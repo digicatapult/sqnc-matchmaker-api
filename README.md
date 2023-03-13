@@ -38,6 +38,8 @@ View OpenAPI documentation for all routes with Swagger:
 localhost:3000/swagger/
 ```
 ## Database
+> before performing any database interations like clean/migrate make sure you have database running e.g. docker-compose up -d
+> or any local instance if not using docker
 ```sh
 # running migrations
 npm run db:migrate
