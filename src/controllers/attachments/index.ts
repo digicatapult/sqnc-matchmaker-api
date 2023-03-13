@@ -1,15 +1,20 @@
-import { Controller, Get, Route } from 'tsoa'
+import { Controller, Get, Route, Path, Post, Body } from 'tsoa'
 import { Logger } from 'pino'
 
-import { Request } from 'express'
 import { logger } from '../../lib/logger'
 import Database, { Models, Query } from '../../lib/db'
 import type { Attachments } from '../../models'
 
+type Response = {
+  status: 200 | 201 | 404,
+  msg?: string
+  data: Attachments[] | Attachments
+} | void
+
 @Route('attachments')
 export class attachments extends Controller {
   log: Logger
-  dbClient: Database = new Database() // TODO should init once when service starts
+  dbClient: Database = new Database()
   db: Models<Query> | any // TODO
 
   constructor() {
@@ -18,25 +23,30 @@ export class attachments extends Controller {
     this.db = this.dbClient.init()
   }
 
-  @Get('/{id}')
-  public async getById(req: Request): Promise<{ status: number; attachment: Attachments }> {
-    const { id } = req.params
-
-    return {
-      status: 200,
-      attachment: await this.db.attachments().where(id),
-    }
-  }
-
   @Get('/')
-  public async get(): Promise<{ status: number; attachments: Attachments[] }> {
+  public async get(): Promise<Response> {
     this.log.debug({
       msg: 'this is a test route to validate tsoa/swagger',
     })
 
     return {
       status: 200,
-      attachments: await this.db.attachments(),
+      data: await this.db.attachments(),
+    }
+  }
+
+  @Post('/')
+  public async create(@Body() data: Attachments): Promise<Response> {
+    console.log(data)
+
+    return Promise.resolve()
+  }
+
+  @Get('/{id}')
+  public async getById(@Path() id: string): Promise<Response> {
+    return {
+      status: 200,
+      data: await this.db.attachments().where(id),
     }
   }
 }
