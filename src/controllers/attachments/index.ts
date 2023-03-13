@@ -2,20 +2,19 @@ import { Controller, Get, Route } from 'tsoa'
 import { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
-import Database from '../../lib/db'
+import Database, { Models, Query } from '../../lib/db'
 import type { Attachments } from '../../models'
 
 @Route('attachments')
 export class attachments extends Controller {
   log: Logger
-  // TMP update once we have more defined schema
-  dbClient: any = new Database()
-  db: any
+  dbClient: Database = new Database()
+  db: Models<Query> | any  // TOD 
 
   constructor() {
     super()
     this.log = logger.child({ controller: '/attachments' })
-    this.db = this.dbClient.db()
+    this.db = this.dbClient.init()
   }
 
   @Get('/')
