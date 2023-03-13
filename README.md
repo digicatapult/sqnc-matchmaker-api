@@ -37,6 +37,17 @@ View OpenAPI documentation for all routes with Swagger:
 ```
 localhost:3000/swagger/
 ```
+## Database
+```sh
+# running migrations
+npm run db:migrate
+
+# creating new migration
+## install npx globally
+npm i -g knex
+## make new migration with some prefixes
+npx knex migrate:make --knexfile src/lib/db/knexfile.ts attachments-table 
+```
 
 ## Tests
 
