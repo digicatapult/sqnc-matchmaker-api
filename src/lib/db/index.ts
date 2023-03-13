@@ -20,8 +20,7 @@ export default class Database {
   constructor() {
     this.log = logger
     this.client = knex(pgConfig)
-    this.db = () => {
-      const models: any = {}
+    this.db = (models: any = {}) => {
       fs.readdirSync(MODELS_DIRECTORY).forEach((file: string): any => {
         this.log.debug('initializing db models')
         const { name } = path.parse(file)
