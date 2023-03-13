@@ -3,6 +3,7 @@ import { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
+import { Attachments } from 'src/models'
 
 @Route('attachments')
 export class attachments extends Controller {
@@ -18,13 +19,14 @@ export class attachments extends Controller {
   }
 
   @Get('/')
-  public async get(): Promise<{ status: number }> {
+  public async get(): Promise<{ status: number; attachments: Attachments }> {
     this.log.debug({
       msg: 'this is a test route to validate tsoa/swagger',
     })
 
-    return Promise.resolve({
+    return {
       status: 200,
-    })
+      attachments: await this.db.attachments(),
+    }
   }
 }
