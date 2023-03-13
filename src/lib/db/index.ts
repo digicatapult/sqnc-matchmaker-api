@@ -22,7 +22,7 @@ export type Query = Knex.QueryBuilder
 export default class Database {
   public client: Knex
   private log: Logger
-  public init: () => Models<Query> // TODO
+  public init: () => Models<Query>
 
   constructor() {
     this.log = logger
