@@ -13,6 +13,7 @@
   },
   "rules": {
     "prettier/prettier": "error",
+    "@typescript-eslint/no-explicit-any": "off",
     "no-console": 2
   },
   "overrides": [

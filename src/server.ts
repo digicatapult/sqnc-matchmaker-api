@@ -7,11 +7,10 @@ import { errorHandler } from './lib/error-handler'
 
 import { RegisterRoutes } from './routes'
 import * as swaggerJson from './swagger.json'
-import Database from './lib/db'
 
+// TODO review this any
 export default async (): Promise<Express> => {
   const app: Express = express()
-  new Database().init() /* not assigned due to linting */
 
   app.use(json())
   app.use(cors())
