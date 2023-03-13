@@ -15,22 +15,19 @@ const MODELS_DIRECTORY = path.join(__dirname, '../../models')
 export default class Database {
   public client: Knex
   private log: Logger
-  public db: { [k: string]: unknown }
+  public db: any
 
   constructor() {
     this.log = logger
     this.client = knex(pgConfig)
-    this.db = {}
-  }
-
-  init(): void {
-    this.log.debug('initializing db models')
-
-    fs.readdirSync(MODELS_DIRECTORY).forEach((file: string) => {
-      const { name } = path.parse(file)
-
-      // TODO check if table exists -> append to the db object
-      if (name != 'index.d') this.db[name] = () => this.client(name)
-    })
+    this.db = (models: any = {}) => {
+      fs.readdirSync(MODELS_DIRECTORY).forEach((file: string): any => {
+        this.log.debug('initializing db models')
+        const { name } = path.parse(file)
+        // TODO check if table exists -> append to the db object
+        if (name != 'index.d') models[name] = () => this.client(name)
+      })
+      return models
+    }
   }
 }
