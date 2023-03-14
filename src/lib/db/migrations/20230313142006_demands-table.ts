@@ -21,14 +21,19 @@ export async function up(knex: Knex): Promise<void> {
       })
       .notNullable()
 
-    def.uuid('demands_attachment_id').notNullable()
+    def.uuid('parameters_attachment_id').notNullable()
     def.integer('latest_token_id')
     def.integer('original_token_id')
     def.datetime('created_at').notNullable().defaultTo(now())
     def.datetime('updated_at').notNullable().defaultTo(now())
 
     def.primary(['id'])
-    def.foreign('demands_attachment_id').references('id').inTable('attachments').onDelete('CASCADE').onUpdate('CASCADE')
+    def
+      .foreign('parameters_attachment_id')
+      .references('id')
+      .inTable('attachments')
+      .onDelete('CASCADE')
+      .onUpdate('CASCADE')
   })
 }
 

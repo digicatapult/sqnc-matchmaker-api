@@ -18,11 +18,11 @@ export class HttpResponseError extends Error {
   }
 }
 
-// export class BadRequestError extends HttpResponseError {
-//   constructor(message: string) {
-//     super({ code: 400, message: `Bad Request: ${message}` })
-//   }
-// }
+export class BadRequestError extends HttpResponseError {
+  constructor(message: string) {
+    super({ code: 400, message: `Bad Request: ${message}` })
+  }
+}
 
 export class NotFoundError extends HttpResponseError {
   constructor(message: string) {

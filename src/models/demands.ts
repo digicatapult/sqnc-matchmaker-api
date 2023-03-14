@@ -16,9 +16,13 @@ export enum DemandStatus {
   Allocated = 'Allocated',
 }
 
-export interface Demand {
+export interface DemandResponse {
   id: UUID
   owner: string
-  subtype: DemandSubtype
+  parametersAttachmentId: UUID
   status: DemandStatus
+}
+
+export interface DemandRequest {
+  parametersAttachmentId: UUID
 }
