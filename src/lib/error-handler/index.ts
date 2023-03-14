@@ -7,16 +7,17 @@ export interface ValidateErrorJSON {
   details: { [name: string]: unknown }
 }
 
-class HttpResponseError extends Error {
+export class HttpResponseError extends Error {
   public code: number
   public message: string
 
-  constructor({ code = 500, message = 'Unknown error' }) {
+  constructor({ code = 500, message = 'Internal server error' }) {
     super(message)
     this.code = code
     this.message = message
   }
 }
+
 // export class BadRequestError extends HttpResponseError {
 //   constructor(message: string) {
 //     super({ code: 400, message: `Bad Request: ${message}` })

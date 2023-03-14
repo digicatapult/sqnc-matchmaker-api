@@ -6,18 +6,17 @@ import Database from '../../lib/db'
 import { Demand, DemandSubtype, UUID } from '../../models/demands'
 import { NotFoundError } from '../../lib/error-handler/index'
 import { ValidateErrorJSON } from '../../lib/error-handler/index'
+import { getMemberByAddress } from '../../services/identity'
 
 @Route('capacity')
 export class CapacityController extends Controller {
   log: Logger
-  // TMP update once we have more defined schema
-  dbClient: any = new Database()
-  db: any
+  db: Database['db']
 
   constructor() {
     super()
     this.log = logger.child({ controller: '/capacity' })
-    this.db = this.dbClient.db()
+    this.db = new Database().db()
   }
 
   @Get('/')
@@ -37,9 +36,11 @@ export class CapacityController extends Controller {
       .where({ id: capacityId, subtype: DemandSubtype.Capacity })
     if (!capacity) throw new NotFoundError('Capacity Not Found')
 
+    const { alias: ownerAlias } = await getMemberByAddress(capacity.owner)
+
     return {
       status: 200,
-      capacity,
+      capacity: { id: capacity.id, subtype: capacity.subtype, owner: ownerAlias, status: capacity.status },
     }
   }
 }

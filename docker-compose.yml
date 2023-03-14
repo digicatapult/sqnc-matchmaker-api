@@ -2,15 +2,49 @@
 version: '3'
 
 services:
-  db:
+  postgres-matchmaker-api:
     image: postgres:15.0-alpine
+    container_name: postgres-matchmaker-api
     ports:
       - 5432:5432
     volumes:
-      - data-storage:/var/lib/postgresql/data
+      - matchmaker-api-storage:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=dscp-matchmaker-api
+  
+  postgres-identity-service:
+    image: postgres:15.0-alpine
+    container_name: postgres-identity
+    ports:
+      - 5433:5432
+    volumes:
+      - identity-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=dscp-identity-service
+  
+  dscp-identity-service:
+    image: digicatapult/dscp-identity-service:latest
+    container_name: identity-service
+    command: /bin/sh -c "
+      sleep 30 &&
+      npx knex migrate:latest &&
+      node app/index.js"
+    ports:
+      - 3002:3002
+    environment:
+      - PORT=3002
+      - API_HOST=dscp-node
+      - DB_HOST=postgres-identity-service
+      - DB_PORT=5432
+      - DB_NAME=dscp-identity-service
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+      - AUTH_TYPE=${AUTH_TYPE:-NONE}
 volumes:
-  data-storage:
+  matchmaker-api-storage:
+  identity-storage:

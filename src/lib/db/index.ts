@@ -21,8 +21,8 @@ export default class Database {
     this.log = logger
     this.client = knex(pgConfig)
     this.db = (models: any = {}) => {
+      this.log.debug('initializing db models')
       fs.readdirSync(MODELS_DIRECTORY).forEach((file: string): any => {
-        this.log.debug('initializing db models')
         const { name } = path.parse(file)
         // TODO check if table exists -> append to the db object
         if (name != 'index.d') models[name] = () => this.client(name)
