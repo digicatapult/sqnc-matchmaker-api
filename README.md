@@ -37,9 +37,12 @@ View OpenAPI documentation for all routes with Swagger:
 ```
 localhost:3000/swagger/
 ```
+
 ## Database
-> before performing any database interations like clean/migrate make sure you have database running e.g. docker-compose up -d
+
+> before performing any database interactions like clean/migrate make sure you have database running e.g. docker-compose up -d
 > or any local instance if not using docker
+
 ```sh
 # running migrations
 npm run db:migrate
@@ -48,7 +51,7 @@ npm run db:migrate
 ## install npx globally
 npm i -g knex
 ## make new migration with some prefixes
-npx knex migrate:make --knexfile src/lib/db/knexfile.ts attachments-table 
+npx knex migrate:make --knexfile src/lib/db/knexfile.ts attachments-table
 ```
 
 ## Tests
@@ -63,4 +66,14 @@ Unit tests are executed by calling:
 
 ```sh
 npm run test:unit
+```
+
+## Process Flows
+
+To ensure integrity of data within transactions (and therefore on chain), it's possible to define custom processes that validate transactions. [More info](https://github.com/digicatapult/dscp-documentation/blob/main/docs/tokenModels/guardRails.md).
+
+Process flows covering this API's transactions are in [`processFlows.json`](./processFlows.json). The file is an array of process flows that can be supplied to the [`dscp-process-management`](https://github.com/digicatapult/dscp-process-management) CLI for creating processes on chain:
+
+```
+process-management create -h localhost -p 9944 -u //Alice "$(cat processFlows.json)"
 ```
