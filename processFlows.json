@@ -52,7 +52,7 @@
         "restriction": {
           "FixedOutputMetadataValueType": {
             "index": 0,
-            "metadataKey": "details",
+            "metadataKey": "parameters",
             "metadataValueType": "File"
           }
         }
