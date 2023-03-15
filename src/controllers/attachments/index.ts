@@ -9,7 +9,7 @@ import { BadRequst, NotFound } from '../../lib/error-handler'
 
 /**
  * A successfull reponse
- * @example to be updated...
+ * @example { "status": 200, "data": [ { "id": "5a3f54bd-a459-45fb-8e50-9ffdd26ff981", "filename": "Screenshot 2023-03-13 at 15.26.41.png", "created_at": "2023-03-14T11:56:19.832Z" } ] } 
  */
 interface Success {
   status: 200 | 201
@@ -78,14 +78,14 @@ export class attachments extends Controller {
   @Response<BadRequst>(400)
   public async getById(
     @Path() id: string,
-    @Header() media: 'json' | 'file'
+    @Header('return-type') type: 'json' | 'file'
   ): Promise<Success> {
     const [attachment] = await this.db.attachments().where({ id })
     if (!attachment) throw new NotFound('attachments') // TODO update after most routes have been defined (all in one)
     this.setHeader('accept', 'application/octet-stream')
 
     // we do not care if json or not since request is for download
-    if (media === 'file') {
+    if (type === 'file') {
       this.setHeader('content-type', 'application/octet-stream')
       return {
         status: 200,
@@ -95,7 +95,7 @@ export class attachments extends Controller {
 
     // no need to check for filename since JSON.parse will throw
     this.setHeader('content-type', 'application/json')
-    if (media === 'json') return {
+    if (type === 'json') return {
       status: 200,
       data: JSON.parse(attachment.binary_blob),
     }

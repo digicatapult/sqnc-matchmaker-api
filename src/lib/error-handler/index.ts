@@ -3,11 +3,14 @@ import { ValidateError } from 'tsoa'
 
 import { logger } from '../logger'
 
-export interface ValidateErrorJSON {
+interface ValidateErrorJSON {
   message: 'Validation failed'
   details: { [name: string]: unknown }
 }
 
+/**
+ * this should reflect database tables
+ */
 type Entities = 'attachments' // add as needed
 
 interface INotFound {
@@ -22,7 +25,6 @@ interface IBadRequest {
   message?: string
   name: string
 }
-
 
 export class NotFound extends Error implements INotFound{
   public item: Entities
@@ -53,15 +55,13 @@ export const errorHandler = function errorHandler(
   next: NextFunction
 ): ExResponse | void {
   if (err instanceof ValidateError) {
-    logger.debug(`Handled Validation Error for ${req.path}:`, err.fields)
-    const response: ValidateErrorJSON = {
-      message: 'Validation failed',
-      details: err?.fields,
-    }
-    return res.status(422).json(response)
+    logger.error(`Handled Validation Error for ${req.path}:`, err.fields)
+
+    return res.send(err)
   }
   if (err instanceof Error) {
-    logger.warn('Unexpected error thrown in handler: %s', err.message)
+    logger.error('Unexpected error thrown in handler: %s', err.message)
+
     return res.status(500).json(err)
   }
 
