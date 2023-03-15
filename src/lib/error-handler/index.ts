@@ -9,14 +9,14 @@ import { logger } from '../logger'
 type Entities = 'attachments' // add as needed
 
 interface INotFound {
-  status: 404
+  status: number
   message?: string
   item: Entities
   name: string
 }
 
 interface IBadRequest {
-  status: 400
+  status: number
   message?: string
   name: string
 }
@@ -24,15 +24,15 @@ interface IBadRequest {
 /**
  * reports that item was not found
  */
-export class NotFound extends Error implements INotFound{
+export class NotFound extends Error implements INotFound {
   public item: Entities
-  public status: 404 = 404
+  public status = 404
 
-  constructor (item: Entities, message?: string) {
-      super(message)
-      this.item = item
-      this.name = 'not found'
-      // this.stack = (<any> new Error()).stack
+  constructor(item: Entities, message?: string) {
+    super(message)
+    this.item = item
+    this.name = 'not found'
+    // this.stack = (<any> new Error()).stack
   }
 }
 
@@ -40,12 +40,12 @@ export class NotFound extends Error implements INotFound{
  * indicates that request was invalid e.g. missing parameter
  */
 export class BadRequst extends Error implements IBadRequest {
-  public status: 400 = 400
+  public status = 400
 
-  constructor (message?: string | undefined) {
-      super(message)
-      this.name = 'bad request'
-      // this.stack = (<any> new Error()).stack
+  constructor(message?: string | undefined) {
+    super(message)
+    this.name = 'bad request'
+    // this.stack = (<any> new Error()).stack
   }
 }
 

@@ -12,7 +12,6 @@ import * as swaggerJson from './swagger.json'
 export default async (): Promise<Express> => {
   const app: Express = express()
 
-
   app.use(urlencoded({ extended: true }))
   app.use(json())
   app.use(cors())

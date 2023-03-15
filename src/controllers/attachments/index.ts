@@ -9,12 +9,13 @@ import { BadRequst, NotFound } from '../../lib/error-handler'
 
 /**
  * A successfull reponse
- * @example { "status": 200, "data": [ { "id": "5a3f54bd-a459-45fb-8e50-9ffdd26ff981", "filename": "Screenshot 2023-03-13 at 15.26.41.png", "created_at": "2023-03-14T11:56:19.832Z" } ] } 
+ * @example { "status": 200, "data": [ { "id": "5a3f54bd-a459-45fb-8e50-9ffdd26ff981", "filename": "Screenshot 2023-03-13 at 15.26.41.png", "created_at": "2023-03-14T11:56:19.832Z" } ] }
  */
 interface Success {
   status: 200 | 201
   message?: string
   data?: Attachments[] | Attachments
+  headers?: { [k: string]: unknown }
 }
 
 type File = {
@@ -30,12 +31,13 @@ export class attachments extends Controller {
   constructor() {
     super()
     this.log = logger.child({ controller: '/attachments' })
+    // TMP will be updated with a wrapper so ORM client independant
     this.db = this.dbClient.init()
   }
 
   @Get('/')
   public async get(): Promise<Success> {
-    this.log.info('retrieving all attachments')
+    this.log.debug('retrieving all attachments')
     const result = await this.db.attachments()
 
     return {
@@ -48,56 +50,64 @@ export class attachments extends Controller {
   }
 
   @Post('/')
-  public async create(
-    @Request() req: express.Request,
-    @UploadedFile() file: File,
-  ): Promise<Success> {
-    this.log.info({ message: 'crating an attachment', attachment: file || req.body })
-    if (file)
+  public async create(@Request() req: express.Request, @UploadedFile() file: File): Promise<Success> {
+    this.log.debug(`crating an attachment ${JSON.stringify(file || req.body)}`)
+    if (file) {
+      await this.db.attachments().insert({
+        filename: file.originalname,
+        binary_blob: Buffer.from(file.buffer),
+      })
       return {
         status: 201,
-        data: await this.db.attachments().insert({
-          filename: file.originalname,
-          binary_blob: Buffer.from(file.buffer),
-        }),
+        message: 'created as file blob',
       }
+    }
 
     if (!req.body) throw new Error('nothing to upload') // TODO return correct (badreq)
+    
+    await this.db.attachments().insert({
+      filename: 'json',
+      binary_blob: Buffer.from(JSON.stringify(req.body))
+    })
 
     return {
       status: 201,
-      data: await this.db.attachments().insert({
-        filename: 'json',
-        binary_blob: Buffer.from(JSON.stringify(req.body)),
-      }),
+      message: 'created as JSON',
     }
   }
 
   @Get('/{id}')
   @Response<NotFound>(404)
   @Response<BadRequst>(400)
-  public async getById(
-    @Path() id: string,
-    @Header('return-type') type: 'json' | 'file'
-  ): Promise<Success> {
+  public async getById(@Request() req: express.Request, @Path() id: string, @Header('return-type') type: 'json' | 'file'): Promise<Success> {
+    this.log.debug(`attempting to retrieve ${id} attachment`)
+    const { accept } = req.headers
     const [attachment] = await this.db.attachments().where({ id })
-    if (!attachment) throw new NotFound('attachments') // TODO update after most routes have been defined (all in one)
-    this.setHeader('accept', 'application/octet-stream')
+    if (!attachment) throw new NotFound('attachments')
 
     // we do not care if json or not since request is for download
-    if (type === 'file') {
-      this.setHeader('content-type', 'application/octet-stream')
+    if (type === 'file' || accept === 'application/octet-stream') {
+      this.setHeader('accept', 'application/octet-stream')
       return {
         status: 200,
-        data: attachment, 
+        headers: {
+          immutable: true,
+          maxAge: 365 * 24 * 60 * 60 * 1000,
+          'content-disposition': `attachment; filename="${attachment.filename}"`,
+          'access-control-expose-headers': 'content-disposition',
+          'content-type': 'application/octet-stream',
+        },
+        data: attachment,
       }
     }
 
     // no need to check for filename since JSON.parse will throw
-    this.setHeader('content-type', 'application/json')
-    if (type === 'json') return {
-      status: 200,
-      data: JSON.parse(attachment.binary_blob),
+    if (type === 'json' || accept === 'application/json') {
+      this.setHeader('content-type', 'application/json')
+      return {
+        status: 200,
+        data: JSON.parse(attachment.binary_blob),
+      }
     }
 
     throw new BadRequst()
