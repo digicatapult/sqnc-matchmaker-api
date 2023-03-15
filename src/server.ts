@@ -2,7 +2,7 @@ import express, { Express } from 'express'
 import { setup, serve } from 'swagger-ui-express'
 
 import cors from 'cors'
-import { json } from 'body-parser'
+import { json, urlencoded } from 'body-parser'
 import { errorHandler } from './lib/error-handler'
 
 import { RegisterRoutes } from './routes'
@@ -13,9 +13,11 @@ export default async (): Promise<Express> => {
   const app: Express = express()
 
 
-  RegisterRoutes(app)
+  app.use(urlencoded({ extended: true }))
   app.use(json())
   app.use(cors())
+  RegisterRoutes(app)
+
   app.use(errorHandler)
   app.use(['/swagger'], serve, setup(swaggerJson))
 

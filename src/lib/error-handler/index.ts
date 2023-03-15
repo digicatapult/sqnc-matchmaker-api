@@ -8,13 +8,40 @@ export interface ValidateErrorJSON {
   details: { [name: string]: unknown }
 }
 
-export class BadRequst extends Error {
-  public status: number
+type Entities = 'attachments' // add as needed
+
+interface INotFound {
+  status: 404
+  message?: string
+  item: Entities
+  name: string
+}
+
+interface IBadRequest {
+  status: 400
+  message?: string
+  name: string
+}
+
+
+export class NotFound extends Error implements INotFound{
+  public item: Entities
+  public status: 404 = 404
+
+  constructor (item: Entities, message?: string) {
+      super(message)
+      this.item = item
+      this.name = 'not found'
+      // this.stack = (<any> new Error()).stack
+  }
+}
+
+export class BadRequst extends Error implements IBadRequest {
+  public status: 400 = 400
 
   constructor (message?: string | undefined) {
       super(message)
       this.name = 'bad request'
-      this.status = 400
       // this.stack = (<any> new Error()).stack
   }
 }
@@ -35,9 +62,7 @@ export const errorHandler = function errorHandler(
   }
   if (err instanceof Error) {
     logger.warn('Unexpected error thrown in handler: %s', err.message)
-    return res.status(500).json({
-      message: 'Internal Server Error',
-    })
+    return res.status(500).json(err)
   }
 
   next()

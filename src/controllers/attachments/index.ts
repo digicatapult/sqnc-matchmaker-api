@@ -1,26 +1,20 @@
-import { UploadedFile, Request, Controller, Get, Route, Path, Post, Response } from 'tsoa'
+import { UploadedFile, Request, Controller, Get, Route, Path, Post, Header, Response } from 'tsoa'
 import { Logger } from 'pino'
 import express from 'express'
 
 import { logger } from '../../lib/logger'
 import Database, { Models, Query } from '../../lib/db'
 import type { Attachments } from '../../models'
-import { BadRequst } from '../../lib/error-handler'
+import { BadRequst, NotFound } from '../../lib/error-handler'
 
 /**
- * This is Response description, will it work? - this is a test
+ * A successfull reponse
+ * @example to be updated...
  */
 interface Success {
-  status: 200 | 201 | 404
+  status: 200 | 201
   message?: string
   data?: Attachments[] | Attachments
-}
-
-type ResponseHeaders = 'application/json' | 'application/octet-stream'
-
-interface BadRequstResponse {
-  status: 400,
-  message?: string, 
 }
 
 type File = {
@@ -80,23 +74,28 @@ export class attachments extends Controller {
   }
 
   @Get('/{id}')
-  @Response<BadRequstResponse, { accept: ResponseHeaders }>(400)
+  @Response<NotFound>(404)
+  @Response<BadRequst>(400)
   public async getById(
     @Path() id: string,
-    @Request() req: express.Request,
+    @Header() media: 'json' | 'file'
   ): Promise<Success> {
     const [attachment] = await this.db.attachments().where({ id })
-    if (!attachment) throw new Error('not found') // TODO update after most routes have been defined (all in one)
-    const { accept } = req.headers
+    if (!attachment) throw new NotFound('attachments') // TODO update after most routes have been defined (all in one)
+    this.setHeader('accept', 'application/octet-stream')
 
     // we do not care if json or not since request is for download
-    if (accept === 'application/octet-stream') return {
-      status: 200,
-      data: attachment, 
+    if (media === 'file') {
+      this.setHeader('content-type', 'application/octet-stream')
+      return {
+        status: 200,
+        data: attachment, 
+      }
     }
 
     // no need to check for filename since JSON.parse will throw
-    if (accept === 'application/json') return {
+    this.setHeader('content-type', 'application/json')
+    if (media === 'json') return {
       status: 200,
       data: JSON.parse(attachment.binary_blob),
     }
