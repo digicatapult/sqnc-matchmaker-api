@@ -64,10 +64,10 @@ export class attachments extends Controller {
     }
 
     if (!req.body) throw new Error('nothing to upload') // TODO return correct (badreq)
-    
+
     await this.db.attachments().insert({
       filename: 'json',
-      binary_blob: Buffer.from(JSON.stringify(req.body))
+      binary_blob: Buffer.from(JSON.stringify(req.body)),
     })
 
     return {
@@ -79,7 +79,11 @@ export class attachments extends Controller {
   @Get('/{id}')
   @Response<NotFound>(404)
   @Response<BadRequst>(400)
-  public async getById(@Request() req: express.Request, @Path() id: string, @Header('return-type') type: 'json' | 'file'): Promise<Success> {
+  public async getById(
+    @Request() req: express.Request,
+    @Path() id: string,
+    @Header('return-type') type: 'json' | 'file'
+  ): Promise<Success> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const { accept } = req.headers
     const [attachment] = await this.db.attachments().where({ id })
