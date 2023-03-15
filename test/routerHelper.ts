@@ -23,15 +23,3 @@ export async function post(app: express.Express, endpoint: string, body: object)
       return err
     })
 }
-
-// export async function postCapacity(app: express.Express, capacity: DemandRequest) {
-//   return request(app)
-//     .post('/capacity')
-//     .send(capacity)
-//     .then((response) => {
-//       return response
-//     })
-//     .catch((err) => {
-//       return err
-//     })
-// }

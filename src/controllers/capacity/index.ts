@@ -11,33 +11,32 @@ import { getMemberByAddress, getMemberBySelf } from '../../services/identity'
 @Route('capacity')
 export class CapacityController extends Controller {
   log: Logger
-  db: Database['db']
+  db: Database
 
   constructor() {
     super()
     this.log = logger.child({ controller: '/capacity' })
-    this.db = new Database().db()
+    this.db = new Database()
   }
 
   @Post()
   @SuccessResponse('201', 'Created')
   public async createCapacity(@Body() requestBody: DemandRequest): Promise<DemandResponse> {
     const { parametersAttachmentId } = requestBody
-    const [attachment] = await this.db.attachments().where({ id: parametersAttachmentId })
+    const [attachment] = await this.db.getAttachment(parametersAttachmentId)
+
     if (!attachment) {
       throw new BadRequestError('Attachment id not found')
     }
 
     const selfAddress = await getMemberBySelf()
 
-    const capacityRow = {
+    const [capacity] = await this.db.insertCapacity({
       owner: selfAddress,
       subtype: DemandSubtype.Capacity,
       status: DemandStatus.Created,
       parameters_attachment_id: parametersAttachmentId,
-    }
-
-    const [capacity] = await this.db.demands().insert(capacityRow).returning('*')
+    })
 
     const { alias: ownerAlias } = await getMemberByAddress(capacity.owner)
     return {
@@ -50,10 +49,7 @@ export class CapacityController extends Controller {
 
   @Get('/')
   public async getAll(): Promise<DemandResponse[]> {
-    const capacities = await this.db
-      .demands()
-      .select(['id', 'owner', 'status', 'parameters_attachment_id AS parametersAttachmentId'])
-      .where({ subtype: DemandSubtype.Capacity })
+    const capacities = await this.db.getCapacities()
     const result = await Promise.all(capacities.map(async (capacity: DemandResponse) => responseWithAlias(capacity)))
     return result
   }
@@ -61,10 +57,7 @@ export class CapacityController extends Controller {
   @Response<ValidateErrorJSON>(422, 'Validation Failed')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {
-    const [capacity] = await this.db
-      .demands()
-      .select(['id', 'owner', 'status', 'parameters_attachment_id AS parametersAttachmentId'])
-      .where({ id: capacityId, subtype: DemandSubtype.Capacity })
+    const [capacity] = await this.db.getCapacity(capacityId)
     if (!capacity) throw new NotFoundError('Capacity Not Found')
 
     return responseWithAlias(capacity)
