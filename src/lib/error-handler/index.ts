@@ -3,11 +3,6 @@ import { ValidateError } from 'tsoa'
 
 import { logger } from '../logger'
 
-interface ValidateErrorJSON {
-  message: 'Validation failed'
-  details: { [name: string]: unknown }
-}
-
 /**
  * this should reflect database tables
  */
@@ -26,6 +21,9 @@ interface IBadRequest {
   name: string
 }
 
+/**
+ * reports that item was not found
+ */
 export class NotFound extends Error implements INotFound{
   public item: Entities
   public status: 404 = 404
@@ -38,6 +36,9 @@ export class NotFound extends Error implements INotFound{
   }
 }
 
+/**
+ * indicates that request was invalid e.g. missing parameter
+ */
 export class BadRequst extends Error implements IBadRequest {
   public status: 400 = 400
 

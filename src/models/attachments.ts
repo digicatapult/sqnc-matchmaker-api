@@ -1,12 +1,12 @@
 /**
- * Some description for attachments.... - this is a test
+ * File or JSON attachments
  */
 export interface Attachments {
   id?: string
   /**
-   * and another description for bloby blob - this is a test
+   * for json files name will be 'json'
    */
-  filename: string
+  filename: string | 'json'
   binary_blob: Blob
   datetime: Date
 }
