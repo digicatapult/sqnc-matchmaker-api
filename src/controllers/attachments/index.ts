@@ -5,7 +5,7 @@ import express from 'express'
 import { logger } from '../../lib/logger'
 import Database, { Models, Query } from '../../lib/db'
 import type { Attachments } from '../../models'
-import { BadRequst, NotFound } from '../../lib/error-handler'
+import { BadReqeust, NotFound } from '../../lib/error-handler'
 
 /**
  * A successfull reponse
@@ -78,7 +78,7 @@ export class attachments extends Controller {
 
   @Get('/{id}')
   @Response<NotFound>(404)
-  @Response<BadRequst>(400)
+  @Response<BadReqeust>(400)
   public async getById(
     @Request() req: express.Request,
     @Path() id: string,
@@ -115,6 +115,6 @@ export class attachments extends Controller {
       }
     }
 
-    throw new BadRequst()
+    throw new BadReqeust()
   }
 }
