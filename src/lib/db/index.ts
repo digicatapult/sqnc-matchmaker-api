@@ -5,7 +5,8 @@ import type { Logger } from 'pino'
 
 import { logger } from '../logger'
 import { pgConfig } from './knexfile'
-import { DemandSubtype, UUID } from '../../models/demands'
+import { DemandSubtype } from '../../models/demands'
+import { UUID } from '../../models/uuid'
 
 const MODELS_DIRECTORY = path.join(__dirname, '../../models')
 
