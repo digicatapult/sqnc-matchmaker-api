@@ -8,7 +8,6 @@ import { errorHandler } from './lib/error-handler'
 import { RegisterRoutes } from './routes'
 import * as swaggerJson from './swagger.json'
 
-// TODO review this any
 export default async (): Promise<Express> => {
   const app: Express = express()
 

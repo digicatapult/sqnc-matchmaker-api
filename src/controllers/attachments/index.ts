@@ -89,7 +89,8 @@ export class attachments extends Controller {
     const [attachment] = await this.db.attachments().where({ id })
     if (!attachment) throw new NotFound('attachments')
 
-    // we do not care if json or not since request is for download
+    // TMP doubling upping on headers as I was not able to figure out why 'accept' using @Header() get overwritten
+    // also not checking for mime type as we have two options here download or sned json
     if (type === 'file' || accept === 'application/octet-stream') {
       this.setHeader('accept', 'application/octet-stream')
       return {
