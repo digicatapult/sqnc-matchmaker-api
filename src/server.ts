@@ -12,11 +12,11 @@ import * as swaggerJson from './swagger.json'
 export default async (): Promise<Express> => {
   const app: Express = express()
 
+
+  RegisterRoutes(app)
   app.use(json())
   app.use(cors())
   app.use(errorHandler)
-
-  RegisterRoutes(app)
   app.use(['/swagger'], serve, setup(swaggerJson))
 
   return app

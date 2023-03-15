@@ -2,9 +2,21 @@ import { Response as ExResponse, Request as ExRequest, NextFunction } from 'expr
 import { ValidateError } from 'tsoa'
 
 import { logger } from '../logger'
+
 export interface ValidateErrorJSON {
   message: 'Validation failed'
   details: { [name: string]: unknown }
+}
+
+export class BadRequst extends Error {
+  public status: number
+
+  constructor (message?: string | undefined) {
+      super(message)
+      this.name = 'bad request'
+      this.status = 400
+      // this.stack = (<any> new Error()).stack
+  }
 }
 
 export const errorHandler = function errorHandler(
