@@ -5,7 +5,7 @@ import type { Logger } from 'pino'
 
 import { logger } from '../logger'
 import { pgConfig } from './knexfile'
-import { DemandSubtype } from '../../models/demands'
+import { DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 
 const MODELS_DIRECTORY = path.join(__dirname, '../../models')
@@ -38,19 +38,19 @@ export default class Database {
   }
 
   insertDemand = async (capacity: object) => {
-    return this.db().demands().insert(capacity).returning('*')
+    return this.db().demand().insert(capacity).returning('*')
   }
 
   getDemands = async (subtype: DemandSubtype) => {
     return this.db()
-      .demands()
+      .demand()
       .select(['id', 'owner', 'status', 'parameters_attachment_id AS parametersAttachmentId'])
       .where({ subtype })
   }
 
   getDemand = async (capacityId: UUID, subtype: DemandSubtype) => {
     return this.db()
-      .demands()
+      .demand()
       .select(['id', 'owner', 'status', 'parameters_attachment_id AS parametersAttachmentId'])
       .where({ id: capacityId, subtype })
   }

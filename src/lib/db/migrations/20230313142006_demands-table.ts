@@ -3,7 +3,7 @@ import { Knex } from 'knex'
 export async function up(knex: Knex): Promise<void> {
   const now = () => knex.fn.now()
 
-  await knex.schema.createTable('demands', (def) => {
+  await knex.schema.createTable('demand', (def) => {
     def.uuid('id').defaultTo(knex.raw('uuid_generate_v4()'))
     def.string('owner', 48).notNullable()
 
@@ -38,5 +38,5 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.dropTable('demands')
+  await knex.schema.dropTable('demand')
 }

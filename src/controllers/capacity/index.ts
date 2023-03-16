@@ -3,7 +3,7 @@ import { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
-import { DemandResponse, DemandSubtype, DemandRequest, DemandStatus } from '../../models/demands'
+import { DemandResponse, DemandSubtype, DemandRequest, DemandStatus } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 import { NotFoundError } from '../../lib/error-handler/index'
 import { ValidateErrorJSON, BadRequestError } from '../../lib/error-handler/index'

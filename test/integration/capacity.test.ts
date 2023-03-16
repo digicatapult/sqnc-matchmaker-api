@@ -7,7 +7,7 @@ import { post, get } from '../helper/routeHelper'
 import { seed, cleanup, parametersAttachmentId, capacityId } from '../seeds/capacity'
 import { selfAlias } from '../helper/identityMock'
 
-import { DemandStatus } from '../../src/models/demands'
+import { DemandStatus } from '../../src/models/demand'
 import { setupIdentityMock } from '../helper/identityMock'
 
 describe('capacity', () => {
