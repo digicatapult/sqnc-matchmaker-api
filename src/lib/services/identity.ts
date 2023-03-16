@@ -1,5 +1,5 @@
-import { NotFoundError, HttpResponseError } from '../lib/error-handler'
-import env from '../env'
+import { NotFoundError, HttpResponseError } from '../error-handler'
+import env from '../../env'
 
 const URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}/v1`
 

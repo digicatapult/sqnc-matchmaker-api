@@ -7,7 +7,7 @@ import { DemandResponse, DemandSubtype, DemandRequest, DemandStatus } from '../.
 import { UUID } from '../../models/uuid'
 import { NotFoundError } from '../../lib/error-handler/index'
 import { ValidateErrorJSON, BadRequestError } from '../../lib/error-handler/index'
-import { getMemberByAddress, getMemberBySelf } from '../../services/identity'
+import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
 
 @Route('capacity')
 @Tags('capacity')
