@@ -54,4 +54,16 @@ export default class Database {
       .select(['id', 'owner', 'status', 'parameters_attachment_id AS parametersAttachmentId'])
       .where({ id: capacityId, subtype })
   }
+
+  getDemandWithAttachment = async (capacityId: UUID, subtype: DemandSubtype) => {
+    return this.db()
+      .demand()
+      .join('attachments', 'demand.parameters_attachment_id', 'attachments.id')
+      .select()
+      .where({ 'demand.id': capacityId, subtype })
+  }
+
+  insertTransaction = async (transaction: object) => {
+    return this.db().transaction().insert(transaction).returning('*')
+  }
 }

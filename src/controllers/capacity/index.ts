@@ -3,12 +3,14 @@ import { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
-import { DemandResponse, DemandSubtype, DemandRequest, DemandStatus } from '../../models/demand'
+import { DemandResponse, DemandSubtype, DemandRequest, DemandStatus, Demand } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 import { NotFound } from '../../lib/error-handler/index'
 import { ValidateErrorJSON, BadRequest } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-
+import { TransactionResponse, TransactionStatus } from '../../models/transaction'
+import { TokenType } from '../../models/tokenType'
+import { runProcess } from '../..//lib/services/dscpApi'
 @Route('capacity')
 @Tags('capacity')
 @Security('bearerAuth')
@@ -79,6 +81,32 @@ export class CapacityController extends Controller {
 
     return responseWithAlias(capacity)
   }
+
+  /**
+   * A member creates the capacity {capacityId} on-chain. The capacity is now viewable to other members.
+   * @summary Create a new capacity demand on-chain
+   */
+  @Post('{capacityId}/creation')
+  @Response<BadRequest>(400, 'Request was invalid')
+  @SuccessResponse('201')
+  public async createCapacityOnChain(@Path() capacityId: UUID): Promise<TransactionResponse> {
+    const [capacity] = await this.db.getDemandWithAttachment(capacityId, DemandSubtype.Capacity)
+    if (!capacity) throw new NotFound('Capacity Not Found')
+
+    const [transaction] = await this.db.insertTransaction({
+      token_type: TokenType.DEMAND,
+      local_id: capacityId,
+      status: TransactionStatus.Submitted,
+    })
+
+    runProcess(buildPayload(capacity, transaction))
+
+    return {
+      id: transaction.id,
+      submittedAt: new Date(transaction.created_at),
+      status: transaction.status,
+    }
+  }
 }
 
 const responseWithAlias = async (capacity: DemandResponse): Promise<DemandResponse> => {
@@ -91,3 +119,21 @@ const responseWithAlias = async (capacity: DemandResponse): Promise<DemandRespon
     parametersAttachmentId: capacity.parametersAttachmentId,
   }
 }
+
+const buildPayload = (demand: Demand, transaction: TransactionResponse) => ({
+  files: [{ blob: new Blob([demand.binary_blob]), filename: demand.filename }],
+  inputs: [],
+  outputs: [
+    {
+      roles: { Owner: demand.owner },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.DEMAND },
+        status: { type: 'LITERAL', value: DemandStatus.Created },
+        subtype: { type: 'LITERAL', value: demand.subtype },
+        parameters: { type: 'FILE', value: demand.filename },
+        transactionId: { type: 'LITERAL', value: transaction.id.replace(/[-]/g, '') },
+      },
+    },
+  ],
+})

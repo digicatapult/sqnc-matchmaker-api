@@ -1,3 +1,4 @@
+import { Attachments } from './attachments'
 import { UUID } from './uuid'
 
 /**
@@ -27,6 +28,14 @@ export interface DemandResponse {
   owner: string
   parametersAttachmentId: UUID
   status: DemandStatus
+}
+
+export interface Demand extends DemandResponse, Attachments {
+  subtype: DemandSubtype
+  latestTokenId: number
+  originalTokenId: number
+  created_at: Date
+  updated_at: Date
 }
 
 /**

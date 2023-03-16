@@ -1,6 +1,6 @@
 export interface Attachments {
   id: string
   filename: string
-  binary_blob: string
+  binary_blob: Blob
   datetime: Date
 }
