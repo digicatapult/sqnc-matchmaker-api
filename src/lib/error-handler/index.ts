@@ -44,10 +44,11 @@ export const errorHandler = function errorHandler(
     }
     return res.status(422).json(response)
   }
-  if (err.code) {
+  if (err instanceof HttpResponse) {
     logger.debug(`Bad request for ${req.path}`)
     return res.status(err.code).json(err.message)
-  } else {
+  }
+  if (err instanceof Error) {
     logger.warn('Unexpected error thrown in handler: %s', err.message)
     return res.status(500).json({
       message: 'Internal Server Error',
