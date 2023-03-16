@@ -24,9 +24,11 @@ interface IBadReqeust {
  */
 export class NotFound extends Error implements INotFound {
   public item: Entities
+  public code = 404
 
   constructor(item: Entities, message?: string) {
     super(message)
+    this.code = 404
     this.item = item
     this.name = 'not found'
     // this.stack = (<any> new Error()).stack
@@ -37,6 +39,8 @@ export class NotFound extends Error implements INotFound {
  * indicates that request was invalid e.g. missing parameter
  */
 export class BadReqeust extends Error implements IBadReqeust {
+  public code = 400
+
   constructor(message?: string | undefined) {
     super(message)
     this.name = 'bad request'
@@ -45,7 +49,7 @@ export class BadReqeust extends Error implements IBadReqeust {
 }
 
 export const errorHandler = function errorHandler(
-  err: unknown,
+  err: Error & { code: number },
   req: ExRequest,
   res: ExResponse,
   next: NextFunction
@@ -58,7 +62,7 @@ export const errorHandler = function errorHandler(
   if (err instanceof Error) {
     logger.error('Unexpected error thrown in handler: %s', err.message)
 
-    return res.status(500).json(err)
+    return res.status(err.code || 500).json(err)
   }
 
   next()
