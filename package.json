@@ -1,7 +1,7 @@
 {
   "name": "@digicatapult/dscp-matchmaker-api",
-  "version": "0.0.5",
-  "description": "An open api typescript nodejs/express api service template",
+  "version": "0.1.0",
+  "description": "An OpenAPI Matchmaking API service for DSCP",
   "main": "src/index.ts",
   "scripts": {
     "lint": "eslint .",
@@ -10,8 +10,8 @@
     "build": "tsoa spec-and-routes && tsc",
     "start": "node build/index.js",
     "dev": "npm run build && NODE_ENV=dev concurrently \"npx tsc --watch\" \"nodemon -q build/index.js | pino-colada\"",
-    "test": "NODE_ENV=test ./node_modules/.bin/mocha --timeout 30000 -r ts-node/register ./test/*.test.ts",
-    "test:unit": "NODE_ENV=test ./node_modules/.bin/mocha -r ts-node/register ./src/**/*.test.ts",
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha --config ./test/mocharc.json -r ts-node/register ./test/**/*.test.ts",
+    "test:unit": "NODE_ENV=test ./node_modules/.bin/mocha --config ./test/mocharc.json -r ts-node/register ./src/**/*.test.ts",
     "db:migrate": "npx knex migrate:latest --knexfile src/lib/db/knexfile.ts",
     "coverage": "c8 npm run test"
   },
@@ -55,7 +55,8 @@
     "prettier": "^2.8.4",
     "supertest": "^6.3.3",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "undici": "^5.21.0"
   },
   "dependencies": {
     "body-parser": "^1.20.2",

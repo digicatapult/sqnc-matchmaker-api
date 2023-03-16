@@ -15,7 +15,6 @@ export class health extends Controller {
     logger.debug({ msg: 'new request received', controller: '/health' })
 
     return Promise.resolve({
-      status: 200,
       message: 'success',
       req_id: req.req_id,
     })

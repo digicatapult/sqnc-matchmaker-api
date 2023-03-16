@@ -15,4 +15,6 @@ export default envalid.cleanEnv(process.env, {
   DB_USERNAME: envalid.str({ devDefault: 'postgres' }),
   DB_PASSWORD: envalid.str({ devDefault: 'postgres' }),
   DB_NAME: envalid.str({ default: 'dscp-matchmaker-api' }),
+  IDENTITY_SERVICE_HOST: envalid.host({ devDefault: 'localhost' }),
+  IDENTITY_SERVICE_PORT: envalid.port({ devDefault: 3002 }),
 })

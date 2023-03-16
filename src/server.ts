@@ -14,9 +14,9 @@ export default async (): Promise<Express> => {
 
   app.use(json())
   app.use(cors())
-  app.use(errorHandler)
 
   RegisterRoutes(app)
+  app.use(errorHandler)
   app.use(['/swagger'], serve, setup(swaggerJson))
 
   return app
