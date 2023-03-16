@@ -1,4 +1,4 @@
-import { NotFoundError, HttpResponseError } from '../error-handler'
+import { NotFound, HttpResponse } from '../error-handler'
 import env from '../../env'
 
 const URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}/v1`
@@ -12,10 +12,10 @@ const getMemberByAlias = async (alias: string) => {
   }
 
   if (res.status === 404) {
-    throw new NotFoundError(`Member "${alias}" does not exist`)
+    throw new NotFound(`Member "${alias}" does not exist`)
   }
 
-  throw new HttpResponseError({})
+  throw new HttpResponse({})
 }
 
 const getMemberBySelf = async () => {
@@ -26,7 +26,7 @@ const getMemberBySelf = async () => {
     return member.address
   }
 
-  throw new HttpResponseError({})
+  throw new HttpResponse({})
 }
 
 const getMemberByAddress = (alias: string) => getMemberByAlias(alias)

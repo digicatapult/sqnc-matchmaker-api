@@ -5,8 +5,8 @@ import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
 import { DemandResponse, DemandSubtype, DemandRequest, DemandStatus } from '../../models/demand'
 import { UUID } from '../../models/uuid'
-import { NotFoundError } from '../../lib/error-handler/index'
-import { ValidateErrorJSON, BadRequestError } from '../../lib/error-handler/index'
+import { NotFound } from '../../lib/error-handler/index'
+import { ValidateErrorJSON, BadRequest } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
 
 @Route('capacity')
@@ -27,14 +27,14 @@ export class CapacityController extends Controller {
    * @summary Create a new capacity demand
    */
   @Post()
-  @Response<BadRequestError>(400, 'Request was invalid')
+  @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
   public async createCapacity(@Body() requestBody: DemandRequest): Promise<DemandResponse> {
     const { parametersAttachmentId } = requestBody
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
 
     if (!attachment) {
-      throw new BadRequestError('Attachment id not found')
+      throw new BadRequest('Attachment id not found')
     }
 
     const selfAddress = await getMemberBySelf()
@@ -71,11 +71,11 @@ export class CapacityController extends Controller {
    * @param capacityId The capacity's identifier
    */
   @Response<ValidateErrorJSON>(422, 'Validation Failed')
-  @Response<NotFoundError>(404, 'Item not found')
+  @Response<NotFound>(404, 'Item not found')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {
     const [capacity] = await this.db.getDemand(capacityId, DemandSubtype.Capacity)
-    if (!capacity) throw new NotFoundError('Capacity Not Found')
+    if (!capacity) throw new NotFound('Capacity Not Found')
 
     return responseWithAlias(capacity)
   }
