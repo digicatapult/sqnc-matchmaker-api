@@ -13,10 +13,19 @@ const mockPool = mockAgent.get(`http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTI
 export const setupIdentityMock = () => {
   beforeEach(async () => {
     mockAgent.activate()
-
     mockPool
       .intercept({
         path: '/v1/self',
+        method: 'GET',
+      })
+      .reply(200, {
+        alias: selfAlias,
+        address: selfAddress,
+      })
+
+    mockPool
+      .intercept({
+        path: `/v1/members/${selfAddress}`,
         method: 'GET',
       })
       .reply(200, {

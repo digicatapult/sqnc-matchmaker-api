@@ -10,7 +10,7 @@ import { selfAlias } from '../helper/identityMock'
 import { DemandStatus } from '../../src/models/demands'
 import { setupIdentityMock } from '../helper/identityMock'
 
-describe.only('capacity', () => {
+describe('capacity', () => {
   let app: Express
   setupIdentityMock()
 
