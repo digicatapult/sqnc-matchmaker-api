@@ -51,7 +51,7 @@ npm run db:migrate
 ## install npx globally
 npm i -g knex
 ## make new migration with some prefixes
-npx knex migrate:make --knexfile src/lib/db/knexfile.ts attachments-table
+npx knex migrate:make --knexfile src/lib/db/knexfile.ts attachment-table
 ```
 
 ## Tests

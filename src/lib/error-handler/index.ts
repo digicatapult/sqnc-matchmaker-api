@@ -6,7 +6,7 @@ import { logger } from '../logger'
 /**
  * this should reflect database tables
  */
-type Entities = 'attachments' // add as needed
+type Entities = 'attachment' | 'demand' // add as needed
 
 interface INotFound {
   message?: string
