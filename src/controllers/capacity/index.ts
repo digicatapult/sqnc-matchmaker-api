@@ -27,6 +27,7 @@ export class CapacityController extends Controller {
    * @summary Create a new capacity demand
    */
   @Post()
+  @Response<BadRequestError>(400)
   @SuccessResponse('201')
   public async createCapacity(@Body() requestBody: DemandRequest): Promise<DemandResponse> {
     const { parametersAttachmentId } = requestBody
@@ -70,6 +71,7 @@ export class CapacityController extends Controller {
    * @param capacityId The capacity's identifier
    */
   @Response<ValidateErrorJSON>(422, 'Validation Failed')
+  @Response<NotFoundError>(404)
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {
     const [capacity] = await this.db.getDemand(capacityId, DemandSubtype.Capacity)
