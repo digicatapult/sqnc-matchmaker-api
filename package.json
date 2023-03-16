@@ -13,7 +13,8 @@
     "test": "NODE_ENV=test ./node_modules/.bin/mocha --config ./test/mocharc.json -r ts-node/register ./test/**/*.test.ts",
     "test:unit": "NODE_ENV=test ./node_modules/.bin/mocha --config ./test/mocharc.json -r ts-node/register ./src/**/*.test.ts",
     "db:migrate": "npx knex migrate:latest --knexfile src/lib/db/knexfile.ts",
-    "coverage": "c8 npm run test"
+    "coverage": "c8 npm run test",
+    "process": "npx @digicatapult/dscp-process-management create -h localhost -p 9944 -u //Alice \"$(cat processFlows.json)\""
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,7 @@
   },
   "homepage": "https://github.com/digicatapult/dscp-matchmaker-api#readme",
   "devDependencies": {
+    "@digicatapult/dscp-process-management": "^1.6.8",
     "@types/chai": "^4.3.4",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",

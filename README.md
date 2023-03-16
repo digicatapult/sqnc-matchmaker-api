@@ -79,5 +79,5 @@ To ensure integrity of data within transactions (and therefore on chain), it's p
 Process flows covering this API's transactions are in [`processFlows.json`](./processFlows.json). The file is an array of process flows that can be supplied to the [`dscp-process-management`](https://github.com/digicatapult/dscp-process-management) CLI for creating processes on chain:
 
 ```
-process-management create -h localhost -p 9944 -u //Alice "$(cat processFlows.json)"
+npm run process
 ```
