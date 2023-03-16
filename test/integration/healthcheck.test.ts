@@ -2,7 +2,7 @@ import { describe, before, test } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 import createHttpServer from '../../src/server'
-import { get } from '../routerHelper'
+import { get } from '../helper/routeHelper'
 
 describe('health check', () => {
   let app: Express

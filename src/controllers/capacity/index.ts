@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Route, Path, Response, Body, SuccessResponse } from 'tsoa'
+import { Controller, Get, Post, Route, Path, Response, Body, SuccessResponse, Tags, Security } from 'tsoa'
 import { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
@@ -10,6 +10,8 @@ import { ValidateErrorJSON, BadRequestError } from '../../lib/error-handler/inde
 import { getMemberByAddress, getMemberBySelf } from '../../services/identity'
 
 @Route('capacity')
+@Tags('capacity')
+@Security('bearerAuth')
 export class CapacityController extends Controller {
   log: Logger
   db: Database
@@ -20,8 +22,12 @@ export class CapacityController extends Controller {
     this.db = new Database()
   }
 
+  /**
+   * A Member creates a new demand for a capacity by referencing an uploaded parameters file.
+   * @summary Create a new capacity demand
+   */
   @Post()
-  @SuccessResponse('201', 'Created')
+  @SuccessResponse('201')
   public async createCapacity(@Body() requestBody: DemandRequest): Promise<DemandResponse> {
     const { parametersAttachmentId } = requestBody
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
@@ -32,7 +38,7 @@ export class CapacityController extends Controller {
 
     const selfAddress = await getMemberBySelf()
 
-    const [capacity] = await this.db.insertCapacity({
+    const [capacity] = await this.db.insertDemand({
       owner: selfAddress,
       subtype: DemandSubtype.Capacity,
       status: DemandStatus.Created,
@@ -48,17 +54,25 @@ export class CapacityController extends Controller {
     }
   }
 
+  /**
+   * Returns the details of all capacity demands.
+   * @summary List all capacity demands
+   */
   @Get('/')
   public async getAll(): Promise<DemandResponse[]> {
-    const capacities = await this.db.getCapacities()
+    const capacities = await this.db.getDemands(DemandSubtype.Capacity)
     const result = await Promise.all(capacities.map(async (capacity: DemandResponse) => responseWithAlias(capacity)))
     return result
   }
 
+  /**
+   * @summary Get a capacity by ID
+   * @param capacityId The capacity's identifier
+   */
   @Response<ValidateErrorJSON>(422, 'Validation Failed')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {
-    const [capacity] = await this.db.getCapacity(capacityId)
+    const [capacity] = await this.db.getDemand(capacityId, DemandSubtype.Capacity)
     if (!capacity) throw new NotFoundError('Capacity Not Found')
 
     return responseWithAlias(capacity)

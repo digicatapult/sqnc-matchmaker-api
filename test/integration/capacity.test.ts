@@ -3,13 +3,16 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
-import { post, get } from '../routerHelper'
-import { seed, cleanup, parametersAttachmentId, selfAlias, capacityId } from '../seeds/capacity'
+import { post, get } from '../helper/routeHelper'
+import { seed, cleanup, parametersAttachmentId, capacityId } from '../seeds/capacity'
+import { selfAlias } from '../helper/identityMock'
 
 import { DemandStatus } from '../../src/models/demands'
+import { setupIdentityMock } from '../helper/identityMock'
 
 describe.only('capacity', () => {
   let app: Express
+  setupIdentityMock()
 
   before(async function () {
     app = await createHttpServer()

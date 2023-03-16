@@ -8,16 +8,18 @@ A `Node.js` typescript template with open api implementation
 
 Use a `.env` at root of the repository to set values for the environment variables defined in `.env` file.
 
-| variable        | required |        default         | description                                                                          |
-| :-------------- | :------: | :--------------------: | :----------------------------------------------------------------------------------- |
-| PORT            |    N     |         `3000`         | The port for the API to listen on                                                    |
-| LOG_LEVEL       |    N     |        `debug`         | Logging level. Valid values are [`trace`, `debug`, `info`, `warn`, `error`, `fatal`] |
-| ENVIRONMENT_VAR |    N     |       `example`        | An environment specific variable                                                     |
-| DB_PORT         |    N     |         `5432`         | The port for the database                                                            |
-| DB_HOST         |    N     |      `localhost`       | The database hostname / host                                                         |
-| DB_NAME         |    N     | `dscp-matchmaker-api ` | The database name                                                                    |
-| DB_USERNAME     |    N     |       `postgres`       | The database username                                                                |
-| DB_PASSWORD     |    N     |       `postgres`       | The database password                                                                |
+| variable              | required |        default         | description                                                                          |
+| :-------------------- | :------: | :--------------------: | :----------------------------------------------------------------------------------- |
+| PORT                  |    N     |         `3000`         | The port for the API to listen on                                                    |
+| LOG_LEVEL             |    N     |        `debug`         | Logging level. Valid values are [`trace`, `debug`, `info`, `warn`, `error`, `fatal`] |
+| ENVIRONMENT_VAR       |    N     |       `example`        | An environment specific variable                                                     |
+| DB_PORT               |    N     |         `5432`         | The port for the database                                                            |
+| DB_HOST               |    Y     |           -            | The database hostname / host                                                         |
+| DB_NAME               |    N     | `dscp-matchmaker-api ` | The database name                                                                    |
+| DB_USERNAME           |    Y     |           -            | The database username                                                                |
+| DB_PASSWORD           |    Y     |           -            | The database password                                                                |
+| IDENTITY_SERVICE_HOST |    Y     |           -            | Hostname of the `dscp-identity-service`                                              |
+| IDENTITY_SERVICE_PORT |    Y     |           -            | Port of the `dscp-identity-service` -                                                |
 
 ## Getting started
 
@@ -37,9 +39,12 @@ View OpenAPI documentation for all routes with Swagger:
 ```
 localhost:3000/swagger/
 ```
+
 ## Database
-> before performing any database interations like clean/migrate make sure you have database running e.g. docker-compose up -d
+
+> before performing any database interactions like clean/migrate make sure you have database running e.g. docker-compose up -d
 > or any local instance if not using docker
+
 ```sh
 # running migrations
 npm run db:migrate
@@ -48,7 +53,7 @@ npm run db:migrate
 ## install npx globally
 npm i -g knex
 ## make new migration with some prefixes
-npx knex migrate:make --knexfile src/lib/db/knexfile.ts attachments-table 
+npx knex migrate:make --knexfile src/lib/db/knexfile.ts attachments-table
 ```
 
 ## Tests

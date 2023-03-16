@@ -37,21 +37,21 @@ export default class Database {
     return this.db().attachments().where({ id: parametersAttachmentId })
   }
 
-  insertCapacity = async (capacity: object) => {
+  insertDemand = async (capacity: object) => {
     return this.db().demands().insert(capacity).returning('*')
   }
 
-  getCapacities = async () => {
+  getDemands = async (subtype: DemandSubtype) => {
     return this.db()
       .demands()
       .select(['id', 'owner', 'status', 'parameters_attachment_id AS parametersAttachmentId'])
-      .where({ subtype: DemandSubtype.Capacity })
+      .where({ subtype })
   }
 
-  getCapacity = async (capacityId: UUID) => {
+  getDemand = async (capacityId: UUID, subtype: DemandSubtype) => {
     return this.db()
       .demands()
       .select(['id', 'owner', 'status', 'parameters_attachment_id AS parametersAttachmentId'])
-      .where({ id: capacityId, subtype: DemandSubtype.Capacity })
+      .where({ id: capacityId, subtype })
   }
 }

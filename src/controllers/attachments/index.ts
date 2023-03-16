@@ -1,5 +1,5 @@
 import { Controller, Get, Route } from 'tsoa'
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'

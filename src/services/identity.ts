@@ -31,21 +31,4 @@ const getMemberBySelf = async () => {
 
 const getMemberByAddress = (alias: string) => getMemberByAlias(alias)
 
-const putMemberAlias = async (address: string, alias: string) => {
-  const res = await fetch(`${URL_PREFIX}/members/${address}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ alias }),
-  })
-
-  if (res.status === 409 || res.ok) {
-    const addressAlias = await res.json()
-    return addressAlias
-  }
-
-  throw new HttpResponseError({})
-}
-
-export { getMemberByAlias, getMemberByAddress, getMemberBySelf, putMemberAlias }
+export { getMemberByAlias, getMemberByAddress, getMemberBySelf }
