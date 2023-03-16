@@ -18,18 +18,12 @@ export class HttpResponseError extends Error {
   }
 }
 
-/**
- * request was invalid e.g. missing parameter
- */
 export class BadRequestError extends HttpResponseError {
   constructor(message: string) {
     super({ code: 400, message: `Bad Request: ${message}` })
   }
 }
 
-/**
- * item was not found
- */
 export class NotFoundError extends HttpResponseError {
   constructor(message: string) {
     super({ code: 404, message: `Not Found: ${message}` })

@@ -1,7 +1,7 @@
 {
   "name": "@digicatapult/dscp-matchmaker-api",
   "version": "0.1.0",
-  "description": "An open api typescript nodejs/express api service template",
+  "description": "An OpenAPI Matchmaking API service for DSCP",
   "main": "src/index.ts",
   "scripts": {
     "lint": "eslint .",
