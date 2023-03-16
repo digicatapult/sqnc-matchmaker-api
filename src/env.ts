@@ -17,4 +17,6 @@ export default envalid.cleanEnv(process.env, {
   DB_NAME: envalid.str({ default: 'dscp-matchmaker-api' }),
   IDENTITY_SERVICE_HOST: envalid.host({ devDefault: 'localhost' }),
   IDENTITY_SERVICE_PORT: envalid.port({ devDefault: 3002 }),
+  DSCP_API_HOST: envalid.host({ devDefault: 'localhost' }),
+  DSCP_API_PORT: envalid.port({ devDefault: 3001 }),
 })

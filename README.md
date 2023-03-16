@@ -19,7 +19,9 @@ Use a `.env` at root of the repository to set values for the environment variabl
 | DB_USERNAME           |    Y     |           -            | The database username                                                                |
 | DB_PASSWORD           |    Y     |           -            | The database password                                                                |
 | IDENTITY_SERVICE_HOST |    Y     |           -            | Hostname of the `dscp-identity-service`                                              |
-| IDENTITY_SERVICE_PORT |    Y     |           -            | Port of the `dscp-identity-service` -                                                |
+| IDENTITY_SERVICE_PORT |    Y     |           -            | Port of the `dscp-identity-service`                                                  |
+| DSCP_API_HOST         |    Y     |           -            | Hostname of the `dscp-api`                                                           |
+| DSCP_API_PORT         |    Y     |           -            | Port of the `dscp-api`                                                               |
 
 ## Getting started
 
