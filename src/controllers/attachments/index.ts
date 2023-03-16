@@ -11,7 +11,7 @@ type File = {
   [k: string]: string
 }
 
-@Route('attachments')
+@Route('attachment')
 export class attachments extends Controller {
   log: Logger
   dbClient: Database = new Database()
