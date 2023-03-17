@@ -69,12 +69,15 @@ export class attachment extends Controller {
 
     if (!req.body) throw new Error('nothing to upload') // TODO return correct (badreq)
 
-    await this.db.attachment().insert({
-      filename: 'json',
-      binary_blob: Buffer.from(JSON.stringify(req.body)),
-    })
+    const id = await this.db
+      .attachment()
+      .insert({
+        filename: 'json',
+        binary_blob: Buffer.from(JSON.stringify(req.body)),
+      })
+      .then((row: Array<unknown>) => row[0]) // return id implement along with db changes since it already addresses this
 
-    return 'success'
+    return `${id} attachment has been created`
   }
 
   @Get('/{id}')
