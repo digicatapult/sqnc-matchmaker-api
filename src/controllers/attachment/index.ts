@@ -64,7 +64,7 @@ export class attachment extends Controller {
         })
         .then((row: Array<unknown>) => row[0]) // return id implement along with db changes since it already addresses this
 
-      return `${id} attachment has been created`
+      return `${id} binary attachment has been created`
     }
 
     if (!req.body) throw new Error('nothing to upload') // TODO return correct (badreq)
@@ -77,7 +77,7 @@ export class attachment extends Controller {
       })
       .then((row: Array<unknown>) => row[0]) // return id implement along with db changes since it already addresses this
 
-    return `${id} attachment has been created`
+    return `${id} JSON attachment has been created`
   }
 
   @Get('/{id}')
