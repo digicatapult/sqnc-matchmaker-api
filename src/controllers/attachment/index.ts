@@ -67,7 +67,7 @@ export class attachment extends Controller {
       return `${id} binary attachment has been created`
     }
 
-    if (!req.body) throw new Error('nothing to upload') // TODO return correct (badreq)
+    if (!req.body) throw new BadRequest('nothing to upload')
 
     const id = await this.db
       .attachment()
