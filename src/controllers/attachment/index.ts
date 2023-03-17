@@ -39,7 +39,7 @@ export class attachment extends Controller {
   @Post('/')
   @SuccessResponse(201, 'attachment has been created')
   public async create(@Request() req: express.Request, @UploadedFile() file: File): Promise<string> {
-    this.log.debug(`crating an attachment ${JSON.stringify(file || req.body)}`)
+    this.log.debug(`creating an attachment ${JSON.stringify(file || req.body)}`)
     if (file) {
       await this.db.attachment().insert({
         filename: file.originalname,

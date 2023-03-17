@@ -12,7 +12,7 @@ const getMemberByAlias = async (alias: string) => {
   }
 
   if (res.status === 404) {
-    throw new NotFound('capacity')
+    throw new NotFound('identity')
   }
 
   throw new HttpResponse({})
