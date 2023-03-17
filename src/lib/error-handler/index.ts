@@ -6,11 +6,9 @@ import { logger } from '../logger'
 /**
  * this should reflect database tables
  */
-type Entities = 'attachment' | 'demand' | 'capacity' | 'identity' // add as needed
-
 interface INotFound {
   message?: string
-  item: Entities
+  item: string
   name: string
 }
 
@@ -34,9 +32,10 @@ export class HttpResponse extends Error {
  * reports that item was not found
  */
 export class NotFound extends HttpResponse implements INotFound {
-  public item: Entities
+  // TODO once pull of all items is clear update with 'item1' | 'item2'
+  public item: string
 
-  constructor(item: Entities) {
+  constructor(item: string) {
     super({ code: 404, message: `${item} not found` })
     this.item = item
     this.name = 'not found'

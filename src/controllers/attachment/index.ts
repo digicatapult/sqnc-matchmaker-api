@@ -62,7 +62,8 @@ export class attachment extends Controller {
           filename: file.originalname,
           binary_blob: Buffer.from(file.buffer),
         })
-        .then((row: Array<unknown>) => row[0]) // return id implement along with db changes since it already addresses this
+        .returning('id')
+        .then((row: any) => row[0].id)
 
       return `${id} binary attachment has been created`
     }
