@@ -6,8 +6,8 @@ import { logger } from '../logger'
 import { pgConfig } from './knexfile'
 import { DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
-import Attachment from '../../models'
-import Demand from '../../models'
+import Attachment from '../../models/index'
+import Demand from '../../models/index'
 
 const MODELS = [Attachment, Demand]
 
