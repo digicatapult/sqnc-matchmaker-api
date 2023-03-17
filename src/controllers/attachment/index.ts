@@ -53,32 +53,34 @@ export class attachment extends Controller {
 
   @Post('/')
   @SuccessResponse(201, 'attachment has been created')
-  public async create(@Request() req: express.Request, @UploadedFile() file: File): Promise<string> {
+  public async create(@Request() req: express.Request, @UploadedFile() file: File): Promise<{ [k: string]: string }> {
     this.log.debug(`creating an attachment ${JSON.stringify(file || req.body)}`)
-    if (file) {
-      const id = await this.db
-        .attachment()
-        .insert({
-          filename: file.originalname,
-          binary_blob: Buffer.from(file.buffer),
-        })
-        .returning('id')
-        .then((row: any) => row[0].id)
 
-      return `${id} binary attachment has been created`
-    }
+    if (file)
+      return {
+        attachment: await this.db
+          .attachment()
+          .insert({
+            filename: file.originalname,
+            binary_blob: Buffer.from(file.buffer),
+          })
+          .returning('id')
+          .then((row: any) => row[0]),
+        message: 'binary attachment has been created',
+      }
 
     if (!req.body) throw new BadRequest('nothing to upload')
 
-    const id = await this.db
-      .attachment()
-      .insert({
-        filename: 'json',
-        binary_blob: Buffer.from(JSON.stringify(req.body)),
-      })
-      .then((row: Array<unknown>) => row[0]) // return id implement along with db changes since it already addresses this
-
-    return `${id} JSON attachment has been created`
+    return {
+      attachment: await this.db
+        .attachment()
+        .insert({
+          filename: 'json',
+          binary_blob: Buffer.from(JSON.stringify(req.body)),
+        })
+        .then((row: Array<unknown>) => row[0]),
+      message: 'JSON attachment has been created',
+    }
   }
 
   @Get('/{id}')

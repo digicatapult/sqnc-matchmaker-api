@@ -1,5 +1,4 @@
 import knex, { Knex } from 'knex'
-import fs from 'fs'
 import path from 'path'
 import type { Logger } from 'pino'
 
@@ -7,8 +6,10 @@ import { logger } from '../logger'
 import { pgConfig } from './knexfile'
 import { DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
+import Attachment from '../../models'
+import Demand from '../../models'
 
-const MODELS_DIRECTORY = path.join(__dirname, '../../models')
+const MODELS = [Attachment, Demand]
 
 export interface Models<V> {
   [key: string | number]: V[keyof V]
@@ -30,9 +31,8 @@ export default class Database {
     this.log = logger
     this.client = knex(pgConfig)
     this.db = (models: Models<Query> = {}) => {
-      fs.readdirSync(MODELS_DIRECTORY).forEach((file: string) => {
-        const { name } = path.parse(file)
-        // TODO check if table exists -> append to the db object
+      MODELS.forEach((file: unknown) => {
+        const { name } = path.parse(file as any)
         if (name != 'index.d' && name != 'health') {
           this.log.debug(`initializing ${name} db model`)
           models[name] = () => this.client(name)
