@@ -1,5 +1,4 @@
 import knex, { Knex } from 'knex'
-import path from 'path'
 import type { Logger } from 'pino'
 
 import { logger } from '../logger'
