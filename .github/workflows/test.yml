@@ -93,7 +93,7 @@ jobs:
         with:
           time: '30s'
       - name: Put process flows on-chain
-        run: npm run process
+        run: npm run flows
       - name: Run database migrations
         run: npm run db:migrate
         env:

@@ -5,16 +5,16 @@ import { UUID } from './uuid'
  * The possible types of a Demand
  */
 export enum DemandSubtype {
-  Order = 'Order',
-  Capacity = 'Capacity',
+  order = 'order',
+  capacity = 'capacity',
 }
 
 /**
  * The possible states of a Demand
  */
 export enum DemandStatus {
-  Created = 'Created',
-  Allocated = 'Allocated',
+  created = 'created',
+  allocated = 'allocated',
 }
 
 /**

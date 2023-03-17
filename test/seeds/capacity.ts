@@ -27,8 +27,8 @@ export const seed = async () => {
     {
       id: capacityId,
       owner: selfAddress,
-      subtype: DemandSubtype.Capacity,
-      status: DemandStatus.Created,
+      subtype: DemandSubtype.capacity,
+      status: DemandStatus.created,
       parameters_attachment_id: parametersAttachmentId,
     },
   ])

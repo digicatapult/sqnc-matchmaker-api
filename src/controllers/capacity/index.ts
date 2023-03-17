@@ -43,8 +43,8 @@ export class CapacityController extends Controller {
 
     const [capacity] = await this.db.insertDemand({
       owner: selfAddress,
-      subtype: DemandSubtype.Capacity,
-      status: DemandStatus.Created,
+      subtype: DemandSubtype.capacity,
+      status: DemandStatus.created,
       parameters_attachment_id: parametersAttachmentId,
     })
 
@@ -63,7 +63,7 @@ export class CapacityController extends Controller {
    */
   @Get('/')
   public async getAll(): Promise<DemandResponse[]> {
-    const capacities = await this.db.getDemands(DemandSubtype.Capacity)
+    const capacities = await this.db.getDemands(DemandSubtype.capacity)
     const result = await Promise.all(capacities.map(async (capacity: DemandResponse) => responseWithAlias(capacity)))
     return result
   }
@@ -76,7 +76,7 @@ export class CapacityController extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {
-    const [capacity] = await this.db.getDemand(capacityId, DemandSubtype.Capacity)
+    const [capacity] = await this.db.getDemand(capacityId, DemandSubtype.capacity)
     if (!capacity) throw new NotFound('Capacity Not Found')
 
     return responseWithAlias(capacity)
@@ -90,13 +90,13 @@ export class CapacityController extends Controller {
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
   public async createCapacityOnChain(@Path() capacityId: UUID): Promise<TransactionResponse> {
-    const [capacity] = await this.db.getDemandWithAttachment(capacityId, DemandSubtype.Capacity)
+    const [capacity] = await this.db.getDemandWithAttachment(capacityId, DemandSubtype.capacity)
     if (!capacity) throw new NotFound('Capacity Not Found')
 
     const [transaction] = await this.db.insertTransaction({
       token_type: TokenType.DEMAND,
       local_id: capacityId,
-      status: TransactionStatus.Submitted,
+      status: TransactionStatus.submitted,
     })
 
     runProcess(buildPayload(capacity, transaction))
@@ -122,6 +122,7 @@ const responseWithAlias = async (capacity: DemandResponse): Promise<DemandRespon
 
 const buildPayload = (demand: Demand, transaction: TransactionResponse) => ({
   files: [{ blob: new Blob([demand.binary_blob]), filename: demand.filename }],
+  process: { id: 'demand-create', version: 1 },
   inputs: [],
   outputs: [
     {
@@ -129,7 +130,7 @@ const buildPayload = (demand: Demand, transaction: TransactionResponse) => ({
       metadata: {
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.DEMAND },
-        status: { type: 'LITERAL', value: DemandStatus.Created },
+        status: { type: 'LITERAL', value: DemandStatus.created },
         subtype: { type: 'LITERAL', value: demand.subtype },
         parameters: { type: 'FILE', value: demand.filename },
         transactionId: { type: 'LITERAL', value: transaction.id.replace(/[-]/g, '') },

@@ -8,14 +8,14 @@ export async function up(knex: Knex): Promise<void> {
     def.string('owner', 48).notNullable()
 
     def
-      .enum('subtype', ['Order', 'Capacity'], {
+      .enum('subtype', ['order', 'capacity'], {
         enumName: 'demand_subtype',
         useNative: true,
       })
       .notNullable()
 
     def
-      .enum('status', ['Created', 'Allocated'], {
+      .enum('status', ['created', 'allocated'], {
         enumName: 'demand_status',
         useNative: true,
       })

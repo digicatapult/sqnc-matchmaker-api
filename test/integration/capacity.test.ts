@@ -37,7 +37,7 @@ describe('capacity', () => {
       )
       expect(responseRest).to.deep.equal({
         parametersAttachmentId,
-        status: DemandStatus.Created,
+        status: DemandStatus.created,
         owner: selfAlias,
       })
     })
@@ -48,7 +48,7 @@ describe('capacity', () => {
       expect(response.body).to.deep.equal({
         id: capacityId,
         owner: selfAlias,
-        status: DemandStatus.Created,
+        status: DemandStatus.created,
         parametersAttachmentId,
       })
     })
@@ -60,7 +60,7 @@ describe('capacity', () => {
       expect(response.body[0]).to.deep.equal({
         id: capacityId,
         owner: selfAlias,
-        status: DemandStatus.Created,
+        status: DemandStatus.created,
         parametersAttachmentId,
       })
     })

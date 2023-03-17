@@ -4,10 +4,10 @@ import { UUID } from './uuid'
  * The possible states of a chain transaction
  */
 export enum TransactionStatus {
-  Submitted = 'Submitted',
-  InBlock = 'InBlock',
-  Finalised = 'Finalised',
-  Failed = 'Failed',
+  submitted = 'submitted',
+  inBlock = 'inBlock',
+  finalised = 'finalised',
+  failed = 'failed',
 }
 
 /**
