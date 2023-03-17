@@ -84,14 +84,6 @@ jobs:
             ${{ runner.OS }}-
       - name: Install Packages
         run: npm ci
-      - name: Print PATH variable
-        run: echo $PATH
-      - name: node
-        run: which node
-      - name: Try dpm
-        run: process-management
-      - name: Try dpm
-        run: npx @digicatapult/dscp-process-management
       - name: Build OpenAPI
         run: npm run build
       - name: Setup dependencies
@@ -100,6 +92,10 @@ jobs:
         uses: kibertoad/wait-action@1.0.1
         with:
           time: '30s'
+      - name: Install
+        run: |
+         npm install -g @digicatapult/dscp-process-management
+         process-management create -h localhost -p 9944 -u //Alice \"$(cat processFlows.json)\"
       - name: Put process flows on-chain
         run: npm run flows
       - name: Run database migrations
