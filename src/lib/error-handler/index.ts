@@ -66,6 +66,11 @@ export const errorHandler = function errorHandler(
 
     return res.send(err)
   }
+  if (err instanceof HttpResponse) {
+    logger.error('Unexpected error thrown in handler: %s', err.message)
+
+    return res.status(err.code).json(err)
+  }
   if (err instanceof Error) {
     logger.error('Unexpected error thrown in handler: %s', err.message)
 
