@@ -5,7 +5,7 @@ import express from 'express'
 import { logger } from '../../lib/logger'
 import Database, { Models, Query } from '../../lib/db'
 import type { Attachment } from '../../models'
-import { BadReqeust, NotFound } from '../../lib/error-handler'
+import { BadRequest, NotFound } from '../../lib/error-handler'
 
 type File = {
   [k: string]: string
@@ -21,7 +21,7 @@ export class attachment extends Controller {
     super()
     this.log = logger.child({ controller: '/attachment' })
     // TMP will be updated with a wrapper so ORM client independant
-    this.db = this.dbClient.init()
+    this.db = this.dbClient.db()
   }
 
   @Get('/')
@@ -59,7 +59,7 @@ export class attachment extends Controller {
 
   @Get('/{id}')
   @Response<NotFound>(404)
-  @Response<BadReqeust>(400)
+  @Response<BadRequest>(400)
   @SuccessResponse(200)
   public async getById(
     @Request() req: express.Request,
@@ -89,6 +89,6 @@ export class attachment extends Controller {
       return JSON.parse(attachment.binary_blob)
     }
 
-    throw new BadReqeust()
+    throw new BadRequest()
   }
 }

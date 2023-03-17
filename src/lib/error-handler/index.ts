@@ -6,7 +6,7 @@ import { logger } from '../logger'
 /**
  * this should reflect database tables
  */
-type Entities = 'attachment' | 'demand' // add as needed
+type Entities = 'attachment' | 'demand' | 'capacity' // add as needed
 
 interface INotFound {
   message?: string
@@ -14,21 +14,30 @@ interface INotFound {
   name: string
 }
 
-interface IBadReqeust {
+interface IBadRequest {
   message?: string
   name: string
+}
+
+export class HttpResponse extends Error {
+  public code: number
+  public message: string
+
+  constructor({ code = 500, message = 'Internal server error' }) {
+    super(message)
+    this.code = code
+    this.message = message
+  }
 }
 
 /**
  * reports that item was not found
  */
-export class NotFound extends Error implements INotFound {
+export class NotFound extends HttpResponse implements INotFound {
   public item: Entities
-  public code = 404
 
   constructor(item: Entities, message?: string) {
-    super(message)
-    this.code = 404
+    super({ code: 404, message })
     this.item = item
     this.name = 'not found'
     // this.stack = (<any> new Error()).stack
@@ -38,11 +47,9 @@ export class NotFound extends Error implements INotFound {
 /**
  * indicates that request was invalid e.g. missing parameter
  */
-export class BadReqeust extends Error implements IBadReqeust {
-  public code = 400
-
-  constructor(message?: string | undefined) {
-    super(message)
+export class BadRequest extends HttpResponse implements IBadRequest {
+  constructor(message?: string) {
+    super({ code: 400, message })
     this.name = 'bad request'
     // this.stack = (<any> new Error()).stack
   }
@@ -62,7 +69,7 @@ export const errorHandler = function errorHandler(
   if (err instanceof Error) {
     logger.error('Unexpected error thrown in handler: %s', err.message)
 
-    return res.status(err.code || 500).json(err)
+    return res.status(500).json(err)
   }
 
   next()

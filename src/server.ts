@@ -14,8 +14,8 @@ export default async (): Promise<Express> => {
   app.use(urlencoded({ extended: true }))
   app.use(json())
   app.use(cors())
-  RegisterRoutes(app)
 
+  RegisterRoutes(app)
   app.use(errorHandler)
   app.use(['/swagger'], serve, setup(swaggerJson))
 
