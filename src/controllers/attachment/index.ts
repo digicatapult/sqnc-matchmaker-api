@@ -80,7 +80,7 @@ export class attachment extends Controller {
       this.setHeader('maxAge', `${365 * 24 * 60 * 60 * 1000}`)
       this.setHeader('immutable', 'true')
 
-      return attachment
+      return attachment.binary_blob
     }
 
     // no need to check for filename since JSON.parse will throw
