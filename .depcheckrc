@@ -1,4 +1,5 @@
 ignores: [
+  "@digicatapult/dscp-process-management",
   "concurrently",
   "pino-colada",
   "nodemon",

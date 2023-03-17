@@ -10,7 +10,6 @@ export interface RunProcessFile {
 export const runProcess = async ({ files, ...payload }: { files: RunProcessFile[] }) => {
   const url = `${URL_PREFIX}/run-process`
   const formData = new FormData()
-  console.log(JSON.stringify(payload))
 
   formData.append('request', JSON.stringify(payload))
   files.map((f: RunProcessFile) => formData.append('files', f.blob, f.filename))
