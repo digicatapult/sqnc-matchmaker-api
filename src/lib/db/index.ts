@@ -17,11 +17,6 @@ export interface Models<V> {
 
 export type Query = Knex.QueryBuilder
 
-/** Creates a connection to the postgres instance
- * usage: var client = new Database()
- * db = client.init()
- * db.Example().where(id); db.Table.select(id);
- */
 export default class Database {
   public client: Knex
   private log: Logger
