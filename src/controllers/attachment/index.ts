@@ -25,7 +25,7 @@ export class attachment extends Controller {
   }
 
   @Get('/')
-  @SuccessResponse(201, 'returns all attachments')
+  @SuccessResponse(200, 'returns all attachments')
   public async get(): Promise<Attachment[]> {
     this.log.debug('retrieving all attachments')
     const result = await this.db.attachment()
@@ -37,7 +37,7 @@ export class attachment extends Controller {
   }
 
   @Post('/')
-  @SuccessResponse(201, 'attachemnt has been created')
+  @SuccessResponse(201, 'attachment has been created')
   public async create(@Request() req: express.Request, @UploadedFile() file: File): Promise<string> {
     this.log.debug(`crating an attachment ${JSON.stringify(file || req.body)}`)
     if (file) {
