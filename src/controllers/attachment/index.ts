@@ -56,7 +56,7 @@ export class attachment extends Controller {
   public async create(@Request() req: express.Request, @UploadedFile() file: File): Promise<string> {
     this.log.debug(`creating an attachment ${JSON.stringify(file || req.body)}`)
     if (file) {
-      await this.db
+      const id = await this.db
         .attachment()
         .insert({
           filename: file.originalname,
@@ -64,7 +64,7 @@ export class attachment extends Controller {
         })
         .then((row: Array<unknown>) => row[0]) // return id implement along with db changes since it already addresses this
 
-      return 'attachment has been created'
+      return `${id} attachment has been created`
     }
 
     if (!req.body) throw new Error('nothing to upload') // TODO return correct (badreq)
