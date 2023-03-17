@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Route, Path, Response, Body, SuccessResponse, Tags, Security } from 'tsoa'
+import {
+  ValidateError,
+  Controller,
+  Get,
+  Post,
+  Route,
+  Path,
+  Response,
+  Body,
+  SuccessResponse,
+  Tags,
+  Security,
+} from 'tsoa'
 import { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
@@ -27,7 +39,7 @@ export class CapacityController extends Controller {
    */
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
-  @SuccessResponse('201')
+  @SuccessResponse(201)
   public async createCapacity(@Body() requestBody: DemandRequest): Promise<DemandResponse> {
     const { parametersAttachmentId } = requestBody
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
@@ -69,6 +81,7 @@ export class CapacityController extends Controller {
    * @summary Get a capacity by ID
    * @param capacityId The capacity's identifier
    */
+  @Response<ValidateError>(422, 'Validation Failed')
   @Response<NotFound>(404, 'Item not found')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {

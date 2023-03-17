@@ -36,8 +36,8 @@ export class HttpResponse extends Error {
 export class NotFound extends HttpResponse implements INotFound {
   public item: Entities
 
-  constructor(item: Entities, message?: string) {
-    super({ code: 404, message })
+  constructor(item: Entities) {
+    super({ code: 404, message: `${item} not found` })
     this.item = item
     this.name = 'not found'
     // this.stack = (<any> new Error()).stack
@@ -48,9 +48,8 @@ export class NotFound extends HttpResponse implements INotFound {
  * indicates that request was invalid e.g. missing parameter
  */
 export class BadRequest extends HttpResponse implements IBadRequest {
-  constructor(message?: string) {
+  constructor(message = 'bad request') {
     super({ code: 400, message })
-    this.name = 'bad request'
     // this.stack = (<any> new Error()).stack
   }
 }
@@ -64,12 +63,15 @@ export const errorHandler = function errorHandler(
   if (err instanceof ValidateError) {
     logger.error(`Handled Validation Error for ${req.path}:`, err.fields)
 
-    return res.send(err)
+    return res.status(422).send({
+      ...err,
+      message: 'Validation failed',
+    })
   }
   if (err instanceof HttpResponse) {
     logger.error('Unexpected error thrown in handler: %s', err.message)
 
-    return res.status(err.code).json(err)
+    return res.status(err.code).json(err.message)
   }
   if (err instanceof Error) {
     logger.error('Unexpected error thrown in handler: %s', err.message)

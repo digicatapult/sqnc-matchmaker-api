@@ -76,7 +76,7 @@ describe('capacity', () => {
     test('non-existent attachment - 400', async () => {
       const response = await post(app, '/capacity', { parametersAttachmentId: 'a789ad47-91c3-446e-90f9-a7c9b233eaf9' })
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('Bad Request: Attachment id not found')
+      expect(response.body).to.equal('Attachment id not found')
     })
 
     it('non-existent capacity id - 404', async () => {
