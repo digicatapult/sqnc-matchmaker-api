@@ -1,4 +1,17 @@
-import { UploadedFile, Request, Controller, Get, Route, Path, Post, Header, Response, SuccessResponse } from 'tsoa'
+import {
+  Security,
+  Tags,
+  UploadedFile,
+  Request,
+  Controller,
+  Get,
+  Route,
+  Path,
+  Post,
+  Header,
+  Response,
+  SuccessResponse,
+} from 'tsoa'
 import { Logger } from 'pino'
 import express from 'express'
 
@@ -12,6 +25,8 @@ type File = {
 }
 
 @Route('attachment')
+@Tags('attachment')
+@Security('bearerAuth')
 export class attachment extends Controller {
   log: Logger
   dbClient: Database = new Database()
@@ -41,10 +56,15 @@ export class attachment extends Controller {
   public async create(@Request() req: express.Request, @UploadedFile() file: File): Promise<string> {
     this.log.debug(`creating an attachment ${JSON.stringify(file || req.body)}`)
     if (file) {
-      await this.db.attachment().insert({
-        filename: file.originalname,
-        binary_blob: Buffer.from(file.buffer),
-      })
+      await this.db
+        .attachment()
+        .insert({
+          filename: file.originalname,
+          binary_blob: Buffer.from(file.buffer),
+        })
+        .then((row: Array<unknown>) => row[0]) // return id implement along with db changes since it already addresses this
+
+      return 'attachment has been created'
     }
 
     if (!req.body) throw new Error('nothing to upload') // TODO return correct (badreq)
