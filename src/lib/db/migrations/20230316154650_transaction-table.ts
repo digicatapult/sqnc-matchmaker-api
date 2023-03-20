@@ -24,7 +24,7 @@ export async function up(knex: Knex): Promise<void> {
     def.datetime('created_at').notNullable().defaultTo(now())
     def.datetime('updated_at').notNullable().defaultTo(now())
 
-    def.integer('chain_id')
+    def.integer('token_id')
 
     def.primary(['id'])
   })

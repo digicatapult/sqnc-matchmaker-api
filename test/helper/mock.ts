@@ -4,16 +4,18 @@ import env from '../../src/env'
 
 export const selfAlias = 'test-self'
 export const selfAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+export const mockTokenId = 42
 
 const mockAgent = new MockAgent()
 setGlobalDispatcher(mockAgent)
 
-const mockPool = mockAgent.get(`http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`)
+const mockIdentity = mockAgent.get(`http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`)
+const mockApi = mockAgent.get(`http://${env.DSCP_API_HOST}:${env.DSCP_API_PORT}`)
 
-export const setupIdentityMock = () => {
+export const setupMocks = () => {
   beforeEach(async () => {
     mockAgent.activate()
-    mockPool
+    mockIdentity
       .intercept({
         path: '/v1/self',
         method: 'GET',
@@ -23,7 +25,7 @@ export const setupIdentityMock = () => {
         address: selfAddress,
       })
 
-    mockPool
+    mockIdentity
       .intercept({
         path: `/v1/members/${selfAddress}`,
         method: 'GET',
@@ -32,6 +34,13 @@ export const setupIdentityMock = () => {
         alias: selfAlias,
         address: selfAddress,
       })
+
+    mockApi
+      .intercept({
+        path: '/v3/run-process',
+        method: 'POST',
+      })
+      .reply(200, [mockTokenId])
   })
 
   afterEach(async () => {

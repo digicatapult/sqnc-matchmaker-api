@@ -4,15 +4,18 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
-import { seed, cleanup, parametersAttachmentId, capacityId } from '../seeds/capacity'
-import { selfAlias } from '../helper/identityMock'
+import { seed, cleanup, parametersAttachmentId, seededCapacityId } from '../seeds/capacity'
 
 import { DemandStatus } from '../../src/models/demand'
-import { setupIdentityMock } from '../helper/identityMock'
+import { setupMocks, selfAlias, mockTokenId } from '../helper/mock'
+import { TransactionStatus } from '../../src/models/transaction'
+import Database from '../../src/lib/db'
+
+const db = new Database()
 
 describe('capacity', () => {
   let app: Express
-  setupIdentityMock()
+  setupMocks()
 
   before(async function () {
     app = await createHttpServer()
@@ -43,10 +46,10 @@ describe('capacity', () => {
     })
 
     test('it should get a capacity', async () => {
-      const response = await get(app, `/capacity/${capacityId}`)
+      const response = await get(app, `/capacity/${seededCapacityId}`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
-        id: capacityId,
+        id: seededCapacityId,
         owner: selfAlias,
         status: DemandStatus.created,
         parametersAttachmentId,
@@ -58,11 +61,33 @@ describe('capacity', () => {
       expect(response.status).to.equal(200)
       expect(response.body.length).to.equal(1)
       expect(response.body[0]).to.deep.equal({
-        id: capacityId,
+        id: seededCapacityId,
         owner: selfAlias,
         status: DemandStatus.created,
         parametersAttachmentId,
       })
+    })
+
+    test('it should create a capacity on-chain', async () => {
+      // submit to chain
+      const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
+      expect(response.status).to.equal(201)
+
+      const { id: transactionId, status } = response.body
+      expect(transactionId).to.match(
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
+      )
+      expect(status).to.equal(TransactionStatus.submitted)
+
+      // check local transaction updates
+      const [transaction] = await db.getTransaction(transactionId)
+      expect(transaction.token_id).to.equal(mockTokenId)
+      expect(transaction.status).to.equal(TransactionStatus.finalised)
+
+      // check local capacity updates with token id
+      const [capacity] = await db.getDemand(seededCapacityId)
+      expect(capacity.latest_token_id).to.equal(mockTokenId)
+      expect(capacity.original_token_id).to.equal(mockTokenId)
     })
   })
 
@@ -81,6 +106,11 @@ describe('capacity', () => {
 
     it('non-existent capacity id - 404', async () => {
       const response = await get(app, `/capacity/a789ad47-91c3-446e-90f9-a7c9b233eaf9`)
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-existent capacity id when creating on-chain - 404', async () => {
+      const response = await get(app, `/capacity/a789ad47-91c3-446e-90f9-a7c9b233eaf9/creation`)
       expect(response.status).to.equal(404)
     })
   })

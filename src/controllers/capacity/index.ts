@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Route, Path, Response, Body, SuccessResponse, Tags, Security } from 'tsoa'
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
-import { DemandResponse, DemandSubtype, DemandRequest, DemandStatus, Demand } from '../../models/demand'
+import { DemandResponse, DemandSubtype, DemandRequest, DemandStatus } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 import { NotFound } from '../../lib/error-handler/index'
 import { ValidateErrorJSON, BadRequest } from '../../lib/error-handler/index'
@@ -11,6 +11,8 @@ import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity
 import { TransactionResponse, TransactionStatus } from '../../models/transaction'
 import { TokenType } from '../../models/tokenType'
 import { runProcess } from '../..//lib/services/dscpApi'
+import { demandCreate } from '../../lib/payload'
+import { observeNewToken } from '../../lib/services/blockchainWatcher'
 @Route('capacity')
 @Tags('capacity')
 @Security('bearerAuth')
@@ -31,8 +33,7 @@ export class CapacityController extends Controller {
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
-  public async createCapacity(@Body() requestBody: DemandRequest): Promise<DemandResponse> {
-    const { parametersAttachmentId } = requestBody
+  public async createCapacity(@Body() { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
 
     if (!attachment) {
@@ -76,7 +77,7 @@ export class CapacityController extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {
-    const [capacity] = await this.db.getDemand(capacityId, DemandSubtype.capacity)
+    const [capacity] = await this.db.getDemand(capacityId)
     if (!capacity) throw new NotFound('Capacity Not Found')
 
     return responseWithAlias(capacity)
@@ -99,8 +100,9 @@ export class CapacityController extends Controller {
       status: TransactionStatus.submitted,
     })
 
-    runProcess(buildPayload(capacity, transaction))
-
+    // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
+    const [tokenId] = await runProcess(demandCreate(capacity, transaction.id))
+    await observeNewToken(this.db, TokenType.DEMAND, transaction.id, tokenId)
     return {
       id: transaction.id,
       submittedAt: new Date(transaction.created_at),
@@ -119,22 +121,3 @@ const responseWithAlias = async (capacity: DemandResponse): Promise<DemandRespon
     parametersAttachmentId: capacity.parametersAttachmentId,
   }
 }
-
-const buildPayload = (demand: Demand, transaction: TransactionResponse) => ({
-  files: [{ blob: new Blob([demand.binary_blob]), filename: demand.filename }],
-  process: { id: 'demand-create', version: 1 },
-  inputs: [],
-  outputs: [
-    {
-      roles: { Owner: demand.owner },
-      metadata: {
-        version: { type: 'LITERAL', value: '1' },
-        type: { type: 'LITERAL', value: TokenType.DEMAND },
-        status: { type: 'LITERAL', value: DemandStatus.created },
-        subtype: { type: 'LITERAL', value: demand.subtype },
-        parameters: { type: 'FILE', value: demand.filename },
-        transactionId: { type: 'LITERAL', value: transaction.id.replace(/[-]/g, '') },
-      },
-    },
-  ],
-})

@@ -7,8 +7,14 @@ import { logger } from '../logger'
 import { pgConfig } from './knexfile'
 import { DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
+import { TokenType } from '../../models/tokenType'
 
 const MODELS_DIRECTORY = path.join(__dirname, '../../models')
+
+const typeTableMap = {
+  [TokenType.DEMAND]: 'demand',
+  [TokenType.MATCH2]: 'match2',
+}
 
 /** Creates a connection to the postgres instance
  * usage: var db = new Database().init()
@@ -48,11 +54,8 @@ export default class Database {
       .where({ subtype })
   }
 
-  getDemand = async (capacityId: UUID, subtype: DemandSubtype) => {
-    return this.db()
-      .demand()
-      .select(['id', 'owner', 'status', 'parameters_attachment_id AS parametersAttachmentId'])
-      .where({ id: capacityId, subtype })
+  getDemand = async (id: UUID) => {
+    return this.db().demand().select(['*', 'parameters_attachment_id AS parametersAttachmentId']).where({ id })
   }
 
   getDemandWithAttachment = async (capacityId: UUID, subtype: DemandSubtype) => {
@@ -65,5 +68,34 @@ export default class Database {
 
   insertTransaction = async (transaction: object) => {
     return this.db().transaction().insert(transaction).returning('*')
+  }
+
+  getTransaction = async (id: UUID) => {
+    return this.db().transaction().select('*').where({ id })
+  }
+
+  updateTransaction = async (transactionId: UUID, transaction: object) => {
+    return this.db()
+      .transaction()
+      .update({ ...transaction, updated_at: this.client.fn.now() })
+      .where({ id: transactionId })
+      .returning('local_id AS localId')
+  }
+
+  updateLocalWithTokenId = async (tokenType: TokenType, localId: UUID, latestTokenId: number) => {
+    const table = typeTableMap[tokenType]
+    const [{ originalTokenId }] = await this.db()
+      [table]()
+      .select(['original_token_id AS originalTokenId'])
+      .where({ id: localId })
+
+    return this.db()
+      [table]()
+      .update({
+        latest_token_id: latestTokenId,
+        original_token_id: originalTokenId ? originalTokenId : latestTokenId,
+        updated_at: this.client.fn.now(),
+      })
+      .where({ id: localId })
   }
 }
