@@ -553,7 +553,7 @@
       {
         "restriction": {
           "OutputHasMetadata": {
-            "index": 0,
+            "index": 2,
             "metadataKey": "originalId"
           }
         }
