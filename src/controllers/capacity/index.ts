@@ -3,16 +3,16 @@ import type { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
-import { DemandResponse, DemandSubtype, DemandRequest, DemandStatus } from '../../models/demand'
+import { DemandResponse, DemandSubtype, DemandRequest, DemandState } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 import { NotFound } from '../../lib/error-handler/index'
 import { ValidateErrorJSON, BadRequest } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-import { TransactionResponse, TransactionStatus } from '../../models/transaction'
+import { TransactionResponse, TransactionState } from '../../models/transaction'
 import { TokenType } from '../../models/tokenType'
 import { runProcess } from '../..//lib/services/dscpApi'
 import { demandCreate } from '../../lib/payload'
-import { observeNewToken } from '../../lib/services/blockchainWatcher'
+import { observeTokenId } from '../../lib/services/blockchainWatcher'
 @Route('capacity')
 @Tags('capacity')
 @Security('bearerAuth')
@@ -45,7 +45,7 @@ export class CapacityController extends Controller {
     const [capacity] = await this.db.insertDemand({
       owner: selfAddress,
       subtype: DemandSubtype.capacity,
-      status: DemandStatus.created,
+      state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
     })
 
@@ -53,7 +53,7 @@ export class CapacityController extends Controller {
     return {
       id: capacity.id,
       owner: ownerAlias,
-      status: capacity.status,
+      state: capacity.state,
       parametersAttachmentId: parametersAttachmentId,
     }
   }
@@ -88,7 +88,7 @@ export class CapacityController extends Controller {
    * @summary Create a new capacity demand on-chain
    */
   @Post('{capacityId}/creation')
-  @Response<BadRequest>(400, 'Request was invalid')
+  @Response<NotFound>(404, 'Item not found')
   @SuccessResponse('201')
   public async createCapacityOnChain(@Path() capacityId: UUID): Promise<TransactionResponse> {
     const [capacity] = await this.db.getDemandWithAttachment(capacityId, DemandSubtype.capacity)
@@ -97,16 +97,16 @@ export class CapacityController extends Controller {
     const [transaction] = await this.db.insertTransaction({
       token_type: TokenType.DEMAND,
       local_id: capacityId,
-      status: TransactionStatus.submitted,
+      state: TransactionState.submitted,
     })
 
     // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
     const [tokenId] = await runProcess(demandCreate(capacity, transaction.id))
-    await observeNewToken(this.db, TokenType.DEMAND, transaction.id, tokenId)
+    await observeTokenId(this.db, TokenType.DEMAND, transaction.id, tokenId, true)
     return {
       id: transaction.id,
       submittedAt: new Date(transaction.created_at),
-      status: transaction.status,
+      state: transaction.state,
     }
   }
 }
@@ -117,7 +117,7 @@ const responseWithAlias = async (capacity: DemandResponse): Promise<DemandRespon
   return {
     id: capacity.id,
     owner: ownerAlias,
-    status: capacity.status,
+    state: capacity.state,
     parametersAttachmentId: capacity.parametersAttachmentId,
   }
 }

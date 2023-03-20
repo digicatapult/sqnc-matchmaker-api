@@ -15,8 +15,8 @@ export async function up(knex: Knex): Promise<void> {
       .notNullable()
 
     def
-      .enum('status', ['created', 'allocated'], {
-        enumName: 'demand_status',
+      .enum('state', ['created', 'allocated'], {
+        enumName: 'demand_state',
         useNative: true,
       })
       .notNullable()

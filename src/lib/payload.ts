@@ -1,4 +1,4 @@
-import { Demand, DemandStatus } from '../models/demand'
+import { Demand, DemandState } from '../models/demand'
 import { TokenType } from '../models/tokenType'
 import { UUID } from '../models/uuid'
 
@@ -12,7 +12,7 @@ export const demandCreate = (demand: Demand, transactionId: UUID) => ({
       metadata: {
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.DEMAND },
-        status: { type: 'LITERAL', value: DemandStatus.created },
+        state: { type: 'LITERAL', value: DemandState.created },
         subtype: { type: 'LITERAL', value: demand.subtype },
         parameters: { type: 'FILE', value: demand.filename },
         transactionId: { type: 'LITERAL', value: transactionId.replace(/[-]/g, '') },

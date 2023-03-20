@@ -12,7 +12,7 @@ export enum DemandSubtype {
 /**
  * The possible states of a Demand
  */
-export enum DemandStatus {
+export enum DemandState {
   created = 'created',
   allocated = 'allocated',
 }
@@ -27,7 +27,7 @@ export interface DemandResponse {
    */
   owner: string
   parametersAttachmentId: UUID
-  status: DemandStatus
+  state: DemandState
 }
 
 export interface Demand extends DemandResponse, Attachments {

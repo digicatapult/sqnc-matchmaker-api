@@ -1,5 +1,5 @@
 import Database from '../../src/lib/db'
-import { DemandStatus, DemandSubtype } from '../../src/models/demand'
+import { DemandState, DemandSubtype } from '../../src/models/demand'
 import { selfAddress } from '../helper/mock'
 
 const db = new Database().db()
@@ -28,7 +28,7 @@ export const seed = async () => {
       id: seededCapacityId,
       owner: selfAddress,
       subtype: DemandSubtype.capacity,
-      status: DemandStatus.created,
+      state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
     },
   ])

@@ -6,9 +6,9 @@ import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
 import { seed, cleanup, parametersAttachmentId, seededCapacityId } from '../seeds/capacity'
 
-import { DemandStatus } from '../../src/models/demand'
+import { DemandState } from '../../src/models/demand'
 import { setupMocks, selfAlias, mockTokenId } from '../helper/mock'
-import { TransactionStatus } from '../../src/models/transaction'
+import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 
 const db = new Database()
@@ -40,7 +40,7 @@ describe('capacity', () => {
       )
       expect(responseRest).to.deep.equal({
         parametersAttachmentId,
-        status: DemandStatus.created,
+        state: DemandState.created,
         owner: selfAlias,
       })
     })
@@ -51,7 +51,7 @@ describe('capacity', () => {
       expect(response.body).to.deep.equal({
         id: seededCapacityId,
         owner: selfAlias,
-        status: DemandStatus.created,
+        state: DemandState.created,
         parametersAttachmentId,
       })
     })
@@ -63,7 +63,7 @@ describe('capacity', () => {
       expect(response.body[0]).to.deep.equal({
         id: seededCapacityId,
         owner: selfAlias,
-        status: DemandStatus.created,
+        state: DemandState.created,
         parametersAttachmentId,
       })
     })
@@ -73,16 +73,16 @@ describe('capacity', () => {
       const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
       expect(response.status).to.equal(201)
 
-      const { id: transactionId, status } = response.body
+      const { id: transactionId, state } = response.body
       expect(transactionId).to.match(
         /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
       )
-      expect(status).to.equal(TransactionStatus.submitted)
+      expect(state).to.equal(TransactionState.submitted)
 
       // check local transaction updates
       const [transaction] = await db.getTransaction(transactionId)
       expect(transaction.token_id).to.equal(mockTokenId)
-      expect(transaction.status).to.equal(TransactionStatus.finalised)
+      expect(transaction.state).to.equal(TransactionState.finalised)
 
       // check local capacity updates with token id
       const [capacity] = await db.getDemand(seededCapacityId)

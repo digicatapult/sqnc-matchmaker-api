@@ -3,7 +3,7 @@ import { UUID } from './uuid'
 /**
  * The possible states of a chain transaction
  */
-export enum TransactionStatus {
+export enum TransactionState {
   submitted = 'submitted',
   inBlock = 'inBlock',
   finalised = 'finalised',
@@ -15,6 +15,6 @@ export enum TransactionStatus {
  */
 export interface TransactionResponse {
   id: UUID
-  status: TransactionStatus
+  state: TransactionState
   submittedAt: Date
 }
