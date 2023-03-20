@@ -1,6 +1,6 @@
 [
   {
-    "name": "Demand - Create",
+    "name": "demand-create",
     "version": 1,
     "program": [
       {
@@ -101,7 +101,7 @@
           "None": {}
         }
       },
-      { "op": "NotL" },
+      { "op": "NotR" },
       { "op": "And" },
       {
         "restriction": {
@@ -115,7 +115,7 @@
     ]
   },
   {
-    "name": "Match2 - Create",
+    "name": "match2-create",
     "version": 1,
     "program": [
       {
@@ -259,7 +259,7 @@
           "None": {}
         }
       },
-      { "op": "NotL" },
+      { "op": "NotR" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -398,7 +398,7 @@
           "None": {}
         }
       },
-      { "op": "NotL" },
+      { "op": "NotR" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -501,7 +501,7 @@
           "None": {}
         }
       },
-      { "op": "NotL" },
+      { "op": "NotR" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -537,7 +537,7 @@
           "None": {}
         }
       },
-      { "op": "NotL" },
+      { "op": "NotR" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -563,12 +563,12 @@
           "None": {}
         }
       },
-      { "op": "NotL" },
+      { "op": "NotR" },
       { "op": "And" }
     ]
   },
   {
-    "name": "Match2 - Accept",
+    "name": "match2-accept",
     "version": 1,
     "program": [
       {
@@ -764,7 +764,7 @@
           "None": {}
         }
       },
-      { "op": "NotL" },
+      { "op": "NotR" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -780,7 +780,7 @@
     ]
   },
   {
-    "name": "Match2 - FinalAccept",
+    "name": "match2-finalAccept",
     "version": 1,
     "program": [
       {
@@ -901,7 +901,7 @@
           "None": {}
         }
       },
-      { "op": "NotL" },
+      { "op": "NotR" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -1041,7 +1041,7 @@
           "None": {}
         }
       },
-      { "op": "NotL" },
+      { "op": "NotR" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -1224,7 +1224,7 @@
           "None": {}
         }
       },
-      { "op": "NotL" },
+      { "op": "NotR" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
