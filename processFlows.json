@@ -46,7 +46,7 @@
         "restriction": {
           "FixedOutputMetadataValue": {
             "index": 0,
-            "metadataKey": "status",
+            "metadataKey": "state",
             "metadataValue": {
               "Literal": "created"
             }
@@ -1255,7 +1255,7 @@
             "index": 2,
             "metadataKey": "state",
             "metadataValue": {
-               "Literal": "acceptedA"
+              "Literal": "acceptedA"
             }
           }
         }
@@ -1275,7 +1275,7 @@
             "index": 2,
             "metadataKey": "state",
             "metadataValue": {
-               "Literal": "acceptedB"
+              "Literal": "acceptedB"
             }
           }
         }

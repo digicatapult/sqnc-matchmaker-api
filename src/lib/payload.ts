@@ -1,8 +1,8 @@
-import { Demand, DemandState } from '../models/demand'
+import { DemandPayload, DemandState } from '../models/demand'
 import { TokenType } from '../models/tokenType'
 import { UUID } from '../models/uuid'
 
-export const demandCreate = (demand: Demand, transactionId: UUID) => ({
+export const demandCreate = (demand: DemandPayload, transactionId: UUID) => ({
   files: [{ blob: new Blob([demand.binary_blob]), filename: demand.filename }],
   process: { id: 'demand-create', version: 1 },
   inputs: [],

@@ -11,6 +11,8 @@ import { setupMocks, selfAlias, mockTokenId } from '../helper/mock'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 
+const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
+
 const db = new Database()
 
 describe('capacity', () => {
@@ -99,18 +101,18 @@ describe('capacity', () => {
     })
 
     test('non-existent attachment - 400', async () => {
-      const response = await post(app, '/capacity', { parametersAttachmentId: 'a789ad47-91c3-446e-90f9-a7c9b233eaf9' })
+      const response = await post(app, '/capacity', { parametersAttachmentId: nonExistentId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Bad Request: Attachment id not found')
     })
 
     it('non-existent capacity id - 404', async () => {
-      const response = await get(app, `/capacity/a789ad47-91c3-446e-90f9-a7c9b233eaf9`)
+      const response = await get(app, `/capacity/${nonExistentId}`)
       expect(response.status).to.equal(404)
     })
 
     it('non-existent capacity id when creating on-chain - 404', async () => {
-      const response = await get(app, `/capacity/a789ad47-91c3-446e-90f9-a7c9b233eaf9/creation`)
+      const response = await get(app, `/capacity/${nonExistentId}/creation`)
       expect(response.status).to.equal(404)
     })
   })

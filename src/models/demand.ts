@@ -30,12 +30,8 @@ export interface DemandResponse {
   state: DemandState
 }
 
-export interface Demand extends DemandResponse, Attachments {
+export interface DemandPayload extends DemandResponse, Attachments {
   subtype: DemandSubtype
-  latestTokenId: number
-  originalTokenId: number
-  created_at: Date
-  updated_at: Date
 }
 
 /**
