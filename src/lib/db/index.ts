@@ -6,7 +6,7 @@ import { pgConfig } from './knexfile'
 import { DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 
-const TABLES: string[] = ['attachment', 'demand', 'transaction']
+const TABLES: string[] = ['attachment', 'demand', 'transaction', 'match2']
 
 export interface Models<V> {
   [key: string | number]: V[keyof V]
