@@ -21,10 +21,6 @@ import type { Attachment } from '../../models'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import { Readable } from 'node:stream'
 
-type File = {
-  [k: string]: string
-}
-
 @Route('attachment')
 @Tags('attachment')
 @Security('bearerAuth')
@@ -70,7 +66,7 @@ export class attachment extends Controller {
 
   @Post('/')
   @SuccessResponse(201, 'attachment has been created')
-  public async create(@Request() req: express.Request, @UploadedFile() file: File): Promise<Attachment> {
+  public async create(@Request() req: express.Request, @UploadedFile() file: Express.Multer.File): Promise<Attachment> {
     this.log.debug(`creating an attachment ${JSON.stringify(file || req.body)}`)
 
     if (!req.body && !file) throw new BadRequest('nothing to upload')
@@ -78,7 +74,7 @@ export class attachment extends Controller {
     const [{ id, filename, binary_blob, created_at }]: any[] = await this.db
       .attachment()
       .insert({
-        filename: 'json',
+        filename: file ? file.originalname : 'json',
         binary_blob: Buffer.from(file.buffer || JSON.stringify(req.body)),
       })
       .returning(['id', 'filename', 'binary_blob', 'created_at'])
