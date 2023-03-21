@@ -6,7 +6,7 @@ import { UUID } from './uuid'
  *   "id": "string",
  *   "filename": "string",
  *   "size": 1024,
- *   "datetime": "2023-03-16T13:18:42.357Z"
+ *   "createdAt": "2023-03-16T13:18:42.357Z"
  * }]
  */
 export interface Attachment {
