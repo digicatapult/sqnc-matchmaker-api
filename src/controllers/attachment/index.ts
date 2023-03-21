@@ -58,12 +58,10 @@ export class attachment extends Controller {
 
     if (file)
       return {
-        attachment: await this.db
-          .attachment('id')
-          .insert({
-            filename: file.originalname,
-            binary_blob: Buffer.from(file.buffer),
-          }),
+        attachment: await this.db.attachment('id').insert({
+          filename: file.originalname,
+          binary_blob: Buffer.from(file.buffer),
+        }),
         message: 'binary attachment has been created',
       }
 
