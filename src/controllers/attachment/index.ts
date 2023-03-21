@@ -39,7 +39,7 @@ export class attachment extends Controller {
     this.db = this.dbClient.db()
   }
 
-  returnOctet(blob: Blob, name: string) {
+  octetResponse(blob: Blob, name: string): Blob {
     // default to octect-stream or allow error middleware to handle
     this.setHeader('accept', 'application/octet-stream')
     this.setHeader('access-control-expose-headers', 'content-disposition')
@@ -112,6 +112,6 @@ export class attachment extends Controller {
       }
     }
 
-    return this.returnOctet(binary_blob, filename)
+    return this.octetResponse(binary_blob, filename)
   }
 }
