@@ -59,13 +59,11 @@ export class attachment extends Controller {
     if (file)
       return {
         attachment: await this.db
-          .attachment()
+          .attachment('id')
           .insert({
             filename: file.originalname,
             binary_blob: Buffer.from(file.buffer),
-          })
-          .returning('id')
-          .then((row: any) => row[0]),
+          }),
         message: 'binary attachment has been created',
       }
 
@@ -78,7 +76,7 @@ export class attachment extends Controller {
           filename: 'json',
           binary_blob: Buffer.from(JSON.stringify(req.body)),
         })
-        .then((row: Array<unknown>) => row[0]),
+        .then((row: Array<unknown>) => row[0]), // row[0] - is first column in this case id
       message: 'JSON attachment has been created',
     }
   }
@@ -96,25 +94,20 @@ export class attachment extends Controller {
     const { accept } = req.headers
     const [attachment] = await this.db.attachment().where({ id })
     if (!attachment) throw new NotFound('attachment')
+    const { filename, binary_blob } = attachment
 
-    // TMP doubling upping on headers as I was not able to figure out why 'accept' using @Header() get overwritten
-    // also not checking for mime type as we have two options here download or sned json
-    if (type === 'file' || accept === 'application/octet-stream') {
-      this.setHeader('accept', 'application/octet-stream')
-      this.setHeader('access-control-expose-headers', 'content-disposition')
-      this.setHeader('content-disposition', `attachment; filename="${attachment.filename}"`)
-      this.setHeader('maxAge', `${365 * 24 * 60 * 60 * 1000}`)
-      this.setHeader('immutable', 'true')
-
-      return attachment.binary_blob
-    }
-
-    // no need to check for filename since JSON.parse will throw
     if (type === 'json' || accept === 'application/json') {
       this.setHeader('content-type', 'application/json')
-      return JSON.parse(attachment.binary_blob)
+      return JSON.parse(binary_blob)
     }
 
-    throw new BadRequest()
+    // default to octect-stream or allow error middleware to handle
+    this.setHeader('accept', 'application/octet-stream')
+    this.setHeader('access-control-expose-headers', 'content-disposition')
+    this.setHeader('content-disposition', `attachment; filename="${filename}"`)
+    this.setHeader('maxAge', `${365 * 24 * 60 * 60 * 1000}`)
+    this.setHeader('immutable', 'true')
+
+    return binary_blob
   }
 }
