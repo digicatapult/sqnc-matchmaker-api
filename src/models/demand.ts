@@ -1,19 +1,20 @@
+import { Attachments } from './attachments'
 import { UUID } from './uuid'
 
 /**
  * The possible types of a Demand
  */
 export enum DemandSubtype {
-  Order = 'Order',
-  Capacity = 'Capacity',
+  order = 'order',
+  capacity = 'capacity',
 }
 
 /**
  * The possible states of a Demand
  */
-export enum DemandStatus {
-  Created = 'Created',
-  Allocated = 'Allocated',
+export enum DemandState {
+  created = 'created',
+  allocated = 'allocated',
 }
 
 /**
@@ -26,7 +27,11 @@ export interface DemandResponse {
    */
   owner: string
   parametersAttachmentId: UUID
-  status: DemandStatus
+  state: DemandState
+}
+
+export interface DemandPayload extends DemandResponse, Attachments {
+  subtype: DemandSubtype
 }
 
 /**

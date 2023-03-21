@@ -44,14 +44,46 @@ export default class Database {
   getDemands = async (subtype: DemandSubtype) => {
     return this.db()
       .demand()
-      .select(['id', 'owner', 'status', 'parameters_attachment_id AS parametersAttachmentId'])
+      .select(['id', 'owner', 'state', 'parameters_attachment_id AS parametersAttachmentId'])
       .where({ subtype })
   }
 
-  getDemand = async (capacityId: UUID, subtype: DemandSubtype) => {
+  getDemand = async (id: UUID) => {
+    return this.db().demand().select(['*', 'parameters_attachment_id AS parametersAttachmentId']).where({ id })
+  }
+
+  getDemandWithAttachment = async (capacityId: UUID, subtype: DemandSubtype) => {
     return this.db()
       .demand()
-      .select(['id', 'owner', 'status', 'parameters_attachment_id AS parametersAttachmentId'])
-      .where({ id: capacityId, subtype })
+      .join('attachments', 'demand.parameters_attachment_id', 'attachments.id')
+      .select()
+      .where({ 'demand.id': capacityId, subtype })
+  }
+
+  insertTransaction = async (transaction: object) => {
+    return this.db().transaction().insert(transaction).returning('*')
+  }
+
+  getTransaction = async (id: UUID) => {
+    return this.db().transaction().select('*').where({ id })
+  }
+
+  updateTransaction = async (transactionId: UUID, transaction: object) => {
+    return this.db()
+      .transaction()
+      .update({ ...transaction, updated_at: this.client.fn.now() })
+      .where({ id: transactionId })
+      .returning('local_id AS localId')
+  }
+
+  updateLocalWithTokenId = async (table: string, localId: UUID, latestTokenId: number, isNewEntity: boolean) => {
+    return this.db()
+      [table]()
+      .update({
+        latest_token_id: latestTokenId,
+        ...(isNewEntity && { original_token_id: latestTokenId }),
+        updated_at: this.client.fn.now(),
+      })
+      .where({ id: localId })
   }
 }
