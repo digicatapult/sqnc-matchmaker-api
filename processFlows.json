@@ -101,7 +101,7 @@
           "None": {}
         }
       },
-      { "op": "NotR" },
+      { "op": "NotL" },
       { "op": "And" },
       {
         "restriction": {
@@ -115,7 +115,7 @@
     ]
   },
   {
-    "name": "match2-create",
+    "name": "match2-propose",
     "version": 1,
     "program": [
       {
@@ -259,7 +259,7 @@
           "None": {}
         }
       },
-      { "op": "NotR" },
+      { "op": "NotL" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -398,7 +398,7 @@
           "None": {}
         }
       },
-      { "op": "NotR" },
+      { "op": "NotL" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -415,7 +415,7 @@
         "restriction": {
           "SenderHasOutputRole": {
             "index": 2,
-            "roleKey": "Reviewer"
+            "roleKey": "Optimiser"
           }
         }
       },
@@ -426,7 +426,7 @@
             "inputIndex": 0,
             "inputRoleKey": "Owner",
             "outputIndex": 2,
-            "outputRoleKey": "Customer"
+            "outputRoleKey": "MemberA"
           }
         }
       },
@@ -437,7 +437,7 @@
             "inputIndex": 1,
             "inputRoleKey": "Owner",
             "outputIndex": 2,
-            "outputRoleKey": "Supplier"
+            "outputRoleKey": "MemberB"
           }
         }
       },
@@ -501,7 +501,7 @@
           "None": {}
         }
       },
-      { "op": "NotR" },
+      { "op": "NotL" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -537,7 +537,7 @@
           "None": {}
         }
       },
-      { "op": "NotR" },
+      { "op": "NotL" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -563,7 +563,7 @@
           "None": {}
         }
       },
-      { "op": "NotR" },
+      { "op": "NotL" },
       { "op": "And" }
     ]
   },
@@ -590,9 +590,9 @@
         "restriction": {
           "MatchInputOutputRole": {
             "inputIndex": 0,
-            "inputRoleKey": "Customer",
+            "inputRoleKey": "MemberA",
             "outputIndex": 0,
-            "outputRoleKey": "Customer"
+            "outputRoleKey": "MemberA"
           }
         }
       },
@@ -601,9 +601,9 @@
         "restriction": {
           "MatchInputOutputRole": {
             "inputIndex": 0,
-            "inputRoleKey": "Supplier",
+            "inputRoleKey": "MemberB",
             "outputIndex": 0,
-            "outputRoleKey": "Supplier"
+            "outputRoleKey": "MemberB"
           }
         }
       },
@@ -612,9 +612,9 @@
         "restriction": {
           "MatchInputOutputRole": {
             "inputIndex": 0,
-            "inputRoleKey": "Reviewer",
+            "inputRoleKey": "Optimiser",
             "outputIndex": 0,
-            "outputRoleKey": "Reviewer"
+            "outputRoleKey": "Optimiser"
           }
         }
       },
@@ -703,7 +703,7 @@
         "restriction": {
           "SenderHasOutputRole": {
             "index": 0,
-            "roleKey": "Customer"
+            "roleKey": "MemberA"
           }
         }
       },
@@ -723,7 +723,7 @@
         "restriction": {
           "SenderHasOutputRole": {
             "index": 0,
-            "roleKey": "Supplier"
+            "roleKey": "MemberB"
           }
         }
       },
@@ -764,7 +764,7 @@
           "None": {}
         }
       },
-      { "op": "NotR" },
+      { "op": "NotL" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -901,7 +901,7 @@
           "None": {}
         }
       },
-      { "op": "NotR" },
+      { "op": "NotL" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -1041,7 +1041,7 @@
           "None": {}
         }
       },
-      { "op": "NotR" },
+      { "op": "NotL" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -1082,9 +1082,9 @@
         "restriction": {
           "MatchInputOutputRole": {
             "inputIndex": 2,
-            "inputRoleKey": "Reviewer",
+            "inputRoleKey": "Optimiser",
             "outputIndex": 2,
-            "outputRoleKey": "Reviewer"
+            "outputRoleKey": "Optimiser"
           }
         }
       },
@@ -1093,9 +1093,9 @@
         "restriction": {
           "MatchInputOutputRole": {
             "inputIndex": 2,
-            "inputRoleKey": "Customer",
+            "inputRoleKey": "MemberA",
             "outputIndex": 2,
-            "outputRoleKey": "Customer"
+            "outputRoleKey": "MemberA"
           }
         }
       },
@@ -1104,9 +1104,9 @@
         "restriction": {
           "MatchInputOutputRole": {
             "inputIndex": 2,
-            "inputRoleKey": "Supplier",
+            "inputRoleKey": "MemberB",
             "outputIndex": 2,
-            "outputRoleKey": "Supplier"
+            "outputRoleKey": "MemberB"
           }
         }
       },
@@ -1224,7 +1224,7 @@
           "None": {}
         }
       },
-      { "op": "NotR" },
+      { "op": "NotL" },
       {
         "restriction": {
           "MatchInputIdOutputMetadataValue": {
@@ -1264,7 +1264,7 @@
         "restriction": {
           "SenderHasOutputRole": {
             "index": 2,
-            "roleKey": "Supplier"
+            "roleKey": "MemberB"
           }
         }
       },
@@ -1284,7 +1284,7 @@
         "restriction": {
           "SenderHasOutputRole": {
             "index": 2,
-            "roleKey": "Customer"
+            "roleKey": "MemberA"
           }
         }
       },
