@@ -57,11 +57,12 @@ export class attachment extends Controller {
     this.log.debug('retrieving all attachment')
     const result = await this.db.attachment()
 
-    return result.map((row: any): Attachment => {
-      const { binary_blob, ...item } = row
+    return result.map(({ id, filename, binary_blob, created_at }: any): Attachment => {
       const size = (binary_blob as Buffer).length
       return {
-        ...item,
+        id,
+        filename,
+        createdAt: created_at,
         size,
       }
     })
@@ -85,7 +86,7 @@ export class attachment extends Controller {
     const result: Attachment = {
       id,
       filename,
-      datetime: created_at,
+      createdAt: created_at,
       size: (binary_blob as Buffer).length,
     }
     return result

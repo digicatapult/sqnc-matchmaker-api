@@ -19,5 +19,5 @@ export interface Attachment {
    */
   filename: string | 'json'
   size: number
-  datetime: Date
+  createdAt: Date
 }
