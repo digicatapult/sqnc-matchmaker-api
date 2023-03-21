@@ -6,7 +6,7 @@ import { pgConfig } from './knexfile'
 import { DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 
-const MODELS: string[] = ['attachment', 'demand']
+const TABLES: string[] = ['attachment', 'demand', 'transaction']
 
 export interface Models<V> {
   [key: string | number]: V[keyof V]
@@ -23,7 +23,7 @@ export default class Database {
     this.log = logger
     this.client = knex(pgConfig)
     this.db = (models: Models<Query> = {}) => {
-      MODELS.forEach((name: string) => {
+      TABLES.forEach((name: string) => {
         this.log.debug(`initializing ${name} db model`)
         models[name] = () => this.client(name)
       })
