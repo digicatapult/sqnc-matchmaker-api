@@ -5,7 +5,7 @@ import { selfAddress } from '../helper/mock'
 const db = new Database().db()
 
 export const cleanup = async () => {
-  await db.attachments().del()
+  await db.attachment().del()
   await db.demand().del()
 }
 
@@ -15,7 +15,7 @@ export const seededCapacityId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
 export const seed = async () => {
   await cleanup()
 
-  await db.attachments().insert([
+  await db.attachment().insert([
     {
       id: parametersAttachmentId,
       filename: 'test.txt',

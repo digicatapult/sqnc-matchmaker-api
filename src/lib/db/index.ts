@@ -1,6 +1,4 @@
 import knex, { Knex } from 'knex'
-import fs from 'fs'
-import path from 'path'
 import type { Logger } from 'pino'
 
 import { logger } from '../logger'
@@ -8,33 +6,33 @@ import { pgConfig } from './knexfile'
 import { DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 
-const MODELS_DIRECTORY = path.join(__dirname, '../../models')
+const TABLES: string[] = ['attachment', 'demand', 'transaction']
 
-/** Creates a connection to the postgres instance
- * usage: var db = new Database().init()
- * db.Example().where(id); db.Table.select(id);
- */
+export interface Models<V> {
+  [key: string | number]: V[keyof V]
+}
+
+export type Query = Knex.QueryBuilder
+
 export default class Database {
   public client: Knex
   private log: Logger
-  public db: any
+  public db: () => Models<Query> | any
 
   constructor() {
     this.log = logger
     this.client = knex(pgConfig)
-    this.db = (models: any = {}) => {
-      this.log.debug('initializing db models')
-      fs.readdirSync(MODELS_DIRECTORY).forEach((file: string): any => {
-        const { name } = path.parse(file)
-        // TODO check if table exists -> append to the db object
-        if (name != 'index.d') models[name] = () => this.client(name)
+    this.db = (models: Models<Query> = {}) => {
+      TABLES.forEach((name: string) => {
+        this.log.debug(`initializing ${name} db model`)
+        models[name] = () => this.client(name)
       })
       return models
     }
   }
 
   getAttachment = async (parametersAttachmentId: string) => {
-    return this.db().attachments().where({ id: parametersAttachmentId })
+    return this.db().attachment().where({ id: parametersAttachmentId })
   }
 
   insertDemand = async (capacity: object) => {
@@ -55,7 +53,7 @@ export default class Database {
   getDemandWithAttachment = async (capacityId: UUID, subtype: DemandSubtype) => {
     return this.db()
       .demand()
-      .join('attachments', 'demand.parameters_attachment_id', 'attachments.id')
+      .join('attachment', 'demand.parameters_attachment_id', 'attachment.id')
       .select()
       .where({ 'demand.id': capacityId, subtype })
   }

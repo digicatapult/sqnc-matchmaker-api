@@ -2,9 +2,19 @@ import { Response as ExResponse, Request as ExRequest, NextFunction } from 'expr
 import { ValidateError } from 'tsoa'
 
 import { logger } from '../logger'
-export interface ValidateErrorJSON {
-  message: 'Validation failed'
-  details: { [name: string]: unknown }
+
+/**
+ * this should reflect database tables
+ */
+interface INotFound {
+  message?: string
+  item: string
+  name: string
+}
+
+interface IBadRequest {
+  message?: string
+  name: string
 }
 
 export class HttpResponse extends Error {
@@ -18,15 +28,28 @@ export class HttpResponse extends Error {
   }
 }
 
-export class BadRequest extends HttpResponse {
-  constructor(message: string) {
-    super({ code: 400, message: `Bad Request: ${message}` })
+/**
+ * reports that item was not found
+ */
+export class NotFound extends HttpResponse implements INotFound {
+  // TODO once pull of all items is clear update with 'item1' | 'item2'
+  public item: string
+
+  constructor(item: string) {
+    super({ code: 404, message: `${item} not found` })
+    this.item = item
+    this.name = 'not found'
+    // this.stack = (<any> new Error()).stack
   }
 }
 
-export class NotFound extends HttpResponse {
-  constructor(message: string) {
-    super({ code: 404, message: `Not Found: ${message}` })
+/**
+ * indicates that request was invalid e.g. missing parameter
+ */
+export class BadRequest extends HttpResponse implements IBadRequest {
+  constructor(message = 'bad request') {
+    super({ code: 400, message })
+    // this.stack = (<any> new Error()).stack
   }
 }
 
@@ -37,22 +60,22 @@ export const errorHandler = function errorHandler(
   next: NextFunction
 ): ExResponse | void {
   if (err instanceof ValidateError) {
-    logger.debug(`Handled Validation Error for ${req.path}:`, err.fields)
-    const response: ValidateErrorJSON = {
+    logger.error(`Handled Validation Error for ${req.path}:`, err.fields)
+
+    return res.status(422).send({
+      ...err,
       message: 'Validation failed',
-      details: err?.fields,
-    }
-    return res.status(422).json(response)
+    })
   }
   if (err instanceof HttpResponse) {
-    logger.debug(`Bad request for ${req.path}`)
+    logger.error('Unexpected error thrown in handler: %s', err.message)
+
     return res.status(err.code).json(err.message)
   }
   if (err instanceof Error) {
-    logger.warn('Unexpected error thrown in handler: %s', err.message)
-    return res.status(500).json({
-      message: 'Internal Server Error',
-    })
+    logger.error('Unexpected error thrown in handler: %s', err.message)
+
+    return res.status(500).json(err)
   }
 
   next()

@@ -12,7 +12,7 @@ const getMemberByAlias = async (alias: string) => {
   }
 
   if (res.status === 404) {
-    throw new NotFound(`Member "${alias}" does not exist`)
+    throw new NotFound(`identity: ${alias}`)
   }
 
   throw new HttpResponse({})

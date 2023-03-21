@@ -5,7 +5,7 @@ export async function up(knex: Knex): Promise<void> {
 
   if (!extInstalled) await knex.raw('CREATE EXTENSION "uuid-ossp"')
 
-  await knex.schema.createTable('attachments', (def) => {
+  await knex.schema.createTable('attachment', (def) => {
     def.uuid('id').defaultTo(knex.raw('uuid_generate_v4()'))
     def.string('filename', 255).notNullable()
     def.binary('binary_blob').notNullable()
@@ -16,6 +16,6 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.dropTable('attachments')
+  await knex.schema.dropTable('attachment')
   await knex.raw('DROP EXTENSION "uuid-ossp"')
 }

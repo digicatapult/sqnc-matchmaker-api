@@ -45,6 +45,7 @@ services:
       - DB_PASSWORD=postgres
       - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
       - AUTH_TYPE=${AUTH_TYPE:-NONE}
+
   dscp-node:
     image: digicatapult/dscp-node:latest
     container_name: node

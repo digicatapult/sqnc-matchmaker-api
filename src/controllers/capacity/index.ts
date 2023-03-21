@@ -1,12 +1,23 @@
-import { Controller, Get, Post, Route, Path, Response, Body, SuccessResponse, Tags, Security } from 'tsoa'
+import {
+  ValidateError,
+  Controller,
+  Get,
+  Post,
+  Route,
+  Path,
+  Response,
+  Body,
+  SuccessResponse,
+  Tags,
+  Security,
+} from 'tsoa'
 import type { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
 import { DemandResponse, DemandSubtype, DemandRequest, DemandState } from '../../models/demand'
 import { UUID } from '../../models/uuid'
-import { NotFound } from '../../lib/error-handler/index'
-import { ValidateErrorJSON, BadRequest } from '../../lib/error-handler/index'
+import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
 import { TransactionResponse, TransactionState } from '../../models/transaction'
 import { TokenType } from '../../models/tokenType'
@@ -73,7 +84,7 @@ export class CapacityController extends Controller {
    * @summary Get a capacity by ID
    * @param capacityId The capacity's identifier
    */
-  @Response<ValidateErrorJSON>(422, 'Validation Failed')
+  @Response<ValidateError>(422, 'Validation Failed')
   @Response<NotFound>(404, 'Item not found')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {

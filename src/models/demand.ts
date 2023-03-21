@@ -1,4 +1,4 @@
-import { Attachments } from './attachments'
+import { Attachment } from './attachment'
 import { UUID } from './uuid'
 
 /**
@@ -30,7 +30,7 @@ export interface DemandResponse {
   state: DemandState
 }
 
-export interface DemandPayload extends DemandResponse, Attachments {
+export interface DemandPayload extends DemandResponse, Attachment {
   subtype: DemandSubtype
 }
 

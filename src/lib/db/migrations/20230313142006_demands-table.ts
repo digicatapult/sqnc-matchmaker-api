@@ -31,7 +31,7 @@ export async function up(knex: Knex): Promise<void> {
     def
       .foreign('parameters_attachment_id')
       .references('id')
-      .inTable('attachments')
+      .inTable('attachment')
       .onDelete('CASCADE')
       .onUpdate('CASCADE')
   })
