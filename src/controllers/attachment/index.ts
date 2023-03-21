@@ -67,7 +67,7 @@ export class attachment extends Controller {
   @Post('/')
   @SuccessResponse(201, 'attachment has been created')
   public async create(@Request() req: express.Request, @UploadedFile() file: Express.Multer.File): Promise<Attachment> {
-    this.log.debug(`creating an attachment ${JSON.stringify(file || req.body)}`)
+    this.log.debug(`creating an attachment filename: ${file?.originalname || 'json'}`)
 
     if (!req.body && !file) throw new BadRequest('nothing to upload')
 
