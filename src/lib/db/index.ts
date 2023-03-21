@@ -53,7 +53,7 @@ export default class Database {
   getDemandWithAttachment = async (capacityId: UUID, subtype: DemandSubtype) => {
     return this.db()
       .demand()
-      .join('attachments', 'demand.parameters_attachment_id', 'attachments.id')
+      .join('attachment', 'demand.parameters_attachment_id', 'attachment.id')
       .select()
       .where({ 'demand.id': capacityId, subtype })
   }

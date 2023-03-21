@@ -51,9 +51,9 @@ export class attachment extends Controller {
   }
 
   @Get('/')
-  @SuccessResponse(200, 'returns all attachments')
+  @SuccessResponse(200, 'returns all attachment')
   public async get(): Promise<Attachment[]> {
-    this.log.debug('retrieving all attachments')
+    this.log.debug('retrieving all attachment')
     const result = await this.db.attachment()
 
     return result.map(({ binary_blob, ...item }: Attachment) => ({

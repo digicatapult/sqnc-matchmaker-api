@@ -1,7 +1,7 @@
 import { UUID } from './uuid'
 
 /**
- * File or JSON attachments
+ * File or JSON attachment
  * @example [{
  *   "id": "string",
  *   "filename": "string",
@@ -16,7 +16,7 @@ export interface Attachment {
   /**
    * uuid generated using knex
    */
-  id?: UUID
+  id: UUID
   /**
    * for json files name will be 'json'
    */
