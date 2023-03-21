@@ -13,7 +13,8 @@
     "test": "NODE_ENV=test ./node_modules/.bin/mocha --config ./test/mocharc.json -r ts-node/register ./test/**/*.test.ts",
     "test:unit": "NODE_ENV=test ./node_modules/.bin/mocha --config ./test/mocharc.json -r ts-node/register ./src/**/*.test.ts",
     "db:migrate": "npx knex migrate:latest --knexfile src/lib/db/knexfile.ts",
-    "coverage": "c8 npm run test"
+    "coverage": "c8 npm run test",
+    "flows": "npx @digicatapult/dscp-process-management create -h localhost -p 9944 -u //Alice \"$(cat processFlows.json)\""
   },
   "repository": {
     "type": "git",

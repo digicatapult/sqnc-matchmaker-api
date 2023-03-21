@@ -24,8 +24,6 @@ type File = {
   [k: string]: string
 }
 
-
-
 @Route('attachment')
 @Tags('attachment')
 @Security('bearerAuth')
@@ -104,12 +102,12 @@ export class attachment extends Controller {
     if (!attachment) throw new NotFound('attachment')
     const { filename, binary_blob } = attachment
 
-    // log and default to octect-stream  
+    // log and default to octect-stream
     if (type === 'json' || accept === 'application/json') {
       this.setHeader('content-type', 'application/json')
       try {
         return JSON.parse(binary_blob)
-      } catch(err) {
+      } catch (err) {
         this.log.warn('requested type failed, returning as octet')
       }
     }

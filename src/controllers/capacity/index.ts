@@ -11,15 +11,19 @@ import {
   Tags,
   Security,
 } from 'tsoa'
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
-import { DemandResponse, DemandSubtype, DemandRequest, DemandStatus } from '../../models/demand'
+import { DemandResponse, DemandSubtype, DemandRequest, DemandState } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-
+import { TransactionResponse, TransactionState } from '../../models/transaction'
+import { TokenType } from '../../models/tokenType'
+import { runProcess } from '../..//lib/services/dscpApi'
+import { demandCreate } from '../../lib/payload'
+import { observeTokenId } from '../../lib/services/blockchainWatcher'
 @Route('capacity')
 @Tags('capacity')
 @Security('bearerAuth')
@@ -39,9 +43,8 @@ export class CapacityController extends Controller {
    */
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
-  @SuccessResponse(201)
-  public async createCapacity(@Body() requestBody: DemandRequest): Promise<DemandResponse> {
-    const { parametersAttachmentId } = requestBody
+  @SuccessResponse('201')
+  public async createCapacity(@Body() { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
 
     if (!attachment) {
@@ -52,8 +55,8 @@ export class CapacityController extends Controller {
 
     const [capacity] = await this.db.insertDemand({
       owner: selfAddress,
-      subtype: DemandSubtype.Capacity,
-      status: DemandStatus.Created,
+      subtype: DemandSubtype.capacity,
+      state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
     })
 
@@ -61,7 +64,7 @@ export class CapacityController extends Controller {
     return {
       id: capacity.id,
       owner: ownerAlias,
-      status: capacity.status,
+      state: capacity.state,
       parametersAttachmentId: parametersAttachmentId,
     }
   }
@@ -72,7 +75,7 @@ export class CapacityController extends Controller {
    */
   @Get('/')
   public async getAll(): Promise<DemandResponse[]> {
-    const capacities = await this.db.getDemands(DemandSubtype.Capacity)
+    const capacities = await this.db.getDemands(DemandSubtype.capacity)
     const result = await Promise.all(capacities.map(async (capacity: DemandResponse) => responseWithAlias(capacity)))
     return result
   }
@@ -85,10 +88,37 @@ export class CapacityController extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {
-    const [capacity] = await this.db.getDemand(capacityId, DemandSubtype.Capacity)
-    if (!capacity) throw new NotFound('capacity')
+    const [capacity] = await this.db.getDemand(capacityId)
+    if (!capacity) throw new NotFound('Capacity Not Found')
 
     return responseWithAlias(capacity)
+  }
+
+  /**
+   * A member creates the capacity {capacityId} on-chain. The capacity is now viewable to other members.
+   * @summary Create a new capacity demand on-chain
+   */
+  @Post('{capacityId}/creation')
+  @Response<NotFound>(404, 'Item not found')
+  @SuccessResponse('201')
+  public async createCapacityOnChain(@Path() capacityId: UUID): Promise<TransactionResponse> {
+    const [capacity] = await this.db.getDemandWithAttachment(capacityId, DemandSubtype.capacity)
+    if (!capacity) throw new NotFound('Capacity Not Found')
+
+    const [transaction] = await this.db.insertTransaction({
+      token_type: TokenType.DEMAND,
+      local_id: capacityId,
+      state: TransactionState.submitted,
+    })
+
+    // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
+    const [tokenId] = await runProcess(demandCreate(capacity, transaction.id))
+    await observeTokenId(this.db, TokenType.DEMAND, transaction.id, tokenId, true)
+    return {
+      id: transaction.id,
+      submittedAt: new Date(transaction.created_at),
+      state: transaction.state,
+    }
   }
 }
 
@@ -98,7 +128,7 @@ const responseWithAlias = async (capacity: DemandResponse): Promise<DemandRespon
   return {
     id: capacity.id,
     owner: ownerAlias,
-    status: capacity.status,
+    state: capacity.state,
     parametersAttachmentId: capacity.parametersAttachmentId,
   }
 }

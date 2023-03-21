@@ -92,6 +92,8 @@ jobs:
         uses: kibertoad/wait-action@1.0.1
         with:
           time: '30s'
+      - name: Put process flows on-chain
+        run: npm run flows
       - name: Run database migrations
         run: npm run db:migrate
         env:

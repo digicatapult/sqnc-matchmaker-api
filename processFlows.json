@@ -1255,7 +1255,7 @@
             "index": 2,
             "metadataKey": "state",
             "metadataValue": {
-               "Literal": "acceptedA"
+              "Literal": "acceptedA"
             }
           }
         }
@@ -1275,7 +1275,7 @@
             "index": 2,
             "metadataKey": "state",
             "metadataValue": {
-               "Literal": "acceptedB"
+              "Literal": "acceptedB"
             }
           }
         }
