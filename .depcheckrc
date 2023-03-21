@@ -1,7 +1,1 @@
-ignores: [
-  "@digicatapult/dscp-process-management",
-  "concurrently",
-  "pino-colada",
-  "nodemon",
-  "pg",
-]
+ignores: ['concurrently', 'pino-colada', 'nodemon', 'pg']

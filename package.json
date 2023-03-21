@@ -34,7 +34,6 @@
   },
   "homepage": "https://github.com/digicatapult/dscp-matchmaker-api#readme",
   "devDependencies": {
-    "@digicatapult/dscp-process-management": "^1.6.10",
     "@types/chai": "^4.3.4",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
