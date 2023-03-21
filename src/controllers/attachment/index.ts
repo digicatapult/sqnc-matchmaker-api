@@ -95,7 +95,7 @@ export class attachment extends Controller {
     @Request() req: express.Request,
     @Path() id: string,
     @Header('return-type') type: 'json' | 'file'
-  ): Promise<Attachment | Blob> {
+  ): Promise<JSON | Blob> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const { accept } = req.headers
     const [attachment] = await this.db.attachment().where({ id })
