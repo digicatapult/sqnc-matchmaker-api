@@ -7,7 +7,7 @@ import { post, get } from '../helper/routeHelper'
 import { seed, cleanup, parametersAttachmentId, seededCapacityId } from '../seeds/capacity'
 
 import { DemandState } from '../../src/models/demand'
-import { setupMocks, selfAlias, mockTokenId } from '../helper/mock'
+import { selfAlias, mockTokenId, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 
@@ -17,7 +17,6 @@ const db = new Database()
 
 describe('capacity', () => {
   let app: Express
-  setupMocks()
 
   before(async function () {
     app = await createHttpServer()
@@ -33,6 +32,7 @@ describe('capacity', () => {
 
   describe('happy path', () => {
     test('it should create a capacity', async () => {
+      identitySelfMock()
       const response = await post(app, '/capacity', { parametersAttachmentId })
       expect(response.status).to.equal(201)
 
@@ -48,6 +48,7 @@ describe('capacity', () => {
     })
 
     test('it should get a capacity', async () => {
+      identitySelfMock()
       const response = await get(app, `/capacity/${seededCapacityId}`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
@@ -59,6 +60,7 @@ describe('capacity', () => {
     })
 
     test('it should get all capacities', async () => {
+      identitySelfMock()
       const response = await get(app, `/capacity`)
       expect(response.status).to.equal(200)
       expect(response.body.length).to.equal(1)
@@ -71,6 +73,7 @@ describe('capacity', () => {
     })
 
     test('it should create a capacity on-chain', async () => {
+      apiRunProcessMock()
       // submit to chain
       const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
       expect(response.status).to.equal(201)
@@ -114,6 +117,12 @@ describe('capacity', () => {
     it('non-existent capacity id when creating on-chain - 404', async () => {
       const response = await get(app, `/capacity/${nonExistentId}/creation`)
       expect(response.status).to.equal(404)
+    })
+
+    it('dscp-api error - 500', async () => {
+      apiRunProcessMockError()
+      const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
+      expect(response.status).to.equal(500)
     })
   })
 })
