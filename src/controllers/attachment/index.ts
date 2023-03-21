@@ -19,6 +19,7 @@ import { logger } from '../../lib/logger'
 import Database, { Models, Query } from '../../lib/db'
 import type { Attachment } from '../../models'
 import { BadRequest, NotFound } from '../../lib/error-handler'
+import { Readable } from 'node:stream'
 
 type File = {
   [k: string]: string
@@ -56,10 +57,14 @@ export class attachment extends Controller {
     this.log.debug('retrieving all attachment')
     const result = await this.db.attachment()
 
-    return result.map(({ binary_blob, ...item }: Attachment) => ({
-      ...item,
-      size: binary_blob.size,
-    }))
+    return result.map((row: any): Attachment => {
+      const { binary_blob, ...item } = row
+      const size = (binary_blob as Buffer).length
+      return {
+        ...item,
+        size,
+      }
+    })
   }
 
   @Post('/')
@@ -67,24 +72,23 @@ export class attachment extends Controller {
   public async create(@Request() req: express.Request, @UploadedFile() file: File): Promise<Attachment> {
     this.log.debug(`creating an attachment ${JSON.stringify(file || req.body)}`)
 
-    if (file)
-      return await this.db
-        .attachment('id')
-        .insert({
-          filename: file.originalname,
-          binary_blob: Buffer.from(file.buffer),
-        })
-        .returning(['id', 'filename', 'binary_blob', 'datetime'])
+    if (!req.body && !file) throw new BadRequest('nothing to upload')
 
-    if (!req.body) throw new BadRequest('nothing to upload')
-
-    return await this.db
+    const [{ id, filename, binary_blob, created_at }]: any[] = await this.db
       .attachment()
       .insert({
         filename: 'json',
-        binary_blob: Buffer.from(JSON.stringify(req.body)),
+        binary_blob: Buffer.from(file.buffer || JSON.stringify(req.body)),
       })
-      .returning(['id', 'filename', 'binary_blob', 'datetime'])
+      .returning(['id', 'filename', 'binary_blob', 'created_at'])
+
+    const result: Attachment = {
+      id,
+      filename,
+      datetime: created_at,
+      size: (binary_blob as Buffer).length,
+    }
+    return result
   }
 
   @Get('/{id}')
@@ -95,7 +99,7 @@ export class attachment extends Controller {
     @Request() req: express.Request,
     @Path() id: string,
     @Header('return-type') type: 'json' | 'file'
-  ): Promise<unknown | Blob> {
+  ): Promise<unknown | Readable> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const { accept } = req.headers
     const [attachment] = await this.db.attachment().where({ id })

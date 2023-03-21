@@ -5,10 +5,7 @@ import { UUID } from './uuid'
  * @example [{
  *   "id": "string",
  *   "filename": "string",
- *   "binary_blob": {
- *     "size": 0,
- *     "type": "string"
- *   },
+ *   "size": 1024,
  *   "datetime": "2023-03-16T13:18:42.357Z"
  * }]
  */
@@ -21,6 +18,6 @@ export interface Attachment {
    * for json files name will be 'json'
    */
   filename: string | 'json'
-  binary_blob: Blob
+  size: number
   datetime: Date
 }
