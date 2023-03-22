@@ -4,14 +4,12 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
-import { seed, cleanup, parametersAttachmentId, seededCapacityId } from '../seeds/capacity'
+import { seed, cleanup, parametersAttachmentId, seededCapacityId, nonExistentId } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
 import { selfAlias, mockTokenId, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
-
-const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
 
 const db = new Database()
 
@@ -20,6 +18,7 @@ describe('capacity', () => {
 
   before(async function () {
     app = await createHttpServer()
+    identitySelfMock()
   })
 
   beforeEach(async function () {
@@ -32,7 +31,6 @@ describe('capacity', () => {
 
   describe('happy path', () => {
     test('it should create a capacity', async () => {
-      identitySelfMock()
       const response = await post(app, '/capacity', { parametersAttachmentId })
       expect(response.status).to.equal(201)
 
@@ -48,7 +46,6 @@ describe('capacity', () => {
     })
 
     test('it should get a capacity', async () => {
-      identitySelfMock()
       const response = await get(app, `/capacity/${seededCapacityId}`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
@@ -60,7 +57,6 @@ describe('capacity', () => {
     })
 
     test('it should get all capacities', async () => {
-      identitySelfMock()
       const response = await get(app, `/capacity`)
       expect(response.status).to.equal(200)
       expect(response.body.length).to.equal(1)
@@ -91,8 +87,8 @@ describe('capacity', () => {
 
       // check local capacity updates with token id
       const [capacity] = await db.getDemand(seededCapacityId)
-      expect(capacity.latest_token_id).to.equal(mockTokenId)
-      expect(capacity.original_token_id).to.equal(mockTokenId)
+      expect(capacity.latestTokenId).to.equal(mockTokenId)
+      expect(capacity.originalTokenId).to.equal(mockTokenId)
     })
   })
 

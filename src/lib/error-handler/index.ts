@@ -60,7 +60,7 @@ export const errorHandler = function errorHandler(
   next: NextFunction
 ): ExResponse | void {
   if (err instanceof ValidateError) {
-    logger.error(`Handled Validation Error for ${req.path}:`, err.fields)
+    logger.warn(`Handled Validation Error for ${req.path}:%s`, JSON.stringify(err.fields))
 
     return res.status(422).send({
       ...err,
@@ -68,7 +68,7 @@ export const errorHandler = function errorHandler(
     })
   }
   if (err instanceof HttpResponse) {
-    logger.error('Unexpected error thrown in handler: %s', err.message)
+    logger.warn('Error thrown in handler: %s', err.message)
 
     return res.status(err.code).json(err.message)
   }

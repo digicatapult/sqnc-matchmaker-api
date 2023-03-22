@@ -21,6 +21,7 @@ export const identitySelfMock = () => {
       alias: selfAlias,
       address: selfAddress,
     })
+    .persist()
 
   mockIdentity
     .intercept({
@@ -31,6 +32,7 @@ export const identitySelfMock = () => {
       alias: selfAlias,
       address: selfAddress,
     })
+    .persist()
 }
 
 export const apiRunProcessMock = () => {

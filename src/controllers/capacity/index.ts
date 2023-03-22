@@ -65,7 +65,7 @@ export class CapacityController extends Controller {
       id: capacity.id,
       owner: ownerAlias,
       state: capacity.state,
-      parametersAttachmentId: parametersAttachmentId,
+      parametersAttachmentId,
     }
   }
 
@@ -84,7 +84,7 @@ export class CapacityController extends Controller {
    * @summary Get a capacity by ID
    * @param capacityId The capacity's identifier
    */
-  @Response<ValidateError>(422, 'Validation Failed')
+  @Response<ValidateError>(400, 'Validation Failed')
   @Response<NotFound>(404, 'Item not found')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {
@@ -97,6 +97,7 @@ export class CapacityController extends Controller {
   /**
    * A member creates the capacity {capacityId} on-chain. The capacity is now viewable to other members.
    * @summary Create a new capacity demand on-chain
+   * @param capacityId The capacity's identifier
    */
   @Post('{capacityId}/creation')
   @Response<NotFound>(404, 'Item not found')
