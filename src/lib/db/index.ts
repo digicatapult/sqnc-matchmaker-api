@@ -6,28 +6,86 @@ import { pgConfig } from './knexfile'
 import { DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 
-const TABLES: string[] = ['attachment', 'demand', 'transaction', 'match2']
+const TABLES: Model[] = ['attachment', 'demand', 'transaction', 'match2']
 
-export interface Models<V> {
-  [key: string | number]: V[keyof V]
-}
+/* TODO define interface for whole class (methods/constructor) 
+type CreateMethod = (
+  query: () => Knex.QueryBuilder,
+  model: Model,
+  data: {
+    [key: string]: string
+  }
+) => Promise<void>
+
+type GetByIdMethod = (query: () => Knex.QueryBuilder, model: Model, id: UUID) => Promise<void>
+*/
 
 export type Query = Knex.QueryBuilder
+export type Model = 'attachment' | 'demand' | 'transaction' | 'match2'
+export interface Models<V> {
+  [k: string]: V[keyof V]
+}
 
 export default class Database {
   public client: Knex
   private log: Logger
+  private limit = 1000
+
   public db: () => Models<Query> | any
 
   constructor() {
     this.log = logger
     this.client = knex(pgConfig)
-    this.db = (models: Models<Query> = {}) => {
-      TABLES.forEach((name: string) => {
-        this.log.debug(`initializing ${name} db model`)
-        models[name] = () => this.client(name)
+    this.db = (models: any = {}) => {
+      TABLES.forEach((model: Model) => {
+        this.log.debug(`initializing ${model} db model`)
+        const query = () => this.client(model)
+        models[model] = {
+          getAll: async () => this.getAll(query, model),
+          getById: (id: UUID) => this.getById(query, model, id),
+          create: (data: any) => this.create(query, data, model),
+          query, // for performing raw queries e.g. query('*').where(args).innerJoin...
+        }
       })
       return models
+    }
+  }
+
+  private getAll(query: () => Knex.QueryBuilder, model: Model): Promise<void> {
+    try {
+      this.log.info('attempting to retrieve the total of 100 records', { model })
+
+      return query().select('*').limit(this.limit)
+    } catch (err: InstanceType<Error & any>) {
+      this.log.error(err)
+      // TODO database errors; atm it will return 500 along with message
+      throw new Error(err.message)
+    }
+  }
+
+  private getById(query: () => Knex.QueryBuilder, model: Model, id: UUID): Promise<void> {
+    try {
+      this.log.info('retrieving record', { model, id })
+
+      return query().where({ id })
+    } catch (err: InstanceType<Error & any>) {
+      this.log.error(err)
+      // TODO database errors; atm it will return 500 along with message
+      throw new Error(err.message)
+    }
+  }
+
+  private async create(query: () => Knex.QueryBuilder, data: any, model: string): Promise<void | unknown> {
+    this.log.info('attempting to insert', { model, data })
+
+    try {
+      const id = await query().insert(data).returning('id')
+      this.log.debug('returning new record', { id })
+      return query().where({ id })
+    } catch (err) {
+      this.log.error(err)
+      // TODO some database errors
+      return err
     }
   }
 
