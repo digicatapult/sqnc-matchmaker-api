@@ -34,14 +34,14 @@ export class Match2Controller extends Controller {
   }
 
   /**
-   * A Member creates a new match2 for an order and a capacity by referencing each demand.
-   * @summary Create a new match2
+   * A Member proposes a new match2 for an order and a capacity by referencing each demand.
+   * @summary Propose a new match2
    */
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
-  public async createMatch2(
+  public async proposeMatch2(
     @Body() { demandA: demandAId, demandB: demandBId }: Match2Request
   ): Promise<Match2Response> {
     const [demandA] = await this.db.getDemand(demandAId)
