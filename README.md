@@ -108,7 +108,7 @@ These are the top level physical concepts in the system. They are the top level 
 - `order`
 - `match2`
 
-Additionally, there is the `attachment` entity which returns an `id` that can then be used when preparing entity updates to attach files.
+Additionally, there is the `attachment` entity which returns an `id` to be used when preparing entity updates to attach files.
 
 ### Entity queries
 
@@ -159,12 +159,12 @@ curl -X 'PUT' \
 
 Also process flows must be added to the chain with `npm run flows`. Process flows validate transactions that affect the chain.
 
-1. `MemberA` wants to create a `capacity`, which includes a parameters file to the parameters of the available capacity they have. The parameters file will be used by `Optimiser` when matching `capacity` with a `demand`. First `MemberA` must upload this parameters file to their local database with `POST /attachment`.
-2. They use the returned `id` for the `parametersAttachmentId` in the request body to `POST /capacity`. At this point, the `capacity` only exists in the `MemberA` database.
+1. `MemberA` wants to create a `capacity`, which includes a parameters file to the parameters of the available capacity they have. The parameters file will be used by `Optimiser` when matching `capacity` with a `order`. First `MemberA` must upload this parameters file to their local database with `POST /attachment`.
+2. They use the returned `id` for `parametersAttachmentId` in the request body to `POST /capacity`. At this point, the `capacity` only exists in the `MemberA` database.
 3. When `MemberA` is ready for the `capacity` to exist on chain they `POST capacity/{capacityId}/creation`. `MemberB` and `Optimiser` can now see the `capacity` if their node is running and connected.
-4. `MemberB` creates an `order`, which includes a parameters file to describe the parameters of their order.
+4. `MemberB` creates an `order` in a similar manner to creating a `capacity`. It includes a parameters file to describe the parameters of their order.
 5. When `MemberB` is ready for the `order` to exist on chain they `POST order/{id}/creation`.
-6. `Optimiser` can now create a `match2` that matches a single `capacity` with a single `order`. They supply these as an `id` for `demandA` and `demandB`. It doesn't matter if which is `demandA` and which is `demandB`.
+6. `Optimiser` can now create a `match2` that matches a single `capacity` with a single `order`. They supply these as an `id` for `demandA` and `demandB`. It doesn't matter which is `demandA` and which is `demandB`.
 7. When `Optimiser` is ready for the `match2` to exist on chain they `POST match2/{id}/propose`.
 
 //TODO the accept steps
