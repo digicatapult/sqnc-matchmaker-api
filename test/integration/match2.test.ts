@@ -1,4 +1,4 @@
-import { describe, before, test } from 'mocha'
+import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
@@ -26,7 +26,7 @@ describe('match2', () => {
   })
 
   describe('happy path', () => {
-    test('it should create a match2', async () => {
+    it('should create a match2', async () => {
       const response = await post(app, '/match2', { demandA: seededOrderId, demandB: seededCapacityId })
       expect(response.status).to.equal(201)
 
@@ -44,7 +44,7 @@ describe('match2', () => {
       })
     })
 
-    test('it should get a match2', async () => {
+    it('should get a match2', async () => {
       const response = await get(app, `/match2/${seededMatch2Id}`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
@@ -58,7 +58,7 @@ describe('match2', () => {
       })
     })
 
-    test('it should get all match2s', async () => {
+    it('should get all match2s', async () => {
       const response = await get(app, `/match2`)
       expect(response.status).to.equal(200)
       expect(response.body.length).to.equal(1)
@@ -75,31 +75,31 @@ describe('match2', () => {
   })
 
   describe('sad path', () => {
-    test('non-existent demandA - 400', async () => {
+    it('non-existent demandA - 400', async () => {
       const response = await post(app, '/match2', { demandA: nonExistentId, demandB: seededCapacityId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Demand A not found')
     })
 
-    test('non-existent demandB - 400', async () => {
+    it('non-existent demandB - 400', async () => {
       const response = await post(app, '/match2', { demandA: seededOrderId, demandB: nonExistentId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Demand B not found')
     })
 
-    test('both demands are orders - 400', async () => {
+    it('both demands are orders - 400', async () => {
       const response = await post(app, '/match2', { demandA: seededOrderId, demandB: seededOrderId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Demands have matching type: order')
     })
 
-    test('both demands are capacities - 400', async () => {
+    it('both demands are capacities - 400', async () => {
       const response = await post(app, '/match2', { demandA: seededCapacityId, demandB: seededCapacityId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Demands have matching type: capacity')
     })
 
-    test('invalid demand uuid - 422', async () => {
+    it('invalid demand uuid - 422', async () => {
       const response = await post(app, '/match2', { demandA: 'invalid', demandB: seededCapacityId })
       expect(response.status).to.equal(422)
       expect(response.body.message).to.equal('Validation failed')

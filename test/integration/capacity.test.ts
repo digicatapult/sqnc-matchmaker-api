@@ -1,4 +1,4 @@
-import { describe, before, test } from 'mocha'
+import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
@@ -30,7 +30,7 @@ describe('capacity', () => {
   })
 
   describe('happy path', () => {
-    test('it should create a capacity', async () => {
+    it('should create a capacity', async () => {
       const response = await post(app, '/capacity', { parametersAttachmentId })
       expect(response.status).to.equal(201)
 
@@ -45,7 +45,7 @@ describe('capacity', () => {
       })
     })
 
-    test('it should get a capacity', async () => {
+    it('should get a capacity', async () => {
       const response = await get(app, `/capacity/${seededCapacityId}`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
@@ -56,7 +56,7 @@ describe('capacity', () => {
       })
     })
 
-    test('it should get all capacities', async () => {
+    it('should get all capacities', async () => {
       const response = await get(app, `/capacity`)
       expect(response.status).to.equal(200)
       expect(response.body.length).to.equal(1)
@@ -68,7 +68,7 @@ describe('capacity', () => {
       })
     })
 
-    test('it should create a capacity on-chain', async () => {
+    it('should create a capacity on-chain', async () => {
       apiRunProcessMock()
       // submit to chain
       const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
@@ -93,13 +93,13 @@ describe('capacity', () => {
   })
 
   describe('sad path', () => {
-    test('invalid attachment uuid - 422', async () => {
+    it('invalid attachment uuid - 422', async () => {
       const response = await post(app, '/capacity', { parametersAttachmentId: 'invalid' })
       expect(response.status).to.equal(422)
       expect(response.body.message).to.equal('Validation failed')
     })
 
-    test('non-existent attachment - 400', async () => {
+    it('non-existent attachment - 400', async () => {
       const response = await post(app, '/capacity', { parametersAttachmentId: nonExistentId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Attachment id not found')
