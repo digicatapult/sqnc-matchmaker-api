@@ -79,7 +79,7 @@ export class Match2Controller extends Controller {
   @Get('/')
   public async getAll(): Promise<Match2Response[]> {
     const match2s = await this.db.getMatch2s()
-    const result = await Promise.all(match2s.map(async (capacity: Match2Response) => responseWithAliases(capacity)))
+    const result = await Promise.all(match2s.map(async (match2: Match2Response) => responseWithAliases(match2)))
     return result
   }
 
@@ -90,7 +90,7 @@ export class Match2Controller extends Controller {
   @Response<ValidateError>(400, 'Validation Failed')
   @Response<NotFound>(404, 'Item not found')
   @Get('{match2Id}')
-  public async getCapacity(@Path() match2Id: UUID): Promise<Match2Response> {
+  public async getMatch2(@Path() match2Id: UUID): Promise<Match2Response> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('Match2 Not Found')
 
