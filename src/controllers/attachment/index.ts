@@ -20,7 +20,7 @@ import Database, { Models, Query } from '../../lib/db'
 import type { Attachment } from '../../models'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import { Readable } from 'node:stream'
-import type { UUID } from 'src/models/uuid'
+import type { UUID } from '../../models/uuid'
 
 const parseAccept = (acceptHeader: string) =>
   acceptHeader
