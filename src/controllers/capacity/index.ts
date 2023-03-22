@@ -43,6 +43,7 @@ export class CapacityController extends Controller {
    */
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
+  @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
   public async createCapacity(@Body() { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
@@ -84,7 +85,6 @@ export class CapacityController extends Controller {
    * @summary Get a capacity by ID
    * @param capacityId The capacity's identifier
    */
-  @Response<ValidateError>(400, 'Validation Failed')
   @Response<NotFound>(404, 'Item not found')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {

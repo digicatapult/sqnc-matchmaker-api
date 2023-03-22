@@ -34,11 +34,12 @@ export class Match2Controller extends Controller {
   }
 
   /**
-   * A Member creates a new Match2 for an order and a capacity by referencing each demand.
-   * @summary Create a new Match2
+   * A Member creates a new match2 for an order and a capacity by referencing each demand.
+   * @summary Create a new match2
    */
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
+  @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
   public async createMatch2(
     @Body() { demandA: demandAId, demandB: demandBId }: Match2Request
@@ -73,7 +74,7 @@ export class Match2Controller extends Controller {
 
   /**
    * Returns the details of all match2s.
-   * @summary List all capacity demands
+   * @summary List all match2s
    */
   @Get('/')
   public async getAll(): Promise<Match2Response[]> {

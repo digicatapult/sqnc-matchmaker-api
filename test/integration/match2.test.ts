@@ -99,6 +99,12 @@ describe('match2', () => {
       expect(response.body).to.equal('Demands have matching type: capacity')
     })
 
+    test('invalid demand uuid - 422', async () => {
+      const response = await post(app, '/match2', { demandA: 'invalid', demandB: seededCapacityId })
+      expect(response.status).to.equal(422)
+      expect(response.body.message).to.equal('Validation failed')
+    })
+
     it('non-existent match2 id - 404', async () => {
       const response = await get(app, `/match2/${nonExistentId}`)
       expect(response.status).to.equal(404)
