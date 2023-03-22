@@ -1,7 +1,9 @@
 {
   "entryFile": "src/index.ts",
   "noImplicitAdditionalProperties": "throw-on-extras",
-  "controllerPathGlobs": ["src/controllers/**/*.ts"],
+  "controllerPathGlobs": [
+    "src/controllers/**/*.ts"
+  ],
   "spec": {
     "outputDirectory": "src",
     "specVersion": 3,
@@ -10,6 +12,82 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      }
+    },
+    "specMerging": "recursive",
+    "spec": {
+      "paths": {
+        "/attachment": {
+          "post": {
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "example": {
+                          "some": "example JSON"
+                        }
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "example": {
+                            "some": "example JSON"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "consumes": [
+              "multipart/form-data",
+              "application/json"
+            ]
+          }
+        },
+        "/attachment/{id}": {
+          "get": {
+            "responses": {
+              "200": {
+                "content": {
+                  "application/octet-stream": {
+                    "schema": {
+                      "description": "Attachment file",
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  },
+                  "application/json": {
+                    "schema": {
+                      "description": "Attachment json",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "example": {
+                            "some": "example JSON"
+                          }
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "example": {
+                              "some": "example JSON"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   },

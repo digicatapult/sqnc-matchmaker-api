@@ -8,9 +8,9 @@ import {
   Route,
   Path,
   Post,
-  Header,
   Response,
   SuccessResponse,
+  Produces,
 } from 'tsoa'
 import { Logger } from 'pino'
 import express from 'express'
@@ -20,6 +20,36 @@ import Database, { Models, Query } from '../../lib/db'
 import type { Attachment } from '../../models'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import { Readable } from 'node:stream'
+
+const parseAccept = (acceptHeader: string) =>
+  acceptHeader
+    .split(',')
+    .map((acceptElement) => {
+      const trimmed = acceptElement.trim()
+      const [mimeType, quality = '1'] = trimmed.split(';q=')
+      return { mimeType, quality: parseInt(quality) }
+    })
+    .sort((a, b) => {
+      if (a.quality !== b.quality) {
+        return b.quality - a.quality
+      }
+      const [aType, aSubtype] = a.mimeType.split('/')
+      const [bType, bSubtype] = b.mimeType.split('/')
+      if (aType === '*' && bType !== '*') {
+        return 1
+      }
+      if (aType !== '*' && bType === '*') {
+        return -1
+      }
+      if (aSubtype === '*' && bSubtype !== '*') {
+        return 1
+      }
+      if (aSubtype !== '*' && bSubtype === '*') {
+        return -1
+      }
+      return 0
+    })
+    .map(({ mimeType }) => mimeType)
 
 @Route('attachment')
 @Tags('attachment')
@@ -66,7 +96,10 @@ export class attachment extends Controller {
 
   @Post('/')
   @SuccessResponse(201, 'attachment has been created')
-  public async create(@Request() req: express.Request, @UploadedFile() file: Express.Multer.File): Promise<Attachment> {
+  public async create(
+    @Request() req: express.Request,
+    @UploadedFile() file?: Express.Multer.File
+  ): Promise<Attachment> {
     this.log.debug(`creating an attachment filename: ${file?.originalname || 'json'}`)
 
     if (!req.body && !file) throw new BadRequest('nothing to upload')
@@ -75,7 +108,7 @@ export class attachment extends Controller {
       .attachment()
       .insert({
         filename: file ? file.originalname : 'json',
-        binary_blob: Buffer.from(file.buffer || JSON.stringify(req.body)),
+        binary_blob: Buffer.from(file?.buffer || JSON.stringify(req.body)),
       })
       .returning(['id', 'filename', 'binary_blob', 'created_at'])
 
@@ -91,28 +124,32 @@ export class attachment extends Controller {
   @Get('/{id}')
   @Response<NotFound>(404)
   @Response<BadRequest>(400)
+  @Produces('application/octet-stream')
+  @Produces('application/json')
   @SuccessResponse(200)
-  public async getById(
-    @Request() req: express.Request,
-    @Path() id: string,
-    @Header('return-type') type: 'json' | 'file'
-  ): Promise<unknown | Readable> {
+  public async getById(@Request() req: express.Request, @Path() id: string): Promise<unknown | Readable> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
-    const { accept } = req.headers
     const [attachment] = await this.db.attachment().where({ id })
     if (!attachment) throw new NotFound('attachment')
     const { filename, binary_blob } = attachment
 
-    // log and default to octect-stream
-    if (type === 'json' || accept === 'application/json') {
-      this.setHeader('content-type', 'application/json')
-      try {
-        return JSON.parse(binary_blob)
-      } catch (err) {
-        this.log.warn('requested type failed, returning as octet')
+    const orderedAccept = parseAccept(req.headers.accept || '*/*')
+    if (filename === 'json') {
+      for (const mimeType of orderedAccept) {
+        if (mimeType === 'application/json' || mimeType === 'application/*' || mimeType === '*/*') {
+          try {
+            const json = JSON.parse(binary_blob)
+            return json
+          } catch (err) {
+            this.log.warn(`Unable to parse json file for attachment ${id}`)
+            return this.octetResponse(binary_blob, filename)
+          }
+        }
+        if (mimeType === 'application/octet-stream') {
+          return this.octetResponse(binary_blob, filename)
+        }
       }
     }
-
     return this.octetResponse(binary_blob, filename)
   }
 }
