@@ -28,7 +28,7 @@ const parseAccept = (acceptHeader: string) =>
     .map((acceptElement) => {
       const trimmed = acceptElement.trim()
       const [mimeType, quality = '1'] = trimmed.split(';q=')
-      return { mimeType, quality: parseInt(quality) }
+      return { mimeType, quality: parseFloat(quality) }
     })
     .sort((a, b) => {
       if (a.quality !== b.quality) {
