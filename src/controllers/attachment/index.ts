@@ -137,8 +137,13 @@ export class attachment extends Controller {
     if (filename === 'json') {
       for (const mimeType of orderedAccept) {
         if (mimeType === 'application/json' || mimeType === 'application/*' || mimeType === '*/*') {
-          const json = JSON.parse(binary_blob)
-          return json
+          try {
+            const json = JSON.parse(binary_blob)
+            return json
+          } catch (err) {
+            this.log.warn(`Unable to parse json file for attachment ${id}`)
+            return this.octetResponse(binary_blob, filename)
+          }
         }
         if (mimeType === 'application/octet-stream') {
           return this.octetResponse(binary_blob, filename)
