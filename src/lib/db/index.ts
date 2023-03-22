@@ -29,7 +29,7 @@ export default class Database {
   private log: Logger
   private limit = 1000
 
-  public db: () => Models<Query>
+  public db: () => any
   public db2: () => any
 
   constructor() {
@@ -69,7 +69,7 @@ export default class Database {
     }
   }
 
-  private getById(query: () => Knex.QueryBuilder, model: Model, id: UUID): any {
+  private getById(query: () => Knex.QueryBuilder, model: Model, id: UUID): Promise<void> | any {
     try {
       this.log.info('retrieving record', { model, id })
 
