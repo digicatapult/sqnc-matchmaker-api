@@ -51,17 +51,14 @@ export class attachment extends Controller {
   @SuccessResponse(200, 'returns all attachment')
   public async get(): Promise<Attachment[]> {
     this.log.debug('retrieving all attachment')
-    const result: Attachment[] = await this.db.attachment()
 
-    return result.map(({ id, filename, binary_blob, created_at }: any): Attachment => {
-      const size = (binary_blob as Buffer).length
-      return {
-        id,
-        filename,
+    return await this.db.attachment().map(
+      ({ binary_blob, created_at, ...rest }: any): Attachment => ({
+        ...rest,
         createdAt: created_at,
-        size,
-      }
-    })
+        size: binary_blob.length,
+      })
+    )
   }
 
   @Post('/')
@@ -98,7 +95,7 @@ export class attachment extends Controller {
   public async getById(
     @Request() req: express.Request,
     @Path() id: string,
-    @Header('return-type') type?: 'json' | 'file'
+    @Header('return-type') type?: 'json' | 'file' // optional due to integration testing otherwise it won't compile/run
   ): Promise<unknown | Readable> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const { accept } = req.headers
