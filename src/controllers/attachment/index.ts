@@ -66,7 +66,7 @@ export class attachment extends Controller {
 
   @Post('/')
   @SuccessResponse(201, 'attachment has been created')
-  public async create(@Request() req: express.Request, @UploadedFile() file: Express.Multer.File): Promise<Attachment> {
+  public async create(@Request() req: express.Request, @UploadedFile() file?: Express.Multer.File): Promise<Attachment> {
     this.log.debug(`creating an attachment filename: ${file?.originalname || 'json'}`)
 
     if (!req.body && !file) throw new BadRequest('nothing to upload')
@@ -75,7 +75,7 @@ export class attachment extends Controller {
       .attachment()
       .insert({
         filename: file ? file.originalname : 'json',
-        binary_blob: Buffer.from(file.buffer || JSON.stringify(req.body)),
+        binary_blob: Buffer.from(file?.buffer || JSON.stringify(req.body)),
       })
       .returning(['id', 'filename', 'binary_blob', 'created_at'])
 
@@ -95,7 +95,7 @@ export class attachment extends Controller {
   public async getById(
     @Request() req: express.Request,
     @Path() id: string,
-    @Header('return-type') type: 'json' | 'file'
+    @Header('return-type') type?: 'json' | 'file'
   ): Promise<unknown | Readable> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const { accept } = req.headers
