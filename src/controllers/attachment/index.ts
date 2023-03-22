@@ -71,12 +71,10 @@ export class attachment extends Controller {
 
     if (!req.body && !file) throw new BadRequest('nothing to upload')
 
-    const [{ id, filename, binary_blob, created_at }]: any[] = await this.db
-      .attachment()
-      .create({
-        filename: file ? file.originalname : 'json',
-        binary_blob: Buffer.from(file.buffer || JSON.stringify(req.body)),
-      })
+    const [{ id, filename, binary_blob, created_at }]: any[] = await this.db.attachment().create({
+      filename: file ? file.originalname : 'json',
+      binary_blob: Buffer.from(file.buffer || JSON.stringify(req.body)),
+    })
 
     const result: Attachment = {
       id,
