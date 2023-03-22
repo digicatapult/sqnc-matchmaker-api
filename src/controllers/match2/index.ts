@@ -19,6 +19,11 @@ import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
 import { Match2Request, Match2Response, Match2State } from '../../models/match2'
 import { UUID } from '../../models/uuid'
+import { TransactionResponse, TransactionState } from '../../models/transaction'
+import { TokenType } from 'src/models/tokenType'
+import { observeTokenId } from 'src/lib/services/blockchainWatcher'
+import { runProcess } from 'src/lib/services/dscpApi'
+import { match2Propose } from 'src/lib/payload'
 
 @Route('match2')
 @Tags('match2')
@@ -95,6 +100,34 @@ export class Match2Controller extends Controller {
     if (!match2) throw new NotFound('Match2 Not Found')
 
     return responseWithAliases(match2)
+  }
+
+  /**
+   * An optimiser creates the match2 {match2Id} on-chain. The match2 is now viewable to other members.
+   * @summary Create a new match2 on-chain
+   * @param match2Id The match2's identifier
+   */
+  @Post('{match2Id}/proposal')
+  @Response<NotFound>(404, 'Item not found')
+  @SuccessResponse('201')
+  public async createMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('Match2 Not Found')
+
+    const [transaction] = await this.db.insertTransaction({
+      token_type: TokenType.MATCH2,
+      local_id: match2Id,
+      state: TransactionState.submitted,
+    })
+
+    // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
+    const [tokenId] = await runProcess(match2Propose(match2, transaction.id))
+    await observeTokenId(this.db, TokenType.MATCH2, transaction.id, tokenId, true)
+    return {
+      id: transaction.id,
+      submittedAt: new Date(transaction.created_at),
+      state: transaction.state,
+    }
   }
 }
 
