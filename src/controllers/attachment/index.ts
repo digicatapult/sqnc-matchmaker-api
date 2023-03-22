@@ -51,7 +51,7 @@ export class attachment extends Controller {
   @SuccessResponse(200, 'returns all attachment')
   public async get(): Promise<Attachment[]> {
     this.log.debug('retrieving all attachment')
-    const result = await this.db.attachment()
+    const result: Attachment[] = await this.db.attachment()
 
     return result.map(({ id, filename, binary_blob, created_at }: any): Attachment => {
       const size = (binary_blob as Buffer).length
@@ -66,7 +66,10 @@ export class attachment extends Controller {
 
   @Post('/')
   @SuccessResponse(201, 'attachment has been created')
-  public async create(@Request() req: express.Request, @UploadedFile() file?: Express.Multer.File): Promise<Attachment> {
+  public async create(
+    @Request() req: express.Request,
+    @UploadedFile() file?: Express.Multer.File
+  ): Promise<Attachment> {
     this.log.debug(`creating an attachment filename: ${file?.originalname || 'json'}`)
 
     if (!req.body && !file) throw new BadRequest('nothing to upload')
