@@ -73,11 +73,19 @@ describe('attachment', () => {
 
     test('returns octet attachment', async () => {
       const { id } = octetRes.body
-      const { status, body } = await get(app, `/attachment/${id}`, { accept: 'application/octet-stream' })
+      const { status, body, header } = await get(app, `/attachment/${id}`, { accept: 'application/octet-stream' })
 
       expect(status).to.equal(200)
       expect(body.type).to.equal('Buffer')
       expect(Buffer.from(body.data).toString()).to.equal(blobData)
+      expect(header).to.deep.contain({
+        immutable: 'true',
+        maxage: '31536000000',
+        accept: 'application/octet-stream',
+        'access-control-expose-headers': 'content-disposition',
+        'content-disposition': 'attachment; filename="test.pdf"',
+        'content-length': '326',
+      })
     })
 
     test('returns JSON attachment', async () => {
@@ -90,21 +98,37 @@ describe('attachment', () => {
 
     test('returns octet when JSON.parse fails', async () => {
       const { id } = octetRes.body
-      const { status, body } = await get(app, `/attachment/${id}`, { accept: 'application/json' })
+      const { status, body, header } = await get(app, `/attachment/${id}`, { accept: 'application/json' })
 
       expect(status).to.equal(200)
       expect(body.type).to.equal('Buffer')
       expect(Buffer.from(body.data).toString()).to.equal(blobData)
+      expect(header).to.deep.contain({
+        immutable: 'true',
+        maxage: '31536000000',
+        accept: 'application/octet-stream',
+        'access-control-expose-headers': 'content-disposition',
+        'content-disposition': 'attachment; filename="test.pdf"',
+        'content-length': '326',
+      })
     })
   })
 
 
   test('attachment as octect with the filename [json]', async () => {
     const uploadRes = await postFile(app, '/attachment', Buffer.from(blobData), 'json') 
-    const { status, body } = await get(app, `/attachment/${uploadRes.body.id}`, { accept: 'application/octet-stream' })
+    const { status, body, header } = await get(app, `/attachment/${uploadRes.body.id}`, { accept: 'application/octet-stream' })
 
     expect(status).to.equal(200)
     expect(body.type).to.equal('Buffer')
     expect(Buffer.from(body.data).toString()).to.equal(blobData)
+    expect(header).to.deep.contain({
+      immutable: 'true',
+      maxage: '31536000000',
+      accept: 'application/octet-stream',
+      'access-control-expose-headers': 'content-disposition',
+      'content-disposition': 'attachment; filename="json"',
+      'content-length': '326',
+    })
   })
 })
