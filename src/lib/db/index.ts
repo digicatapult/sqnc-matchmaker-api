@@ -32,11 +32,19 @@ export default class Database {
   private limit = 1000
 
   public db: () => Models<Query> | any
+  public db2: () => any
 
   constructor() {
     this.log = logger
     this.client = knex(pgConfig)
-    this.db = (models: any = {}) => {
+    this.db = (models: Models<Query> = {}) => {
+      TABLES.forEach((name: string) => {
+        this.log.debug(`initializing ${name} db model`)
+        models[name] = () => this.client(name)
+      })
+      return models
+    }
+    this.db2 = (models: any = {}) => {
       TABLES.forEach((model: Model) => {
         this.log.debug(`initializing ${model} db model`)
         const query = () => this.client(model)
@@ -76,11 +84,11 @@ export default class Database {
   }
 
   private async create(query: () => Knex.QueryBuilder, data: any, model: string): Promise<void | unknown> {
-    this.log.info('attempting to insert', { model, data })
-
     try {
+      this.log.info('attempting to insert', { model, data })
       const id = await query().insert(data).returning('id')
-      this.log.debug('returning new record', { id })
+      this.log.debug('returning new record', { id, model })
+
       return query().where({ id })
     } catch (err) {
       this.log.error(err)

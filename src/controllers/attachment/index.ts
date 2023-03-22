@@ -33,7 +33,7 @@ export class attachment extends Controller {
     super()
     this.log = logger.child({ controller: '/attachment' })
     // TMP will be updated with a wrapper so ORM client independant
-    this.db = this.dbClient.db()
+    this.db = this.dbClient.db2()
   }
 
   octetResponse(blob: Blob, name: string): Blob {
@@ -51,7 +51,7 @@ export class attachment extends Controller {
   @SuccessResponse(200, 'returns all attachment')
   public async get(): Promise<Attachment[]> {
     this.log.debug('retrieving all attachment')
-    const result = await this.db.attachment()
+    const result = await this.db.attachment().getAll()
 
     return result.map(({ id, filename, binary_blob, created_at }: any): Attachment => {
       const size = (binary_blob as Buffer).length
@@ -73,11 +73,10 @@ export class attachment extends Controller {
 
     const [{ id, filename, binary_blob, created_at }]: any[] = await this.db
       .attachment()
-      .insert({
+      .create({
         filename: file ? file.originalname : 'json',
         binary_blob: Buffer.from(file.buffer || JSON.stringify(req.body)),
       })
-      .returning(['id', 'filename', 'binary_blob', 'created_at'])
 
     const result: Attachment = {
       id,
@@ -99,7 +98,7 @@ export class attachment extends Controller {
   ): Promise<unknown | Readable> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const { accept } = req.headers
-    const [attachment] = await this.db.attachment().where({ id })
+    const [attachment] = await this.db.attachment().getById(id)
     if (!attachment) throw new NotFound('attachment')
     const { filename, binary_blob } = attachment
 
