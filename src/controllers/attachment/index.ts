@@ -20,6 +20,7 @@ import Database, { Models, Query } from '../../lib/db'
 import type { Attachment } from '../../models'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import { Readable } from 'node:stream'
+import type { UUID } from 'src/models/uuid'
 
 const parseAccept = (acceptHeader: string) =>
   acceptHeader
@@ -124,7 +125,7 @@ export class attachment extends Controller {
   @Produces('application/octet-stream')
   @Produces('application/json')
   @SuccessResponse(200)
-  public async getById(@Request() req: express.Request, @Path() id: string): Promise<unknown | Readable> {
+  public async getById(@Request() req: express.Request, @Path() id: UUID): Promise<unknown | Readable> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const [attachment] = await this.db.attachment().where({ id })
     if (!attachment) throw new NotFound('attachment')
