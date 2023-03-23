@@ -87,16 +87,16 @@ describe('match2', () => {
       expect(response.body).to.equal('Demand B not found')
     })
 
-    it('both demands are orders - 400', async () => {
-      const response = await post(app, '/match2', { demandA: seededOrderId, demandB: seededOrderId })
-      expect(response.status).to.equal(400)
-      expect(response.body).to.equal('Demands have matching type: order')
-    })
-
-    it('both demands are capacities - 400', async () => {
+    it('demandA not an order - 400', async () => {
       const response = await post(app, '/match2', { demandA: seededCapacityId, demandB: seededCapacityId })
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('Demands have matching type: capacity')
+      expect(response.body).to.equal('DemandA must be order')
+    })
+
+    it('demandB not a capacity - 400', async () => {
+      const response = await post(app, '/match2', { demandA: seededOrderId, demandB: seededOrderId })
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal('DemandB must be capacity')
     })
 
     it('invalid demand uuid - 422', async () => {

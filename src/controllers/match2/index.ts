@@ -19,6 +19,7 @@ import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
 import { Match2Request, Match2Response, Match2State } from '../../models/match2'
 import { UUID } from '../../models/uuid'
+import { DemandSubtype } from '../../models/demand'
 
 @Route('match2')
 @Tags('match2')
@@ -49,13 +50,17 @@ export class Match2Controller extends Controller {
       throw new BadRequest('Demand A not found')
     }
 
+    if (demandA.subtype !== DemandSubtype.order) {
+      throw new BadRequest(`DemandA must be ${DemandSubtype.order}`)
+    }
+
     const [demandB] = await this.db.getDemand(demandBId)
     if (!demandB) {
       throw new BadRequest('Demand B not found')
     }
 
-    if (demandA.subtype === demandB.subtype) {
-      throw new BadRequest(`Demands have matching type: ${demandA.subtype}`)
+    if (demandB.subtype !== DemandSubtype.capacity) {
+      throw new BadRequest(`DemandB must be ${DemandSubtype.capacity}`)
     }
 
     const selfAddress = await getMemberBySelf()
