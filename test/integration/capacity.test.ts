@@ -124,5 +124,10 @@ describe('capacity', () => {
       const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
       expect(response.status).to.equal(500)
     })
+
+    it('non-existant Creation ID', async () => {
+      const response = await get(app, `/capacity/${seededCapacityId}/creation/${nonExistentId}`)
+      expect(response.status).to.equal(404)
+    })
   })
 })

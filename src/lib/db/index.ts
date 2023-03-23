@@ -84,4 +84,8 @@ export default class Database {
       })
       .where({ id: localId })
   }
+
+  getCreationID = async (capacityId: UUID) => {
+    return this.db().transaction().select().where({ id: capacityId })
+  }
 }
