@@ -72,12 +72,6 @@ describe('capacity', () => {
       })
     })
 
-    test('should get transactions', async () => {
-      identitySelfMock()
-      const response = await get(app, `/capacity/${seededCapacityId}/creation/${seededTransactionId}`)
-      expect(response.status).to.equal(200)
-    })
-
     test('it should create a capacity on-chain', async () => {
       apiRunProcessMock()
       // submit to chain
@@ -100,7 +94,16 @@ describe('capacity', () => {
       expect(capacity.latest_token_id).to.equal(mockTokenId)
       expect(capacity.original_token_id).to.equal(mockTokenId)
     })
+
+    test('it should get transactions', async () => {
+      identitySelfMock()
+      const response = await get(app, `/capacity/${seededCapacityId}/creation/${seededTransactionId}`)
+      console.log(response.body)
+      expect(response.status).to.equal(200)
+    })
   })
+
+
 
   describe('sad path', () => {
     test('invalid attachment uuid - 422', async () => {
