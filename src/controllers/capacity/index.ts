@@ -133,7 +133,7 @@ export class CapacityController extends Controller {
     const [capacity] = await this.db.getDemand(capacityId)
     if (!capacity) throw new NotFound('Capacity Not Found')
 
-    const creation = await this.db.getCreationID(creationId)
+    const [creation] = await this.db.getCreationID(creationId)
     if (!creation) throw new NotFound('Creation Not Found')
     return creation
   }
