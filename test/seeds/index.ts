@@ -13,7 +13,9 @@ export const cleanup = async () => {
 
 export const parametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
 export const seededCapacityId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
+export const seededCapacityTokenId = 12
 export const seededOrderId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
+export const seededOrderTokenId = 11
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
 
 export const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
@@ -36,6 +38,7 @@ export const seed = async () => {
       subtype: DemandSubtype.capacity,
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: seededCapacityTokenId,
     },
   ])
 
@@ -46,6 +49,7 @@ export const seed = async () => {
       subtype: DemandSubtype.order,
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: seededOrderTokenId,
     },
   ])
 

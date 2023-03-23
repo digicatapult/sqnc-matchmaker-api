@@ -3,7 +3,7 @@ import env from '../../src/env'
 
 export const selfAlias = 'test-self'
 export const selfAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
-export const mockTokenId = 42
+export const mockTokenIds = [42, 43, 44]
 
 const mockAgent = new MockAgent()
 setGlobalDispatcher(mockAgent)
@@ -41,7 +41,7 @@ export const apiRunProcessMock = () => {
       path: '/v3/run-process',
       method: 'POST',
     })
-    .reply(200, [mockTokenId])
+    .reply(200, mockTokenIds.slice(0, 1))
 }
 
 export const apiRunProcessMockError = () => {

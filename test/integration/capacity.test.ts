@@ -7,7 +7,7 @@ import { post, get } from '../helper/routeHelper'
 import { seed, cleanup, parametersAttachmentId, seededCapacityId, nonExistentId } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
-import { selfAlias, mockTokenId, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
+import { selfAlias, mockTokenIds, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 
@@ -82,13 +82,13 @@ describe('capacity', () => {
 
       // check local transaction updates
       const [transaction] = await db.getTransaction(transactionId)
-      expect(transaction.token_id).to.equal(mockTokenId)
+      expect(transaction.token_id).to.equal(mockTokenIds[0])
       expect(transaction.state).to.equal(TransactionState.finalised)
 
       // check local capacity updates with token id
       const [capacity] = await db.getDemand(seededCapacityId)
-      expect(capacity.latestTokenId).to.equal(mockTokenId)
-      expect(capacity.originalTokenId).to.equal(mockTokenId)
+      expect(capacity.latestTokenId).to.equal(mockTokenIds[0])
+      expect(capacity.originalTokenId).to.equal(mockTokenIds[0])
     })
   })
 

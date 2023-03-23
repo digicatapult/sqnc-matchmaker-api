@@ -6,8 +6,12 @@ import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
 import { seed, cleanup, seededCapacityId, seededOrderId, nonExistentId, seededMatch2Id } from '../seeds'
 
-import { selfAlias, identitySelfMock } from '../helper/mock'
+import { selfAlias, identitySelfMock, apiRunProcessMock, mockTokenIds } from '../helper/mock'
 import { Match2State } from '../../src/models/match2'
+import { TransactionState } from '../../src/models/transaction'
+import Database from '../../src/lib/db'
+
+const db = new Database()
 
 describe('match2', () => {
   let app: Express
@@ -71,6 +75,29 @@ describe('match2', () => {
         demandA: seededOrderId,
         demandB: seededCapacityId,
       })
+    })
+
+    it('should create a match2 on-chain', async () => {
+      apiRunProcessMock()
+      // submit to chain
+      const response = await post(app, `/match2/${seededMatch2Id}/proposal`, {})
+      expect(response.status).to.equal(201)
+
+      const { id: transactionId, state } = response.body
+      expect(transactionId).to.match(
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
+      )
+      expect(state).to.equal(TransactionState.submitted)
+
+      // check local transaction updates
+      const [transaction] = await db.getTransaction(transactionId)
+      expect(transaction.token_id).to.equal(mockTokenIds[0])
+      expect(transaction.state).to.equal(TransactionState.finalised)
+
+      // check local match2 updates with token id
+      const [match2] = await db.getMatch2(seededMatch2Id)
+      expect(match2.latestTokenId).to.equal(mockTokenIds[0])
+      expect(match2.originalTokenId).to.equal(mockTokenIds[0])
     })
   })
 

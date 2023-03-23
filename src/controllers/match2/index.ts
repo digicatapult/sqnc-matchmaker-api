@@ -119,6 +119,16 @@ export class Match2Controller extends Controller {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
 
+    const [{ latestTokenId: demandAId }] = await this.db.getDemandLatestTokenId(match2.demandA)
+    if (!demandAId) {
+      throw new BadRequest('Demand A must be on chain')
+    }
+
+    const [{ latestTokenId: demandBId }] = await this.db.getDemandLatestTokenId(match2.demandB)
+    if (!demandBId) {
+      throw new BadRequest('Demand B must be on chain')
+    }
+
     const [transaction] = await this.db.insertTransaction({
       token_type: TokenType.MATCH2,
       local_id: match2Id,
@@ -126,7 +136,7 @@ export class Match2Controller extends Controller {
     })
 
     // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-    const [tokenId] = await runProcess(match2Propose(match2, 0, 0))
+    const [tokenId] = await runProcess(match2Propose(match2, demandAId, demandBId))
     await observeTokenId(this.db, TokenType.MATCH2, transaction.id, tokenId, true)
     return {
       id: transaction.id,

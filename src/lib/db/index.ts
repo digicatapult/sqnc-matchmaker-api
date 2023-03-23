@@ -115,4 +115,8 @@ export default class Database {
   getMatch2 = async (match2Id: UUID) => {
     return this.db().match2().where({ id: match2Id }).select(match2Columns)
   }
+
+  getDemandLatestTokenId = async (demandId: UUID) => {
+    return this.db().demand().where({ id: demandId }).select('latest_token_id AS latestTokenId')
+  }
 }
