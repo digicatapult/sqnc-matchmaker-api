@@ -86,6 +86,6 @@ export default class Database {
   }
 
   getCreationID = async (capacityId: UUID) => {
-    return this.db().transaction().select().where({ id: capacityId })
+    return this.db().transaction().select('*').where({ id: capacityId })
   }
 }
