@@ -1,17 +1,15 @@
-import { describe, before, test } from 'mocha'
+import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
-import { seed, cleanup, parametersAttachmentId, seededCapacityId } from '../seeds/capacity'
+import { seed, cleanup, parametersAttachmentId, seededCapacityId, nonExistentId } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
 import { selfAlias, mockTokenId, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
-
-const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
 
 const db = new Database()
 
@@ -20,6 +18,7 @@ describe('capacity', () => {
 
   before(async function () {
     app = await createHttpServer()
+    identitySelfMock()
   })
 
   beforeEach(async function () {
@@ -31,8 +30,7 @@ describe('capacity', () => {
   })
 
   describe('happy path', () => {
-    test('it should create a capacity', async () => {
-      identitySelfMock()
+    it('should create a capacity', async () => {
       const response = await post(app, '/capacity', { parametersAttachmentId })
       expect(response.status).to.equal(201)
 
@@ -47,8 +45,7 @@ describe('capacity', () => {
       })
     })
 
-    test('it should get a capacity', async () => {
-      identitySelfMock()
+    it('should get a capacity', async () => {
       const response = await get(app, `/capacity/${seededCapacityId}`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
@@ -59,8 +56,7 @@ describe('capacity', () => {
       })
     })
 
-    test('it should get all capacities', async () => {
-      identitySelfMock()
+    it('should get all capacities', async () => {
       const response = await get(app, `/capacity`)
       expect(response.status).to.equal(200)
       expect(response.body.length).to.equal(1)
@@ -72,7 +68,7 @@ describe('capacity', () => {
       })
     })
 
-    test('it should create a capacity on-chain', async () => {
+    it('should create a capacity on-chain', async () => {
       apiRunProcessMock()
       // submit to chain
       const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
@@ -91,19 +87,19 @@ describe('capacity', () => {
 
       // check local capacity updates with token id
       const [capacity] = await db.getDemand(seededCapacityId)
-      expect(capacity.latest_token_id).to.equal(mockTokenId)
-      expect(capacity.original_token_id).to.equal(mockTokenId)
+      expect(capacity.latestTokenId).to.equal(mockTokenId)
+      expect(capacity.originalTokenId).to.equal(mockTokenId)
     })
   })
 
   describe('sad path', () => {
-    test('invalid attachment uuid - 422', async () => {
+    it('invalid attachment uuid - 422', async () => {
       const response = await post(app, '/capacity', { parametersAttachmentId: 'invalid' })
       expect(response.status).to.equal(422)
       expect(response.body.message).to.equal('Validation failed')
     })
 
-    test('non-existent attachment - 400', async () => {
+    it('non-existent attachment - 400', async () => {
       const response = await post(app, '/capacity', { parametersAttachmentId: nonExistentId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Attachment id not found')

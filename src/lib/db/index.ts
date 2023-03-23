@@ -14,6 +14,28 @@ export interface Models<V> {
 
 export type Query = Knex.QueryBuilder
 
+const demandColumns = [
+  'id',
+  'owner',
+  'state',
+  'subtype',
+  'parameters_attachment_id AS parametersAttachmentId',
+  'latest_token_id AS latestTokenId',
+  'original_token_id AS originalTokenId',
+]
+
+const match2Columns = [
+  'id',
+  'state',
+  'optimiser',
+  'member_a AS memberA',
+  'member_b AS memberB',
+  'demand_a_id AS demandA',
+  'demand_b_id AS demandB',
+  'latest_token_id AS latestTokenId',
+  'original_token_id AS originalTokenId',
+]
+
 export default class Database {
   public client: Knex
   private log: Logger
@@ -40,14 +62,11 @@ export default class Database {
   }
 
   getDemands = async (subtype: DemandSubtype) => {
-    return this.db()
-      .demand()
-      .select(['id', 'owner', 'state', 'parameters_attachment_id AS parametersAttachmentId'])
-      .where({ subtype })
+    return this.db().demand().select(demandColumns).where({ subtype })
   }
 
   getDemand = async (id: UUID) => {
-    return this.db().demand().select(['*', 'parameters_attachment_id AS parametersAttachmentId']).where({ id })
+    return this.db().demand().select(demandColumns).where({ id })
   }
 
   getDemandWithAttachment = async (capacityId: UUID, subtype: DemandSubtype) => {
@@ -83,5 +102,17 @@ export default class Database {
         updated_at: this.client.fn.now(),
       })
       .where({ id: localId })
+  }
+
+  insertMatch2 = async (match2: object) => {
+    return this.db().match2().insert(match2).returning(match2Columns)
+  }
+
+  getMatch2s = async () => {
+    return this.db().match2().select(match2Columns)
+  }
+
+  getMatch2 = async (match2Id: UUID) => {
+    return this.db().match2().where({ id: match2Id }).select(match2Columns)
   }
 }

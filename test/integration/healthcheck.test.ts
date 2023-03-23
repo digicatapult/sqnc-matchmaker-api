@@ -1,4 +1,4 @@
-import { describe, before, test } from 'mocha'
+import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 import createHttpServer from '../../src/server'
@@ -11,7 +11,7 @@ describe('health check', () => {
     app = await createHttpServer()
   })
 
-  test('should return 200', async () => {
+  it('should return 200', async () => {
     const response = await get(app, '/health')
 
     expect(response.status).to.equal(200)
