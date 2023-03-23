@@ -89,7 +89,7 @@ export class CapacityController extends Controller {
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {
     const [capacity] = await this.db.getDemand(capacityId)
-    if (!capacity) throw new NotFound('Capacity Not Found')
+    if (!capacity) throw new NotFound('capacity')
 
     return responseWithAlias(capacity)
   }
@@ -104,7 +104,7 @@ export class CapacityController extends Controller {
   @SuccessResponse('201')
   public async createCapacityOnChain(@Path() capacityId: UUID): Promise<TransactionResponse> {
     const [capacity] = await this.db.getDemandWithAttachment(capacityId, DemandSubtype.capacity)
-    if (!capacity) throw new NotFound('Capacity Not Found')
+    if (!capacity) throw new NotFound('capacity')
 
     const [transaction] = await this.db.insertTransaction({
       token_type: TokenType.DEMAND,
@@ -113,7 +113,7 @@ export class CapacityController extends Controller {
     })
 
     // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-    const [tokenId] = await runProcess(demandCreate(capacity, transaction.id))
+    const [tokenId] = await runProcess(demandCreate(capacity))
     await observeTokenId(this.db, TokenType.DEMAND, transaction.id, tokenId, true)
     return {
       id: transaction.id,

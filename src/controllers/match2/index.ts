@@ -20,10 +20,11 @@ import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity
 import { Match2Request, Match2Response, Match2State } from '../../models/match2'
 import { UUID } from '../../models/uuid'
 import { TransactionResponse, TransactionState } from '../../models/transaction'
-import { TokenType } from 'src/models/tokenType'
-import { observeTokenId } from 'src/lib/services/blockchainWatcher'
-import { runProcess } from 'src/lib/services/dscpApi'
-import { match2Propose } from 'src/lib/payload'
+import { TokenType } from '../../models/tokenType'
+import { observeTokenId } from '../../lib/services/blockchainWatcher'
+import { runProcess } from '../../lib/services/dscpApi'
+import { match2Propose } from '../../lib/payload'
+import { DemandSubtype } from '../../models/demand'
 
 @Route('match2')
 @Tags('match2')
@@ -54,13 +55,17 @@ export class Match2Controller extends Controller {
       throw new BadRequest('Demand A not found')
     }
 
+    if (demandA.subtype !== DemandSubtype.order) {
+      throw new BadRequest(`DemandA must be ${DemandSubtype.order}`)
+    }
+
     const [demandB] = await this.db.getDemand(demandBId)
     if (!demandB) {
       throw new BadRequest('Demand B not found')
     }
 
-    if (demandA.subtype === demandB.subtype) {
-      throw new BadRequest(`Demands have matching type: ${demandA.subtype}`)
+    if (demandB.subtype !== DemandSubtype.capacity) {
+      throw new BadRequest(`DemandB must be ${DemandSubtype.capacity}`)
     }
 
     const selfAddress = await getMemberBySelf()
@@ -97,7 +102,7 @@ export class Match2Controller extends Controller {
   @Get('{match2Id}')
   public async getMatch2(@Path() match2Id: UUID): Promise<Match2Response> {
     const [match2] = await this.db.getMatch2(match2Id)
-    if (!match2) throw new NotFound('Match2 Not Found')
+    if (!match2) throw new NotFound('match2')
 
     return responseWithAliases(match2)
   }
@@ -112,7 +117,7 @@ export class Match2Controller extends Controller {
   @SuccessResponse('201')
   public async createMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
-    if (!match2) throw new NotFound('Match2 Not Found')
+    if (!match2) throw new NotFound('match2')
 
     const [transaction] = await this.db.insertTransaction({
       token_type: TokenType.MATCH2,
@@ -121,7 +126,7 @@ export class Match2Controller extends Controller {
     })
 
     // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-    const [tokenId] = await runProcess(match2Propose(match2, transaction.id))
+    const [tokenId] = await runProcess(match2Propose(match2, 0, 0))
     await observeTokenId(this.db, TokenType.MATCH2, transaction.id, tokenId, true)
     return {
       id: transaction.id,
