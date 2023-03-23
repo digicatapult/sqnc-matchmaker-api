@@ -43,6 +43,7 @@ export class CapacityController extends Controller {
    */
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
+  @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
   public async createCapacity(@Body() { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
@@ -65,7 +66,7 @@ export class CapacityController extends Controller {
       id: capacity.id,
       owner: ownerAlias,
       state: capacity.state,
-      parametersAttachmentId: parametersAttachmentId,
+      parametersAttachmentId,
     }
   }
 
@@ -84,12 +85,11 @@ export class CapacityController extends Controller {
    * @summary Get a capacity by ID
    * @param capacityId The capacity's identifier
    */
-  @Response<ValidateError>(422, 'Validation Failed')
   @Response<NotFound>(404, 'Item not found')
   @Get('{capacityId}')
   public async getCapacity(@Path() capacityId: UUID): Promise<DemandResponse> {
     const [capacity] = await this.db.getDemand(capacityId)
-    if (!capacity) throw new NotFound('Capacity Not Found')
+    if (!capacity) throw new NotFound('capacity')
 
     return responseWithAlias(capacity)
   }
@@ -97,13 +97,14 @@ export class CapacityController extends Controller {
   /**
    * A member creates the capacity {capacityId} on-chain. The capacity is now viewable to other members.
    * @summary Create a new capacity demand on-chain
+   * @param capacityId The capacity's identifier
    */
   @Post('{capacityId}/creation')
   @Response<NotFound>(404, 'Item not found')
   @SuccessResponse('201')
   public async createCapacityOnChain(@Path() capacityId: UUID): Promise<TransactionResponse> {
     const [capacity] = await this.db.getDemandWithAttachment(capacityId, DemandSubtype.capacity)
-    if (!capacity) throw new NotFound('Capacity Not Found')
+    if (!capacity) throw new NotFound('capacity')
 
     const [transaction] = await this.db.insertTransaction({
       token_type: TokenType.DEMAND,
