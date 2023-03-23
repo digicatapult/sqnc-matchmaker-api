@@ -4,7 +4,7 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
-import { seed, cleanup, parametersAttachmentId, seededCapacityId } from '../seeds/capacity'
+import { seed, cleanup, parametersAttachmentId, seededCapacityId, seededTransactionId } from '../seeds/capacity'
 
 import { DemandState } from '../../src/models/demand'
 import { selfAlias, mockTokenId, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
@@ -70,6 +70,12 @@ describe('capacity', () => {
         state: DemandState.created,
         parametersAttachmentId,
       })
+    })
+
+    test('should get transactions', async () => {
+      identitySelfMock()
+      const response = await get(app, `/capacity/${seededCapacityId}/creation/${seededTransactionId}`)
+      expect(response.status).to.equal(200)
     })
 
     test('it should create a capacity on-chain', async () => {
