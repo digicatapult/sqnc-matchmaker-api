@@ -20,6 +20,7 @@ import Database, { Models, Query } from '../../lib/db'
 import type { Attachment } from '../../models'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import { Readable } from 'node:stream'
+import type { UUID } from '../../models/uuid'
 
 const parseAccept = (acceptHeader: string) =>
   acceptHeader
@@ -27,7 +28,7 @@ const parseAccept = (acceptHeader: string) =>
     .map((acceptElement) => {
       const trimmed = acceptElement.trim()
       const [mimeType, quality = '1'] = trimmed.split(';q=')
-      return { mimeType, quality: parseInt(quality) }
+      return { mimeType, quality: parseFloat(quality) }
     })
     .sort((a, b) => {
       if (a.quality !== b.quality) {
@@ -81,17 +82,14 @@ export class attachment extends Controller {
   @SuccessResponse(200, 'returns all attachment')
   public async get(): Promise<Attachment[]> {
     this.log.debug('retrieving all attachment')
-    const result = await this.db.attachment()
 
-    return result.map(({ id, filename, binary_blob, created_at }: any): Attachment => {
-      const size = (binary_blob as Buffer).length
-      return {
-        id,
-        filename,
+    return await this.db.attachment().map(
+      ({ binary_blob, created_at, ...rest }: any): Attachment => ({
+        ...rest,
         createdAt: created_at,
-        size,
-      }
-    })
+        size: binary_blob.length,
+      })
+    )
   }
 
   @Post('/')
@@ -127,7 +125,7 @@ export class attachment extends Controller {
   @Produces('application/octet-stream')
   @Produces('application/json')
   @SuccessResponse(200)
-  public async getById(@Request() req: express.Request, @Path() id: string): Promise<unknown | Readable> {
+  public async getById(@Request() req: express.Request, @Path() id: UUID): Promise<unknown | Readable> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const [attachment] = await this.db.attachment().where({ id })
     if (!attachment) throw new NotFound('attachment')
