@@ -91,17 +91,12 @@ describe('capacity', () => {
       expect(capacity.originalTokenId).to.equal(mockTokenId)
     })
 
-    test('it should get transactions', async () => {
+    it('it should get transactions', async () => {
       identitySelfMock()
       const response = await get(app, `/capacity/${seededCapacityId}/creation/${seededTransactionId}`)
       expect(response.status).to.equal(200)
     })
 
-    test('it should get transactions', async () => {
-      identitySelfMock()
-      const response = await get(app, `/capacity/${seededCapacityId}/creation/${seededTransactionId}`)
-      expect(response.status).to.equal(200)
-    })
   })
 
 
