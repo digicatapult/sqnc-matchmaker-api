@@ -127,7 +127,7 @@ export class CapacityController extends Controller {
    * @param creationId The capacity's creation ID
    */
   @Response<NotFound>(404, 'Items not found.')
-  @SuccessResponse('201')
+  @SuccessResponse('200')
   @Get('{capacity_id}/creation/{creation_id}')
   public async getCreationID(@Path() capacityId: UUID, creationId: UUID): Promise<TransactionResponse> {
     const [capacity] = await this.db.getDemand(capacityId)
