@@ -4,7 +4,7 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
-import { seed, cleanup, parametersAttachmentId, seededCapacityId, nonExistentId, seededTransactionId } from '../seeds'
+import { seed, cleanup, parametersAttachmentId, seededCapacityId, nonExistentId, seededTransactionId, seededTransactionId2 } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
 import { selfAlias, mockTokenId, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
@@ -109,6 +109,33 @@ describe('capacity', () => {
       )
     })
 
+    it('it should get all transactions from a capacity ID - 200', async () => {
+      const response = await get(app, `/capacity/${seededCapacityId}/creation/`)
+      expect(response.status).to.equal(200)
+      expect(response.body).to.deep.equal(
+        [
+          {
+            id: seededTransactionId,
+            token_type: TokenType.DEMAND,
+            local_id: seededCapacityId,
+            state: TransactionState.submitted,
+            created_at: '2023-03-24T10:40:47.317Z',
+            updated_at: '2023-03-24T10:40:47.317Z',
+            token_id: 6006
+          },
+          {
+            id: seededTransactionId2,
+            token_type: TokenType.DEMAND,
+            local_id: seededCapacityId,
+            state: TransactionState.submitted,
+            created_at: '2023-03-24T10:40:47.317Z',
+            updated_at: '2023-03-24T10:40:47.317Z',
+            token_id: 7000
+          }
+        ]
+      )      
+    })
+
   })
 
 
@@ -149,6 +176,12 @@ describe('capacity', () => {
 
     it('non-existant Capacity ID when using a Creation ID - 404', async () => {
       const response = await get(app, `/capacity/${nonExistentId}/creation/${seededTransactionId}`)
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-existant Capacity ID should return nothing - 404', async () => {
+      const response = await get(app, `/capacity/${nonExistentId}/creation/`)
+      console.log(response.body)
       expect(response.status).to.equal(404)
     })
   })

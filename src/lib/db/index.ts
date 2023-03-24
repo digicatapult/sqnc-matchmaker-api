@@ -85,6 +85,10 @@ export default class Database {
     return this.db().transaction().select('*').where({ id: id })
   }
 
+  getTransactionsFromCapacityID = async (capacityID: UUID) => {
+    return this.db().transaction().where({ local_id: capacityID })
+  }
+
   updateTransaction = async (transactionId: UUID, transaction: object) => {
     return this.db()
       .transaction()
