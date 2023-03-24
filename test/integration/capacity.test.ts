@@ -116,7 +116,7 @@ describe('capacity', () => {
         [
           {
             id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
-            token_type: 'DEMAND',
+            token_type: TokenType.DEMAND,
             local_id: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
             state: 'submitted',
             created_at: '2023-03-24T10:40:47.317Z',
@@ -125,7 +125,7 @@ describe('capacity', () => {
           },
           {
             id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
-            token_type: 'DEMAND',
+            token_type: TokenType.DEMAND,
             local_id: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
             state: 'submitted',
             created_at: '2023-03-24T10:40:47.317Z',
