@@ -142,8 +142,13 @@ describe('capacity', () => {
       expect(response.status).to.equal(500)
     })
 
-    it('non-existant Creation ID', async () => {
-      const response = await get(app, `/capacity/${seededCapacityId}/creation/${nonExistentId}`)
+    it('non-existant Creation ID - 404', async () => {
+      const response = await get(app, `/capacity/${nonExistentId}/creation/${nonExistentId}`)
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-existant Capacity ID when using a Creation ID - 404', async () => {
+      const response = await get(app, `/capacity/${nonExistentId}/creation/${seededTransactionId}`)
       expect(response.status).to.equal(404)
     })
   })
