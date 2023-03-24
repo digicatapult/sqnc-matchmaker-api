@@ -95,8 +95,9 @@ describe('capacity', () => {
 
     it('it should get a transaction', async () => {
       const response = await get(app, `/capacity/${seededCapacityId}/creation/${seededTransactionId}`)
+      console.log(response)
       expect(response.status).to.equal(200)      
-      expect(response.body[0]).to.deep.equal(
+      expect(response.body).to.deep.equal(
         {
           id: seededTransactionId,
           token_type: TokenType.DEMAND,
