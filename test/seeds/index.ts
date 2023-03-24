@@ -2,6 +2,7 @@ import Database from '../../src/lib/db'
 import { DemandState, DemandSubtype } from '../../src/models/demand'
 import { Match2State } from '../../src/models/match2'
 import { selfAddress } from '../helper/mock'
+import { TokenType } from '../../src/models/tokenType'
 
 const db = new Database().db()
 
@@ -44,9 +45,9 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededTransactionId,
-      token_type: 'DEMAND',
+      token_type: TokenType.DEMAND,
       local_id: seededCapacityId,
-      state: 'submitted',
+      state: DemandState.created,
       token_id: 6006,
     },
   ])

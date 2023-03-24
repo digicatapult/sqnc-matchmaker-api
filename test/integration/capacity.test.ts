@@ -10,6 +10,8 @@ import { DemandState } from '../../src/models/demand'
 import { selfAlias, mockTokenId, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
+import { TokenType } from '../../src/models/tokenType'
+
 
 const db = new Database()
 
@@ -93,13 +95,13 @@ describe('capacity', () => {
 
     it('it should get a transaction', async () => {
       const response = await get(app, `/capacity/${seededCapacityId}/creation/${seededTransactionId}`)
-      expect(response.status).to.equal(200)
+      expect(response.status).to.equal(200)      
       expect(response.body[0]).to.deep.equal(
         {
           id: seededTransactionId,
-          token_type: 'DEMAND',
+          token_type: TokenType.DEMAND,
           local_id: seededCapacityId,
-          state: 'submitted',
+          state: DemandState.created,
           token_id: 6006,
         }
       )

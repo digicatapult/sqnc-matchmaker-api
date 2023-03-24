@@ -82,7 +82,7 @@ export default class Database {
   }
 
   getTransaction = async (id: UUID) => {
-    return this.db().transaction().select('*').where({ id })
+    return this.db().transaction().select('*').where({ id: id })
   }
 
   updateTransaction = async (transactionId: UUID, transaction: object) => {
