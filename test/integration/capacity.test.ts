@@ -101,7 +101,7 @@ describe('capacity', () => {
           id: seededTransactionId,
           token_type: TokenType.DEMAND,
           local_id: seededCapacityId,
-          state: DemandState.created,
+          state: TransactionState.submitted,
           token_id: 6006,
         }
       )

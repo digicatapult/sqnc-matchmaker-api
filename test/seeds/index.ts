@@ -3,6 +3,7 @@ import { DemandState, DemandSubtype } from '../../src/models/demand'
 import { Match2State } from '../../src/models/match2'
 import { selfAddress } from '../helper/mock'
 import { TokenType } from '../../src/models/tokenType'
+import { TransactionState } from '../../src/models/transaction'
 
 const db = new Database().db()
 
@@ -47,7 +48,7 @@ export const seed = async () => {
       id: seededTransactionId,
       token_type: TokenType.DEMAND,
       local_id: seededCapacityId,
-      state: DemandState.created,
+      state: TransactionState.submitted,
       token_id: 6006,
     },
   ])
