@@ -109,6 +109,33 @@ describe('capacity', () => {
       )
     })
 
+    it('it should get all transactions from a capacity ID - 200', async () => {
+      const response = await get(app, `/capacity/${seededCapacityId}/creation/`)
+      expect(response.status).to.equal(200)
+      expect(response.body).to.deep.equal(
+        [
+          {
+            id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
+            token_type: 'DEMAND',
+            local_id: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
+            state: 'submitted',
+            created_at: '2023-03-24T10:40:47.317Z',
+            updated_at: '2023-03-24T10:40:47.317Z',
+            token_id: 6006
+          },
+          {
+            id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
+            token_type: 'DEMAND',
+            local_id: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
+            state: 'submitted',
+            created_at: '2023-03-24T10:40:47.317Z',
+            updated_at: '2023-03-24T10:40:47.317Z',
+            token_id: 7000
+          }
+        ]
+      )      
+    })
+
   })
 
 
@@ -149,6 +176,11 @@ describe('capacity', () => {
 
     it('non-existant Capacity ID when using a Creation ID - 404', async () => {
       const response = await get(app, `/capacity/${nonExistentId}/creation/${seededTransactionId}`)
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-existant Capacity ID should return nothing - 404', async () => {
+      const response = await get(app, `/capacity/${nonExistentId}/creation/`)
       expect(response.status).to.equal(404)
     })
   })
