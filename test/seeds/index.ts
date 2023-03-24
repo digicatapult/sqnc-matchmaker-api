@@ -45,7 +45,7 @@ export const seed = async () => {
     {
       id: seededTransactionId,
       token_type: 'DEMAND',
-      local_id: seededTransactionId,
+      local_id: seededCapacityId,
       state: 'submitted',
       token_id: 6006,
     },
