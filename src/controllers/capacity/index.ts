@@ -124,6 +124,34 @@ export class CapacityController extends Controller {
       state: transaction.state,
     }
   }
+
+  /**
+   * @summary Get a capacity by ID
+   * @param capacityId The capacity's identifier
+   * @param creationId The capacity's creation ID
+   */
+  @Response<NotFound>(404, 'Items not found.')
+  @SuccessResponse('200')
+  @Get('{capacityId}/creation/{creationId}')
+  public async getCreationID(@Path() capacityId: UUID, creationId: UUID): Promise<TransactionResponse> {
+    const [capacity] = await this.db.getDemand(capacityId)
+    if (!capacity) throw new NotFound('capacity')
+
+    const [creation] = await this.db.getTransaction(creationId)
+    if (!creation) throw new NotFound('creation')
+    return creation
+  }
+
+  @Response<NotFound>(404, 'Items not found.')
+  @SuccessResponse('200')
+  @Get('{capacityId}/creation/')
+  public async getTransactionsFromCapacity(@Path() capacityId: UUID): Promise<TransactionResponse[]> {
+    const [capacity] = await this.db.getDemand(capacityId)
+    if (!capacity) throw new NotFound('capacity')
+
+    const creations = await this.db.getTransactionsFromCapacityID(capacityId)
+    return creations
+  }
 }
 
 const responseWithAlias = async (capacity: DemandResponse): Promise<DemandResponse> => {
