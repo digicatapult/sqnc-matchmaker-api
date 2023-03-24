@@ -19,6 +19,8 @@ export const seededOrderTokenId = 11
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
 
 export const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
+export const seededCapacityMissingTokenId = 'b2348deb-d967-4317-8637-2867ced70356'
+export const seededOrderMissingTokenId = '76b7c704-f9a0-4a80-9554-7268df097798'
 
 export const seed = async () => {
   await cleanup()
@@ -64,6 +66,26 @@ export const seed = async () => {
       member_b: selfAddress,
       demand_a_id: seededOrderId,
       demand_b_id: seededCapacityId,
+    },
+  ])
+
+  await db.demand().insert([
+    {
+      id: seededCapacityMissingTokenId,
+      owner: selfAddress,
+      subtype: DemandSubtype.capacity,
+      state: DemandState.created,
+      parameters_attachment_id: parametersAttachmentId,
+    },
+  ])
+
+  await db.demand().insert([
+    {
+      id: seededOrderMissingTokenId,
+      owner: selfAddress,
+      subtype: DemandSubtype.order,
+      state: DemandState.created,
+      parameters_attachment_id: parametersAttachmentId,
     },
   ])
 }

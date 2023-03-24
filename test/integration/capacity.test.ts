@@ -65,7 +65,7 @@ describe('capacity', () => {
     it('should get all capacities', async () => {
       const response = await get(app, `/capacity`)
       expect(response.status).to.equal(200)
-      expect(response.body.length).to.equal(1)
+      expect(response.body.length).to.equal(2)
       expect(response.body[0]).to.deep.equal({
         id: seededCapacityId,
         owner: selfAlias,

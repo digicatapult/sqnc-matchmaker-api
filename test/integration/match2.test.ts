@@ -13,6 +13,8 @@ import {
   seededMatch2Id,
   seededOrderTokenId,
   seededCapacityTokenId,
+  seededOrderMissingTokenId,
+  seededCapacityMissingTokenId,
 } from '../seeds'
 
 import { selfAlias, identitySelfMock, match2ProposeMock, match2ProposeMockTokenIds } from '../helper/mock'
@@ -151,6 +153,24 @@ describe('match2', () => {
     it('non-existent match2 id - 404', async () => {
       const response = await get(app, `/match2/${nonExistentId}`)
       expect(response.status).to.equal(404)
+    })
+
+    it('demandA missing token ID - 400', async () => {
+      const createMatch2 = await post(app, '/match2', { demandA: seededOrderMissingTokenId, demandB: seededCapacityId })
+      expect(createMatch2.status).to.equal(201)
+
+      const response = await post(app, `/match2/${createMatch2.body.id}/proposal`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal('Demand A must be on chain')
+    })
+
+    it('demandB missing token ID - 400', async () => {
+      const createMatch2 = await post(app, '/match2', { demandA: seededOrderId, demandB: seededCapacityMissingTokenId })
+      expect(createMatch2.status).to.equal(201)
+
+      const response = await post(app, `/match2/${createMatch2.body.id}/proposal`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal('Demand B must be on chain')
     })
   })
 })
