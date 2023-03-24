@@ -50,6 +50,8 @@ export const seed = async () => {
       local_id: seededCapacityId,
       state: TransactionState.submitted,
       token_id: 6006,
+      created_at: '2023-03-24T10:40:47.317Z',
+      updated_at: '2023-03-24T10:40:47.317Z',
     },
   ])
 
