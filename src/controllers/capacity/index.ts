@@ -114,7 +114,10 @@ export class CapacityController extends Controller {
 
     // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
     const [tokenId] = await runProcess(demandCreate(capacity))
-    await observeTokenId(this.db, TokenType.DEMAND, transaction.id, tokenId, true)
+    await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
+
+    // demand-create returns a single token ID
+    await observeTokenId(TokenType.DEMAND, capacityId, tokenId, true)
     return {
       id: transaction.id,
       submittedAt: new Date(transaction.created_at),

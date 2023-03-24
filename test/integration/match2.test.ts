@@ -4,9 +4,18 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
-import { seed, cleanup, seededCapacityId, seededOrderId, nonExistentId, seededMatch2Id } from '../seeds'
+import {
+  seed,
+  cleanup,
+  seededCapacityId,
+  seededOrderId,
+  nonExistentId,
+  seededMatch2Id,
+  seededOrderTokenId,
+  seededCapacityTokenId,
+} from '../seeds'
 
-import { selfAlias, identitySelfMock, apiRunProcessMock, mockTokenIds } from '../helper/mock'
+import { selfAlias, identitySelfMock, match2ProposeMock, match2ProposeMockTokenIds } from '../helper/mock'
 import { Match2State } from '../../src/models/match2'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
@@ -78,7 +87,7 @@ describe('match2', () => {
     })
 
     it('should create a match2 on-chain', async () => {
-      apiRunProcessMock()
+      match2ProposeMock()
       // submit to chain
       const response = await post(app, `/match2/${seededMatch2Id}/proposal`, {})
       expect(response.status).to.equal(201)
@@ -91,13 +100,20 @@ describe('match2', () => {
 
       // check local transaction updates
       const [transaction] = await db.getTransaction(transactionId)
-      expect(transaction.token_id).to.equal(mockTokenIds[0])
       expect(transaction.state).to.equal(TransactionState.finalised)
 
-      // check local match2 updates with token id
+      // check local entities update with token id
+      const [demandA] = await db.getDemand(seededOrderId)
+      expect(demandA.latestTokenId).to.equal(match2ProposeMockTokenIds[0])
+      expect(demandA.originalTokenId).to.equal(seededOrderTokenId)
+
+      const [demandB] = await db.getDemand(seededCapacityId)
+      expect(demandB.latestTokenId).to.equal(match2ProposeMockTokenIds[1])
+      expect(demandB.originalTokenId).to.equal(seededCapacityTokenId)
+
       const [match2] = await db.getMatch2(seededMatch2Id)
-      expect(match2.latestTokenId).to.equal(mockTokenIds[0])
-      expect(match2.originalTokenId).to.equal(mockTokenIds[0])
+      expect(match2.latestTokenId).to.equal(match2ProposeMockTokenIds[2])
+      expect(match2.originalTokenId).to.equal(match2ProposeMockTokenIds[2])
     })
   })
 

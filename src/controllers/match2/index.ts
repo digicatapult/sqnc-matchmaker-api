@@ -136,8 +136,14 @@ export class Match2Controller extends Controller {
     })
 
     // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-    const [tokenId] = await runProcess(match2Propose(match2, demandAId, demandBId))
-    await observeTokenId(this.db, TokenType.MATCH2, transaction.id, tokenId, true)
+    const tokenIds = await runProcess(match2Propose(match2, demandAId, demandBId))
+    await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
+
+    // match2-propose returns 3 token IDs
+    await observeTokenId(TokenType.DEMAND, match2.demandA, tokenIds[0], false) // order
+    await observeTokenId(TokenType.DEMAND, match2.demandB, tokenIds[1], false) // capacity
+    await observeTokenId(TokenType.MATCH2, match2.id, tokenIds[2], true) // match2
+
     return {
       id: transaction.id,
       submittedAt: new Date(transaction.created_at),

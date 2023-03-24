@@ -39,6 +39,7 @@ export const seed = async () => {
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededCapacityTokenId,
+      original_token_id: seededCapacityTokenId,
     },
   ])
 
@@ -50,6 +51,7 @@ export const seed = async () => {
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededOrderTokenId,
+      original_token_id: seededOrderTokenId,
     },
   ])
 

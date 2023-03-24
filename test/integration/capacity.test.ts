@@ -7,7 +7,13 @@ import { post, get } from '../helper/routeHelper'
 import { seed, cleanup, parametersAttachmentId, seededCapacityId, nonExistentId } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
-import { selfAlias, mockTokenIds, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
+import {
+  selfAlias,
+  identitySelfMock,
+  demandCreateMock,
+  apiRunProcessMockError,
+  demandCreateTokenId,
+} from '../helper/mock'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 
@@ -69,7 +75,7 @@ describe('capacity', () => {
     })
 
     it('should create a capacity on-chain', async () => {
-      apiRunProcessMock()
+      demandCreateMock()
       // submit to chain
       const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
       expect(response.status).to.equal(201)
@@ -82,13 +88,12 @@ describe('capacity', () => {
 
       // check local transaction updates
       const [transaction] = await db.getTransaction(transactionId)
-      expect(transaction.token_id).to.equal(mockTokenIds[0])
       expect(transaction.state).to.equal(TransactionState.finalised)
 
       // check local capacity updates with token id
       const [capacity] = await db.getDemand(seededCapacityId)
-      expect(capacity.latestTokenId).to.equal(mockTokenIds[0])
-      expect(capacity.originalTokenId).to.equal(mockTokenIds[0])
+      expect(capacity.latestTokenId).to.equal(demandCreateTokenId)
+      expect(capacity.originalTokenId).to.equal(demandCreateTokenId)
     })
   })
 
