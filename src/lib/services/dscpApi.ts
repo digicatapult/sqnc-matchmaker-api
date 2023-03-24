@@ -9,6 +9,7 @@ export interface RunProcessFile {
 }
 
 export const runProcess = async ({ files, ...payload }: { files: RunProcessFile[] }) => {
+  console.log(JSON.stringify(payload))
   const url = `${URL_PREFIX}/run-process`
   const formData = new FormData()
 
