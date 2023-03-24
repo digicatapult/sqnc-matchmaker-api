@@ -143,10 +143,13 @@ export class CapacityController extends Controller {
   @SuccessResponse('200')
   @Get('{capacityId}/creation/')
   public async getTransactionsFromCapacity(@Path() capacityId: UUID): Promise<TransactionResponse[]> {
-    const capacity = await this.db.getTransactionsFromCapacityID(capacityId)
+    const [capacity] = await this.db.getDemand(capacityId)
     if (!capacity) throw new NotFound('capacity')
 
-    return capacity
+    const creations = await this.db.getTransactionsFromCapacityID(capacityId)
+    if (!creations) throw new NotFound('capacity')
+
+    return creations
   }
 }
 

@@ -4,7 +4,7 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
-import { seed, cleanup, parametersAttachmentId, seededCapacityId, nonExistentId, seededTransactionId } from '../seeds'
+import { seed, cleanup, parametersAttachmentId, seededCapacityId, nonExistentId, seededTransactionId, seededTransactionId2 } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
 import { selfAlias, mockTokenId, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
@@ -115,19 +115,19 @@ describe('capacity', () => {
       expect(response.body).to.deep.equal(
         [
           {
-            id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
+            id: seededTransactionId,
             token_type: TokenType.DEMAND,
-            local_id: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-            state: 'submitted',
+            local_id: seededCapacityId,
+            state: TransactionState.submitted,
             created_at: '2023-03-24T10:40:47.317Z',
             updated_at: '2023-03-24T10:40:47.317Z',
             token_id: 6006
           },
           {
-            id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
+            id: seededTransactionId2,
             token_type: TokenType.DEMAND,
-            local_id: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-            state: 'submitted',
+            local_id: seededCapacityId,
+            state: TransactionState.submitted,
             created_at: '2023-03-24T10:40:47.317Z',
             updated_at: '2023-03-24T10:40:47.317Z',
             token_id: 7000
@@ -181,6 +181,7 @@ describe('capacity', () => {
 
     it('non-existant Capacity ID should return nothing - 404', async () => {
       const response = await get(app, `/capacity/${nonExistentId}/creation/`)
+      console.log(response.body)
       expect(response.status).to.equal(404)
     })
   })
