@@ -28,6 +28,9 @@ export const exampleDate = '2023-03-24T10:40:47.317Z'
 export const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
 export const seededCapacityMissingTokenId = 'b2348deb-d967-4317-8637-2867ced70356'
 export const seededOrderMissingTokenId = '76b7c704-f9a0-4a80-9554-7268df097798'
+export const seededCapacityAlreadyAllocated = '859a1561-a22d-4b09-925e-54ee9f9324cc'
+export const seededOrderAlreadyAllocated = '807d1184-9670-4fb0-bb33-28582e5467b1'
+export const seededMatch2WithAllocatedDemands = '27965a5f-f3dd-4110-82e7-68f59bb02c2e'
 
 export const seed = async () => {
   await cleanup()
@@ -128,6 +131,38 @@ export const seed = async () => {
       subtype: DemandSubtype.order,
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
+    },
+  ])
+
+  await db.demand().insert([
+    {
+      id: seededCapacityAlreadyAllocated,
+      owner: selfAddress,
+      subtype: DemandSubtype.capacity,
+      state: DemandState.allocated,
+      parameters_attachment_id: parametersAttachmentId,
+    },
+  ])
+
+  await db.demand().insert([
+    {
+      id: seededOrderAlreadyAllocated,
+      owner: selfAddress,
+      subtype: DemandSubtype.order,
+      state: DemandState.allocated,
+      parameters_attachment_id: parametersAttachmentId,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2WithAllocatedDemands,
+      state: Match2State.proposed,
+      optimiser: selfAddress,
+      member_a: selfAddress,
+      member_b: selfAddress,
+      demand_a_id: seededOrderAlreadyAllocated,
+      demand_b_id: seededCapacityAlreadyAllocated,
     },
   ])
 }

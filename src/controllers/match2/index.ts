@@ -24,7 +24,7 @@ import { TokenType } from '../../models/tokenType'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
 import { runProcess } from '../../lib/services/dscpApi'
 import { match2Propose } from '../../lib/payload'
-import { DemandSubtype } from '../../models/demand'
+import { DemandPayload, DemandState, DemandSubtype } from '../../models/demand'
 
 @Route('match2')
 @Tags('match2')
@@ -51,22 +51,10 @@ export class Match2Controller extends Controller {
     @Body() { demandA: demandAId, demandB: demandBId }: Match2Request
   ): Promise<Match2Response> {
     const [demandA] = await this.db.getDemand(demandAId)
-    if (!demandA) {
-      throw new BadRequest('Demand A not found')
-    }
-
-    if (demandA.subtype !== DemandSubtype.order) {
-      throw new BadRequest(`DemandA must be ${DemandSubtype.order}`)
-    }
+    validatePreLocal(demandA, DemandSubtype.order, 'DemandA')
 
     const [demandB] = await this.db.getDemand(demandBId)
-    if (!demandB) {
-      throw new BadRequest('Demand B not found')
-    }
-
-    if (demandB.subtype !== DemandSubtype.capacity) {
-      throw new BadRequest(`DemandB must be ${DemandSubtype.capacity}`)
-    }
+    validatePreLocal(demandB, DemandSubtype.capacity, 'DemandB')
 
     const selfAddress = await getMemberBySelf()
 
@@ -120,14 +108,10 @@ export class Match2Controller extends Controller {
     if (!match2) throw new NotFound('match2')
 
     const [demandA] = await this.db.getDemand(match2.demandA)
-    if (!demandA.latestTokenId) {
-      throw new BadRequest('Demand A must be on chain')
-    }
+    validatePreOnChain(demandA, DemandSubtype.order, 'DemandA')
 
     const [demandB] = await this.db.getDemand(match2.demandB)
-    if (!demandB.latestTokenId) {
-      throw new BadRequest('Demand B must be on chain')
-    }
+    validatePreOnChain(demandB, DemandSubtype.capacity, 'DemandB')
 
     const [transaction] = await this.db.insertTransaction({
       token_type: TokenType.MATCH2,
@@ -196,5 +180,27 @@ const responseWithAliases = async (match2: Match2Response): Promise<Match2Respon
     memberB,
     demandA: match2.demandA,
     demandB: match2.demandB,
+  }
+}
+
+const validatePreLocal = (demand: DemandPayload, subtype: DemandSubtype, key: string) => {
+  if (!demand) {
+    throw new BadRequest(`${key} not found`)
+  }
+
+  if (demand.subtype !== subtype) {
+    throw new BadRequest(`${key} must be ${subtype}`)
+  }
+
+  if (demand.state === DemandState.allocated) {
+    throw new BadRequest(`${key} is already ${DemandState.allocated}`)
+  }
+}
+
+const validatePreOnChain = (demand: DemandPayload, subtype: DemandSubtype, key: string) => {
+  validatePreLocal(demand, subtype, key)
+
+  if (!demand.latestTokenId) {
+    throw new BadRequest(`${key} must be on chain`)
   }
 }

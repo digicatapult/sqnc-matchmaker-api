@@ -17,6 +17,9 @@ import {
   seededCapacityMissingTokenId,
   seededProposalTransactionId,
   exampleDate,
+  seededCapacityAlreadyAllocated,
+  seededOrderAlreadyAllocated,
+  seededMatch2WithAllocatedDemands,
 } from '../seeds'
 
 import { selfAlias, identitySelfMock, match2ProposeMock, match2ProposeMockTokenIds } from '../helper/mock'
@@ -79,7 +82,7 @@ describe('match2', () => {
     it('should get all match2s', async () => {
       const response = await get(app, `/match2`)
       expect(response.status).to.equal(200)
-      expect(response.body.length).to.equal(1)
+      expect(response.body.length).to.equal(2)
       expect(response.body[0]).to.deep.equal({
         id: seededMatch2Id,
         state: Match2State.proposed,
@@ -154,13 +157,13 @@ describe('match2', () => {
     it('non-existent demandA - 400', async () => {
       const response = await post(app, '/match2', { demandA: nonExistentId, demandB: seededCapacityId })
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('Demand A not found')
+      expect(response.body).to.equal('DemandA not found')
     })
 
     it('non-existent demandB - 400', async () => {
       const response = await post(app, '/match2', { demandA: seededOrderId, demandB: nonExistentId })
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('Demand B not found')
+      expect(response.body).to.equal('DemandB not found')
     })
 
     it('demandA not an order - 400', async () => {
@@ -173,6 +176,18 @@ describe('match2', () => {
       const response = await post(app, '/match2', { demandA: seededOrderId, demandB: seededOrderId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('DemandB must be capacity')
+    })
+
+    it('demandA allocated - 400', async () => {
+      const response = await post(app, '/match2', { demandA: seededOrderAlreadyAllocated, demandB: seededCapacityId })
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal('DemandA is already allocated')
+    })
+
+    it('demandB allocated - 400', async () => {
+      const response = await post(app, '/match2', { demandA: seededOrderId, demandB: seededCapacityAlreadyAllocated })
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal('DemandB is already allocated')
     })
 
     it('invalid demand uuid - 422', async () => {
@@ -192,7 +207,7 @@ describe('match2', () => {
 
       const response = await post(app, `/match2/${createMatch2.body.id}/proposal`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('Demand A must be on chain')
+      expect(response.body).to.equal('DemandA must be on chain')
     })
 
     it('demandB missing token ID - 400', async () => {
@@ -201,7 +216,13 @@ describe('match2', () => {
 
       const response = await post(app, `/match2/${createMatch2.body.id}/proposal`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('Demand B must be on chain')
+      expect(response.body).to.equal('DemandB must be on chain')
+    })
+
+    it('demand allocated - 400', async () => {
+      const response = await post(app, `/match2/${seededMatch2WithAllocatedDemands}/proposal`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal('DemandA is already allocated')
     })
 
     it('non-existent proposal ID - 404', async () => {
