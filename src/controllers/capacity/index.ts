@@ -118,22 +118,18 @@ export class CapacityController extends Controller {
 
     // demand-create returns a single token ID
     await observeTokenId(TokenType.DEMAND, capacityId, tokenId, true)
-    return {
-      id: transaction.id,
-      submittedAt: new Date(transaction.created_at),
-      state: transaction.state,
-    }
+    return transaction
   }
 
   /**
-   * @summary Get a capacity by ID
+   * @summary Get a capacity creation transaction by ID
    * @param capacityId The capacity's identifier
    * @param creationId The capacity's creation ID
    */
-  @Response<NotFound>(404, 'Items not found.')
+  @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
   @Get('{capacityId}/creation/{creationId}')
-  public async getCreationID(@Path() capacityId: UUID, creationId: UUID): Promise<TransactionResponse> {
+  public async getCapacityCreation(@Path() capacityId: UUID, creationId: UUID): Promise<TransactionResponse> {
     const [capacity] = await this.db.getDemand(capacityId)
     if (!capacity) throw new NotFound('capacity')
 
@@ -142,14 +138,18 @@ export class CapacityController extends Controller {
     return creation
   }
 
-  @Response<NotFound>(404, 'Items not found.')
+  /**
+   * @summary Get all of a capacity's creation transactions
+   * @param capacityId The capacity's identifier
+   */
+  @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
   @Get('{capacityId}/creation/')
   public async getTransactionsFromCapacity(@Path() capacityId: UUID): Promise<TransactionResponse[]> {
     const [capacity] = await this.db.getDemand(capacityId)
     if (!capacity) throw new NotFound('capacity')
 
-    const creations = await this.db.getTransactionsFromCapacityID(capacityId)
+    const creations = await this.db.getTransactionsByLocalId(capacityId)
     return creations
   }
 }

@@ -15,12 +15,15 @@ import {
   seededCapacityTokenId,
   seededOrderMissingTokenId,
   seededCapacityMissingTokenId,
+  seededProposalTransactionId,
+  exampleDate,
 } from '../seeds'
 
 import { selfAlias, identitySelfMock, match2ProposeMock, match2ProposeMockTokenIds } from '../helper/mock'
 import { Match2State } from '../../src/models/match2'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
+import { TokenType } from '../../src/models/tokenType'
 
 const db = new Database()
 
@@ -117,6 +120,34 @@ describe('match2', () => {
       expect(match2.latestTokenId).to.equal(match2ProposeMockTokenIds[2])
       expect(match2.originalTokenId).to.equal(match2ProposeMockTokenIds[2])
     })
+
+    it('it should get a proposal transaction', async () => {
+      const response = await get(app, `/match2/${seededMatch2Id}/proposal/${seededProposalTransactionId}`)
+      expect(response.status).to.equal(200)
+      expect(response.body).to.deep.equal({
+        id: seededProposalTransactionId,
+        tokenType: TokenType.MATCH2,
+        localId: seededMatch2Id,
+        state: TransactionState.submitted,
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      })
+    })
+
+    it('it should get all proposal transactions - 200', async () => {
+      const response = await get(app, `/match2/${seededMatch2Id}/proposal`)
+      expect(response.status).to.equal(200)
+      expect(response.body).to.deep.equal([
+        {
+          id: seededProposalTransactionId,
+          tokenType: TokenType.MATCH2,
+          localId: seededMatch2Id,
+          state: TransactionState.submitted,
+          submittedAt: exampleDate,
+          updatedAt: exampleDate,
+        },
+      ])
+    })
   })
 
   describe('sad path', () => {
@@ -171,6 +202,21 @@ describe('match2', () => {
       const response = await post(app, `/match2/${createMatch2.body.id}/proposal`, {})
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Demand B must be on chain')
+    })
+
+    it('non-existent proposal ID - 404', async () => {
+      const response = await get(app, `/match2/${nonExistentId}/creation/${nonExistentId}`)
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-existent match2 when getting a proposal - 404', async () => {
+      const response = await get(app, `/match2/${nonExistentId}/proposal/${seededProposalTransactionId}`)
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-existent match2 when listing proposals - 404', async () => {
+      const response = await get(app, `/match2/${nonExistentId}/proposal/`)
+      expect(response.status).to.equal(404)
     })
   })
 })

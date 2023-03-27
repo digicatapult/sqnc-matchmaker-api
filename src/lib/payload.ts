@@ -1,5 +1,5 @@
 import { Match2Response, Match2State } from '../models/match2'
-import { DemandPayload, DemandResponse, DemandState, DemandSubtype } from '../models/demand'
+import { DemandPayload, DemandState } from '../models/demand'
 import { TokenType } from '../models/tokenType'
 
 export const demandCreate = (demand: DemandPayload) => ({

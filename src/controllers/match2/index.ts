@@ -149,8 +149,42 @@ export class Match2Controller extends Controller {
     return {
       id: transaction.id,
       submittedAt: new Date(transaction.created_at),
+      updatedAt: new Date(transaction.updated_at),
       state: transaction.state,
     }
+  }
+
+  /**
+   * @summary Get a match2 proposal transaction by ID
+   * @param match2Id The match2's identifier
+   * @param proposalId The match2's proposal ID
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{match2Id}/proposal/{proposalId}')
+  public async getMatch2Proposal(@Path() match2Id: UUID, proposalId: UUID): Promise<TransactionResponse> {
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('match2')
+
+    const [proposal] = await this.db.getTransaction(proposalId)
+    if (!proposal) throw new NotFound('proposal')
+
+    return proposal
+  }
+
+  /**
+   * @summary Get all of a match2's proposal transactions
+   * @param match2Id The match2's identifier
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{match2Id}/proposal')
+  public async getMatch2Proposals(@Path() match2Id: UUID): Promise<TransactionResponse[]> {
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('match2')
+
+    const proposals = await this.db.getTransactionsByLocalId(match2Id)
+    return proposals
   }
 }
 
