@@ -3,7 +3,7 @@ import env from '../../src/env'
 
 export const selfAlias = 'test-self'
 export const selfAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
-export const demandCreateTokenId = 42
+export const demandCreateMockTokenId = 42
 export const match2ProposeMockTokenIds = [52, 53, 54]
 
 const mockAgent = new MockAgent()
@@ -42,7 +42,7 @@ export const demandCreateMock = () => {
       path: '/v3/run-process',
       method: 'POST',
     })
-    .reply(200, [demandCreateTokenId])
+    .reply(200, [demandCreateMockTokenId])
 }
 
 export const match2ProposeMock = () => {

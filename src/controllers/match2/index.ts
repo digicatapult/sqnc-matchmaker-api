@@ -120,13 +120,11 @@ export class Match2Controller extends Controller {
     if (!match2) throw new NotFound('match2')
 
     const [demandA] = await this.db.getDemand(match2.demandA)
-    //const [{ latestTokenId: demandAId }] = await this.db.getDemandLatestTokenId(match2.demandA)
     if (!demandA.latestTokenId) {
       throw new BadRequest('Demand A must be on chain')
     }
 
     const [demandB] = await this.db.getDemand(match2.demandB)
-    //const [{ latestTokenId: demandBId }] = await this.db.getDemandLatestTokenId(match2.demandB)
     if (!demandB.latestTokenId) {
       throw new BadRequest('Demand B must be on chain')
     }
@@ -146,12 +144,7 @@ export class Match2Controller extends Controller {
     await observeTokenId(TokenType.DEMAND, match2.demandB, tokenIds[1], false) // capacity
     await observeTokenId(TokenType.MATCH2, match2.id, tokenIds[2], true) // match2
 
-    return {
-      id: transaction.id,
-      submittedAt: new Date(transaction.created_at),
-      updatedAt: new Date(transaction.updated_at),
-      state: transaction.state,
-    }
+    return transaction
   }
 
   /**
