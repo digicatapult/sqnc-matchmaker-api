@@ -87,7 +87,7 @@ export default class Database {
   }
 
   insertTransaction = async (transaction: object) => {
-    return this.db().transaction().insert(transaction).returning('*')
+    return this.db().transaction().insert(transaction).returning(transactionColumns)
   }
 
   getTransaction = async (id: UUID) => {
