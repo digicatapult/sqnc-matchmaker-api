@@ -32,7 +32,7 @@ export class order extends Controller {
   @Response<NotFound>(404, 'Demand was not found')
   @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
-  public async createCapacity(@Body() { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
+  public async create(@Body() { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
     if (!attachment) throw new NotFound('attachment')
 

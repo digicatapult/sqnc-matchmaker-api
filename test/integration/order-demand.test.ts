@@ -10,8 +10,6 @@ import { seed, cleanup, parametersAttachmentId } from '../seeds'
 import { DemandState } from '../../src/models/demand'
 import { selfAlias, identitySelfMock } from '../helper/mock'
 
-// const db = new Database()
-
 describe('order', () => {
   let res: any
   let app: Express
