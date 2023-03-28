@@ -104,6 +104,7 @@ export class CapacityController extends Controller {
   public async createCapacityOnChain(@Path() capacityId: UUID): Promise<TransactionResponse> {
     const [capacity] = await this.db.getDemandWithAttachment(capacityId, DemandSubtype.capacity)
     if (!capacity) throw new NotFound('capacity')
+    if (capacity.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
 
     const [transaction] = await this.db.insertTransaction({
       token_type: TokenType.DEMAND,

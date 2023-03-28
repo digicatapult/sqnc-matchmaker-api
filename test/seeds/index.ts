@@ -31,6 +31,7 @@ export const seededOrderMissingTokenId = '76b7c704-f9a0-4a80-9554-7268df097798'
 export const seededCapacityAlreadyAllocated = '859a1561-a22d-4b09-925e-54ee9f9324cc'
 export const seededOrderAlreadyAllocated = '807d1184-9670-4fb0-bb33-28582e5467b1'
 export const seededMatch2WithAllocatedDemands = '27965a5f-f3dd-4110-82e7-68f59bb02c2e'
+export const seededMatch2AcceptedA = '347411d3-3750-49dd-a548-88e9f2616d9c'
 
 export const seed = async () => {
   await cleanup()
@@ -163,6 +164,18 @@ export const seed = async () => {
       member_b: selfAddress,
       demand_a_id: seededOrderAlreadyAllocated,
       demand_b_id: seededCapacityAlreadyAllocated,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2AcceptedA,
+      state: Match2State.acceptedA,
+      optimiser: selfAddress,
+      member_a: selfAddress,
+      member_b: selfAddress,
+      demand_a_id: seededOrderId,
+      demand_b_id: seededCapacityId,
     },
   ])
 }

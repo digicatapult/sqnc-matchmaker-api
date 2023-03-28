@@ -106,6 +106,7 @@ export class Match2Controller extends Controller {
   public async createMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
+    if (match2.state !== Match2State.proposed) throw new BadRequest(`Match2 must have state: ${Match2State.proposed}`)
 
     const [demandA] = await this.db.getDemand(match2.demandA)
     validatePreOnChain(demandA, DemandSubtype.order, 'DemandA')

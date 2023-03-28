@@ -13,6 +13,7 @@ import {
   seededTransactionId,
   seededTransactionId2,
   exampleDate,
+  seededCapacityAlreadyAllocated,
 } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
@@ -162,8 +163,14 @@ describe('capacity', () => {
     })
 
     it('non-existent capacity id when creating on-chain - 404', async () => {
-      const response = await get(app, `/capacity/${nonExistentId}/creation`)
+      const response = await post(app, `/capacity/${nonExistentId}/creation`, {})
       expect(response.status).to.equal(404)
+    })
+
+    it('incorrect state when creating on-chain - 400', async () => {
+      const response = await post(app, `/capacity/${seededCapacityAlreadyAllocated}/creation`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`Demand must have state: ${DemandState.created}`)
     })
 
     it('dscp-api error - 500', async () => {

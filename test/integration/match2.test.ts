@@ -20,6 +20,7 @@ import {
   seededCapacityAlreadyAllocated,
   seededOrderAlreadyAllocated,
   seededMatch2WithAllocatedDemands,
+  seededMatch2AcceptedA,
 } from '../seeds'
 
 import { selfAlias, identitySelfMock, match2ProposeMock, match2ProposeMockTokenIds } from '../helper/mock'
@@ -82,7 +83,7 @@ describe('match2', () => {
     it('should get all match2s', async () => {
       const response = await get(app, `/match2`)
       expect(response.status).to.equal(200)
-      expect(response.body.length).to.equal(2)
+      expect(response.body.length).to.equal(3)
       expect(response.body[0]).to.deep.equal({
         id: seededMatch2Id,
         state: Match2State.proposed,
@@ -201,6 +202,12 @@ describe('match2', () => {
       expect(response.status).to.equal(404)
     })
 
+    it('incorrect state when creating on-chain - 400', async () => {
+      const response = await post(app, `/match2/${seededMatch2AcceptedA}/proposal`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`Match2 must have state: ${Match2State.proposed}`)
+    })
+
     it('demandA missing token ID - 400', async () => {
       const createMatch2 = await post(app, '/match2', { demandA: seededOrderMissingTokenId, demandB: seededCapacityId })
       expect(createMatch2.status).to.equal(201)
@@ -226,7 +233,7 @@ describe('match2', () => {
     })
 
     it('non-existent proposal ID - 404', async () => {
-      const response = await get(app, `/match2/${nonExistentId}/creation/${nonExistentId}`)
+      const response = await get(app, `/match2/${nonExistentId}/proposal/${nonExistentId}`)
       expect(response.status).to.equal(404)
     })
 
@@ -236,7 +243,7 @@ describe('match2', () => {
     })
 
     it('non-existent match2 when listing proposals - 404', async () => {
-      const response = await get(app, `/match2/${nonExistentId}/proposal/`)
+      const response = await get(app, `/match2/${nonExistentId}/proposal`)
       expect(response.status).to.equal(404)
     })
   })
