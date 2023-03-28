@@ -194,7 +194,7 @@ export class Match2Controller extends Controller {
     const ownsDemandA = demandA.owner === selfAddress
     const ownsDemandB = demandB.owner === selfAddress
 
-    const attemptFirstAccept = async () => {
+    const acceptAB = async () => {
       const [transaction] = await this.db.insertTransaction({
         token_type: TokenType.MATCH2,
         local_id: match2Id,
@@ -212,7 +212,7 @@ export class Match2Controller extends Controller {
       return transaction
     }
 
-    const attemptFinalAccept = async () => {
+    const acceptFinal = async () => {
       const [transaction] = await this.db.insertTransaction({
         token_type: TokenType.MATCH2,
         local_id: match2Id,
@@ -233,14 +233,14 @@ export class Match2Controller extends Controller {
 
     switch (state) {
       case Match2State.proposed:
-        if (!ownsDemandA && !ownsDemandB) throw new BadRequest(`You do not own an unaccepted demand`)
-        return await attemptFirstAccept()
+        if (!ownsDemandA && !ownsDemandB) throw new BadRequest(`You do not own an acceptable demand`)
+        return await acceptAB()
       case Match2State.acceptedA:
-        if (!ownsDemandB) throw new BadRequest(`You do not own an unaccepted demand`)
-        return await attemptFinalAccept()
+        if (!ownsDemandB) throw new BadRequest(`You do not own an acceptable demand`)
+        return await acceptFinal()
       case Match2State.acceptedB:
-        if (!ownsDemandA) throw new BadRequest(`You do not own an unaccepted demand`)
-        return await attemptFinalAccept()
+        if (!ownsDemandA) throw new BadRequest(`You do not own an acceptable demand`)
+        return await acceptFinal()
       default:
         throw new HttpResponse({})
     }

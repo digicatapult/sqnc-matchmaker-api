@@ -19,11 +19,11 @@ export const runProcess = async ({ files, ...payload }: { files: RunProcessFile[
     method: 'POST',
     body: formData,
   })
-  const result = await res.json()
 
   if (res.ok) {
+    const result = await res.json()
     return result
   }
 
-  throw new HttpResponse({ code: 500, message: result }) // pass through dscpApi error
+  throw new HttpResponse({ code: 500, message: await res.text() }) // pass through dscpApi error
 }

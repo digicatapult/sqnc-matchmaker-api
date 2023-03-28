@@ -23,6 +23,11 @@ import {
   seededMatch2AcceptedA,
   seededMatch2TokenId,
   seededMatch2OrderNotOwnedId,
+  seededMatch2AcceptedFinal,
+  seededMatch2NotAcceptableB,
+  seededMatch2NotAcceptableA,
+  seededMatch2NotAcceptableBoth,
+  seededAcceptTransactionId,
 } from '../seeds'
 
 import {
@@ -153,16 +158,15 @@ describe('match2', () => {
     it('it should get all proposal transactions - 200', async () => {
       const response = await get(app, `/match2/${seededMatch2Id}/proposal`)
       expect(response.status).to.equal(200)
-      expect(response.body).to.deep.equal([
-        {
-          id: seededProposalTransactionId,
-          tokenType: TokenType.MATCH2,
-          localId: seededMatch2Id,
-          state: TransactionState.submitted,
-          submittedAt: exampleDate,
-          updatedAt: exampleDate,
-        },
-      ])
+      expect(response.body.length).to.be.greaterThan(0)
+      expect(response.body[0]).to.deep.equal({
+        id: seededProposalTransactionId,
+        tokenType: TokenType.MATCH2,
+        localId: seededMatch2Id,
+        state: TransactionState.submitted,
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      })
     })
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
@@ -210,6 +214,33 @@ describe('match2', () => {
       expect(match2.latestTokenId).to.equal(match2AcceptMockTokenId)
       expect(match2.state).to.equal(Match2State.acceptedB)
       expect(match2.originalTokenId).to.equal(seededMatch2TokenId)
+    })
+
+    it('it should get a accept transaction', async () => {
+      const response = await get(app, `/match2/${seededMatch2Id}/accept/${seededAcceptTransactionId}`)
+      expect(response.status).to.equal(200)
+      expect(response.body).to.deep.equal({
+        id: seededAcceptTransactionId,
+        tokenType: TokenType.MATCH2,
+        localId: seededMatch2Id,
+        state: TransactionState.submitted,
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      })
+    })
+
+    it('it should get all accept transactions - 200', async () => {
+      const response = await get(app, `/match2/${seededMatch2Id}/accept`)
+      expect(response.status).to.equal(200)
+      expect(response.body.length).to.be.greaterThan(0)
+      expect(response.body[1]).to.deep.equal({
+        id: seededAcceptTransactionId,
+        tokenType: TokenType.MATCH2,
+        localId: seededMatch2Id,
+        state: TransactionState.submitted,
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      })
     })
   })
 
@@ -304,6 +335,30 @@ describe('match2', () => {
     it('non-existent match2 when listing proposals - 404', async () => {
       const response = await get(app, `/match2/${nonExistentId}/proposal`)
       expect(response.status).to.equal(404)
+    })
+
+    it('match2 at acceptA and DemandB not owned - 400', async () => {
+      const response = await post(app, `/match2/${seededMatch2NotAcceptableA}/accept`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`You do not own an acceptable demand`)
+    })
+
+    it('match2 at acceptB and DemandA not owned - 400', async () => {
+      const response = await post(app, `/match2/${seededMatch2NotAcceptableB}/accept`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`You do not own an acceptable demand`)
+    })
+
+    it('neither demand owned - 400', async () => {
+      const response = await post(app, `/match2/${seededMatch2NotAcceptableBoth}/accept`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`You do not own an acceptable demand`)
+    })
+
+    it('match2 already acceptedFinal when accepting - 400', async () => {
+      const response = await post(app, `/match2/${seededMatch2AcceptedFinal}/accept`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`Already ${Match2State.acceptedFinal}`)
     })
   })
 })
