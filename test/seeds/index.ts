@@ -1,7 +1,7 @@
 import Database from '../../src/lib/db'
 import { DemandState, DemandSubtype } from '../../src/models/demand'
 import { Match2State } from '../../src/models/match2'
-import { selfAddress } from '../helper/mock'
+import { notSelfAddress, selfAddress } from '../helper/mock'
 import { TokenType } from '../../src/models/tokenType'
 import { TransactionState } from '../../src/models/transaction'
 
@@ -21,8 +21,11 @@ export const seededTransactionId = '1f3af974-7d4d-40b4-86a5-94a2241265cb'
 export const seededTransactionId2 = 'd65d8e11-150f-4ea4-b778-b920e9dbc378'
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
 export const seededOrderId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
+export const seededOrderNotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
 export const seededOrderTokenId = 11
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
+export const seededMatch2OrderNotOwnedId = 'ffb6a503-353c-40a3-94ce-bb04353b68df'
+export const seededMatch2TokenId = 13
 export const exampleDate = '2023-03-24T10:40:47.317Z'
 
 export const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
@@ -92,6 +95,18 @@ export const seed = async () => {
     },
   ])
 
+  await db.demand().insert([
+    {
+      id: seededOrderNotOwnedId,
+      owner: notSelfAddress,
+      subtype: DemandSubtype.order,
+      state: DemandState.created,
+      parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: seededOrderTokenId,
+      original_token_id: seededOrderTokenId,
+    },
+  ])
+
   await db.match2().insert([
     {
       id: seededMatch2Id,
@@ -101,6 +116,22 @@ export const seed = async () => {
       member_b: selfAddress,
       demand_a_id: seededOrderId,
       demand_b_id: seededCapacityId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2OrderNotOwnedId,
+      state: Match2State.proposed,
+      optimiser: selfAddress,
+      member_a: notSelfAddress,
+      member_b: selfAddress,
+      demand_a_id: seededOrderNotOwnedId,
+      demand_b_id: seededCapacityId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
     },
   ])
 

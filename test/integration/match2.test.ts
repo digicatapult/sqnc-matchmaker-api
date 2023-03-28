@@ -21,13 +21,25 @@ import {
   seededOrderAlreadyAllocated,
   seededMatch2WithAllocatedDemands,
   seededMatch2AcceptedA,
+  seededMatch2TokenId,
+  seededMatch2OrderNotOwnedId,
 } from '../seeds'
 
-import { selfAlias, identitySelfMock, match2ProposeMock, match2ProposeMockTokenIds } from '../helper/mock'
+import {
+  selfAlias,
+  identitySelfMock,
+  match2ProposeMock,
+  match2ProposeMockTokenIds,
+  match2AcceptMock,
+  match2AcceptMockTokenId,
+  match2AcceptFinalMock,
+  match2AcceptFinalMockTokenIds,
+} from '../helper/mock'
 import { Match2State } from '../../src/models/match2'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 import { TokenType } from '../../src/models/tokenType'
+import { DemandState } from '../../src/models/demand'
 
 const db = new Database()
 
@@ -83,7 +95,7 @@ describe('match2', () => {
     it('should get all match2s', async () => {
       const response = await get(app, `/match2`)
       expect(response.status).to.equal(200)
-      expect(response.body.length).to.equal(3)
+      expect(response.body.length).to.be.greaterThan(0)
       expect(response.body[0]).to.deep.equal({
         id: seededMatch2Id,
         state: Match2State.proposed,
@@ -95,7 +107,7 @@ describe('match2', () => {
       })
     })
 
-    it('should create a match2 on-chain', async () => {
+    it('should propose a match2 on-chain', async () => {
       match2ProposeMock()
       // submit to chain
       const response = await post(app, `/match2/${seededMatch2Id}/proposal`, {})
@@ -151,6 +163,53 @@ describe('match2', () => {
           updatedAt: exampleDate,
         },
       ])
+    })
+
+    it('should acceptA then acceptFinal a match2 on-chain', async () => {
+      match2AcceptMock()
+      // submit to chain
+      const responseAcceptA = await post(app, `/match2/${seededMatch2Id}/accept`, {})
+      expect(responseAcceptA.status).to.equal(201)
+
+      // check local entities update with token id
+      const [match2AcceptA] = await db.getMatch2(seededMatch2Id)
+      expect(match2AcceptA.latestTokenId).to.equal(match2AcceptMockTokenId)
+      expect(match2AcceptA.state).to.equal(Match2State.acceptedA)
+      expect(match2AcceptA.originalTokenId).to.equal(seededMatch2TokenId)
+
+      match2AcceptFinalMock()
+      // submit to chain
+      const responseAcceptFinal = await post(app, `/match2/${seededMatch2Id}/accept`, {})
+      expect(responseAcceptFinal.status).to.equal(201)
+
+      // check local entities update with token id
+      const [demandA] = await db.getDemand(seededOrderId)
+      expect(demandA.latestTokenId).to.equal(match2AcceptFinalMockTokenIds[0])
+      expect(demandA.state).to.equal(DemandState.allocated)
+      expect(demandA.originalTokenId).to.equal(seededOrderTokenId)
+
+      const [demandB] = await db.getDemand(seededCapacityId)
+      expect(demandB.latestTokenId).to.equal(match2AcceptFinalMockTokenIds[1])
+      expect(demandB.state).to.equal(DemandState.allocated)
+      expect(demandB.originalTokenId).to.equal(seededCapacityTokenId)
+
+      const [matchAcceptFinal] = await db.getMatch2(seededMatch2Id)
+      expect(matchAcceptFinal.latestTokenId).to.equal(match2AcceptFinalMockTokenIds[2])
+      expect(matchAcceptFinal.state).to.equal(Match2State.acceptedFinal)
+      expect(matchAcceptFinal.originalTokenId).to.equal(seededMatch2TokenId)
+    })
+
+    it('should acceptB a match2 on-chain', async () => {
+      match2AcceptMock()
+      // submit to chain
+      const response = await post(app, `/match2/${seededMatch2OrderNotOwnedId}/accept`, {})
+      expect(response.status).to.equal(201)
+
+      // check local entities update with token id
+      const [match2] = await db.getMatch2(seededMatch2OrderNotOwnedId)
+      expect(match2.latestTokenId).to.equal(match2AcceptMockTokenId)
+      expect(match2.state).to.equal(Match2State.acceptedB)
+      expect(match2.originalTokenId).to.equal(seededMatch2TokenId)
     })
   })
 

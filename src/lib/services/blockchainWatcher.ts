@@ -3,7 +3,7 @@
 import { UUID } from '../../models/uuid'
 import { TokenType } from '../../models/tokenType'
 import Database from '../db'
-import { DemandState, Match2State } from 'src/models'
+import { DemandState, Match2State } from '../../models'
 
 const db = new Database()
 

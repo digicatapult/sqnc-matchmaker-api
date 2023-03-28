@@ -104,7 +104,7 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
-  public async createMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+  public async proposeMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
     if (match2.state !== Match2State.proposed) throw new BadRequest(`Match2 must have state: ${Match2State.proposed}`)
@@ -192,7 +192,7 @@ export class Match2Controller extends Controller {
 
     const { address: selfAddress } = await getMemberBySelf()
     const ownsDemandA = demandA.owner === selfAddress
-    const ownsDemandB = demandA.owner === selfAddress
+    const ownsDemandB = demandB.owner === selfAddress
 
     const attemptFirstAccept = async () => {
       const [transaction] = await this.db.insertTransaction({
@@ -233,7 +233,7 @@ export class Match2Controller extends Controller {
 
     switch (state) {
       case Match2State.proposed:
-        if (!ownsDemandA || !ownsDemandB) throw new BadRequest(`You do not own an unaccepted demand`)
+        if (!ownsDemandA && !ownsDemandB) throw new BadRequest(`You do not own an unaccepted demand`)
         return await attemptFirstAccept()
       case Match2State.acceptedA:
         if (!ownsDemandB) throw new BadRequest(`You do not own an unaccepted demand`)
@@ -244,6 +244,39 @@ export class Match2Controller extends Controller {
       default:
         throw new HttpResponse({})
     }
+  }
+
+  /**
+   * @summary Get a match2 accept transaction by ID
+   * @param match2Id The match2's identifier
+   * @param acceptId The match2's accept ID
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{match2Id}/accept/{acceptId}')
+  public async getMatch2Accept(@Path() match2Id: UUID, acceptId: UUID): Promise<TransactionResponse> {
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('match2')
+
+    const [accept] = await this.db.getTransaction(acceptId)
+    if (!accept) throw new NotFound('accept')
+
+    return accept
+  }
+
+  /**
+   * @summary Get all of a match2's accept transactions
+   * @param match2Id The match2's identifier
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{match2Id}/accept')
+  public async getMatch2Accepts(@Path() match2Id: UUID): Promise<TransactionResponse[]> {
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('match2')
+
+    const accepts = await this.db.getTransactionsByLocalId(match2Id)
+    return accepts
   }
 }
 
