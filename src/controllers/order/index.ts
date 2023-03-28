@@ -26,7 +26,7 @@ export class order extends Controller {
    * A Member creates a new demand for a order by referencing an uploaded parameters file.
    * @summary Create a new order demand
    * @param parametersAttachmentId The attachment's identifier
-  */
+   */
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<NotFound>(404, 'Demand was not found')
@@ -44,10 +44,9 @@ export class order extends Controller {
       parameters_attachment_id: parametersAttachmentId,
     })
 
-    console.log({ order })
     return {
       id: order.id,
-      owner: await getMemberByAddress(selfAddress).then(({ alias }: { alias: string}) => alias),
+      owner: await getMemberByAddress(selfAddress).then(({ alias }: { alias: string }) => alias),
       state: order.state,
       parametersAttachmentId,
     }
