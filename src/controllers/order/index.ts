@@ -10,20 +10,20 @@ import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity
 const SUBTYPE = 'order'
 const STATE = 'created'
 
-@Route('demand')
-@Tags('demand')
+@Route('order')
+@Tags('order')
 @Security('bearerAuth')
-export class demand extends Controller {
+export class order extends Controller {
   log: Logger
   db: Database
   constructor() {
     super()
-    this.log = logger.child({ controller: '/demand' })
+    this.log = logger.child({ controller: '/order' })
     this.db = new Database()
   }
 
   /**
-   * A Member creates a new demand for a capacity by referencing an uploaded parameters file.
+   * A Member creates a new demand for a order by referencing an uploaded parameters file.
    * @summary Create a new order demand
    * @param parametersAttachmentId The attachment's identifier
   */
@@ -44,9 +44,10 @@ export class demand extends Controller {
       parameters_attachment_id: parametersAttachmentId,
     })
 
+    console.log({ order })
     return {
       id: order.id,
-      owner: await getMemberByAddress(selfAddress),
+      owner: await getMemberByAddress(selfAddress).then(({ alias }: { alias: string}) => alias),
       state: order.state,
       parametersAttachmentId,
     }
