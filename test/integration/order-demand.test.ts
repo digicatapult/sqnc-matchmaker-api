@@ -12,7 +12,7 @@ import { selfAlias, identitySelfMock } from '../helper/mock'
 
 // const db = new Database()
 
-describe.only('order', () => {
+describe('order', () => {
   let res: any
   let app: Express
 
@@ -49,16 +49,17 @@ describe.only('order', () => {
 
     it('returns 422 along with validation error', () => {
       const { status, body } = res
-      console.log({ status, body: body.fields })
 
       expect(status).to.equal(422)
       expect(body).to.deep.contain({
-        fields: { '.parametersAttachmentId': {
-          message: "Not match in '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}'",
-          value: "a789ad47",
-         } },
-        name: 'ValidationError',
-        message: 'validation failed',
+        fields: {
+          '.parametersAttachmentId': {
+            message: "Not match in '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}'",
+            value: "a789ad47",
+          }
+        },
+        name: 'ValidateError',
+        message: 'Validation failed',
       })
     })
   })
