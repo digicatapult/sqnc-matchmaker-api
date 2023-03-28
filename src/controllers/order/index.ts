@@ -13,6 +13,7 @@ import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity
 export class order extends Controller {
   log: Logger
   db: Database
+  
   constructor() {
     super()
     this.log = logger.child({ controller: '/order' })
