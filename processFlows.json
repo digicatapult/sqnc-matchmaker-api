@@ -1,7 +1,7 @@
 [
   {
     "name": "demand-create",
-    "version": 8,
+    "version": 1,
     "program": [
       {
         "restriction": {
@@ -116,7 +116,7 @@
   },
   {
     "name": "match2-propose",
-    "version": 7,
+    "version": 1,
     "program": [
       {
         "restriction": {
@@ -569,7 +569,7 @@
   },
   {
     "name": "match2-accept",
-    "version": 3,
+    "version": 1,
     "program": [
       {
         "restriction": {
