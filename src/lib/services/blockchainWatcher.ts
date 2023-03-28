@@ -3,6 +3,7 @@
 import { UUID } from '../../models/uuid'
 import { TokenType } from '../../models/tokenType'
 import Database from '../db'
+import { DemandState, Match2State } from 'src/models'
 
 const db = new Database()
 
@@ -11,6 +12,12 @@ const typeTableMap = {
   [TokenType.MATCH2]: 'match2',
 }
 
-export const observeTokenId = async (tokenType: TokenType, localId: UUID, tokenId: number, isNewEntity: boolean) => {
-  await db.updateLocalWithTokenId(typeTableMap[tokenType], localId, tokenId, isNewEntity)
+export const observeTokenId = async (
+  tokenType: TokenType,
+  localId: UUID,
+  state: DemandState | Match2State,
+  tokenId: number,
+  isNewEntity: boolean
+) => {
+  await db.updateLocalWithTokenId(typeTableMap[tokenType], localId, state, tokenId, isNewEntity)
 }

@@ -3,8 +3,9 @@ import type { Logger } from 'pino'
 
 import { logger } from '../logger'
 import { pgConfig } from './knexfile'
-import { DemandSubtype } from '../../models/demand'
+import { DemandState, DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
+import { Match2State } from 'src/models'
 
 const TABLES: string[] = ['attachment', 'demand', 'transaction', 'match2']
 
@@ -106,10 +107,17 @@ export default class Database {
       .returning('local_id AS localId')
   }
 
-  updateLocalWithTokenId = async (table: string, localId: UUID, latestTokenId: number, isNewEntity: boolean) => {
+  updateLocalWithTokenId = async (
+    table: string,
+    localId: UUID,
+    state: DemandState | Match2State,
+    latestTokenId: number,
+    isNewEntity: boolean
+  ) => {
     return this.db()
       [table]()
       .update({
+        state,
         latest_token_id: latestTokenId,
         ...(isNewEntity && { original_token_id: latestTokenId }),
         updated_at: this.client.fn.now(),

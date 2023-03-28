@@ -117,7 +117,7 @@ export class CapacityController extends Controller {
     await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
     // demand-create returns a single token ID
-    await observeTokenId(TokenType.DEMAND, capacityId, tokenId, true)
+    await observeTokenId(TokenType.DEMAND, capacityId, DemandState.created, tokenId, true)
     return transaction
   }
 
