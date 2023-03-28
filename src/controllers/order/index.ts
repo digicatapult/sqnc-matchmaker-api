@@ -1,7 +1,7 @@
 import { Body, Tags, Security, ValidateError, SuccessResponse, Response, Controller, Post, Route } from 'tsoa'
 import { Logger } from 'pino'
 
-import { DemandRequest, DemandResponse, DemandState, DemandSubtype } from '../../models'
+import { DemandRequest, DemandResponse, DemandState, DemandSubtype } from '../../models/demand'
 import { logger } from '../../lib/logger'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import Database from '../../lib/db'
@@ -13,7 +13,7 @@ import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity
 export class order extends Controller {
   log: Logger
   db: Database
-  
+
   constructor() {
     super()
     this.log = logger.child({ controller: '/order' })
