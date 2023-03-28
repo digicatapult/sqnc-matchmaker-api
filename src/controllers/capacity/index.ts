@@ -52,7 +52,7 @@ export class CapacityController extends Controller {
       throw new BadRequest('Attachment id not found')
     }
 
-    const selfAddress = await getMemberBySelf()
+    const { address: selfAddress, alias: selfAlias } = await getMemberBySelf()
 
     const [capacity] = await this.db.insertDemand({
       owner: selfAddress,
@@ -61,10 +61,9 @@ export class CapacityController extends Controller {
       parameters_attachment_id: parametersAttachmentId,
     })
 
-    const { alias: ownerAlias } = await getMemberByAddress(capacity.owner)
     return {
       id: capacity.id,
-      owner: ownerAlias,
+      owner: selfAlias,
       state: capacity.state,
       parametersAttachmentId,
     }

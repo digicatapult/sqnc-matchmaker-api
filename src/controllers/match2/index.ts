@@ -56,7 +56,7 @@ export class Match2Controller extends Controller {
     const [demandB] = await this.db.getDemand(demandBId)
     validatePreLocal(demandB, DemandSubtype.capacity, 'DemandB')
 
-    const selfAddress = await getMemberBySelf()
+    const { address: selfAddress } = await getMemberBySelf()
 
     const [match2] = await this.db.insertMatch2({
       optimiser: selfAddress,

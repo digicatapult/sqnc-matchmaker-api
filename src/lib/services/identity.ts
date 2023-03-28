@@ -23,7 +23,7 @@ const getMemberBySelf = async () => {
 
   if (res.ok) {
     const member = await res.json()
-    return member.address
+    return member
   }
 
   throw new HttpResponse({})
