@@ -58,7 +58,7 @@ export const match2Propose = (match2: Match2Response, demandA: DemandPayload, de
   ],
 })
 
-export const match2FirstAccept = (
+export const match2AcceptFirst = (
   match2: Match2Payload,
   newState: Match2State.acceptedA | Match2State.acceptedB,
   demandA: DemandPayload,
@@ -82,7 +82,7 @@ export const match2FirstAccept = (
   ],
 })
 
-export const match2FinalAccept = (match2: Match2Payload, demandA: DemandPayload, demandB: DemandPayload) => ({
+export const match2AcceptFinal = (match2: Match2Payload, demandA: DemandPayload, demandB: DemandPayload) => ({
   files: [],
   process: { id: 'match2-acceptFinal', version: 1 },
   inputs: [demandA.latestTokenId, demandB.latestTokenId, match2.latestTokenId],

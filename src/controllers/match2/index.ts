@@ -23,7 +23,7 @@ import { TransactionResponse, TransactionState } from '../../models/transaction'
 import { TokenType } from '../../models/tokenType'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
 import { runProcess } from '../../lib/services/dscpApi'
-import { match2FinalAccept, match2FirstAccept, match2Propose } from '../../lib/payload'
+import { match2AcceptFinal, match2AcceptFirst, match2Propose } from '../../lib/payload'
 import { DemandPayload, DemandState, DemandSubtype } from '../../models/demand'
 
 @Route('match2')
@@ -204,7 +204,7 @@ export class Match2Controller extends Controller {
       const newState = ownsDemandA ? Match2State.acceptedA : Match2State.acceptedB
 
       // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-      const [tokenId] = await runProcess(match2FirstAccept(match2, newState, demandA, demandB))
+      const [tokenId] = await runProcess(match2AcceptFirst(match2, newState, demandA, demandB))
       await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
       await observeTokenId(TokenType.MATCH2, match2.id, newState, tokenId, false)
@@ -220,7 +220,7 @@ export class Match2Controller extends Controller {
       })
 
       // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-      const tokenIds = await runProcess(match2FinalAccept(match2, demandA, demandB))
+      const tokenIds = await runProcess(match2AcceptFinal(match2, demandA, demandB))
       await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
       // match2-acceptFinal returns 3 token IDs
