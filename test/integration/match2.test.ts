@@ -41,9 +41,8 @@ import {
   match2AcceptFinalMockTokenIds,
 } from '../helper/mock'
 import { Match2State } from '../../src/models/match2'
-import { TransactionState } from '../../src/models/transaction'
+import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
-import { TokenType } from '../../src/models/tokenType'
 import { DemandState } from '../../src/models/demand'
 
 const db = new Database()
@@ -147,7 +146,8 @@ describe('match2', () => {
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededProposalTransactionId,
-        tokenType: TokenType.MATCH2,
+        apiType: TransactionApiType.match2,
+        transactionType: TransactionType.proposal,
         localId: seededMatch2Id,
         state: TransactionState.submitted,
         submittedAt: exampleDate,
@@ -161,7 +161,8 @@ describe('match2', () => {
       expect(response.body.length).to.be.greaterThan(0)
       expect(response.body[0]).to.deep.equal({
         id: seededProposalTransactionId,
-        tokenType: TokenType.MATCH2,
+        transactionType: TransactionType.proposal,
+        apiType: TransactionApiType.match2,
         localId: seededMatch2Id,
         state: TransactionState.submitted,
         submittedAt: exampleDate,
@@ -216,12 +217,13 @@ describe('match2', () => {
       expect(match2.originalTokenId).to.equal(seededMatch2TokenId)
     })
 
-    it('it should get a accept transaction', async () => {
+    it('it should get an accept transaction', async () => {
       const response = await get(app, `/match2/${seededMatch2Id}/accept/${seededAcceptTransactionId}`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededAcceptTransactionId,
-        tokenType: TokenType.MATCH2,
+        apiType: TransactionApiType.match2,
+        transactionType: TransactionType.accept,
         localId: seededMatch2Id,
         state: TransactionState.submitted,
         submittedAt: exampleDate,
@@ -233,9 +235,10 @@ describe('match2', () => {
       const response = await get(app, `/match2/${seededMatch2Id}/accept`)
       expect(response.status).to.equal(200)
       expect(response.body.length).to.be.greaterThan(0)
-      expect(response.body[1]).to.deep.equal({
+      expect(response.body[0]).to.deep.equal({
         id: seededAcceptTransactionId,
-        tokenType: TokenType.MATCH2,
+        apiType: TransactionApiType.match2,
+        transactionType: TransactionType.accept,
         localId: seededMatch2Id,
         state: TransactionState.submitted,
         submittedAt: exampleDate,

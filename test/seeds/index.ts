@@ -2,8 +2,7 @@ import Database from '../../src/lib/db'
 import { DemandState, DemandSubtype } from '../../src/models/demand'
 import { Match2State } from '../../src/models/match2'
 import { notSelfAddress, selfAddress } from '../helper/mock'
-import { TokenType } from '../../src/models/tokenType'
-import { TransactionState } from '../../src/models/transaction'
+import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 
 const db = new Database().db()
 
@@ -68,10 +67,10 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededTransactionId,
-      token_type: TokenType.DEMAND,
+      api_type: TransactionApiType.capacity,
+      transaction_type: TransactionType.creation,
       local_id: seededCapacityId,
       state: TransactionState.submitted,
-      token_id: 6006,
       created_at: exampleDate,
       updated_at: exampleDate,
     },
@@ -80,10 +79,10 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededTransactionId2,
-      token_type: TokenType.DEMAND,
+      api_type: TransactionApiType.capacity,
+      transaction_type: TransactionType.creation,
       local_id: seededCapacityId,
       state: TransactionState.submitted,
-      token_id: 7000,
       created_at: exampleDate,
       updated_at: exampleDate,
     },
@@ -156,7 +155,8 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededProposalTransactionId,
-      token_type: TokenType.MATCH2,
+      api_type: TransactionApiType.match2,
+      transaction_type: TransactionType.proposal,
       local_id: seededMatch2Id,
       state: TransactionState.submitted,
       created_at: exampleDate,
@@ -167,7 +167,8 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededAcceptTransactionId,
-      token_type: TokenType.MATCH2,
+      api_type: TransactionApiType.match2,
+      transaction_type: TransactionType.accept,
       local_id: seededMatch2Id,
       state: TransactionState.submitted,
       created_at: exampleDate,

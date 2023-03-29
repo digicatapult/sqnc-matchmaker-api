@@ -19,7 +19,7 @@ import { BadRequest, HttpResponse, NotFound } from '../../lib/error-handler/inde
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
 import { Match2Request, Match2Response, Match2State } from '../../models/match2'
 import { UUID } from '../../models/uuid'
-import { TransactionResponse, TransactionState } from '../../models/transaction'
+import { TransactionResponse, TransactionState, TransactionType, TransactionApiType } from '../../models/transaction'
 import { TokenType } from '../../models/tokenType'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
 import { runProcess } from '../../lib/services/dscpApi'
@@ -116,7 +116,8 @@ export class Match2Controller extends Controller {
     validatePreOnChain(demandB, DemandSubtype.capacity, 'DemandB')
 
     const [transaction] = await this.db.insertTransaction({
-      token_type: TokenType.MATCH2,
+      transaction_type: TransactionType.proposal,
+      api_type: TransactionApiType.match2,
       local_id: match2Id,
       state: TransactionState.submitted,
     })
@@ -162,8 +163,7 @@ export class Match2Controller extends Controller {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
 
-    const proposals = await this.db.getTransactionsByLocalId(match2Id)
-    return proposals
+    return await this.db.getTransactionsByLocalId(match2Id, TransactionType.proposal)
   }
 
   /**
@@ -196,7 +196,8 @@ export class Match2Controller extends Controller {
 
     const acceptAB = async () => {
       const [transaction] = await this.db.insertTransaction({
-        token_type: TokenType.MATCH2,
+        transaction_type: TransactionType.accept,
+        api_type: TransactionApiType.match2,
         local_id: match2Id,
         state: TransactionState.submitted,
       })
@@ -214,7 +215,8 @@ export class Match2Controller extends Controller {
 
     const acceptFinal = async () => {
       const [transaction] = await this.db.insertTransaction({
-        token_type: TokenType.MATCH2,
+        transaction_type: TransactionType.accept,
+        api_type: TransactionApiType.match2,
         local_id: match2Id,
         state: TransactionState.submitted,
       })
@@ -275,7 +277,7 @@ export class Match2Controller extends Controller {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
 
-    const accepts = await this.db.getTransactionsByLocalId(match2Id)
+    const accepts = await this.db.getTransactionsByLocalId(match2Id, TransactionType.accept)
     return accepts
   }
 }

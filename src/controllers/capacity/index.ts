@@ -19,7 +19,7 @@ import { DemandResponse, DemandSubtype, DemandRequest, DemandState } from '../..
 import { UUID } from '../../models/uuid'
 import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-import { TransactionResponse, TransactionState } from '../../models/transaction'
+import { TransactionResponse, TransactionState, TransactionApiType, TransactionType } from '../../models/transaction'
 import { TokenType } from '../../models/tokenType'
 import { runProcess } from '../..//lib/services/dscpApi'
 import { demandCreate } from '../../lib/payload'
@@ -107,7 +107,8 @@ export class CapacityController extends Controller {
     if (capacity.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
 
     const [transaction] = await this.db.insertTransaction({
-      token_type: TokenType.DEMAND,
+      api_type: TransactionApiType.capacity,
+      transaction_type: TransactionType.creation,
       local_id: capacityId,
       state: TransactionState.submitted,
     })
@@ -149,7 +150,7 @@ export class CapacityController extends Controller {
     const [capacity] = await this.db.getDemand(capacityId)
     if (!capacity) throw new NotFound('capacity')
 
-    return await this.db.getTransactionsByLocalId(capacityId)
+    return await this.db.getTransactionsByLocalId(capacityId, TransactionType.creation)
   }
 }
 
