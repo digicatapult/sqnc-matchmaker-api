@@ -82,7 +82,7 @@ describe('capacity', () => {
       })
 
       it('it should get all transactions of an api type - 200', async () => {
-        const response = await get(app, `/transaction/${TransactionApiType.match2}`)
+        const response = await get(app, `/transaction?apiType=${TransactionApiType.match2}`)
         expect(response.status).to.equal(200)
         expect(response.body).to.deep.equal([
           {
