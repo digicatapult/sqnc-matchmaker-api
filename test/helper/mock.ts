@@ -3,7 +3,8 @@ import env from '../../src/env'
 
 export const selfAlias = 'test-self'
 export const selfAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
-export const mockTokenId = 42
+export const demandCreateMockTokenId = 42
+export const match2ProposeMockTokenIds = [52, 53, 54]
 
 const mockAgent = new MockAgent()
 setGlobalDispatcher(mockAgent)
@@ -35,13 +36,22 @@ export const identitySelfMock = () => {
     .persist()
 }
 
-export const apiRunProcessMock = () => {
+export const demandCreateMock = () => {
   mockApi
     .intercept({
       path: '/v3/run-process',
       method: 'POST',
     })
-    .reply(200, [mockTokenId])
+    .reply(200, [demandCreateMockTokenId])
+}
+
+export const match2ProposeMock = () => {
+  mockApi
+    .intercept({
+      path: '/v3/run-process',
+      method: 'POST',
+    })
+    .reply(200, match2ProposeMockTokenIds)
 }
 
 export const apiRunProcessMockError = () => {

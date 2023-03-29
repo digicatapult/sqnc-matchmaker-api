@@ -34,7 +34,7 @@ export class order extends Controller {
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
     if (!attachment) throw new NotFound('attachment')
 
-    const selfAddress = await getMemberBySelf()
+    const { address: selfAddress } = await getMemberBySelf()
     const [order] = await this.db.insertDemand({
       owner: selfAddress,
       subtype: DemandSubtype.order,

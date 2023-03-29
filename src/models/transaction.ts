@@ -17,4 +17,5 @@ export interface TransactionResponse {
   id: UUID
   state: TransactionState
   submittedAt: Date
+  updatedAt: Date
 }

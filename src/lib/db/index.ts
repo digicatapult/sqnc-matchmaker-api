@@ -36,6 +36,15 @@ const match2Columns = [
   'original_token_id AS originalTokenId',
 ]
 
+const transactionColumns = [
+  'id',
+  'state',
+  'local_id AS localId',
+  'token_type AS tokenType',
+  'created_at AS submittedAt',
+  'updated_at AS updatedAt',
+]
+
 export default class Database {
   public client: Knex
   private log: Logger
@@ -78,15 +87,15 @@ export default class Database {
   }
 
   insertTransaction = async (transaction: object) => {
-    return this.db().transaction().insert(transaction).returning('*')
+    return this.db().transaction().insert(transaction).returning(transactionColumns)
   }
 
   getTransaction = async (id: UUID) => {
-    return this.db().transaction().select('*').where({ id: id })
+    return this.db().transaction().select(transactionColumns).where({ id })
   }
 
-  getTransactionsFromCapacityID = async (capacityID: UUID) => {
-    return this.db().transaction().where({ local_id: capacityID })
+  getTransactionsByLocalId = async (local_id: UUID) => {
+    return this.db().transaction().select(transactionColumns).where({ local_id })
   }
 
   updateTransaction = async (transactionId: UUID, transaction: object) => {

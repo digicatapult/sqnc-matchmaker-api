@@ -25,5 +25,5 @@ export const runProcess = async ({ files, ...payload }: { files: RunProcessFile[
     return result
   }
 
-  throw new HttpResponse({ code: 500, message: result }) // pass through dscpApi error
+  throw new HttpResponse({ code: 500, message: JSON.stringify(result) }) // pass through dscpApi error
 }

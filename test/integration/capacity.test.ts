@@ -4,14 +4,29 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
-import { seed, cleanup, parametersAttachmentId, seededCapacityId, nonExistentId, seededTransactionId, seededTransactionId2 } from '../seeds'
+import {
+  seed,
+  cleanup,
+  parametersAttachmentId,
+  seededCapacityId,
+  nonExistentId,
+  seededTransactionId,
+  seededTransactionId2,
+  exampleDate,
+  seededCapacityAlreadyAllocated,
+} from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
-import { selfAlias, mockTokenId, identitySelfMock, apiRunProcessMock, apiRunProcessMockError } from '../helper/mock'
+import {
+  selfAlias,
+  identitySelfMock,
+  demandCreateMock,
+  apiRunProcessMockError,
+  demandCreateMockTokenId,
+} from '../helper/mock'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 import { TokenType } from '../../src/models/tokenType'
-
 
 const db = new Database()
 
@@ -61,7 +76,7 @@ describe('capacity', () => {
     it('should get all capacities', async () => {
       const response = await get(app, `/capacity`)
       expect(response.status).to.equal(200)
-      expect(response.body.length).to.equal(1)
+      expect(response.body.length).to.equal(3)
       expect(response.body[0]).to.deep.equal({
         id: seededCapacityId,
         owner: selfAlias,
@@ -71,7 +86,7 @@ describe('capacity', () => {
     })
 
     it('should create a capacity on-chain', async () => {
-      apiRunProcessMock()
+      demandCreateMock()
       // submit to chain
       const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
       expect(response.status).to.equal(201)
@@ -84,61 +99,50 @@ describe('capacity', () => {
 
       // check local transaction updates
       const [transaction] = await db.getTransaction(transactionId)
-      expect(transaction.token_id).to.equal(mockTokenId)
       expect(transaction.state).to.equal(TransactionState.finalised)
 
       // check local capacity updates with token id
       const [capacity] = await db.getDemand(seededCapacityId)
-      expect(capacity.latestTokenId).to.equal(mockTokenId)
-      expect(capacity.originalTokenId).to.equal(mockTokenId)
+      expect(capacity.latestTokenId).to.equal(demandCreateMockTokenId)
+      expect(capacity.originalTokenId).to.equal(demandCreateMockTokenId)
     })
 
     it('it should get a transaction', async () => {
       const response = await get(app, `/capacity/${seededCapacityId}/creation/${seededTransactionId}`)
-      expect(response.status).to.equal(200)      
-      expect(response.body).to.deep.equal(
-        {
-          id: seededTransactionId,
-          token_type: TokenType.DEMAND,
-          local_id: seededCapacityId,
-          state: TransactionState.submitted,
-          token_id: 6006,
-          created_at: '2023-03-24T10:40:47.317Z',
-          updated_at: '2023-03-24T10:40:47.317Z',
-        }
-      )
+      expect(response.status).to.equal(200)
+      expect(response.body).to.deep.equal({
+        id: seededTransactionId,
+        tokenType: TokenType.DEMAND,
+        localId: seededCapacityId,
+        state: TransactionState.submitted,
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      })
     })
 
     it('it should get all transactions from a capacity ID - 200', async () => {
       const response = await get(app, `/capacity/${seededCapacityId}/creation/`)
       expect(response.status).to.equal(200)
-      expect(response.body).to.deep.equal(
-        [
-          {
-            id: seededTransactionId,
-            token_type: TokenType.DEMAND,
-            local_id: seededCapacityId,
-            state: TransactionState.submitted,
-            created_at: '2023-03-24T10:40:47.317Z',
-            updated_at: '2023-03-24T10:40:47.317Z',
-            token_id: 6006
-          },
-          {
-            id: seededTransactionId2,
-            token_type: TokenType.DEMAND,
-            local_id: seededCapacityId,
-            state: TransactionState.submitted,
-            created_at: '2023-03-24T10:40:47.317Z',
-            updated_at: '2023-03-24T10:40:47.317Z',
-            token_id: 7000
-          }
-        ]
-      )      
+      expect(response.body).to.deep.equal([
+        {
+          id: seededTransactionId,
+          tokenType: TokenType.DEMAND,
+          localId: seededCapacityId,
+          state: TransactionState.submitted,
+          submittedAt: exampleDate,
+          updatedAt: exampleDate,
+        },
+        {
+          id: seededTransactionId2,
+          tokenType: TokenType.DEMAND,
+          localId: seededCapacityId,
+          state: TransactionState.submitted,
+          submittedAt: exampleDate,
+          updatedAt: exampleDate,
+        },
+      ])
     })
-
   })
-
-
 
   describe('sad path', () => {
     it('invalid attachment uuid - 422', async () => {
@@ -159,8 +163,14 @@ describe('capacity', () => {
     })
 
     it('non-existent capacity id when creating on-chain - 404', async () => {
-      const response = await get(app, `/capacity/${nonExistentId}/creation`)
+      const response = await post(app, `/capacity/${nonExistentId}/creation`, {})
       expect(response.status).to.equal(404)
+    })
+
+    it('incorrect state when creating on-chain - 400', async () => {
+      const response = await post(app, `/capacity/${seededCapacityAlreadyAllocated}/creation`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`Demand must have state: ${DemandState.created}`)
     })
 
     it('dscp-api error - 500', async () => {
@@ -169,19 +179,18 @@ describe('capacity', () => {
       expect(response.status).to.equal(500)
     })
 
-    it('non-existant Creation ID - 404', async () => {
-      const response = await get(app, `/capacity/${nonExistentId}/creation/${nonExistentId}`)
+    it('non-existent Creation ID - 404', async () => {
+      const response = await get(app, `/capacity/${seededCapacityId}/creation/${nonExistentId}`)
       expect(response.status).to.equal(404)
     })
 
-    it('non-existant Capacity ID when using a Creation ID - 404', async () => {
+    it('non-existent Capacity ID when using a Creation ID - 404', async () => {
       const response = await get(app, `/capacity/${nonExistentId}/creation/${seededTransactionId}`)
       expect(response.status).to.equal(404)
     })
 
-    it('non-existant Capacity ID should return nothing - 404', async () => {
+    it('non-existent Capacity ID should return nothing - 404', async () => {
       const response = await get(app, `/capacity/${nonExistentId}/creation/`)
-      console.log(response.body)
       expect(response.status).to.equal(404)
     })
   })

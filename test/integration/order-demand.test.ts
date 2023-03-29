@@ -52,16 +52,16 @@ describe('order', () => {
       expect(body).to.deep.contain({
         fields: {
           '.parametersAttachmentId': {
-            message: "Not match in '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}'",
-            value: "a789ad47",
-          }
+            message:
+              "Not match in '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}'",
+            value: 'a789ad47',
+          },
         },
         name: 'ValidateError',
         message: 'Validation failed',
       })
     })
   })
-
 
   it('should create a order demand', async () => {
     const response = await post(app, '/order', { parametersAttachmentId })
