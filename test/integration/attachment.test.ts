@@ -29,7 +29,7 @@ describe('attachment', () => {
       const { status, body } = await get(app, '/attachment/not-uuid')
 
       expect(status).to.equal(422)
-      expect(body).to.have.keys(['fields', 'message', 'name', 'status'])
+      expect(body).to.have.keys(['fields', 'message', 'name'])
       expect(body).to.contain({
         name: 'ValidateError',
         message: 'Validation failed'
