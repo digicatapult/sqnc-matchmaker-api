@@ -2,7 +2,6 @@ import Database from '../../src/lib/db'
 import { DemandState, DemandSubtype } from '../../src/models/demand'
 import { Match2State } from '../../src/models/match2'
 import { selfAddress } from '../helper/mock'
-import { TokenType } from '../../src/models/tokenType'
 import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 
 const db = new Database().db()
