@@ -27,7 +27,6 @@ import { selfAlias, identitySelfMock, match2ProposeMock, match2ProposeMockTokenI
 import { Match2State } from '../../src/models/match2'
 import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
-import { TokenType } from '../../src/models/tokenType'
 
 const db = new Database()
 
