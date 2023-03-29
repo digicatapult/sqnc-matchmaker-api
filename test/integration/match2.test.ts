@@ -133,7 +133,6 @@ describe('match2', () => {
         transactionType: TransactionType.proposal,
         localId: seededMatch2Id,
         state: TransactionState.submitted,
-        created_at: exampleDate,
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
@@ -150,7 +149,6 @@ describe('match2', () => {
           localId: seededMatch2Id,
           state: TransactionState.submitted,
           submittedAt: exampleDate,
-          createdAt: exampleDate,
           updatedAt: exampleDate,
         },
       ])

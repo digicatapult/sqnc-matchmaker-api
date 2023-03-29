@@ -135,8 +135,8 @@ describe('capacity', () => {
         },
         {
           id: seededTransactionId2,
-          api_type: TransactionApiType.capacity,
-          transaction_type: TransactionType.creation,
+          apiType: TransactionApiType.capacity,
+          transactionType: TransactionType.creation,
           localId: seededCapacityId,
           state: TransactionState.submitted,
           submittedAt: exampleDate,
