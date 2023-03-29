@@ -277,8 +277,7 @@ export class Match2Controller extends Controller {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
 
-    const accepts = await this.db.getTransactionsByLocalId(match2Id, TransactionType.accept)
-    return accepts
+    return await this.db.getTransactionsByLocalId(match2Id, TransactionType.accept)
   }
 }
 

@@ -231,7 +231,7 @@ describe('match2', () => {
       })
     })
 
-    it('it should get all accept transactions - 200', async () => {
+    it('it should get all accept transactions', async () => {
       const response = await get(app, `/match2/${seededMatch2Id}/accept`)
       expect(response.status).to.equal(200)
       expect(response.body.length).to.be.greaterThan(0)
