@@ -129,12 +129,13 @@ describe('match2', () => {
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededProposalTransactionId,
-        api_type: TransactionApiType.match2,
-        transaction_type: TransactionType.proposal,
-        local_id: seededMatch2Id,
+        apiType: TransactionApiType.match2,
+        transactionType: TransactionType.proposal,
+        localId: seededMatch2Id,
         state: TransactionState.submitted,
         created_at: exampleDate,
-        updated_at: exampleDate,
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
       })
     })
 
@@ -144,12 +145,13 @@ describe('match2', () => {
       expect(response.body).to.deep.equal([
         {
           id: seededProposalTransactionId,
-          api_type: TransactionApiType.match2,
-          transaction_type: TransactionType.proposal,
-          local_id: seededMatch2Id,
+          apiType: TransactionApiType.match2,
+          transactionType: TransactionType.proposal,
+          localId: seededMatch2Id,
           state: TransactionState.submitted,
-          created_at: exampleDate,
-          updated_at: exampleDate,
+          submittedAt: exampleDate,
+          createdAt: exampleDate,
+          updatedAt: exampleDate,
         },
       ])
     })

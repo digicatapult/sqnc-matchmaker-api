@@ -111,8 +111,8 @@ describe('capacity', () => {
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededTransactionId,
-        api_type: TransactionApiType.capacity,
-        transaction_type: TransactionType.creation,
+        apiType: TransactionApiType.capacity,
+        transactionType: TransactionType.creation,
         localId: seededCapacityId,
         state: TransactionState.submitted,
         submittedAt: exampleDate,
@@ -126,8 +126,8 @@ describe('capacity', () => {
       expect(response.body).to.deep.equal([
         {
           id: seededTransactionId,
-          api_type: TransactionApiType.capacity,
-          transaction_type: TransactionType.creation,
+          apiType: TransactionApiType.capacity,
+          transactionType: TransactionType.creation,
           localId: seededCapacityId,
           state: TransactionState.submitted,
           submittedAt: exampleDate,
