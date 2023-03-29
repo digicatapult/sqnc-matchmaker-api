@@ -107,7 +107,8 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededProposalTransactionId,
-      token_type: TokenType.MATCH2,
+      api_type: TransactionApiType.match2,
+      transaction_type: TransactionType.proposal,
       local_id: seededMatch2Id,
       state: TransactionState.submitted,
       created_at: exampleDate,

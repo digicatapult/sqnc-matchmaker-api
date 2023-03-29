@@ -25,7 +25,7 @@ import {
 
 import { selfAlias, identitySelfMock, match2ProposeMock, match2ProposeMockTokenIds } from '../helper/mock'
 import { Match2State } from '../../src/models/match2'
-import { TransactionState } from '../../src/models/transaction'
+import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 import { TokenType } from '../../src/models/tokenType'
 
@@ -130,11 +130,12 @@ describe('match2', () => {
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededProposalTransactionId,
-        tokenType: TokenType.MATCH2,
-        localId: seededMatch2Id,
+        api_type: TransactionApiType.match2,
+        transaction_type: TransactionType.proposal,
+        local_id: seededMatch2Id,
         state: TransactionState.submitted,
-        submittedAt: exampleDate,
-        updatedAt: exampleDate,
+        created_at: exampleDate,
+        updated_at: exampleDate,
       })
     })
 
@@ -144,11 +145,12 @@ describe('match2', () => {
       expect(response.body).to.deep.equal([
         {
           id: seededProposalTransactionId,
-          tokenType: TokenType.MATCH2,
-          localId: seededMatch2Id,
+          api_type: TransactionApiType.match2,
+          transaction_type: TransactionType.proposal,
+          local_id: seededMatch2Id,
           state: TransactionState.submitted,
-          submittedAt: exampleDate,
-          updatedAt: exampleDate,
+          created_at: exampleDate,
+          updated_at: exampleDate,
         },
       ])
     })

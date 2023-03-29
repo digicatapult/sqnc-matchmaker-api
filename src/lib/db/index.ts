@@ -40,7 +40,8 @@ const transactionColumns = [
   'id',
   'state',
   'local_id AS localId',
-  'token_type AS tokenType',
+  'api_type AS api_Type',
+  'transactionType AS transaction_type',
   'created_at AS submittedAt',
   'updated_at AS updatedAt',
 ]
