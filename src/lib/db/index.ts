@@ -5,6 +5,7 @@ import { logger } from '../logger'
 import { pgConfig } from './knexfile'
 import { DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
+import { TransactionApiType } from 'src/models/transaction'
 
 const TABLES: string[] = ['attachment', 'demand', 'transaction', 'match2']
 
@@ -93,6 +94,14 @@ export default class Database {
 
   getTransaction = async (id: UUID) => {
     return this.db().transaction().select(transactionColumns).where({ id })
+  }
+
+  getTransactions = async () => {
+    return this.db().transaction().select(transactionColumns)
+  }
+
+  getTransactionsByType = async (api_type: TransactionApiType) => {
+    return this.db().transaction().select(transactionColumns).where({ api_type })
   }
 
   getTransactionsByLocalId = async (local_id: UUID) => {
