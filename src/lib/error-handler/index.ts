@@ -68,12 +68,12 @@ export const errorHandler = function errorHandler(
     })
   }
   if (err instanceof HttpResponse) {
-    logger.warn('Error thrown in handler: %s', JSON.stringify(err.message))
+    logger.warn('Error thrown in handler: %s', err.message)
 
     return res.status(err.code).json(err.message)
   }
   if (err instanceof Error) {
-    logger.error('Unexpected error thrown in handler: %s', JSON.stringify(err.message))
+    logger.error('Unexpected error thrown in handler: %s', err.message)
 
     return res.status(500).json(err)
   }
