@@ -1,23 +1,10 @@
-import {
-  ValidateError,
-  Controller,
-  Get,
-  Post,
-  Route,
-  Path,
-  Response,
-  Body,
-  SuccessResponse,
-  Tags,
-  Security,
-  Query,
-} from 'tsoa'
+import { Controller, Get, Route, Path, Response, Tags, Security, Query } from 'tsoa'
 import type { Logger } from 'pino'
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
 import { UUID } from '../../models/uuid'
 import { NotFound } from '../../lib/error-handler/index'
-import { TransactionApiType, TransactionResponse } from 'src/models/transaction'
+import { TransactionApiType, TransactionResponse } from '../../models/transaction'
 
 @Route('transaction')
 @Tags('transaction')
