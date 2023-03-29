@@ -24,9 +24,8 @@ import {
   apiRunProcessMockError,
   demandCreateMockTokenId,
 } from '../helper/mock'
-import { TransactionState } from '../../src/models/transaction'
+import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
-import { TokenType } from '../../src/models/tokenType'
 
 const db = new Database()
 
@@ -112,7 +111,8 @@ describe('capacity', () => {
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededTransactionId,
-        tokenType: TokenType.DEMAND,
+        api_type: TransactionApiType.capacity,
+        transaction_type: TransactionType.creation,
         localId: seededCapacityId,
         state: TransactionState.submitted,
         submittedAt: exampleDate,
@@ -126,7 +126,8 @@ describe('capacity', () => {
       expect(response.body).to.deep.equal([
         {
           id: seededTransactionId,
-          tokenType: TokenType.DEMAND,
+          api_type: TransactionApiType.capacity,
+          transaction_type: TransactionType.creation,
           localId: seededCapacityId,
           state: TransactionState.submitted,
           submittedAt: exampleDate,
@@ -134,7 +135,8 @@ describe('capacity', () => {
         },
         {
           id: seededTransactionId2,
-          tokenType: TokenType.DEMAND,
+          api_type: TransactionApiType.capacity,
+          transaction_type: TransactionType.creation,
           localId: seededCapacityId,
           state: TransactionState.submitted,
           submittedAt: exampleDate,

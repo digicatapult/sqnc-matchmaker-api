@@ -19,3 +19,15 @@ export interface TransactionResponse {
   submittedAt: Date
   updatedAt: Date
 }
+
+export enum TransactionApiType {
+  match2 = 'match2',
+  order = 'order',
+  capacity = 'capacity',
+}
+
+export enum TransactionType {
+  creation = 'creation',
+  proposal = 'proposal',
+  accept = 'accept',
+}
