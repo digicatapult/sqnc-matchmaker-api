@@ -17,7 +17,7 @@ import {
 } from '../seeds'
 import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 
-describe('capacity', () => {
+describe('transaction', () => {
   let app: Express
 
   before(async function () {
