@@ -5,7 +5,7 @@ import { logger } from '../logger'
 import { pgConfig } from './knexfile'
 import { DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
-import { TransactionApiType } from 'src/models/transaction'
+import { TransactionApiType } from '../../models/transaction'
 
 const TABLES: string[] = ['attachment', 'demand', 'transaction', 'match2']
 
