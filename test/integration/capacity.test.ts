@@ -192,6 +192,7 @@ describe('capacity', () => {
     })
 
     it('non-existent Capacity ID should return nothing - 404', async () => {
+      await cleanup()
       const response = await get(app, `/capacity/${nonExistentId}/creation/`)
       expect(response.status).to.equal(404)
     })

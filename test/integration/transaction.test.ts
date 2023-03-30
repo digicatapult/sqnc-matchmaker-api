@@ -49,6 +49,7 @@ describe('transaction', () => {
 
       it('it should get all transactions - 200', async () => {
         const response = await get(app, `/transaction/`)
+        console.log(response.body)
         expect(response.status).to.equal(200)
         expect(response.body).to.deep.equal([
           {
