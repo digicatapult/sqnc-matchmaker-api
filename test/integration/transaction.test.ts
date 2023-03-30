@@ -106,7 +106,7 @@ describe('transaction', () => {
 
     it('non-existent transaction type - 404', async () => {
         const response = await get(app, `/transaction?apiType=${TransactionApiType.order}`)
-        console.log(response.body)
+        console.log(response)
         expect(response.status).to.equal(404)
       })
   })
