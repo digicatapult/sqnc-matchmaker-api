@@ -363,5 +363,29 @@ describe('match2', () => {
       expect(response.status).to.equal(400)
       expect(response.body).to.equal(`Already ${Match2State.acceptedFinal}`)
     })
+
+    it('non-existent match2 id when accepting - 404', async () => {
+      const response = await get(app, `/match2/${nonExistentId}/accept`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-existent match2 when listing accepts - 404', async () => {
+      const response = await get(app, `/match2/${nonExistentId}/proposal`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-existent match2 when getting an accept - 404', async () => {
+      const response = await get(app, `/match2/${nonExistentId}/accept/${seededAcceptTransactionId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-existent transaction when getting an accept - 404', async () => {
+      const response = await get(app, `/match2/${seededMatch2Id}/accept/${nonExistentId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('accept not found')
+    })
   })
 })
