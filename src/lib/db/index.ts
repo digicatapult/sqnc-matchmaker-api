@@ -100,8 +100,10 @@ export default class Database {
     return this.db().transaction().select(transactionColumns)
   }
 
-  getTransactionsByType = async (api_type: TransactionApiType) => {
-    return this.db().transaction().select(transactionColumns).where({ api_type })
+  getTransactionsByType = async (apiType: TransactionApiType) => {
+    const data = this.db().transaction().select(transactionColumns).where({ api_type: apiType })
+    console.log(data)
+    return data
   }
 
   getTransactionsByLocalId = async (local_id: UUID) => {
