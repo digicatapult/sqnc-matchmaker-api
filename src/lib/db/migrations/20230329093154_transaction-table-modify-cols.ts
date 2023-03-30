@@ -12,10 +12,12 @@ export async function up(knex: Knex): Promise<void> {
 export async function down(knex: Knex): Promise<void> {
   return knex.schema.table('transaction', function (table) {
     table.integer('token_id')
-    table.enu('token_type', ['DEMAND', 'MATCH2'], {
-      enumName: 'type',
-      useNative: true,
-    })
+    table
+      .enu('token_type', ['DEMAND', 'MATCH2'], {
+        enumName: 'type',
+        useNative: true,
+      })
+      .notNullable()
     table.dropColumn('transaction_type')
     table.dropColumn('api_type')
   })
