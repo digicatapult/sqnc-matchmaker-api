@@ -1,7 +1,7 @@
 import Database from '../../src/lib/db'
 import { DemandState, DemandSubtype } from '../../src/models/demand'
 import { Match2State } from '../../src/models/match2'
-import { selfAddress } from '../helper/mock'
+import { notSelfAddress, selfAddress } from '../helper/mock'
 import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 
 const db = new Database().db()
@@ -19,9 +19,14 @@ export const seededCapacityTokenId = 12
 export const seededTransactionId = '1f3af974-7d4d-40b4-86a5-94a2241265cb'
 export const seededTransactionId2 = 'd65d8e11-150f-4ea4-b778-b920e9dbc378'
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
+export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
 export const seededOrderId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
+export const seededOrderNotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
+export const seededCapacityNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
 export const seededOrderTokenId = 11
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
+export const seededMatch2OrderNotOwnedId = 'ffb6a503-353c-40a3-94ce-bb04353b68df'
+export const seededMatch2TokenId = 13
 export const exampleDate = '2023-03-24T10:40:47.317Z'
 
 export const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
@@ -31,6 +36,10 @@ export const seededCapacityAlreadyAllocated = '859a1561-a22d-4b09-925e-54ee9f932
 export const seededOrderAlreadyAllocated = '807d1184-9670-4fb0-bb33-28582e5467b1'
 export const seededMatch2WithAllocatedDemands = '27965a5f-f3dd-4110-82e7-68f59bb02c2e'
 export const seededMatch2AcceptedA = '347411d3-3750-49dd-a548-88e9f2616d9c'
+export const seededMatch2AcceptedFinal = '85a50fd9-f20f-4a61-a7e4-3ad49b7c3f21'
+export const seededMatch2NotAcceptableA = '46d7dbe8-aaef-472e-af9f-ecdd2681d3a5'
+export const seededMatch2NotAcceptableB = '097d3905-72aa-4517-85d2-0091d26fceac'
+export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c9474784d'
 
 export const seed = async () => {
   await cleanup()
@@ -91,6 +100,30 @@ export const seed = async () => {
     },
   ])
 
+  await db.demand().insert([
+    {
+      id: seededOrderNotOwnedId,
+      owner: notSelfAddress,
+      subtype: DemandSubtype.order,
+      state: DemandState.created,
+      parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: seededOrderTokenId,
+      original_token_id: seededOrderTokenId,
+    },
+  ])
+
+  await db.demand().insert([
+    {
+      id: seededCapacityNotOwnedId,
+      owner: notSelfAddress,
+      subtype: DemandSubtype.capacity,
+      state: DemandState.created,
+      parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: seededOrderTokenId,
+      original_token_id: seededOrderTokenId,
+    },
+  ])
+
   await db.match2().insert([
     {
       id: seededMatch2Id,
@@ -100,6 +133,22 @@ export const seed = async () => {
       member_b: selfAddress,
       demand_a_id: seededOrderId,
       demand_b_id: seededCapacityId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2OrderNotOwnedId,
+      state: Match2State.proposed,
+      optimiser: selfAddress,
+      member_a: notSelfAddress,
+      member_b: selfAddress,
+      demand_a_id: seededOrderNotOwnedId,
+      demand_b_id: seededCapacityId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
     },
   ])
 
@@ -108,6 +157,18 @@ export const seed = async () => {
       id: seededProposalTransactionId,
       api_type: TransactionApiType.match2,
       transaction_type: TransactionType.proposal,
+      local_id: seededMatch2Id,
+      state: TransactionState.submitted,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+
+  await db.transaction().insert([
+    {
+      id: seededAcceptTransactionId,
+      api_type: TransactionApiType.match2,
+      transaction_type: TransactionType.accept,
       local_id: seededMatch2Id,
       state: TransactionState.submitted,
       created_at: exampleDate,
@@ -176,6 +237,60 @@ export const seed = async () => {
       member_b: selfAddress,
       demand_a_id: seededOrderId,
       demand_b_id: seededCapacityId,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2AcceptedFinal,
+      state: Match2State.acceptedFinal,
+      optimiser: selfAddress,
+      member_a: selfAddress,
+      member_b: selfAddress,
+      demand_a_id: seededOrderId,
+      demand_b_id: seededCapacityId,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2NotAcceptableA,
+      state: Match2State.acceptedB,
+      optimiser: selfAddress,
+      member_a: notSelfAddress,
+      member_b: selfAddress,
+      demand_a_id: seededOrderNotOwnedId,
+      demand_b_id: seededCapacityId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2NotAcceptableB,
+      state: Match2State.acceptedA,
+      optimiser: selfAddress,
+      member_a: selfAddress,
+      member_b: notSelfAddress,
+      demand_a_id: seededOrderId,
+      demand_b_id: seededCapacityNotOwnedId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2NotAcceptableBoth,
+      state: Match2State.acceptedB,
+      optimiser: selfAddress,
+      member_a: notSelfAddress,
+      member_b: notSelfAddress,
+      demand_a_id: seededOrderNotOwnedId,
+      demand_b_id: seededCapacityNotOwnedId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
     },
   ])
 }

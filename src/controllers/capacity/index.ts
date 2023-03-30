@@ -118,7 +118,7 @@ export class CapacityController extends Controller {
     await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
     // demand-create returns a single token ID
-    await observeTokenId(TokenType.DEMAND, capacityId, tokenId, true)
+    await observeTokenId(TokenType.DEMAND, capacityId, DemandState.created, tokenId, true)
     return transaction
   }
 
@@ -150,7 +150,7 @@ export class CapacityController extends Controller {
     const [capacity] = await this.db.getDemand(capacityId)
     if (!capacity) throw new NotFound('capacity')
 
-    return await this.db.getTransactionsByLocalId(capacityId)
+    return await this.db.getTransactionsByLocalId(capacityId, TransactionType.creation)
   }
 }
 

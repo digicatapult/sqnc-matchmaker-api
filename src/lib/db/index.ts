@@ -3,8 +3,10 @@ import type { Logger } from 'pino'
 
 import { logger } from '../logger'
 import { pgConfig } from './knexfile'
-import { DemandSubtype } from '../../models/demand'
+import { DemandState, DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
+import { Match2State } from '../../models/match2'
+import { TransactionType } from '../../models/transaction'
 
 const TABLES: string[] = ['attachment', 'demand', 'transaction', 'match2']
 
@@ -95,8 +97,8 @@ export default class Database {
     return this.db().transaction().select(transactionColumns).where({ id })
   }
 
-  getTransactionsByLocalId = async (local_id: UUID) => {
-    return this.db().transaction().select(transactionColumns).where({ local_id })
+  getTransactionsByLocalId = async (local_id: UUID, transaction_type: TransactionType) => {
+    return this.db().transaction().select(transactionColumns).where({ local_id, transaction_type })
   }
 
   updateTransaction = async (transactionId: UUID, transaction: object) => {
@@ -107,10 +109,17 @@ export default class Database {
       .returning('local_id AS localId')
   }
 
-  updateLocalWithTokenId = async (table: string, localId: UUID, latestTokenId: number, isNewEntity: boolean) => {
+  updateLocalWithTokenId = async (
+    table: string,
+    localId: UUID,
+    state: DemandState | Match2State,
+    latestTokenId: number,
+    isNewEntity: boolean
+  ) => {
     return this.db()
       [table]()
       .update({
+        state,
         latest_token_id: latestTokenId,
         ...(isNewEntity && { original_token_id: latestTokenId }),
         updated_at: this.client.fn.now(),

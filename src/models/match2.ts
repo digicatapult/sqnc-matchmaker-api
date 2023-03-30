@@ -32,6 +32,11 @@ export interface Match2Response {
   demandB: UUID
 }
 
+export interface Match2Payload extends Match2Response {
+  latestTokenId: number
+  originalTokenId: number
+}
+
 /**
  * The required properties of a request to create a Match2. demandA is an order. demandB is a capacity.
  */
