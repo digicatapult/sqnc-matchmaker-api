@@ -17,6 +17,8 @@
     "esModuleInterop": true,
     "paths":{
       "pino": ["node_modules/pino"],
+      "@polkadot/api/augment": ["src/interfaces/augment-api.ts"],
+      "@polkadot/types/augment": ["src/interfaces/augment-types.ts"],
       "types": ["types"]
     }
   },

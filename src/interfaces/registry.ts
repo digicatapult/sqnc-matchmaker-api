@@ -1,0 +1,125 @@
+// Auto-generated via `yarn polkadot-types-from-defs`, do not edit
+/* eslint-disable */
+
+// import type lookup before we augment - in some environments
+// this is required to allow for ambient/previous definitions
+import '@polkadot/types/types/registry';
+
+import type { DscpNodeRuntimeMetadataValue, DscpNodeRuntimeMetadataValueType, DscpNodeRuntimeOriginCaller, DscpNodeRuntimeRole, DscpNodeRuntimeRuntime, DscpPalletTraitsProcessFullyQualifiedId, FinalityGrandpaEquivocationPrecommit, FinalityGrandpaEquivocationPrevote, FinalityGrandpaPrecommit, FinalityGrandpaPrevote, FrameSupportDispatchDispatchClass, FrameSupportDispatchDispatchInfo, FrameSupportDispatchPays, FrameSupportDispatchPerDispatchClassU32, FrameSupportDispatchPerDispatchClassWeight, FrameSupportDispatchPerDispatchClassWeightsPerClass, FrameSupportDispatchRawOrigin, FrameSupportPreimagesBounded, FrameSupportTokensMiscBalanceStatus, FrameSystemAccountInfo, FrameSystemCall, FrameSystemError, FrameSystemEvent, FrameSystemEventRecord, FrameSystemExtensionsCheckGenesis, FrameSystemExtensionsCheckNonZeroSender, FrameSystemExtensionsCheckNonce, FrameSystemExtensionsCheckSpecVersion, FrameSystemExtensionsCheckTxVersion, FrameSystemExtensionsCheckWeight, FrameSystemLastRuntimeUpgradeInfo, FrameSystemLimitsBlockLength, FrameSystemLimitsBlockWeights, FrameSystemLimitsWeightsPerClass, FrameSystemPhase, PalletBalancesAccountData, PalletBalancesBalanceLock, PalletBalancesCall, PalletBalancesError, PalletBalancesEvent, PalletBalancesReasons, PalletBalancesReserveData, PalletCollectiveCall, PalletCollectiveError, PalletCollectiveEvent, PalletCollectiveRawOrigin, PalletCollectiveVotes, PalletDoasCall, PalletDoasEvent, PalletGrandpaCall, PalletGrandpaError, PalletGrandpaEvent, PalletGrandpaStoredPendingChange, PalletGrandpaStoredState, PalletMembershipCall, PalletMembershipError, PalletMembershipEvent, PalletNodeAuthorizationCall, PalletNodeAuthorizationError, PalletNodeAuthorizationEvent, PalletPreimageCall, PalletPreimageError, PalletPreimageEvent, PalletPreimageRequestStatus, PalletProcessValidationBinaryExpressionTreeBooleanExpressionSymbol, PalletProcessValidationBinaryExpressionTreeBooleanOperator, PalletProcessValidationCall, PalletProcessValidationError, PalletProcessValidationEvent, PalletProcessValidationProcess, PalletProcessValidationProcessStatus, PalletProcessValidationRestrictionsRestriction, PalletSchedulerCall, PalletSchedulerError, PalletSchedulerEvent, PalletSchedulerScheduled, PalletSimpleNftCall, PalletSimpleNftError, PalletSimpleNftEvent, PalletSimpleNftOutput, PalletSimpleNftToken, PalletSudoCall, PalletSudoError, PalletSudoEvent, PalletSymmetricKeyCall, PalletSymmetricKeyError, PalletSymmetricKeyEvent, PalletTimestampCall, PalletTransactionPaymentFreeCall, PalletTransactionPaymentFreeChargeTransactionPayment, SpArithmeticArithmeticError, SpConsensusAuraSr25519AppSr25519Public, SpCoreEcdsaSignature, SpCoreEd25519Public, SpCoreEd25519Signature, SpCoreSr25519Public, SpCoreSr25519Signature, SpCoreVoid, SpFinalityGrandpaAppPublic, SpFinalityGrandpaAppSignature, SpFinalityGrandpaEquivocation, SpFinalityGrandpaEquivocationProof, SpRuntimeDigest, SpRuntimeDigestDigestItem, SpRuntimeDispatchError, SpRuntimeModuleError, SpRuntimeMultiSignature, SpRuntimeTokenError, SpRuntimeTransactionalError, SpVersionRuntimeVersion, SpWeightsRuntimeDbWeight, SpWeightsWeightV2Weight } from '@polkadot/types/lookup';
+
+declare module '@polkadot/types/types/registry' {
+  interface InterfaceTypes {
+    DscpNodeRuntimeMetadataValue: DscpNodeRuntimeMetadataValue;
+    DscpNodeRuntimeMetadataValueType: DscpNodeRuntimeMetadataValueType;
+    DscpNodeRuntimeOriginCaller: DscpNodeRuntimeOriginCaller;
+    DscpNodeRuntimeRole: DscpNodeRuntimeRole;
+    DscpNodeRuntimeRuntime: DscpNodeRuntimeRuntime;
+    DscpPalletTraitsProcessFullyQualifiedId: DscpPalletTraitsProcessFullyQualifiedId;
+    FinalityGrandpaEquivocationPrecommit: FinalityGrandpaEquivocationPrecommit;
+    FinalityGrandpaEquivocationPrevote: FinalityGrandpaEquivocationPrevote;
+    FinalityGrandpaPrecommit: FinalityGrandpaPrecommit;
+    FinalityGrandpaPrevote: FinalityGrandpaPrevote;
+    FrameSupportDispatchDispatchClass: FrameSupportDispatchDispatchClass;
+    FrameSupportDispatchDispatchInfo: FrameSupportDispatchDispatchInfo;
+    FrameSupportDispatchPays: FrameSupportDispatchPays;
+    FrameSupportDispatchPerDispatchClassU32: FrameSupportDispatchPerDispatchClassU32;
+    FrameSupportDispatchPerDispatchClassWeight: FrameSupportDispatchPerDispatchClassWeight;
+    FrameSupportDispatchPerDispatchClassWeightsPerClass: FrameSupportDispatchPerDispatchClassWeightsPerClass;
+    FrameSupportDispatchRawOrigin: FrameSupportDispatchRawOrigin;
+    FrameSupportPreimagesBounded: FrameSupportPreimagesBounded;
+    FrameSupportTokensMiscBalanceStatus: FrameSupportTokensMiscBalanceStatus;
+    FrameSystemAccountInfo: FrameSystemAccountInfo;
+    FrameSystemCall: FrameSystemCall;
+    FrameSystemError: FrameSystemError;
+    FrameSystemEvent: FrameSystemEvent;
+    FrameSystemEventRecord: FrameSystemEventRecord;
+    FrameSystemExtensionsCheckGenesis: FrameSystemExtensionsCheckGenesis;
+    FrameSystemExtensionsCheckNonZeroSender: FrameSystemExtensionsCheckNonZeroSender;
+    FrameSystemExtensionsCheckNonce: FrameSystemExtensionsCheckNonce;
+    FrameSystemExtensionsCheckSpecVersion: FrameSystemExtensionsCheckSpecVersion;
+    FrameSystemExtensionsCheckTxVersion: FrameSystemExtensionsCheckTxVersion;
+    FrameSystemExtensionsCheckWeight: FrameSystemExtensionsCheckWeight;
+    FrameSystemLastRuntimeUpgradeInfo: FrameSystemLastRuntimeUpgradeInfo;
+    FrameSystemLimitsBlockLength: FrameSystemLimitsBlockLength;
+    FrameSystemLimitsBlockWeights: FrameSystemLimitsBlockWeights;
+    FrameSystemLimitsWeightsPerClass: FrameSystemLimitsWeightsPerClass;
+    FrameSystemPhase: FrameSystemPhase;
+    PalletBalancesAccountData: PalletBalancesAccountData;
+    PalletBalancesBalanceLock: PalletBalancesBalanceLock;
+    PalletBalancesCall: PalletBalancesCall;
+    PalletBalancesError: PalletBalancesError;
+    PalletBalancesEvent: PalletBalancesEvent;
+    PalletBalancesReasons: PalletBalancesReasons;
+    PalletBalancesReserveData: PalletBalancesReserveData;
+    PalletCollectiveCall: PalletCollectiveCall;
+    PalletCollectiveError: PalletCollectiveError;
+    PalletCollectiveEvent: PalletCollectiveEvent;
+    PalletCollectiveRawOrigin: PalletCollectiveRawOrigin;
+    PalletCollectiveVotes: PalletCollectiveVotes;
+    PalletDoasCall: PalletDoasCall;
+    PalletDoasEvent: PalletDoasEvent;
+    PalletGrandpaCall: PalletGrandpaCall;
+    PalletGrandpaError: PalletGrandpaError;
+    PalletGrandpaEvent: PalletGrandpaEvent;
+    PalletGrandpaStoredPendingChange: PalletGrandpaStoredPendingChange;
+    PalletGrandpaStoredState: PalletGrandpaStoredState;
+    PalletMembershipCall: PalletMembershipCall;
+    PalletMembershipError: PalletMembershipError;
+    PalletMembershipEvent: PalletMembershipEvent;
+    PalletNodeAuthorizationCall: PalletNodeAuthorizationCall;
+    PalletNodeAuthorizationError: PalletNodeAuthorizationError;
+    PalletNodeAuthorizationEvent: PalletNodeAuthorizationEvent;
+    PalletPreimageCall: PalletPreimageCall;
+    PalletPreimageError: PalletPreimageError;
+    PalletPreimageEvent: PalletPreimageEvent;
+    PalletPreimageRequestStatus: PalletPreimageRequestStatus;
+    PalletProcessValidationBinaryExpressionTreeBooleanExpressionSymbol: PalletProcessValidationBinaryExpressionTreeBooleanExpressionSymbol;
+    PalletProcessValidationBinaryExpressionTreeBooleanOperator: PalletProcessValidationBinaryExpressionTreeBooleanOperator;
+    PalletProcessValidationCall: PalletProcessValidationCall;
+    PalletProcessValidationError: PalletProcessValidationError;
+    PalletProcessValidationEvent: PalletProcessValidationEvent;
+    PalletProcessValidationProcess: PalletProcessValidationProcess;
+    PalletProcessValidationProcessStatus: PalletProcessValidationProcessStatus;
+    PalletProcessValidationRestrictionsRestriction: PalletProcessValidationRestrictionsRestriction;
+    PalletSchedulerCall: PalletSchedulerCall;
+    PalletSchedulerError: PalletSchedulerError;
+    PalletSchedulerEvent: PalletSchedulerEvent;
+    PalletSchedulerScheduled: PalletSchedulerScheduled;
+    PalletSimpleNftCall: PalletSimpleNftCall;
+    PalletSimpleNftError: PalletSimpleNftError;
+    PalletSimpleNftEvent: PalletSimpleNftEvent;
+    PalletSimpleNftOutput: PalletSimpleNftOutput;
+    PalletSimpleNftToken: PalletSimpleNftToken;
+    PalletSudoCall: PalletSudoCall;
+    PalletSudoError: PalletSudoError;
+    PalletSudoEvent: PalletSudoEvent;
+    PalletSymmetricKeyCall: PalletSymmetricKeyCall;
+    PalletSymmetricKeyError: PalletSymmetricKeyError;
+    PalletSymmetricKeyEvent: PalletSymmetricKeyEvent;
+    PalletTimestampCall: PalletTimestampCall;
+    PalletTransactionPaymentFreeCall: PalletTransactionPaymentFreeCall;
+    PalletTransactionPaymentFreeChargeTransactionPayment: PalletTransactionPaymentFreeChargeTransactionPayment;
+    SpArithmeticArithmeticError: SpArithmeticArithmeticError;
+    SpConsensusAuraSr25519AppSr25519Public: SpConsensusAuraSr25519AppSr25519Public;
+    SpCoreEcdsaSignature: SpCoreEcdsaSignature;
+    SpCoreEd25519Public: SpCoreEd25519Public;
+    SpCoreEd25519Signature: SpCoreEd25519Signature;
+    SpCoreSr25519Public: SpCoreSr25519Public;
+    SpCoreSr25519Signature: SpCoreSr25519Signature;
+    SpCoreVoid: SpCoreVoid;
+    SpFinalityGrandpaAppPublic: SpFinalityGrandpaAppPublic;
+    SpFinalityGrandpaAppSignature: SpFinalityGrandpaAppSignature;
+    SpFinalityGrandpaEquivocation: SpFinalityGrandpaEquivocation;
+    SpFinalityGrandpaEquivocationProof: SpFinalityGrandpaEquivocationProof;
+    SpRuntimeDigest: SpRuntimeDigest;
+    SpRuntimeDigestDigestItem: SpRuntimeDigestDigestItem;
+    SpRuntimeDispatchError: SpRuntimeDispatchError;
+    SpRuntimeModuleError: SpRuntimeModuleError;
+    SpRuntimeMultiSignature: SpRuntimeMultiSignature;
+    SpRuntimeTokenError: SpRuntimeTokenError;
+    SpRuntimeTransactionalError: SpRuntimeTransactionalError;
+    SpVersionRuntimeVersion: SpVersionRuntimeVersion;
+    SpWeightsRuntimeDbWeight: SpWeightsRuntimeDbWeight;
+    SpWeightsWeightV2Weight: SpWeightsWeightV2Weight;
+  } // InterfaceTypes
+} // declare module
