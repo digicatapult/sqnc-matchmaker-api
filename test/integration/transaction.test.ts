@@ -112,7 +112,7 @@ describe('transaction', () => {
 
       it('made-up transaction type - 422', async () => {
         const response = await get(app, `/transaction?apiType=${'banana'}`)
-        expect(response.status).to.equal(422)
+        expect(response.status).to.equal(422) 
       })
 
       it('it should not get all transactions - 200', async () => {
