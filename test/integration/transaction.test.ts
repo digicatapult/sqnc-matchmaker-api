@@ -108,5 +108,11 @@ describe('transaction', () => {
         const response = await get(app, `/transaction?apiType=${TransactionApiType.order}`)
         expect(response.status).to.equal(404)
       })
+
+      it('it should get all transactions - 404', async () => {
+        cleanup()
+        const response = await get(app, `/transaction/`)
+        expect(response.status).to.equal(404)
+      })
   })
 })
