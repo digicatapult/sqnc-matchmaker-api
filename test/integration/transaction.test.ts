@@ -97,6 +97,11 @@ describe('transaction', () => {
           },
         ])
       })
+
+      it('non-existent transaction type - 200', async () => {
+        const response = await get(app, `/transaction?apiType=${TransactionApiType.order}`)
+        expect(response.status).to.equal(200)
+      })
   })
 
   describe('sad path', () => {
@@ -105,15 +110,15 @@ describe('transaction', () => {
         expect(response.status).to.equal(404)
       })
 
-    it('non-existent transaction type - 404', async () => {
-        const response = await get(app, `/transaction?apiType=${TransactionApiType.order}`)
+      it('made-up transaction type - 404', async () => {
+        const response = await get(app, `/transaction?apiType=${'banana'}`)
         expect(response.status).to.equal(404)
       })
 
-      it('it should not get all transactions - 404', async () => {
+      it('it should not get all transactions - 200', async () => {
         cleanup()
         const response = await get(app, `/transaction/`)
-        expect(response.status).to.equal(404)
+        expect(response.status).to.equal(200)
       })
   })
 })
