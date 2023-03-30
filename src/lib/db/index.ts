@@ -102,7 +102,7 @@ export default class Database {
 
   getTransactionsByType = async (apiType: TransactionApiType) => {
     const data = this.db().transaction().select(transactionColumns).where({ api_type: apiType })
-    console.log(data)
+    console.log(data.body)
     return data
   }
 
