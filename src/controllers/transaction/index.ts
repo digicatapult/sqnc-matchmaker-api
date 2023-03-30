@@ -24,6 +24,7 @@ export class TransactionController extends Controller {
    * @summary List all transactions
    * @Query apiType lists all transactions by that type
    */
+  @Response<NotFound>(404, 'Item not found')
   @Get('/')
   public async getAllTransactions(@Query() apiType?: TransactionApiType): Promise<TransactionResponse[]> {
     if (apiType) {
