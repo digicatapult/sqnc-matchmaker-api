@@ -110,9 +110,9 @@ describe('transaction', () => {
         expect(response.status).to.equal(404)
       })
 
-      it('made-up transaction type - 404', async () => {
+      it('made-up transaction type - 422', async () => {
         const response = await get(app, `/transaction?apiType=${'banana'}`)
-        expect(response.status).to.equal(404)
+        expect(response.status).to.equal(422)
       })
 
       it('it should not get all transactions - 200', async () => {
@@ -120,6 +120,6 @@ describe('transaction', () => {
         const response = await get(app, `/transaction/`)
         expect(response.status).to.equal(200)
       })
-      
+
   })
 })
