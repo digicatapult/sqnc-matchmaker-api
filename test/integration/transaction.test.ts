@@ -109,7 +109,7 @@ describe('transaction', () => {
         expect(response.status).to.equal(404)
       })
 
-      it('it should get all transactions - 404', async () => {
+      it('it should not get all transactions - 404', async () => {
         cleanup()
         const response = await get(app, `/transaction/`)
         expect(response.status).to.equal(404)
