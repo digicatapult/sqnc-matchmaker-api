@@ -3,7 +3,7 @@ import type { Logger } from 'pino'
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
 import { UUID } from '../../models/uuid'
-import { NotFound } from '../../lib/error-handler/index'
+import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { TransactionApiType, TransactionResponse } from '../../models/transaction'
 
 @Route('transaction')
@@ -24,6 +24,7 @@ export class TransactionController extends Controller {
    * @summary List all transactions
    * @Query apiType lists all transactions by that type
    */
+  @Response<BadRequest>(400, 'Request was invalid')
   @Response<NotFound>(404, 'Item not found')
   @Get('/')
   public async getAllTransactions(@Query() apiType?: TransactionApiType): Promise<TransactionResponse[]> {
