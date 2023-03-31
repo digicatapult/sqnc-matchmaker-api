@@ -5,12 +5,16 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post } from '../helper/routeHelper'
-import { seed, cleanup, parametersAttachmentId } from '../seeds'
+import { seed, parametersAttachmentId, cleanup } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
 import { selfAlias, identitySelfMock } from '../helper/mock'
+import { TransactionState } from '../../src/models/transaction'
+import Database from '../../src/lib/db'
 
-describe('order', () => {
+const db = new Database()
+
+describe.only('order', () => {
   let res: any
   let app: Express
 
@@ -75,6 +79,39 @@ describe('order', () => {
       parametersAttachmentId,
       state: DemandState.created,
       owner: selfAlias,
+    })
+  })
+
+  it('creates an order transaction on chain', async () => {
+    const { body: { id: orderId } } = await post(app, '/order', { parametersAttachmentId })
+
+    // submit to chain
+    const response = await post(app, `/order/${orderId}/creation`, {})
+    expect(response.status).to.equal(201)
+
+    const { id: transactionId, state } = response.body
+    expect(transactionId).to.match(
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
+    )
+    expect(state).to.equal(TransactionState.submitted)
+
+    // check local transaction updates
+    const [transaction] = await db.getTransaction(transactionId)
+    expect(transaction.state).to.equal(TransactionState.finalised)
+    expect(transaction).to.contain({
+      state: 'submitted',
+      apiType: 'order',
+      transactionType: 'creation',
+    })
+
+    // check local capacity updates with token id
+    const [order] = await db.getDemand(orderId)
+    expect(order).to.contain({
+      id: orderId,
+      owner: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
+      state: 'created',
+      subtype: 'order',
+      parametersAttachmentId,
     })
   })
 })
