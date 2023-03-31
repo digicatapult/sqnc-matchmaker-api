@@ -37,7 +37,7 @@ describe('transaction', () => {
 
   describe('happy path', () => {
     it('it should get a transaction from an id - 200', async () => {
-        const response = await get(app, `/transaction/${seededTransactionId}`)
+        const response = await get(app, `/transaction/${seededTransactionId4}`)
         console.log(response)
         expect(response.status).to.equal(200)
         expect(response.body).to.deep.equal({
@@ -111,9 +111,9 @@ describe('transaction', () => {
         ])
       })
 
-      it('non-existent transaction type - 200', async () => {
+      it('non-existent transaction type - 422', async () => {
         const response = await get(app, `/transaction?apiType=${TransactionApiType.order}`)
-        expect(response.status).to.equal(200)
+        expect(response.status).to.equal(422)
       })
   })
 
