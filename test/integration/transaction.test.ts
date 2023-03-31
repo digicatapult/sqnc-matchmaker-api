@@ -98,9 +98,9 @@ describe('transaction', () => {
         ])
       })
 
-      it('it should get all transactions of an api type - 422', async () => {
+      it('it should get all transactions of an api type - 200', async () => {
         const response = await get(app, `/transaction?apiType=${TransactionApiType.match2}`)
-        expect(response.status).to.equal(422)
+        expect(response.status).to.equal(200)
         expect(response.body).to.deep.equal([
           {
             id: seededProposalTransactionId,
