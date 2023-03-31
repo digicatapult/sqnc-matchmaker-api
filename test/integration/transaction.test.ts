@@ -54,8 +54,8 @@ describe('transaction', () => {
         expect(response.body).to.deep.equal([
           {
             id: seededTransactionId,
-            apiType: TransactionApiType.capacity,
-            transactionType: TransactionType.creation,
+            apiType: TransactionApiType.match2,
+            transactionType: TransactionType.accept,
             localId: seededCapacityId,
             state: TransactionState.submitted,
             submittedAt: exampleDate,
@@ -82,9 +82,9 @@ describe('transaction', () => {
         ])
       })
 
-      it('it should get all transactions of an api type - 200', async () => {
+      it('it should get all transactions of an api type - 422', async () => {
         const response = await get(app, `/transaction?apiType=${TransactionApiType.match2}`)
-        expect(response.status).to.equal(200)
+        expect(response.status).to.equal(422)
         expect(response.body).to.deep.equal([
           {
             id: seededProposalTransactionId,
@@ -98,9 +98,9 @@ describe('transaction', () => {
         ])
       })
 
-      it('non-existent transaction type - 200', async () => {
+      it('non-existent transaction type - 422', async () => {
         const response = await get(app, `/transaction?apiType=${TransactionApiType.order}`)
-        expect(response.status).to.equal(200)
+        expect(response.status).to.equal(422)
       })
   })
 
