@@ -16,7 +16,7 @@ export const cleanup = async () => {
 export const parametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
 export const seededCapacityId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
 export const seededCapacityTokenId = 12
-export const seededTransactionId = '1f3af974-7d4d-40b4-86a5-94a2241265cb'
+export const seededTransactionId = '1eb872bd-1bbe-4a8b-9484-95644b88fea4'
 export const seededTransactionId2 = 'd65d8e11-150f-4ea4-b778-b920e9dbc378'
 export const seededTransactionId3 = 'a65d8e12-210f-5ea5-b227-h920e9dbc379'
 export const seededTransactionId4 = '54b78a1a-c7f7-4503-aa75-8bf91501c0be'
