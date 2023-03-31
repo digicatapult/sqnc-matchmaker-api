@@ -1,4 +1,4 @@
-import { Path, Body, Tags, Security, ValidateError, SuccessResponse, Response, Controller, Post, Route } from 'tsoa'
+import { Get, Path, Body, Tags, Security, ValidateError, SuccessResponse, Response, Controller, Post, Route } from 'tsoa'
 import { Logger } from 'pino'
 
 import { UUID } from '../../models/uuid'
@@ -24,6 +24,37 @@ export class order extends Controller {
     super()
     this.log = logger.child({ controller: '/order' })
     this.db = new Database()
+  }
+
+
+  /**
+   * Returns the details of all order demands.
+   * @summary List all order demands
+   */
+  @Get('/')
+  public async getAll(): Promise<DemandResponse[]> {
+    const capacities = await this.db.getDemands(DemandSubtype.order)
+    const result = await Promise.all(capacities.map(async (order: DemandResponse) => ({
+      ...order,
+      alias: await getMemberByAddress(order.owner),
+    })))
+    return result
+  }
+
+  /**
+   * @summary Get a order by ID
+   * @param orderId The order's identifier
+   */
+  @Response<NotFound>(404, 'Item not found')
+  @Get('{orderId}')
+  public async getCapacity(@Path() orderId: UUID): Promise<DemandResponse> {
+    const [order] = await this.db.getDemand(orderId)
+    if (!order) throw new NotFound('capacity')
+
+    return {
+      ...order,
+      alias: await getMemberByAddress(order.owner),
+    }
   }
 
   /**
