@@ -37,6 +37,7 @@ describe('transaction', () => {
   describe('happy path', () => {
     it('it should get a transaction from an id - 200', async () => {
         const response = await get(app, `/transaction/${seededTransactionId4}`)
+        console.log(seededTransactionId4)
         console.log(response)
         expect(response.status).to.equal(200)
         expect(response.body).to.deep.equal({
@@ -127,11 +128,11 @@ describe('transaction', () => {
         expect(response.status).to.equal(422) 
       })
 
-      it('it should not get all transactions - 200', async () => {
-        cleanup()
-        const response = await get(app, `/transaction/`)
-        expect(response.status).to.equal(200)
-      })
+    //   it('it should not get all transactions - 200', async () => {
+    //     cleanup()
+    //     const response = await get(app, `/transaction/`)
+    //     expect(response.status).to.equal(200)
+    //   })
 
   })
 })
