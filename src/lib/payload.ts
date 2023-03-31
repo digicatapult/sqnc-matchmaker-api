@@ -1,6 +1,6 @@
 import { Match2Payload, Match2Response, Match2State } from '../models/match2'
 import { DemandPayload, DemandState } from '../models/demand'
-import { TokenType } from '../models/tokenType'
+import * as TokenType from '../models/tokenType'
 
 export const demandCreate = (demand: DemandPayload) => ({
   files: [{ blob: new Blob([demand.binary_blob]), filename: demand.filename }],
