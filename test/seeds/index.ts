@@ -18,6 +18,7 @@ export const seededCapacityId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
 export const seededCapacityTokenId = 12
 export const seededTransactionId = '1f3af974-7d4d-40b4-86a5-94a2241265cb'
 export const seededTransactionId2 = 'd65d8e11-150f-4ea4-b778-b920e9dbc378'
+export const seededAcceptTransactionId3 = 'a65d8e11-150f-4ea4-b778-b920e9dbc379'
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
 export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
 export const seededOrderId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
@@ -166,7 +167,7 @@ export const seed = async () => {
 
   await db.transaction().insert([
     {
-      id: seededAcceptTransactionId,
+      id: seededAcceptTransactionId3,
       api_type: TransactionApiType.match2,
       transaction_type: TransactionType.accept,
       local_id: seededMatch2Id,

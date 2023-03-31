@@ -11,6 +11,7 @@ import {
   nonExistentId,
   seededTransactionId,
   seededTransactionId2,
+  seededAcceptTransactionId3,
   seededProposalTransactionId,
   seededAcceptTransactionId,
   seededMatch2Id,
@@ -36,6 +37,7 @@ describe('transaction', () => {
   describe('happy path', () => {
     it('it should get a transaction from an id - 200', async () => {
         const response = await get(app, `/transaction/${seededTransactionId}`)
+        console.log(response)
         expect(response.status).to.equal(200)
         expect(response.body).to.deep.equal({
           id: seededTransactionId,
@@ -55,7 +57,7 @@ describe('transaction', () => {
         expect(response.body).to.deep.equal([
             {
                 id: seededTransactionId,
-                apitype: TransactionApiType.capacity,
+                apiType: TransactionApiType.capacity,
                 transactionType: TransactionType.creation,
                 localId: seededCapacityId,
                 state: TransactionState.submitted,
@@ -64,7 +66,7 @@ describe('transaction', () => {
             },
             {
                 id: seededTransactionId2,
-                apiType: TransactionApiType.capacity,
+                apiType: TransactionApiType.order,
                 transactionType: TransactionType.creation,
                 localId: seededCapacityId,
                 state: TransactionState.submitted,
@@ -81,7 +83,7 @@ describe('transaction', () => {
                 updatedAt: exampleDate,
               },
               {
-                id: seededAcceptTransactionId,
+                id: seededAcceptTransactionId3,
                 apiType: TransactionApiType.match2,
                 transactionType: TransactionType.accept,
                 localId: seededMatch2Id,
