@@ -14,7 +14,6 @@ import {
   seededTransactionId3,
   seededTransactionId4,
   seededProposalTransactionId,
-  seededAcceptTransactionId,
   seededMatch2Id,
   exampleDate,
 } from '../seeds'
@@ -111,9 +110,9 @@ describe('transaction', () => {
         ])
       })
 
-      it('non-existent transaction type - 422', async () => {
+      it('get transaction by type', async () => {
         const response = await get(app, `/transaction?apiType=${TransactionApiType.order}`)
-        expect(response.status).to.equal(422)
+        expect(response.status).to.equal(200)
       })
   })
 
