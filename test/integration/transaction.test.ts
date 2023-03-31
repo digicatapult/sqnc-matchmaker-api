@@ -89,6 +89,12 @@ describe('transaction', () => {
                 created_at: exampleDate,
                 updated_at: exampleDate,
               },
+              {
+                apiType: TransactionApiType.capacity,
+                submittedAt: exampleDate,
+                transactionType: "proposal",
+                updatedAt: exampleDate,
+              },
         ])
       })
 
