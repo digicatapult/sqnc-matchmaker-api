@@ -12,6 +12,7 @@ import {
   seededTransactionId,
   seededTransactionId2,
   seededTransactionId3,
+  seededTransactionId4,
   seededProposalTransactionId,
   seededAcceptTransactionId,
   seededMatch2Id,
@@ -40,14 +41,14 @@ describe('transaction', () => {
         console.log(response)
         expect(response.status).to.equal(200)
         expect(response.body).to.deep.equal({
-          id: seededTransactionId,
-          apiType: TransactionApiType.capacity,
-          transactionType: TransactionType.creation,
-          localId: seededCapacityId,
-          state: TransactionState.submitted,
-          submittedAt: exampleDate,
-          updatedAt: exampleDate,
-        })
+            id: seededTransactionId4,
+            apiType: TransactionApiType.order,
+            transactionType: TransactionType.creation,
+            localId: seededCapacityId,
+            state: TransactionState.submitted,
+            submittedAt: exampleDate,
+            updatedAt: exampleDate,
+          },)
       })
 
       it('it should get all transactions - 200', async () => {
@@ -117,9 +118,9 @@ describe('transaction', () => {
   })
 
   describe('sad path', () => {
-    it('non-existent transaction id - 404', async () => {
+    it('non-existent transaction id - 422', async () => {
         const response = await get(app, `/transaction/${nonExistentId}`)
-        expect(response.status).to.equal(404)
+        expect(response.status).to.equal(422)
       })
 
       it('made-up transaction type - 422', async () => {
