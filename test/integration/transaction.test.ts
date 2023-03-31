@@ -12,6 +12,7 @@ import {
   seededTransactionId,
   seededTransactionId2,
   seededProposalTransactionId,
+  seededAcceptTransactionId,
   seededMatch2Id,
   exampleDate,
 } from '../seeds'
@@ -52,33 +53,42 @@ describe('transaction', () => {
         console.log(response.body)
         expect(response.status).to.equal(200)
         expect(response.body).to.deep.equal([
-          {
-            id: seededTransactionId,
-            apiType: TransactionApiType.match2,
-            transactionType: TransactionType.accept,
-            localId: seededCapacityId,
-            state: TransactionState.submitted,
-            submittedAt: exampleDate,
-            updatedAt: exampleDate,
-          },
-          {
-            id: seededTransactionId2,
-            apiType: TransactionApiType.capacity,
-            transactionType: TransactionType.creation,
-            localId: seededCapacityId,
-            state: TransactionState.submitted,
-            submittedAt: exampleDate,
-            updatedAt: exampleDate,
-          },
-          {
-            id: seededProposalTransactionId,
-            apiType: TransactionApiType.match2,
-            transactionType: TransactionType.proposal,
-            localId: seededMatch2Id,
-            state: TransactionState.submitted,
-            submittedAt: exampleDate,
-            updatedAt: exampleDate,
-          },
+            {
+                id: seededTransactionId,
+                api_type: TransactionApiType.capacity,
+                transaction_type: TransactionType.creation,
+                local_id: seededCapacityId,
+                state: TransactionState.submitted,
+                created_at: exampleDate,
+                updated_at: exampleDate,
+            },
+            {
+                id: seededTransactionId2,
+                api_type: TransactionApiType.capacity,
+                transaction_type: TransactionType.creation,
+                local_id: seededCapacityId,
+                state: TransactionState.submitted,
+                created_at: exampleDate,
+                updated_at: exampleDate,
+              },
+              {
+                id: seededProposalTransactionId,
+                api_type: TransactionApiType.match2,
+                transaction_type: TransactionType.proposal,
+                local_id: seededMatch2Id,
+                state: TransactionState.submitted,
+                created_at: exampleDate,
+                updated_at: exampleDate,
+              },
+              {
+                id: seededAcceptTransactionId,
+                api_type: TransactionApiType.match2,
+                transaction_type: TransactionType.accept,
+                local_id: seededMatch2Id,
+                state: TransactionState.submitted,
+                created_at: exampleDate,
+                updated_at: exampleDate,
+              },
         ])
       })
 
