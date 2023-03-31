@@ -89,21 +89,16 @@ describe('transaction', () => {
                 submittedAt: exampleDate,
                 updatedAt: exampleDate,
               },
-              {
-                submittedAt: exampleDate,
-                transactionType: TransactionType.accept,
-                updatedAt: exampleDate,
-              },
         ])
       })
 
       it('it should get all transactions of an api type - 200', async () => {
-        const response = await get(app, `/transaction?apiType=${TransactionApiType.match2}`)
+        const response = await get(app, `/transaction?apiType=${TransactionApiType.order}`)
         expect(response.status).to.equal(200)
         expect(response.body).to.deep.equal([
           {
             id: seededProposalTransactionId,
-            apiType: TransactionApiType.match2,
+            apiType: TransactionApiType.order,
             transactionType: TransactionType.proposal,
             localId: seededMatch2Id,
             state: TransactionState.submitted,

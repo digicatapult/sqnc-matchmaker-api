@@ -79,7 +79,7 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededTransactionId2,
-      api_type: TransactionApiType.capacity,
+      api_type: TransactionApiType.order,
       transaction_type: TransactionType.creation,
       local_id: seededCapacityId,
       state: TransactionState.submitted,
