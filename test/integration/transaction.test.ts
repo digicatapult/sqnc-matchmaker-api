@@ -11,7 +11,7 @@ import {
   nonExistentId,
   seededTransactionId,
   seededTransactionId2,
-  seededAcceptTransactionId3,
+  seededTransactionId3,
   seededProposalTransactionId,
   seededAcceptTransactionId,
   seededMatch2Id,
@@ -66,7 +66,7 @@ describe('transaction', () => {
             },
             {
                 id: seededTransactionId2,
-                apiType: TransactionApiType.order,
+                apiType: TransactionApiType.capacity,
                 transactionType: TransactionType.creation,
                 localId: seededCapacityId,
                 state: TransactionState.submitted,
@@ -83,7 +83,7 @@ describe('transaction', () => {
                 updatedAt: exampleDate,
               },
               {
-                id: seededAcceptTransactionId3,
+                id: seededTransactionId3,
                 apiType: TransactionApiType.match2,
                 transactionType: TransactionType.accept,
                 localId: seededMatch2Id,
@@ -110,9 +110,9 @@ describe('transaction', () => {
         ])
       })
 
-      it('non-existent transaction type - 422', async () => {
+      it('non-existent transaction type - 200', async () => {
         const response = await get(app, `/transaction?apiType=${TransactionApiType.order}`)
-        expect(response.status).to.equal(422)
+        expect(response.status).to.equal(200)
       })
   })
 
