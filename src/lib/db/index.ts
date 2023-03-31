@@ -5,12 +5,8 @@ import { logger } from '../logger'
 import { pgConfig } from './knexfile'
 import { DemandState, DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
-<<<<<<< HEAD
-import { TransactionApiType } from '../../models/transaction'
-=======
 import { Match2State } from '../../models/match2'
 import { TransactionType } from '../../models/transaction'
->>>>>>> main
 
 const TABLES: string[] = ['attachment', 'demand', 'transaction', 'match2']
 
@@ -101,21 +97,16 @@ export default class Database {
     return this.db().transaction().select(transactionColumns).where({ id })
   }
 
-<<<<<<< HEAD
   getTransactions = async () => {
     return this.db().transaction().select(transactionColumns)
   }
 
-  getTransactionsByType = async (apiType: TransactionApiType) => {
+  getTransactionsByType = async (apiType: TransactionType) => {
     return this.db().transaction().where({ api_type: apiType }).select(transactionColumns)
   }
 
-  getTransactionsByLocalId = async (local_id: UUID) => {
-    return this.db().transaction().select(transactionColumns).where({ local_id })
-=======
   getTransactionsByLocalId = async (local_id: UUID, transaction_type: TransactionType) => {
     return this.db().transaction().select(transactionColumns).where({ local_id, transaction_type })
->>>>>>> main
   }
 
   updateTransaction = async (transactionId: UUID, transaction: object) => {

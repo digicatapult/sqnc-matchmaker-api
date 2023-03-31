@@ -4,7 +4,7 @@ import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
 import { UUID } from '../../models/uuid'
 import { BadRequest, NotFound } from '../../lib/error-handler/index'
-import { TransactionApiType, TransactionResponse } from '../../models/transaction'
+import { TransactionResponse, TransactionType } from '../../models/transaction'
 
 @Route('transaction')
 @Tags('transaction')
@@ -27,7 +27,7 @@ export class TransactionController extends Controller {
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<NotFound>(404, 'Item not found')
   @Get('/')
-  public async getAllTransactions(@Query() apiType?: TransactionApiType): Promise<TransactionResponse[]> {
+  public async getAllTransactions(@Query() apiType?: TransactionType): Promise<TransactionResponse[]> {
     if (apiType) {
       const transactionsByType = await this.db.getTransactionsByType(apiType)
       if (!transactionsByType) throw new NotFound('transactionsByType')
