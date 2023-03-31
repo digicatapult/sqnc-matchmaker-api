@@ -1,11 +1,17 @@
-import { Body, Tags, Security, ValidateError, SuccessResponse, Response, Controller, Post, Route } from 'tsoa'
+import { Path, Body, Tags, Security, ValidateError, SuccessResponse, Response, Controller, Post, Route } from 'tsoa'
 import { Logger } from 'pino'
 
+import { UUID } from '../../models/uuid'
 import { DemandRequest, DemandResponse, DemandState, DemandSubtype } from '../../models/demand'
+import { TransactionResponse, TransactionState, TransactionApiType, TransactionType } from '../../models/transaction'
 import { logger } from '../../lib/logger'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import Database from '../../lib/db'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
+import { TokenType } from '../../models/tokenType'
+import { runProcess } from '../..//lib/services/dscpApi'
+import { observeTokenId } from '../../lib/services/blockchainWatcher'
+import { demandCreate } from '../../lib/payload'
 
 @Route('order')
 @Tags('order')
@@ -19,6 +25,34 @@ export class order extends Controller {
     this.log = logger.child({ controller: '/order' })
     this.db = new Database()
   }
+
+    /**
+   * A member creates the capacity {capacityId} on-chain. The capacity is now viewable to other members.
+   * @summary Create a new capacity demand on-chain
+   * @param orderId The capacity's identifier
+   */
+    @Post('{capacityId}/creation')
+    @Response<NotFound>(404, 'Item not found')
+    @SuccessResponse('201')
+    public async createCapacityOnChain(@Path() orderId: UUID): Promise<TransactionResponse> {
+      const [order] = await this.db.getDemand(orderId)
+      if (!order) throw new NotFound('capacity')
+      if (order.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
+  
+      const [transaction] = await this.db.insertTransaction({
+        api_type: TransactionApiType.order,
+        transaction_type: TransactionType.creation,
+        local_id: orderId,
+        state: TransactionState.submitted,
+      })
+  
+      const [tokenId] = await runProcess(demandCreate(order))
+      await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
+  
+      // demand-create returns a single token ID
+      await observeTokenId(TokenType.DEMAND, orderId, DemandState.created, tokenId, true)
+      return transaction
+    }
 
   /**
    * A Member creates a new demand for a order by referencing an uploaded parameters file.
