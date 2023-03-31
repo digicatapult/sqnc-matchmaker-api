@@ -8,7 +8,7 @@ import { post } from '../helper/routeHelper'
 import { seed, parametersAttachmentId, cleanup } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
-import { selfAlias, identitySelfMock } from '../helper/mock'
+import { selfAlias, identitySelfMock, demandCreateMock } from '../helper/mock'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 
@@ -83,6 +83,7 @@ describe.only('order', () => {
   })
 
   it('creates an order transaction on chain', async () => {
+    demandCreateMock()
     const { body: { id: orderId } } = await post(app, '/order', { parametersAttachmentId })
 
     // submit to chain
