@@ -100,7 +100,7 @@ describe.only('order', () => {
     const [transaction] = await db.getTransaction(transactionId)
     expect(transaction.state).to.equal(TransactionState.finalised)
     expect(transaction).to.contain({
-      state: 'submitted',
+      state: 'finalised',
       apiType: 'order',
       transactionType: 'creation',
     })
