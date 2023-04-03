@@ -44,9 +44,9 @@ export class order extends Controller {
    */
   @Get('/')
   public async getAll(): Promise<DemandResponse[]> {
-    const capacities = await this.db.getDemands(DemandSubtype.order)
+    const order = await this.db.getDemands(DemandSubtype.order)
     const result = await Promise.all(
-      capacities.map(async (order: DemandResponse) => ({
+      order.map(async (order: DemandResponse) => ({
         ...order,
         alias: await getMemberByAddress(order.owner),
       }))
@@ -60,9 +60,9 @@ export class order extends Controller {
    */
   @Response<NotFound>(404, 'Item not found')
   @Get('{orderId}')
-  public async getCapacity(@Path() orderId: UUID): Promise<DemandResponse> {
+  public async getById(@Path() orderId: UUID): Promise<DemandResponse> {
     const [order] = await this.db.getDemand(orderId)
-    if (!order) throw new NotFound('capacity')
+    if (!order) throw new NotFound('order')
 
     return {
       ...order,
@@ -71,14 +71,14 @@ export class order extends Controller {
   }
 
   /**
-   * A member creates the capacity {capacityId} on-chain. The capacity is now viewable to other members.
-   * @summary Create a new capacity demand on-chain
-   * @param orderId The capacity's identifier
+   * A member creates the order {orderId} on-chain. The order is now viewable to other members.
+   * @summary Create a new order demand on-chain
+   * @param orderId The order's identifier
    */
   @Post('{orderId}/creation')
   @Response<NotFound>(404, 'Item not found')
   @SuccessResponse('201')
-  public async createCapacityOnChain(@Path() orderId: UUID): Promise<TransactionResponse> {
+  public async createTransaction(@Path() orderId: UUID): Promise<TransactionResponse> {
     const [order] = await this.db.getDemand(orderId)
     if (!order) throw new NotFound('order')
     if (order.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)

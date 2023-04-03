@@ -4,7 +4,7 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
-import { post } from '../helper/routeHelper'
+import { post, get } from '../helper/routeHelper'
 import { seed, parametersAttachmentId, cleanup } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
@@ -23,12 +23,26 @@ describe('order', () => {
     identitySelfMock()
   })
 
-  beforeEach(async function () {
-    await seed()
-  })
+  beforeEach(async () => await seed())
+  afterEach(async () => await cleanup())
 
-  afterEach(async function () {
-    await cleanup()
+  describe('when requested order or orders do not exist', () => {
+    beforeEach(async () => await cleanup())
+
+    it ('returns 200 and an empty array when retrieving all', async () => {
+      const { status, body } = await get(app, '/order')
+
+      expect(status).to.equal(200)
+      expect(body).to.be.an( "array" ).that.is.empty
+    })
+
+    it('returns 404 if can not be found by ID', async () => {
+      const { status, body } = await get(app, '/order/807d1184-9670-4fb0-bb33-28582e5467b2')
+
+      expect(status).to.equal(404)
+      expect(body).to.equal('order not found')
+    })
+    // TODO - assert for max number of records 
   })
 
   describe('if attachment can not be found', () => {
