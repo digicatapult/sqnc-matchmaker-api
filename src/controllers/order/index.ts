@@ -1,4 +1,16 @@
-import { Get, Path, Body, Tags, Security, ValidateError, SuccessResponse, Response, Controller, Post, Route } from 'tsoa'
+import {
+  Get,
+  Path,
+  Body,
+  Tags,
+  Security,
+  ValidateError,
+  SuccessResponse,
+  Response,
+  Controller,
+  Post,
+  Route,
+} from 'tsoa'
 import { Logger } from 'pino'
 
 import { UUID } from '../../models/uuid'
@@ -26,7 +38,6 @@ export class order extends Controller {
     this.db = new Database()
   }
 
-
   /**
    * Returns the details of all order demands.
    * @summary List all order demands
@@ -34,10 +45,12 @@ export class order extends Controller {
   @Get('/')
   public async getAll(): Promise<DemandResponse[]> {
     const capacities = await this.db.getDemands(DemandSubtype.order)
-    const result = await Promise.all(capacities.map(async (order: DemandResponse) => ({
-      ...order,
-      alias: await getMemberByAddress(order.owner),
-    })))
+    const result = await Promise.all(
+      capacities.map(async (order: DemandResponse) => ({
+        ...order,
+        alias: await getMemberByAddress(order.owner),
+      }))
+    )
     return result
   }
 
