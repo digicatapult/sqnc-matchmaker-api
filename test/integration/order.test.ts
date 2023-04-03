@@ -14,7 +14,7 @@ import Database from '../../src/lib/db'
 
 const db = new Database()
 
-describe.only('order', () => {
+describe('order', () => {
   let res: any
   let app: Express
 
