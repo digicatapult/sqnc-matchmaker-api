@@ -58,7 +58,7 @@ const parseAccept = (acceptHeader: string) =>
 export class attachment extends Controller {
   log: Logger
   dbClient: Database = new Database()
-  db: Models<Query> | any // TMP this is the only one could not address now
+  db: Models<() => Query> // TMP this is the only one could not address now
 
   constructor() {
     super()
@@ -83,7 +83,7 @@ export class attachment extends Controller {
   public async get(): Promise<Attachment[]> {
     this.log.debug('retrieving all attachment')
 
-    return await this.db.attachment().map(
+    return (await this.db.attachment()).map(
       ({ binary_blob, created_at, ...rest }: any): Attachment => ({
         ...rest,
         createdAt: created_at,

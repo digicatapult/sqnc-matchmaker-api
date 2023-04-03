@@ -20,7 +20,7 @@ import { UUID } from '../../models/uuid'
 import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
 import { TransactionResponse, TransactionState, TransactionApiType, TransactionType } from '../../models/transaction'
-import { TokenType } from '../../models/tokenType'
+import { DEMAND } from '../../models/tokenType'
 import { runProcess } from '../..//lib/services/dscpApi'
 import { demandCreate } from '../../lib/payload'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
@@ -118,7 +118,7 @@ export class CapacityController extends Controller {
     await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
     // demand-create returns a single token ID
-    await observeTokenId(TokenType.DEMAND, capacityId, DemandState.created, tokenId, true)
+    await observeTokenId(DEMAND, capacityId, DemandState.created, tokenId, true)
     return transaction
   }
 

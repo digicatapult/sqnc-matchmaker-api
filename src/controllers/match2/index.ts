@@ -20,7 +20,7 @@ import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity
 import { Match2Request, Match2Response, Match2State } from '../../models/match2'
 import { UUID } from '../../models/uuid'
 import { TransactionResponse, TransactionState, TransactionType, TransactionApiType } from '../../models/transaction'
-import { TokenType } from '../../models/tokenType'
+import { MATCH2, DEMAND } from '../../models/tokenType'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
 import { runProcess } from '../../lib/services/dscpApi'
 import { match2AcceptFinal, match2AcceptFirst, match2Propose } from '../../lib/payload'
@@ -127,9 +127,9 @@ export class Match2Controller extends Controller {
     await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
     // match2-propose returns 3 token IDs
-    await observeTokenId(TokenType.DEMAND, match2.demandA, DemandState.created, tokenIds[0], false) // order
-    await observeTokenId(TokenType.DEMAND, match2.demandB, DemandState.created, tokenIds[1], false) // capacity
-    await observeTokenId(TokenType.MATCH2, match2.id, Match2State.proposed, tokenIds[2], true) // match2
+    await observeTokenId(DEMAND, match2.demandA, DemandState.created, tokenIds[0], false) // order
+    await observeTokenId(DEMAND, match2.demandB, DemandState.created, tokenIds[1], false) // capacity
+    await observeTokenId(MATCH2, match2.id, Match2State.proposed, tokenIds[2], true) // match2
 
     return transaction
   }
@@ -208,7 +208,7 @@ export class Match2Controller extends Controller {
       const [tokenId] = await runProcess(match2AcceptFirst(match2, newState, demandA, demandB))
       await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
-      await observeTokenId(TokenType.MATCH2, match2.id, newState, tokenId, false)
+      await observeTokenId(MATCH2, match2.id, newState, tokenId, false)
 
       return transaction
     }
@@ -226,9 +226,9 @@ export class Match2Controller extends Controller {
       await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
       // match2-acceptFinal returns 3 token IDs
-      await observeTokenId(TokenType.DEMAND, match2.demandA, DemandState.allocated, tokenIds[0], false) // order
-      await observeTokenId(TokenType.DEMAND, match2.demandB, DemandState.allocated, tokenIds[1], false) // capacity
-      await observeTokenId(TokenType.MATCH2, match2.id, Match2State.acceptedFinal, tokenIds[2], false) // match2
+      await observeTokenId(DEMAND, match2.demandA, DemandState.allocated, tokenIds[0], false) // order
+      await observeTokenId(DEMAND, match2.demandB, DemandState.allocated, tokenIds[1], false) // capacity
+      await observeTokenId(MATCH2, match2.id, Match2State.acceptedFinal, tokenIds[2], false) // match2
 
       return transaction
     }
