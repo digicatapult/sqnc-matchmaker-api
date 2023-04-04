@@ -31,10 +31,10 @@ describe('transaction', () => {
 
   // handling all errors - error handling reflects whats in code, 422 first because being handled by TSOA/OPEN-API
   describe('if transaction id is not UUID or bad request', () => {
-    it('returns 400 along with validation error', async () => {
+    it('returns 422 along with validation error', async () => {
       const { status, body } = await get(app, '/transaction/123-not-uuid')
 
-      expect(status).to.equal(400)
+      expect(status).to.equal(422)
       expect(body).to.deep.contain({
         fields: {
           transactionId: {
