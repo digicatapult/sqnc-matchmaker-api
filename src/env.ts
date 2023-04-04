@@ -19,4 +19,7 @@ export default envalid.cleanEnv(process.env, {
   IDENTITY_SERVICE_PORT: envalid.port({ devDefault: 3002 }),
   DSCP_API_HOST: envalid.host({ devDefault: 'localhost' }),
   DSCP_API_PORT: envalid.port({ devDefault: 3001 }),
+  NODE_HOST: envalid.host({ default: 'localhost' }),
+  NODE_PORT: envalid.port({ default: 9944 }),
+  ENABLE_INDEXER: envalid.bool({ default: false }),
 })
