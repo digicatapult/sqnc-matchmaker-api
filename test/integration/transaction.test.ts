@@ -9,7 +9,6 @@ import {
   cleanup,
   seededCapacityId,
   nonExistentId,
-  seededTransactionId4,
   exampleDate,
 } from '../seeds'
 import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
