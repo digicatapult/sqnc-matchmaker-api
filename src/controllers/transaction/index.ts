@@ -27,12 +27,7 @@ export class TransactionController extends Controller {
   @Response<BadRequest>(400, 'Request was invalid')
   @Get('/')
   public async getAllTransactions(@Query() apiType?: TransactionApiType): Promise<TransactionResponse[]> {
-    if (apiType) {
-      const transactions = await this.db.getTransactionsByType(apiType)
-      if (!transactions) throw new NotFound('transactionsByType')
-
-      return transactions
-    }
+    if (apiType) return await this.db.getTransactionsByType(apiType)
 
     return await this.db.getTransactions()
   }
