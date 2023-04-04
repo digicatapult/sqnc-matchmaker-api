@@ -61,9 +61,9 @@ export const errorHandler = function errorHandler(
 ): ExResponse | void {
   if (err instanceof ValidateError) {
     logger.warn(`Handled Validation Error for ${req.path}: %s`, JSON.stringify(err.fields))
-    const { status, ...rest } = err
+    const { code, ...rest } = err
 
-    return res.status(status).send({
+    return res.status(code).send({
       ...rest,
       message: 'Validation failed',
     })
