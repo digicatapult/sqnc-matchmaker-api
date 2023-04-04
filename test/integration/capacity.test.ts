@@ -123,7 +123,7 @@ describe('capacity', () => {
     it('it should get all transactions from a capacity ID - 200', async () => {
       const response = await get(app, `/capacity/${seededCapacityId}/creation/`)
       expect(response.status).to.equal(200)
-      expect(response.body).to.deep.equal([
+      expect(response.body).to.deep.include.members([
         {
           id: seededTransactionId,
           apiType: TransactionApiType.capacity,

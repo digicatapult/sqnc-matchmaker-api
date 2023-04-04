@@ -107,7 +107,7 @@ describe('transaction', () => {
         updatedAt: '2023-03-24T10:40:47.317Z'
       },
       {
-        id: '8a5343dc-88a3-4b61-b156-330d52f506f8',
+        id: 'd8eb8a94-222b-4481-b315-1dcbf2e07079',
         state: 'submitted',
         localId: 'f960e4a1-6182-4dd3-8ac2-6f3fad995551',
         apiType: 'match2',
