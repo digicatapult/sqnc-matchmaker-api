@@ -7,11 +7,8 @@ import { get } from '../helper/routeHelper'
 import {
   seed,
   cleanup,
-  seededCapacityId,
   nonExistentId,
-  exampleDate,
 } from '../seeds'
-import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 
 describe('transaction', () => {
   let app: Express
@@ -56,6 +53,7 @@ describe('transaction', () => {
     })
   })
 
+
   it('returns empty array if database contains 0 transactions', async () => {
     cleanup()
     const { status, body } = await get(app, '/transaction')
@@ -64,26 +62,34 @@ describe('transaction', () => {
     expect(body).to.be.an('array').that.is.empty
   })
 
+  it('also returns an empty array if 0 transactions found by type', async () => {
+    const { status, body } = await get(app, '/transaction?apiType=order')
 
-  it('gets transaction by id', async () => {
-    const { status, body }= await get(app, `/transaction/${seededTransactionId4}`)
+    expect(status).to.equal(200)
+    expect(body).to.be.an('array').that.is.empty
+  })
+
+
+  it('returns transaction by id', async () => {
+    const { status, body }= await get(app, '/transaction/1eb872bd-1bbe-4a8b-9484-95644b88fea4')
 
     expect(status).to.equal(200)
     expect(body).to.deep.contain({
-        id: seededTransactionId4,
-        apiType: TransactionApiType.order,
-        transactionType: TransactionType.creation,
-        localId: seededCapacityId,
-        state: TransactionState.submitted,
-        submittedAt: exampleDate,
-        updatedAt: exampleDate,
-      })
+      id: '1eb872bd-1bbe-4a8b-9484-95644b88fea4',
+      state: 'submitted',
+      localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
+      apiType: 'capacity',
+      transactionType: 'creation',
+      submittedAt: '2023-03-24T10:40:47.317Z',
+      updatedAt: '2023-03-24T10:40:47.317Z'
+    })
   })
 
   // TODO assert for limit (when set on the db)
   it('returns all transactions', async () => {
     const { status, body } = await get(app, '/transaction')
 
+    // TODO create a fixtures
     expect(status).to.equal(200)
     expect(body.length).to.equal(3)
     expect(body).to.deep.include.members([
@@ -117,8 +123,8 @@ describe('transaction', () => {
     ])
   })
 
-  it('returns transactions by type', async () => {
-    const { status, body }= await get(app, '/transaction?apiType=capacity')
+  it('returns all transactions by type', async () => {
+    const { status, body } = await get(app, '/transaction?apiType=capacity')
 
     expect(status).to.equal(200)
     expect(body).to.deep.include.members([
