@@ -22,9 +22,10 @@ import { UUID } from '../../models/uuid'
 import { TransactionResponse, TransactionState, TransactionType, TransactionApiType } from '../../models/transaction'
 import { MATCH2, DEMAND } from '../../models/tokenType'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
-import { runProcess } from '../../lib/services/polkadot'
 import { match2AcceptFinal, match2AcceptFirst, match2Propose } from '../../lib/payload'
 import { DemandPayload, DemandState, DemandSubtype } from '../../models/demand'
+import ChainNode from '../../lib/chainNode'
+import env from '../../env'
 
 @Route('match2')
 @Tags('match2')
@@ -32,11 +33,17 @@ import { DemandPayload, DemandState, DemandSubtype } from '../../models/demand'
 export class Match2Controller extends Controller {
   log: Logger
   db: Database
+  node: ChainNode
 
   constructor() {
     super()
     this.log = logger.child({ controller: '/match2' })
     this.db = new Database()
+    this.node = new ChainNode({
+      host: env.NODE_HOST,
+      port: env.NODE_PORT,
+      logger,
+    })
   }
 
   /**
@@ -105,7 +112,7 @@ export class Match2Controller extends Controller {
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
   public async proposeMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
-    const match2 = await this.db.getMatch2(match2Id)
+    const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
     if (match2.state !== Match2State.proposed) throw new BadRequest(`Match2 must have state: ${Match2State.proposed}`)
 
@@ -123,7 +130,7 @@ export class Match2Controller extends Controller {
     })
 
     // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-    const tokenIds = await runProcess(match2Propose(match2, demandA, demandB))
+    const tokenIds = await this.node.runProcess(match2Propose(match2, demandA, demandB))
     await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
     // match2-propose returns 3 token IDs
@@ -205,7 +212,7 @@ export class Match2Controller extends Controller {
       const newState = ownsDemandA ? Match2State.acceptedA : Match2State.acceptedB
 
       // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-      const [tokenId] = await runProcess(match2AcceptFirst(match2, newState, demandA, demandB))
+      const [tokenId] = await this.node.runProcess(match2AcceptFirst(match2, newState, demandA, demandB))
       await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
       await observeTokenId(MATCH2, match2.id, newState, tokenId, false)
@@ -222,7 +229,7 @@ export class Match2Controller extends Controller {
       })
 
       // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-      const tokenIds = await runProcess(match2AcceptFinal(match2, demandA, demandB))
+      const tokenIds = await this.node.runProcess(match2AcceptFinal(match2, demandA, demandB))
       await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
       // match2-acceptFinal returns 3 token IDs

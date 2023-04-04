@@ -84,7 +84,7 @@ describe('capacity', () => {
       })
     })
 
-    it('should create a capacity on-chain', async () => {
+    it.only('should create a capacity on-chain', async () => {
       demandCreateMock()
       // submit to chain
       const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})

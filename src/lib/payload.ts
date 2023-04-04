@@ -3,7 +3,6 @@ import { DemandPayload, DemandState } from '../models/demand'
 import * as TokenType from '../models/tokenType'
 
 export const demandCreate = (demand: DemandPayload) => ({
-  files: [{ blob: new Blob([demand.binary_blob]), filename: demand.filename }],
   process: { id: 'demand-create', version: 1 },
   inputs: [],
   outputs: [
@@ -14,7 +13,7 @@ export const demandCreate = (demand: DemandPayload) => ({
         type: { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: DemandState.created },
         subtype: { type: 'LITERAL', value: demand.subtype },
-        parameters: { type: 'FILE', value: demand.filename },
+        parameters: { type: 'FILE', value: { blob: new Blob([demand.binary_blob]), filename: demand.filename } },
       },
     },
   ],

@@ -14,7 +14,7 @@ const mockAgent = new MockAgent()
 setGlobalDispatcher(mockAgent)
 
 const mockIdentity = mockAgent.get(`http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`)
-const mockApi = mockAgent.get(`http://${env.DSCP_API_HOST}:${env.DSCP_API_PORT}`)
+const mockApi = mockAgent.get(`http://localhost:1234`)
 
 export const identitySelfMock = () => {
   mockIdentity

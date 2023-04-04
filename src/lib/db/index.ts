@@ -5,7 +5,7 @@ import { logger } from '../logger'
 import { pgConfig } from './knexfile'
 import { DemandState, DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
-import { Match2Response, Match2State } from '../../models/match2'
+import { Match2State } from '../../models/match2'
 import { TransactionType } from '../../models/transaction'
 
 const tablesList = ['attachment', 'demand', 'transaction', 'match2', 'processed_blocks'] as const
@@ -140,9 +140,8 @@ export default class Database {
     return this.db().match2().select(match2Columns)
   }
 
-  getMatch2 = async (match2Id: UUID): Promise<Match2Response> => {
-    const match2s = await this.db().match2().where({ id: match2Id }).select(match2Columns)
-    return match2s[0] || null
+  getMatch2 = async (match2Id: UUID) => {
+    return this.db().match2().where({ id: match2Id }).select(match2Columns)
   }
 
   getLastProcessedBlock = async (): Promise<{ hash: string; parent: string; height: number } | null> => {
