@@ -81,7 +81,7 @@ describe('order', () => {
     })
   })
 
-  it('should create a order demand', async () => {
+  it('should create an order demand', async () => {
     const response = await post(app, '/order', { parametersAttachmentId })
     const { id: responseId, ...responseRest } = response.body
 
@@ -119,11 +119,10 @@ describe('order', () => {
       transactionType: 'creation',
     })
 
-    // check local capacity updates with token id
     const [order] = await db.getDemand(orderId)
     expect(order).to.contain({
       id: orderId,
-      owner: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
+      owner: 'test-self',
       state: 'created',
       subtype: 'order',
       parametersAttachmentId,
