@@ -130,6 +130,3 @@ export default class Indexer {
     return Promise.resolve()
   }
 }
-
-// processNewBLocks
-// create a new iterator
