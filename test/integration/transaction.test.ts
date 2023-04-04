@@ -114,38 +114,29 @@ describe('transaction', () => {
         transactionType: 'proposal',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z'
-      },
-      {
-        id: '33e0fa14-9495-42bd-acfb-e82a8c8d4a29',
-        state: 'submitted',
-        localId: 'f960e4a1-6182-4dd3-8ac2-6f3fad995551',
-        apiType: 'match2',
-        transactionType: 'accept',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
-      },
-      {
-        id: '54b78a1a-c7f7-4503-aa75-8bf91501c0be',
-        state: 'submitted',
-        localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-        apiType: 'order',
-        transactionType: 'creation',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
       }
     ])
   })
 
   it('returns transactions by type', async () => {
-    const { status, body }= await get(app, '/transaction?apiType=order')
+    const { status, body }= await get(app, '/transaction?apiType=capacity')
 
     expect(status).to.equal(200)
     expect(body).to.deep.include.members([
       {
-        id: '54b78a1a-c7f7-4503-aa75-8bf91501c0be',
+        id: '1eb872bd-1bbe-4a8b-9484-95644b88fea4',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-        apiType: 'order',
+        apiType: 'capacity',
+        transactionType: 'creation',
+        submittedAt: '2023-03-24T10:40:47.317Z',
+        updatedAt: '2023-03-24T10:40:47.317Z'
+      },
+      {
+        id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
+        state: 'submitted',
+        localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
+        apiType: 'capacity',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z'

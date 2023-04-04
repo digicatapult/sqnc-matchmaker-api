@@ -123,7 +123,7 @@ describe('capacity', () => {
     it('it should get all transactions from a capacity ID - 200', async () => {
       const response = await get(app, `/capacity/${seededCapacityId}/creation/`)
       expect(response.status).to.equal(200)
-      expect(response.body).to.deep.include.members([
+      expect(response.body).to.deep.equal([
         {
           id: seededTransactionId,
           apiType: TransactionApiType.capacity,
@@ -192,7 +192,6 @@ describe('capacity', () => {
     })
 
     it('non-existent Capacity ID should return nothing - 404', async () => {
-      await cleanup()
       const response = await get(app, `/capacity/${nonExistentId}/creation/`)
       expect(response.status).to.equal(404)
     })
