@@ -86,7 +86,7 @@ describe('transaction', () => {
     const { status, body } = await get(app, '/transaction')
 
     expect(status).to.equal(200)
-    expect(body.length).to.equal(5)
+    expect(body.length).to.equal(3)
     expect(body).to.deep.include.members([
       {
         id: '1eb872bd-1bbe-4a8b-9484-95644b88fea4',

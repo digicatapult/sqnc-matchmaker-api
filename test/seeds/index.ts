@@ -16,10 +16,8 @@ export const cleanup = async () => {
 export const parametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
 export const seededCapacityId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
 export const seededCapacityTokenId = 12
-export const seededTransactionId = '1eb872bd-1bbe-4a8b-9484-95644b88fea4'
+export const seededTransactionId = '1f3af974-7d4d-40b4-86a5-94a2241265cb'
 export const seededTransactionId2 = 'd65d8e11-150f-4ea4-b778-b920e9dbc378'
-export const seededTransactionId3 = '33e0fa14-9495-42bd-acfb-e82a8c8d4a29'
-export const seededTransactionId4 = '54b78a1a-c7f7-4503-aa75-8bf91501c0be'
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
 export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
 export const seededOrderId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
@@ -156,7 +154,7 @@ export const seed = async () => {
 
   await db.transaction().insert([
     {
-      id: seededAcceptTransactionId,
+      id: seededProposalTransactionId,
       api_type: TransactionApiType.match2,
       transaction_type: TransactionType.proposal,
       local_id: seededMatch2Id,
@@ -168,22 +166,10 @@ export const seed = async () => {
 
   await db.transaction().insert([
     {
-      id: seededTransactionId3,
+      id: seededAcceptTransactionId,
       api_type: TransactionApiType.match2,
       transaction_type: TransactionType.accept,
       local_id: seededMatch2Id,
-      state: TransactionState.submitted,
-      created_at: exampleDate,
-      updated_at: exampleDate,
-    },
-  ])
-
-  await db.transaction().insert([
-    {
-      id: seededTransactionId4,
-      api_type: TransactionApiType.order,
-      transaction_type: TransactionType.creation,
-      local_id: seededCapacityId,
       state: TransactionState.submitted,
       created_at: exampleDate,
       updated_at: exampleDate,
