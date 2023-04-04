@@ -5,16 +5,12 @@ export const selfAlias = 'test-self'
 export const selfAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
 export const notSelfAlias = 'test-not-self'
 export const notSelfAddress = '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty'
-export const demandCreateMockTokenId = 42
-export const match2ProposeMockTokenIds = [52, 53, 54]
-export const match2AcceptMockTokenId = 62
-export const match2AcceptFinalMockTokenIds = [72, 73, 74]
 
 const mockAgent = new MockAgent()
 setGlobalDispatcher(mockAgent)
 
 const mockIdentity = mockAgent.get(`http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`)
-const mockApi = mockAgent.get(`http://localhost:1234`)
+const mockIpfs = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
 
 export const identitySelfMock = () => {
   mockIdentity
@@ -51,47 +47,12 @@ export const identitySelfMock = () => {
     .persist()
 }
 
-export const demandCreateMock = () => {
-  mockApi
+export const ipfsMock = () => {
+  mockIpfs
     .intercept({
-      path: '/v3/run-process',
+      path: '/api/v0/add?cid-version=0&wrap-with-directory=true',
       method: 'POST',
     })
-    .reply(200, [demandCreateMockTokenId])
-}
-
-export const match2ProposeMock = () => {
-  mockApi
-    .intercept({
-      path: '/v3/run-process',
-      method: 'POST',
-    })
-    .reply(200, match2ProposeMockTokenIds)
-}
-
-export const match2AcceptMock = () => {
-  mockApi
-    .intercept({
-      path: '/v3/run-process',
-      method: 'POST',
-    })
-    .reply(200, [match2AcceptMockTokenId])
-}
-
-export const match2AcceptFinalMock = () => {
-  mockApi
-    .intercept({
-      path: '/v3/run-process',
-      method: 'POST',
-    })
-    .reply(200, match2AcceptFinalMockTokenIds)
-}
-
-export const apiRunProcessMockError = () => {
-  mockApi
-    .intercept({
-      path: '/v3/run-process',
-      method: 'POST',
-    })
-    .reply(400, 'invalid')
+    .reply(200, { Name: '', Hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn', Size: '63052' })
+    .persist()
 }

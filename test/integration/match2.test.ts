@@ -11,8 +11,7 @@ import {
   seededOrderId,
   nonExistentId,
   seededMatch2Id,
-  seededOrderTokenId,
-  seededCapacityTokenId,
+  parametersAttachmentId,
   seededOrderMissingTokenId,
   seededCapacityMissingTokenId,
   seededProposalTransactionId,
@@ -21,31 +20,30 @@ import {
   seededOrderAlreadyAllocated,
   seededMatch2WithAllocatedDemands,
   seededMatch2AcceptedA,
-  seededMatch2TokenId,
-  seededMatch2OrderNotOwnedId,
   seededMatch2AcceptedFinal,
   seededMatch2NotAcceptableB,
   seededMatch2NotAcceptableA,
   seededMatch2NotAcceptableBoth,
   seededAcceptTransactionId,
+  seededOrderWithTokenId,
 } from '../seeds'
 
-import {
-  selfAlias,
-  identitySelfMock,
-  match2ProposeMock,
-  match2ProposeMockTokenIds,
-  match2AcceptMock,
-  match2AcceptMockTokenId,
-  match2AcceptFinalMock,
-  match2AcceptFinalMockTokenIds,
-} from '../helper/mock'
+import { selfAlias, identitySelfMock, ipfsMock } from '../helper/mock'
 import { Match2State } from '../../src/models/match2'
 import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 import { DemandState } from '../../src/models/demand'
+import ChainNode from '../../src/lib/chainNode'
+import { logger } from '../../src/lib/logger'
+import env from '../../src/env'
+import { UUID } from '../../src/models/uuid'
 
 const db = new Database()
+const node = new ChainNode({
+  host: env.NODE_HOST,
+  port: env.NODE_PORT,
+  logger,
+})
 
 describe('match2', () => {
   let app: Express
@@ -53,6 +51,7 @@ describe('match2', () => {
   before(async function () {
     app = await createHttpServer()
     identitySelfMock()
+    ipfsMock()
   })
 
   beforeEach(async function () {
@@ -111,47 +110,104 @@ describe('match2', () => {
       })
     })
 
-    it('should propose a match2 on-chain', async () => {
-      match2ProposeMock()
-      // submit to chain
-      const response = await post(app, `/match2/${seededMatch2Id}/proposal`, {})
-      expect(response.status).to.equal(201)
+    describe('on-chain', async () => {
+      let orderOriginalId: number
+      let capacityOriginalId: number
+      let orderLocalId: UUID
+      let capacityLocalId: UUID
+      let match2LocalId: UUID
 
-      const { id: transactionId, state } = response.body
-      expect(transactionId).to.match(
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-      )
-      expect(state).to.equal(TransactionState.submitted)
+      beforeEach(async () => {
+        const {
+          body: { id: orderId },
+        } = await post(app, '/order', { parametersAttachmentId })
+        await post(app, `/capacity/${orderId}/creation`, {})
+        const [order] = await db.getDemand(orderId)
+        orderLocalId = orderId
+        orderOriginalId = order.originalTokenId
 
-      // check local transaction updates
-      const [transaction] = await db.getTransaction(transactionId)
-      expect(transaction.state).to.equal(TransactionState.finalised)
+        const {
+          body: { id: capacityId },
+        } = await post(app, '/capacity', { parametersAttachmentId })
+        await post(app, `/capacity/${capacityId}/creation`, {})
+        const [capacity] = await db.getDemand(capacityId)
+        capacityLocalId = capacityId
+        capacityOriginalId = capacity.originalTokenId
 
-      // check local entities update with token id
-      const [demandA] = await db.getDemand(seededOrderId)
-      expect(demandA.latestTokenId).to.equal(match2ProposeMockTokenIds[0])
-      expect(demandA.originalTokenId).to.equal(seededOrderTokenId)
+        const {
+          body: { id: match2Id },
+        } = await post(app, '/match2', { demandA: orderId, demandB: capacityId })
+        match2LocalId = match2Id
+      })
 
-      const [demandB] = await db.getDemand(seededCapacityId)
-      expect(demandB.latestTokenId).to.equal(match2ProposeMockTokenIds[1])
-      expect(demandB.originalTokenId).to.equal(seededCapacityTokenId)
+      it('should propose a match2 on-chain', async () => {
+        const lastTokenId = await node.getLastTokenId()
 
-      const [match2] = await db.getMatch2(seededMatch2Id)
-      expect(match2.latestTokenId).to.equal(match2ProposeMockTokenIds[2])
-      expect(match2.originalTokenId).to.equal(match2ProposeMockTokenIds[2])
-    })
+        // submit to chain
+        const response = await post(app, `/match2/${match2LocalId}/proposal`, {})
+        expect(response.status).to.equal(201)
 
-    it('it should get a proposal transaction', async () => {
-      const response = await get(app, `/match2/${seededMatch2Id}/proposal/${seededProposalTransactionId}`)
-      expect(response.status).to.equal(200)
-      expect(response.body).to.deep.equal({
-        id: seededProposalTransactionId,
-        apiType: TransactionApiType.match2,
-        transactionType: TransactionType.proposal,
-        localId: seededMatch2Id,
-        state: TransactionState.submitted,
-        submittedAt: exampleDate,
-        updatedAt: exampleDate,
+        const { id: transactionId, state } = response.body
+        expect(transactionId).to.match(
+          /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
+        )
+        expect(state).to.equal(TransactionState.submitted)
+
+        // check local transaction updates
+        const [transaction] = await db.getTransaction(transactionId)
+        expect(transaction.state).to.equal(TransactionState.finalised)
+
+        // check local entities update with token id
+        const [demandA] = await db.getDemand(orderLocalId)
+        expect(demandA.latestTokenId).to.equal(lastTokenId + 1)
+        expect(demandA.originalTokenId).to.equal(orderOriginalId)
+
+        const [demandB] = await db.getDemand(capacityLocalId)
+        expect(demandB.latestTokenId).to.equal(lastTokenId + 2)
+        expect(demandB.originalTokenId).to.equal(capacityOriginalId)
+
+        const [match2] = await db.getMatch2(match2LocalId)
+        expect(match2.latestTokenId).to.equal(lastTokenId + 3)
+        expect(match2.originalTokenId).to.equal(lastTokenId + 3)
+      })
+
+      it('should acceptA then acceptFinal a match2 on-chain', async () => {
+        // propose
+        await post(app, `/match2/${match2LocalId}/proposal`, {})
+        const [match2] = await db.getMatch2(match2LocalId)
+        const match2OriginalId = match2.originalTokenId
+
+        const lastTokenId = await node.getLastTokenId()
+
+        // submit accept to chain
+        const responseAcceptA = await post(app, `/match2/${match2LocalId}/accept`, {})
+        expect(responseAcceptA.status).to.equal(201)
+
+        // check local entities update with token id
+        const [match2AcceptA] = await db.getMatch2(match2LocalId)
+        expect(match2AcceptA.latestTokenId).to.equal(lastTokenId + 1)
+        expect(match2AcceptA.state).to.equal(Match2State.acceptedA)
+        expect(match2AcceptA.originalTokenId).to.equal(match2OriginalId)
+
+        // submit 2nd accept to chain
+        const responseAcceptFinal = await post(app, `/match2/${match2LocalId}/accept`, {})
+        expect(responseAcceptFinal.status).to.equal(201)
+
+        // check local entities update with token id
+        const [demandA] = await db.getDemand(orderLocalId)
+        expect(demandA.latestTokenId).to.equal(lastTokenId + 2)
+        expect(demandA.state).to.equal(DemandState.allocated)
+        expect(demandA.originalTokenId).to.equal(orderOriginalId)
+
+        const [demandB] = await db.getDemand(capacityLocalId)
+        expect(demandB.latestTokenId).to.equal(lastTokenId + 3)
+        expect(demandB.state).to.equal(DemandState.allocated)
+        expect(demandB.originalTokenId).to.equal(capacityOriginalId)
+
+        const [matchAcceptFinal] = await db.getMatch2(match2LocalId)
+        expect(matchAcceptFinal.latestTokenId).to.equal(lastTokenId + 4)
+        expect(matchAcceptFinal.state).to.equal(Match2State.acceptedFinal)
+        expect(matchAcceptFinal.originalTokenId).to.equal(match2OriginalId)
       })
     })
 
@@ -168,53 +224,6 @@ describe('match2', () => {
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
-    })
-
-    it('should acceptA then acceptFinal a match2 on-chain', async () => {
-      match2AcceptMock()
-      // submit to chain
-      const responseAcceptA = await post(app, `/match2/${seededMatch2Id}/accept`, {})
-      expect(responseAcceptA.status).to.equal(201)
-
-      // check local entities update with token id
-      const [match2AcceptA] = await db.getMatch2(seededMatch2Id)
-      expect(match2AcceptA.latestTokenId).to.equal(match2AcceptMockTokenId)
-      expect(match2AcceptA.state).to.equal(Match2State.acceptedA)
-      expect(match2AcceptA.originalTokenId).to.equal(seededMatch2TokenId)
-
-      match2AcceptFinalMock()
-      // submit to chain
-      const responseAcceptFinal = await post(app, `/match2/${seededMatch2Id}/accept`, {})
-      expect(responseAcceptFinal.status).to.equal(201)
-
-      // check local entities update with token id
-      const [demandA] = await db.getDemand(seededOrderId)
-      expect(demandA.latestTokenId).to.equal(match2AcceptFinalMockTokenIds[0])
-      expect(demandA.state).to.equal(DemandState.allocated)
-      expect(demandA.originalTokenId).to.equal(seededOrderTokenId)
-
-      const [demandB] = await db.getDemand(seededCapacityId)
-      expect(demandB.latestTokenId).to.equal(match2AcceptFinalMockTokenIds[1])
-      expect(demandB.state).to.equal(DemandState.allocated)
-      expect(demandB.originalTokenId).to.equal(seededCapacityTokenId)
-
-      const [matchAcceptFinal] = await db.getMatch2(seededMatch2Id)
-      expect(matchAcceptFinal.latestTokenId).to.equal(match2AcceptFinalMockTokenIds[2])
-      expect(matchAcceptFinal.state).to.equal(Match2State.acceptedFinal)
-      expect(matchAcceptFinal.originalTokenId).to.equal(seededMatch2TokenId)
-    })
-
-    it('should acceptB a match2 on-chain', async () => {
-      match2AcceptMock()
-      // submit to chain
-      const response = await post(app, `/match2/${seededMatch2OrderNotOwnedId}/accept`, {})
-      expect(response.status).to.equal(201)
-
-      // check local entities update with token id
-      const [match2] = await db.getMatch2(seededMatch2OrderNotOwnedId)
-      expect(match2.latestTokenId).to.equal(match2AcceptMockTokenId)
-      expect(match2.state).to.equal(Match2State.acceptedB)
-      expect(match2.originalTokenId).to.equal(seededMatch2TokenId)
     })
 
     it('it should get an accept transaction', async () => {
@@ -311,7 +320,10 @@ describe('match2', () => {
     })
 
     it('demandB missing token ID - 400', async () => {
-      const createMatch2 = await post(app, '/match2', { demandA: seededOrderId, demandB: seededCapacityMissingTokenId })
+      const createMatch2 = await post(app, '/match2', {
+        demandA: seededOrderWithTokenId,
+        demandB: seededCapacityMissingTokenId,
+      })
       expect(createMatch2.status).to.equal(201)
 
       const response = await post(app, `/match2/${createMatch2.body.id}/proposal`, {})

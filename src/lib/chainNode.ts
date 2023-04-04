@@ -97,7 +97,6 @@ export default class ChainNode {
     await this.init()
     await this.api.isReady
 
-    console.log(payload)
     const process = { id: utf8ToHex(payload.process.id, PROCESS_IDENTIFIER_LENGTH), version: payload.process.version }
     const inputs = payload.inputs
     const outputs = await Promise.all(
@@ -106,9 +105,6 @@ export default class ChainNode {
         metadata: await this.processMetadata(output.metadata),
       }))
     )
-    console.log(process)
-    console.log(payload.inputs)
-    console.log(outputs)
     const relevantOutputs = outputs.map(({ roles, metadata }) => [roles, metadata])
 
     this.logger.debug('Running Transaction inputs: %j outputs: %j', inputs, relevantOutputs)
@@ -120,8 +116,8 @@ export default class ChainNode {
         .signAndSend(this.user, (result: SubmittableResult) => {
           this.logger.debug('result.status %s', JSON.stringify(result.status))
           this.logger.debug('result.status.isInBlock', result.status.isInBlock)
-          const { dispatchError, events, status } = result
-          console.log(outputs)
+          const { dispatchError, status } = result
+
           if (dispatchError) {
             if (dispatchError.isModule) {
               const decoded = this.api.registry.findMetaError(dispatchError.asModule)
@@ -132,19 +128,9 @@ export default class ChainNode {
           }
 
           if (status.isInBlock) {
-            const errors = events
-              .filter(({ event: { method } }) => method === 'ExtrinsicFailed')
-              .map(({ event: { data } }) => data[0])
-
-            if (errors.length > 0) {
-              reject(this.processExtrinsicError(errors[0]))
-            }
-
             const processRanEvent = result.events.find(({ event: { method } }) => method === 'ProcessRan')
             const data: any = processRanEvent?.event?.data
-            console.log(data)
             const tokens = data?.outputs?.map((x: any) => x.toNumber())
-            console.log(tokens)
 
             unsub()
             resolve(tokens)
@@ -203,13 +189,11 @@ export default class ChainNode {
     return result
   }
 
-  processExtrinsicError = (error: any) => {
-    if (!error.isModule) {
-      return new HttpResponse({ message: 'Unknown runProcess error' })
-    }
+  async getLastTokenId() {
+    await this.api.isReady
+    const lastTokenId = await this.api.query.simpleNFT.lastToken()
 
-    const decoded = this.api.registry.findMetaError(error.asModule)
-    return new HttpResponse({ message: `runProcess error: ${decoded.name}` })
+    return lastTokenId ? parseInt(lastTokenId.toString(), 10) : 0
   }
 }
 

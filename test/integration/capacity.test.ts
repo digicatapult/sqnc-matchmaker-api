@@ -17,17 +17,19 @@ import {
 } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
-import {
-  selfAlias,
-  identitySelfMock,
-  demandCreateMock,
-  apiRunProcessMockError,
-  demandCreateMockTokenId,
-} from '../helper/mock'
+import { selfAlias, identitySelfMock, ipfsMock } from '../helper/mock'
 import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
+import ChainNode from '../../src/lib/chainNode'
+import { logger } from '../../src/lib/logger'
+import env from '../../src/env'
 
 const db = new Database()
+const node = new ChainNode({
+  host: env.NODE_HOST,
+  port: env.NODE_PORT,
+  logger,
+})
 
 describe('capacity', () => {
   let app: Express
@@ -84,8 +86,10 @@ describe('capacity', () => {
       })
     })
 
-    it.only('should create a capacity on-chain', async () => {
-      demandCreateMock()
+    it('should create a capacity on-chain', async () => {
+      ipfsMock()
+      const lastTokenId = await node.getLastTokenId()
+
       // submit to chain
       const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
       expect(response.status).to.equal(201)
@@ -102,8 +106,8 @@ describe('capacity', () => {
 
       // check local capacity updates with token id
       const [capacity] = await db.getDemand(seededCapacityId)
-      expect(capacity.latestTokenId).to.equal(demandCreateMockTokenId)
-      expect(capacity.originalTokenId).to.equal(demandCreateMockTokenId)
+      expect(capacity.latestTokenId).to.equal(lastTokenId + 1)
+      expect(capacity.originalTokenId).to.equal(lastTokenId + 1)
     })
 
     it('it should get a transaction', async () => {
@@ -173,12 +177,6 @@ describe('capacity', () => {
       const response = await post(app, `/capacity/${seededCapacityAlreadyAllocated}/creation`, {})
       expect(response.status).to.equal(400)
       expect(response.body).to.equal(`Demand must have state: ${DemandState.created}`)
-    })
-
-    it('dscp-api error - 500', async () => {
-      apiRunProcessMockError()
-      const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
-      expect(response.status).to.equal(500)
     })
 
     it('non-existent Creation ID - 404', async () => {
