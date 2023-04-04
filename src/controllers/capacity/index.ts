@@ -21,7 +21,7 @@ import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
 import { TransactionResponse, TransactionState, TransactionApiType, TransactionType } from '../../models/transaction'
 import { DEMAND } from '../../models/tokenType'
-import { runProcess } from '../..//lib/services/dscpApi'
+import { runProcess } from '../..//lib/services/polkadot'
 import { demandCreate } from '../../lib/payload'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
 @Route('capacity')

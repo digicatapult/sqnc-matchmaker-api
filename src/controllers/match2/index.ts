@@ -22,7 +22,7 @@ import { UUID } from '../../models/uuid'
 import { TransactionResponse, TransactionState, TransactionType, TransactionApiType } from '../../models/transaction'
 import { MATCH2, DEMAND } from '../../models/tokenType'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
-import { runProcess } from '../../lib/services/dscpApi'
+import { runProcess } from '../../lib/services/polkadot'
 import { match2AcceptFinal, match2AcceptFirst, match2Propose } from '../../lib/payload'
 import { DemandPayload, DemandState, DemandSubtype } from '../../models/demand'
 
@@ -105,7 +105,7 @@ export class Match2Controller extends Controller {
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
   public async proposeMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
-    const [match2] = await this.db.getMatch2(match2Id)
+    const match2 = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
     if (match2.state !== Match2State.proposed) throw new BadRequest(`Match2 must have state: ${Match2State.proposed}`)
 

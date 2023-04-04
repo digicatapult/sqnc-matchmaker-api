@@ -8,20 +8,27 @@ A `Node.js` typescript template with open api implementation
 
 Use a `.env` at root of the repository to set values for the environment variables defined in `.env` file.
 
-| variable              | required |        default         | description                                                                          |
-| :-------------------- | :------: | :--------------------: | :----------------------------------------------------------------------------------- |
-| PORT                  |    N     |         `3000`         | The port for the API to listen on                                                    |
-| LOG_LEVEL             |    N     |        `debug`         | Logging level. Valid values are [`trace`, `debug`, `info`, `warn`, `error`, `fatal`] |
-| ENVIRONMENT_VAR       |    N     |       `example`        | An environment specific variable                                                     |
-| DB_PORT               |    N     |         `5432`         | The port for the database                                                            |
-| DB_HOST               |    Y     |           -            | The database hostname / host                                                         |
-| DB_NAME               |    N     | `dscp-matchmaker-api ` | The database name                                                                    |
-| DB_USERNAME           |    Y     |           -            | The database username                                                                |
-| DB_PASSWORD           |    Y     |           -            | The database password                                                                |
-| IDENTITY_SERVICE_HOST |    Y     |           -            | Hostname of the `dscp-identity-service`                                              |
-| IDENTITY_SERVICE_PORT |    Y     |           -            | Port of the `dscp-identity-service`                                                  |
-| DSCP_API_HOST         |    Y     |           -            | Hostname of the `dscp-api`                                                           |
-| DSCP_API_PORT         |    Y     |           -            | Port of the `dscp-api`                                                               |
+| variable                      | required |        default         | description                                                                                  |
+| :---------------------------- | :------: | :--------------------: | :------------------------------------------------------------------------------------------- |
+| PORT                          |    N     |         `3000`         | The port for the API to listen on                                                            |
+| LOG_LEVEL                     |    N     |        `debug`         | Logging level. Valid values are [`trace`, `debug`, `info`, `warn`, `error`, `fatal`]         |
+| ENVIRONMENT_VAR               |    N     |       `example`        | An environment specific variable                                                             |
+| DB_PORT                       |    N     |         `5432`         | The port for the database                                                                    |
+| DB_HOST                       |    Y     |           -            | The database hostname / host                                                                 |
+| DB_NAME                       |    N     | `dscp-matchmaker-api ` | The database name                                                                            |
+| DB_USERNAME                   |    Y     |           -            | The database username                                                                        |
+| DB_PASSWORD                   |    Y     |           -            | The database password                                                                        |
+| IDENTITY_SERVICE_HOST         |    Y     |           -            | Hostname of the `dscp-identity-service`                                                      |
+| IDENTITY_SERVICE_PORT         |    Y     |           -            | Port of the `dscp-identity-service`                                                          |
+| NODE_HOST                     |    Y     |           -            | The hostname of the `dscp-node` the API should connect to                                    |
+| NODE_PORT                     |    N     |         `9944`         | The port of the `dscp-node` the API should connect to                                        |
+| LOG_LEVEL                     |    N     |         `info`         | Logging level. Valid values are [`trace`, `debug`, `info`, `warn`, `error`, `fatal`]         |
+| USER_URI                      |    Y     |           -            | The Substrate `URI` representing the private key to use when making `dscp-node` transactions |
+| IPFS_HOST                     |    Y     |           -            | Hostname of the `IPFS` node to use for metadata storage                                      |
+| IPFS_PORT                     |    N     |        `15001`         | Port of the `IPFS` node to use for metadata storage                                          |
+| METADATA_KEY_LENGTH           |    N     |          `32`          | Fixed length of metadata keys                                                                |
+| METADATA_VALUE_LITERAL_LENGTH |    N     |          `32`          | Fixed length of metadata LITERAL values                                                      |
+| FILE_UPLOAD_MAX_SIZE          |    N     |  `200 * 1024 * 1024`   | The Maximum file upload size (bytes)                                                         |
 
 ## Getting started
 
