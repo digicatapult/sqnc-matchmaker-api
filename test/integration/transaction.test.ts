@@ -14,7 +14,7 @@ import {
 } from '../seeds'
 import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 
-describe.only('transaction', () => {
+describe('transaction', () => {
   let app: Express
 
   before(async function () {
@@ -34,7 +34,7 @@ describe.only('transaction', () => {
     it('returns 400 along with validation error', async () => {
       const { status, body } = await get(app, '/transaction/123-not-uuid')
 
-      expect(status).to.equal(422)
+      expect(status).to.equal(400)
       expect(body).to.deep.contain({
         fields: {
           transactionId: {
@@ -42,7 +42,6 @@ describe.only('transaction', () => {
             value: '123-not-uuid'
           }
         },
-        status: 400,
         name: 'ValidateError',
         message: 'Validation failed'
       })
@@ -68,10 +67,10 @@ describe.only('transaction', () => {
 
 
   it('gets transaction by id', async () => {
-    const response = await get(app, `/transaction/${seededTransactionId4}`)
+    const { status, body }= await get(app, `/transaction/${seededTransactionId4}`)
 
-    expect(response.status).to.equal(200)
-    expect(response.body).to.deep.contain({
+    expect(status).to.equal(200)
+    expect(body).to.deep.contain({
         id: seededTransactionId4,
         apiType: TransactionApiType.order,
         transactionType: TransactionType.creation,
