@@ -6,11 +6,18 @@ import { logger } from './lib/logger'
 
 import Database from './lib/db'
 import Indexer from './lib/indexer'
+import ChainNode from './lib/chainNode'
 ;(async () => {
   const app: Express = await Server()
 
+  const node = new ChainNode({
+    host: env.NODE_HOST,
+    port: env.NODE_PORT,
+    logger,
+  })
+
   if (env.ENABLE_INDEXER) {
-    const indexer = new Indexer({ db: new Database(), logger })
+    const indexer = new Indexer({ db: new Database(), logger, node })
     await indexer.start()
   }
 
