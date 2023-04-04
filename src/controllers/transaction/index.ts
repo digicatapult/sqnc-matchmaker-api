@@ -25,20 +25,16 @@ export class TransactionController extends Controller {
    * @Query apiType lists all transactions by that type
    */
   @Response<BadRequest>(400, 'Request was invalid')
-  @Response<NotFound>(404, 'Item not found')
   @Get('/')
   public async getAllTransactions(@Query() apiType?: TransactionApiType): Promise<TransactionResponse[]> {
     if (apiType) {
-      const transactionsByType = await this.db.getTransactionsByType(apiType)
-      if (!transactionsByType) throw new NotFound('transactionsByType')
-
-      return transactionsByType
-    } else {
-      const transactions = await this.db.getTransactions()
-      if (!transactions) throw new NotFound('transactions')
+      const transactions = await this.db.getTransactionsByType(apiType)
+      if (!transactions) throw new NotFound('transactionsByType')
 
       return transactions
     }
+
+    return await this.db.getTransactions()
   }
 
   /**
