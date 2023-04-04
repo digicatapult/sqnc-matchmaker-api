@@ -71,11 +71,11 @@ describe('transaction', () => {
 
 
   it('returns transaction by id', async () => {
-    const { status, body }= await get(app, '/transaction/1eb872bd-1bbe-4a8b-9484-95644b88fea4')
+    const { status, body }= await get(app, '/transaction/1f3af974-7d4d-40b4-86a5-94a2241265cb')
 
     expect(status).to.equal(200)
     expect(body).to.deep.contain({
-      id: '1eb872bd-1bbe-4a8b-9484-95644b88fea4',
+      id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
       state: 'submitted',
       localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
       apiType: 'capacity',
@@ -91,10 +91,10 @@ describe('transaction', () => {
 
     // TODO create a fixtures
     expect(status).to.equal(200)
-    expect(body.length).to.equal(3)
+    expect(body.length).to.equal(4)
     expect(body).to.deep.include.members([
       {
-        id: '1eb872bd-1bbe-4a8b-9484-95644b88fea4',
+        id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
         apiType: 'capacity',
@@ -112,11 +112,20 @@ describe('transaction', () => {
         updatedAt: '2023-03-24T10:40:47.317Z'
       },
       {
-        id: 'd8eb8a94-222b-4481-b315-1dcbf2e07079',
+        id: '8a5343dc-88a3-4b61-b156-330d52f506f8',
         state: 'submitted',
         localId: 'f960e4a1-6182-4dd3-8ac2-6f3fad995551',
         apiType: 'match2',
         transactionType: 'proposal',
+        submittedAt: '2023-03-24T10:40:47.317Z',
+        updatedAt: '2023-03-24T10:40:47.317Z'
+      },
+      {
+        id: 'd8eb8a94-222b-4481-b315-1dcbf2e07079',
+        state: 'submitted',
+        localId: 'f960e4a1-6182-4dd3-8ac2-6f3fad995551',
+        apiType: 'match2',
+        transactionType: 'accept',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z'
       }
@@ -129,7 +138,7 @@ describe('transaction', () => {
     expect(status).to.equal(200)
     expect(body).to.deep.include.members([
       {
-        id: '1eb872bd-1bbe-4a8b-9484-95644b88fea4',
+        id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
         apiType: 'capacity',
