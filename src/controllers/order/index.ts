@@ -54,6 +54,19 @@ export class order extends Controller {
   }
 
   /**
+   * Returns the details of all order demand transactions.
+   * @summary List all order demand transactions
+   * @param orderId The order's identifier
+   */
+  @Get('{orderId}/creation')
+  public async getAllTransactions(@Path() orderId: UUID): Promise<DemandResponse[]> {
+    const [order] = await this.db.getDemand(orderId)
+    if (!order) throw new NotFound('order')
+
+    return await this.db.getTransactionsByLocalId(orderId, TransactionType.creation)
+  }
+
+  /**
    * @summary Get a order by ID
    * @param orderId The order's identifier
    */

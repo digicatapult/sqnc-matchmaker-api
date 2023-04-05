@@ -174,4 +174,17 @@ describe('order', () => {
       transactionType: 'creation',
     })
   })
+
+  it('retrieves all order creations', async () => {
+    await post(app, `/order/${seededOrderId}/creation`, {})
+    const { status, body } = await get(app, `/order/${seededOrderId}/creation`)
+
+    expect(status).to.equal(200)
+    expect(body[0]).to.deep.contain({
+      state: 'submitted',
+      localId: seededOrderId,
+      apiType: 'order',
+      transactionType: 'creation',
+    })
+  })
 })
