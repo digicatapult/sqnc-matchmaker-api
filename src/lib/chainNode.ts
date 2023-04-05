@@ -1,4 +1,6 @@
 import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/api'
+import type { u128 } from '@polkadot/types'
+
 import { Logger } from 'pino'
 import { HttpResponse } from './error-handler'
 
@@ -18,6 +20,12 @@ interface RoleEnum {
   name: string | undefined
   index: number | undefined
 }
+
+type EventData =
+  | {
+      outputs: u128[]
+    }
+  | undefined
 
 export default class ChainNode {
   private provider: WsProvider
@@ -122,11 +130,11 @@ export default class ChainNode {
 
           if (status.isInBlock) {
             const processRanEvent = result.events.find(({ event: { method } }) => method === 'ProcessRan')
-            const data: any = processRanEvent?.event?.data
-            const tokens = data?.outputs?.map((x: any) => x.toNumber())
+            const data = processRanEvent?.event?.data as EventData
+            const tokens = data?.outputs?.map((x) => x.toNumber())
 
             unsub()
-            resolve(tokens)
+            tokens ? resolve(tokens) : reject(Error('No token IDs returned'))
           }
         })
         .then((res) => {
