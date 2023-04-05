@@ -83,12 +83,8 @@ export class attachment extends Controller {
   public async get(): Promise<Attachment[]> {
     this.log.debug('retrieving all attachment')
 
-<<<<<<< HEAD
     const attachments: Attachment[] = await this.db.attachment()
     return attachments.map(
-=======
-    return (await this.db.attachment()).map(
->>>>>>> origin
       ({ binary_blob, created_at, ...rest }: any): Attachment => ({
         ...rest,
         createdAt: created_at,
