@@ -2,17 +2,13 @@ import basex from 'base-x'
 
 import { logger } from '../logger'
 import env from '../../env'
+import type { MetadataFile } from '../payload'
 
 const { IPFS_HOST, IPFS_PORT } = env
 const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 const bs58 = basex(BASE58)
 
 const log = logger.child({ module: 'ipfs' })
-
-export interface MetadataFile {
-  blob: Blob
-  filename: string
-}
 
 export const addFile = async ({ blob, filename }: MetadataFile): Promise<string> => {
   log.debug('Uploading file %s', filename)

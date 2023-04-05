@@ -3,9 +3,10 @@ import { Logger } from 'pino'
 import { HttpResponse } from './error-handler'
 
 import env from '../env'
-import { addFile, MetadataFile } from './services/ipfs'
+import { addFile } from './services/ipfs'
+import type { Payload, Output, Metadata, MetadataFile } from './payload'
 
-const { METADATA_KEY_LENGTH, METADATA_VALUE_LITERAL_LENGTH, PROCESS_IDENTIFIER_LENGTH, USER_URI } = env
+const { USER_URI } = env
 
 export interface NodeCtorConfig {
   host: string
@@ -13,14 +14,17 @@ export interface NodeCtorConfig {
   logger: Logger
 }
 
+interface RoleEnum {
+  name: string | undefined
+  index: number | undefined
+}
+
 export default class ChainNode {
   private provider: WsProvider
   private api: ApiPromise
   private keyring: Keyring
   private logger: Logger
-  private roles: { name: string | undefined; index: number | undefined }[]
-  private user: any
-  private initialised: boolean
+  private roles: RoleEnum[]
 
   constructor({ host, port, logger }: NodeCtorConfig) {
     this.logger = logger.child({ module: 'ChainNode' })
@@ -28,7 +32,6 @@ export default class ChainNode {
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.roles = []
-    this.initialised = false
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     this.api.isReadyOrError.catch(() => {}) // prevent unhandled promise rejection errors
@@ -46,14 +49,6 @@ export default class ChainNode {
     })
   }
 
-  async init() {
-    if (!this.initialised) {
-      this.roles = await this.getRoles()
-      this.user = this.keyring.addFromUri(USER_URI)
-      this.initialised = true
-    }
-  }
-
   async getLastFinalisedBlockHash(): Promise<string> {
     const result = await this.api.rpc.chain.getFinalizedHead()
     return result.toHex()
@@ -68,7 +63,7 @@ export default class ChainNode {
     }
   }
 
-  async getRoles() {
+  async getRoles(): Promise<RoleEnum[]> {
     await this.api.isReady
 
     const registry = this.api.registry
@@ -86,34 +81,32 @@ export default class ChainNode {
   roleToIndex(role: string) {
     const entry = this.roles.find((e) => e.name === role)
 
-    if (!entry) {
+    if (!entry || entry.index === undefined) {
       throw new Error(`Invalid role: ${role}`)
     }
 
     return entry.index
   }
 
-  async runProcess(payload: any): Promise<number[]> {
-    await this.init()
+  async runProcess({ process, inputs, outputs }: Payload): Promise<number[]> {
     await this.api.isReady
 
-    const process = { id: utf8ToHex(payload.process.id, PROCESS_IDENTIFIER_LENGTH), version: payload.process.version }
-    const inputs = payload.inputs
-    const outputs = await Promise.all(
-      payload.outputs.map(async (output: any) => ({
-        roles: this.processRoles(output.roles),
-        metadata: await this.processMetadata(output.metadata),
-      }))
-    )
-    const relevantOutputs = outputs.map(({ roles, metadata }) => [roles, metadata])
+    const account = this.keyring.addFromUri(USER_URI)
 
-    this.logger.debug('Running Transaction inputs: %j outputs: %j', inputs, relevantOutputs)
+    const outputsAsMaps = await Promise.all(
+      outputs.map(async (output: Output) => [
+        await this.processRoles(output.roles),
+        await this.processMetadata(output.metadata),
+      ])
+    )
+
+    this.logger.debug('Running Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
 
     return new Promise((resolve, reject) => {
-      let unsub: any = null
+      let unsub: () => void
       this.api.tx.simpleNFT
-        .runProcess(process, inputs, relevantOutputs)
-        .signAndSend(this.user, (result: SubmittableResult) => {
+        .runProcess(process, inputs, outputsAsMaps)
+        .signAndSend(account, (result: SubmittableResult) => {
           this.logger.debug('result.status %s', JSON.stringify(result.status))
           this.logger.debug('result.status.isInBlock', result.status.isInBlock)
           const { dispatchError, status } = result
@@ -146,7 +139,11 @@ export default class ChainNode {
     })
   }
 
-  processRoles(roles: any) {
+  async processRoles(roles: Record<string, string>) {
+    if (this.roles.length === 0) {
+      this.roles = await this.getRoles()
+    }
+
     return new Map(
       Object.entries(roles).map(([key, v]) => {
         return [this.roleToIndex(key), v]
@@ -154,39 +151,31 @@ export default class ChainNode {
     )
   }
 
-  async processMetadata(metadata: Record<string, { type: string; value: string | MetadataFile }>) {
-    const metadataItems = Object.entries(metadata)
+  async processMetadata(metadata: Metadata) {
+    return new Map(
+      await Promise.all(
+        Object.entries(metadata).map(async ([key, value]) => {
+          let processedValue
+          switch (value.type) {
+            case 'LITERAL':
+              processedValue = { Literal: value.value as string }
+              break
+            case 'TOKEN_ID':
+              processedValue = { TokenId: value.value as string }
+              break
+            case 'FILE':
+              processedValue = { File: await addFile(value.value as MetadataFile) }
+              break
+            default:
+            case 'NONE':
+              processedValue = { None: null }
+              break
+          }
 
-    const maps = await Promise.all(
-      metadataItems.map(async ([key, value]) => {
-        const keyAsUint8Array = utf8ToHex(key, METADATA_KEY_LENGTH)
-
-        let processedValue
-        switch (value.type) {
-          case 'LITERAL':
-            processedValue = { Literal: utf8ToHex(value.value as string, METADATA_VALUE_LITERAL_LENGTH) }
-            break
-          case 'TOKEN_ID':
-            processedValue = { TokenId: value.value as string }
-            break
-          case 'FILE':
-            processedValue = { File: await addFile(value.value as MetadataFile) }
-            break
-          default:
-          case 'NONE':
-            processedValue = { None: null }
-            break
-        }
-        return new Map([[keyAsUint8Array, processedValue]])
-      })
+          return [key, processedValue] as readonly [unknown, unknown]
+        })
+      )
     )
-    const result = new Map()
-    maps.forEach((map) => {
-      map.forEach((value, key) => {
-        result.set(key, value)
-      })
-    })
-    return result
   }
 
   async getLastTokenId() {
@@ -196,29 +185,3 @@ export default class ChainNode {
     return lastTokenId ? parseInt(lastTokenId.toString(), 10) : 0
   }
 }
-
-const utf8ToHex = (str: string, len: number) => {
-  const buffer = Buffer.from(str, 'utf8')
-  const bufferHex = buffer.toString('hex')
-  if (bufferHex.length > 2 * len) {
-    throw new Error(`${str} is too long. Max length: ${len} bytes`)
-  }
-  return `0x${bufferHex}`
-}
-
-// export interface RunProcessFile {
-//   blob: Blob
-//   filename: string
-// }
-
-// interface Payload {
-//   files: RunProcessFile[]
-//   process: object
-//   inputs: number[]
-//   outputs: Output[]
-// }
-
-// interface Output {
-//   roles: Record<string, string | undefined>
-//   metadata:
-// }
