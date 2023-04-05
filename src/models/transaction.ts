@@ -16,6 +16,8 @@ export enum TransactionState {
 export interface TransactionResponse {
   id: UUID
   state: TransactionState
+  apiType: TransactionApiType
+  transactionType: TransactionType
   submittedAt: Date
   updatedAt: Date
 }

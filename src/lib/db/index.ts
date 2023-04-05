@@ -6,12 +6,14 @@ import { pgConfig } from './knexfile'
 import { DemandState, DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 import { Match2State } from '../../models/match2'
-import { TransactionType } from '../../models/transaction'
+import { TransactionApiType, TransactionType } from '../../models/transaction'
 
-const TABLES: string[] = ['attachment', 'demand', 'transaction', 'match2']
+const tablesList = ['attachment', 'demand', 'transaction', 'match2', 'processed_blocks'] as const
+type TABLES_TUPLE = typeof tablesList
+type TABLE = TABLES_TUPLE[number]
 
-export interface Models<V> {
-  [key: string | number]: V[keyof V]
+export type Models<V> = {
+  [key in TABLE]: V
 }
 
 export type Query = Knex.QueryBuilder
@@ -48,21 +50,24 @@ const transactionColumns = [
   'updated_at AS updatedAt',
 ]
 
+const processBlocksColumns = ['hash', 'height', 'parent']
+
 export default class Database {
   public client: Knex
   private log: Logger
-  public db: () => Models<Query> | any
+  public db: () => Models<() => Query>
 
   constructor() {
     this.log = logger
     this.client = knex(pgConfig)
-    this.db = (models: Models<Query> = {}) => {
-      TABLES.forEach((name: string) => {
-        this.log.debug(`initializing ${name} db model`)
-        models[name] = () => this.client(name)
-      })
-      return models
-    }
+    const models = tablesList.reduce((acc, name) => {
+      this.log.debug(`initializing ${name} db model`)
+      return {
+        [name]: () => this.client(name),
+        ...acc,
+      }
+    }, {}) as Models<() => Query>
+    this.db = () => models
   }
 
   getAttachment = async (parametersAttachmentId: string) => {
@@ -97,6 +102,14 @@ export default class Database {
     return this.db().transaction().select(transactionColumns).where({ id })
   }
 
+  getTransactions = async () => {
+    return this.db().transaction().select(transactionColumns)
+  }
+
+  getTransactionsByType = async (apiType: TransactionApiType) => {
+    return this.db().transaction().where({ api_type: apiType }).select(transactionColumns)
+  }
+
   getTransactionsByLocalId = async (local_id: UUID, transaction_type: TransactionType) => {
     return this.db().transaction().select(transactionColumns).where({ local_id, transaction_type })
   }
@@ -110,7 +123,7 @@ export default class Database {
   }
 
   updateLocalWithTokenId = async (
-    table: string,
+    table: TABLE,
     localId: UUID,
     state: DemandState | Match2State,
     latestTokenId: number,
@@ -137,5 +150,14 @@ export default class Database {
 
   getMatch2 = async (match2Id: UUID) => {
     return this.db().match2().where({ id: match2Id }).select(match2Columns)
+  }
+
+  getLastProcessedBlock = async (): Promise<{ hash: string; parent: string; height: number } | null> => {
+    const blockRecords = await this.db()
+      .processed_blocks()
+      .select(processBlocksColumns)
+      .orderBy('height', 'desc')
+      .limit(1)
+    return blockRecords[0] || null
   }
 }
