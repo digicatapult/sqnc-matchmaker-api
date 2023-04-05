@@ -154,6 +154,7 @@ describe('order', () => {
     })
 
     const [order] = await db.getDemand(orderId)
+    expect(transaction.localId).to.equal(orderId)
     expect(order).to.contain({
       id: orderId,
       state: 'created',
