@@ -62,7 +62,7 @@ export const match2Propose = (match2: Match2Response, demandA: DemandPayload, de
       },
     },
     {
-      roles: { Optimiser: match2.optimiser, MemberA: demandA.owner, MemberB: demandB.owner },
+      roles: { Optimiser: match2.optimiser, MemberA: match2.memberA, MemberB: match2.memberB },
       metadata: {
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.MATCH2 },

@@ -51,7 +51,6 @@ describe('match2', () => {
   before(async function () {
     app = await createHttpServer()
     identitySelfMock()
-    ipfsMock()
   })
 
   beforeEach(async function () {
@@ -118,6 +117,7 @@ describe('match2', () => {
       let match2LocalId: UUID
 
       beforeEach(async () => {
+        ipfsMock()
         const {
           body: { id: orderId },
         } = await post(app, '/order', { parametersAttachmentId })
@@ -126,6 +126,7 @@ describe('match2', () => {
         orderLocalId = orderId
         orderOriginalId = order.originalTokenId
 
+        ipfsMock()
         const {
           body: { id: capacityId },
         } = await post(app, '/capacity', { parametersAttachmentId })

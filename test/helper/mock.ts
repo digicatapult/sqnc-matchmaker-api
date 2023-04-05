@@ -54,5 +54,13 @@ export const ipfsMock = () => {
       method: 'POST',
     })
     .reply(200, { Name: '', Hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn', Size: '63052' })
-    .persist()
+}
+
+export const ipfsMockError = () => {
+  mockIpfs
+    .intercept({
+      path: '/api/v0/add?cid-version=0&wrap-with-directory=true',
+      method: 'POST',
+    })
+    .reply(500, 'error')
 }

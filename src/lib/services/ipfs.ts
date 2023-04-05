@@ -3,6 +3,7 @@ import basex from 'base-x'
 import { logger } from '../logger'
 import env from '../../env'
 import type { MetadataFile } from '../payload'
+import { HttpResponse } from '../error-handler'
 
 const { IPFS_HOST, IPFS_PORT } = env
 const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
@@ -14,13 +15,18 @@ export const addFile = async ({ blob, filename }: MetadataFile): Promise<string>
   log.debug('Uploading file %s', filename)
   const form = new FormData()
   form.append('file', blob, filename)
-  const body = await fetch(`http://${IPFS_HOST}:${IPFS_PORT}/api/v0/add?cid-version=0&wrap-with-directory=true`, {
+  const res = await fetch(`http://${IPFS_HOST}:${IPFS_PORT}/api/v0/add?cid-version=0&wrap-with-directory=true`, {
     method: 'POST',
     body: form,
   })
 
+  const text = await res.text()
+
+  if (!res.ok) {
+    throw new HttpResponse({ code: 500, message: text })
+  }
+
   // Build string of objects into array
-  const text = await body.text()
   const json = text
     .split('\n')
     .filter((obj) => obj.length > 0)

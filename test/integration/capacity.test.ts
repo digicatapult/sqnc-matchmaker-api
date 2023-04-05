@@ -17,7 +17,7 @@ import {
 } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
-import { selfAlias, identitySelfMock, ipfsMock } from '../helper/mock'
+import { selfAlias, identitySelfMock, ipfsMock, ipfsMockError } from '../helper/mock'
 import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
 import ChainNode from '../../src/lib/chainNode'
@@ -192,6 +192,14 @@ describe('capacity', () => {
     it('non-existent Capacity ID should return nothing - 404', async () => {
       const response = await get(app, `/capacity/${nonExistentId}/creation/`)
       expect(response.status).to.equal(404)
+    })
+
+    it('ipfs error - 500', async () => {
+      ipfsMockError()
+
+      const { status, body } = await post(app, `/capacity/${seededCapacityId}/creation`, {})
+      expect(status).to.equal(500)
+      expect(body).to.equal('error')
     })
   })
 })
