@@ -104,6 +104,27 @@ describe('order', () => {
     })
   })
 
+  describe('if order state is not created while posting new creation', () => {
+    beforeEach(async () => {
+        await db.insertDemand({
+          id: 'b21f865e-f4e9-4ae2-8944-de691e9eb4d0',
+          owner: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
+          subtype: 'order',
+          state: 'allocated', 
+          parameters_attachment_id: parametersAttachmentId,
+          latest_token_id: 99,
+          original_token_id: 99,
+      })
+    })
+
+    it('returns 400 along with bad request message', async () => {
+      const { status, body } = await post(app, '/order/b21f865e-f4e9-4ae2-8944-de691e9eb4d0/creation', {})
+
+      expect(status).to.equal(400)
+      expect(body).to.equal('Demand must have state: created')
+    })
+  })
+
   it('retrieves order by id', async () => {
     const { status, body } = await post(app, '/order', { parametersAttachmentId })
 
@@ -160,6 +181,8 @@ describe('order', () => {
       state: 'created',
       subtype: 'order',
       parametersAttachmentId,
+      latestTokenId: 42,
+      originalTokenId: 42,
     })
   })
 
