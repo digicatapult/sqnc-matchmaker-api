@@ -20,7 +20,6 @@ import { logger } from '../../lib/logger'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import Database from '../../lib/db'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-import { TokenType } from '../../models/tokenType'
 import { runProcess } from '../..//lib/services/dscpApi'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
 import { demandCreate } from '../../lib/payload'
@@ -94,7 +93,7 @@ export class order extends Controller {
     await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
     // demand-create returns a single token ID
-    await observeTokenId(TokenType.DEMAND, orderId, DemandState.created, tokenId, true)
+    await observeTokenId('DEMAND', orderId, DemandState.created, tokenId, true)
     return transaction
   }
 
