@@ -5,7 +5,7 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
-import { seed, parametersAttachmentId, cleanup } from '../seeds'
+import { seed, parametersAttachmentId, seededOrderId, seededOrderCreationId ,cleanup } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
 import { selfAlias, identitySelfMock, demandCreateMock } from '../helper/mock'
@@ -21,10 +21,10 @@ describe('order', () => {
   before(async function () {
     app = await createHttpServer()
     identitySelfMock()
+    demandCreateMock()
   })
 
   beforeEach(async () => await seed())
-  afterEach(async () => await cleanup())
 
   describe('when requested order or orders do not exist', () => {
     beforeEach(async () => await cleanup())
@@ -58,6 +58,29 @@ describe('order', () => {
     })
   })
 
+  describe('if invalid order uuid', () => {
+    beforeEach(async () => {
+      res = await get(app, '/order/789ad47')
+    })
+
+    it('returns 422 along with validation error', async () => {
+      const { status, body } = res
+
+      expect(status).to.equal(422)
+      expect(body).to.deep.contain({
+        fields: {
+          'orderId': {
+            message:
+              "Not match in '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}'",
+            value: '789ad47',
+          },
+        },
+        name: 'ValidateError',
+        message: 'Validation failed',
+      })
+    })
+  })
+
   describe('if invalid attachment uuid', () => {
     beforeEach(async () => {
       res = await post(app, '/order', { parametersAttachmentId: 'a789ad47' })
@@ -81,6 +104,18 @@ describe('order', () => {
     })
   })
 
+  it('retrieves order by id', async () => {
+    const { status, body } = await post(app, '/order', { parametersAttachmentId })
+
+    expect(status).to.equal(201)
+    expect(body).to.have.property('id')
+    expect(body).to.deep.contain({
+      owner: 'test-self',
+      state: 'created',
+      parametersAttachmentId: 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
+    })
+  })
+
   it('should create an order demand', async () => {
     const response = await post(app, '/order', { parametersAttachmentId })
     const { id: responseId, ...responseRest } = response.body
@@ -97,7 +132,6 @@ describe('order', () => {
   })
 
   it('creates an order transaction on chain', async () => {
-    demandCreateMock()
     const { body: { id: orderId } } = await post(app, '/order', { parametersAttachmentId })
 
     // submit to chain
@@ -122,10 +156,21 @@ describe('order', () => {
     const [order] = await db.getDemand(orderId)
     expect(order).to.contain({
       id: orderId,
-      owner: 'test-self',
       state: 'created',
       subtype: 'order',
       parametersAttachmentId,
+    })
+  })
+
+  it('retrieves order creation', async () => {
+    const { status, body: creation } = await get(app, `/order/${seededOrderId}/creation/${seededOrderCreationId}`)
+
+    expect(status).to.equal(200)
+    expect(creation).to.include.keys(['id', 'localId', 'submittedAt', 'updatedAt'])
+    expect(creation).to.contain({
+      state: 'submitted',
+      apiType: 'order',
+      transactionType: 'creation',
     })
   })
 })

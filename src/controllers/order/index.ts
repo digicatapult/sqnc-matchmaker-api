@@ -47,7 +47,7 @@ export class order extends Controller {
     const result = await Promise.all(
       order.map(async (order: DemandResponse) => ({
         ...order,
-        alias: await getMemberByAddress(order.owner),
+        owner: await getMemberByAddress(order.owner).then(({ alias }) => alias),
       }))
     )
     return result
@@ -65,8 +65,25 @@ export class order extends Controller {
 
     return {
       ...order,
-      alias: await getMemberByAddress(order.owner),
+      owner: await getMemberByAddress(order.owner),
     }
+  }
+
+  /**
+   * @summary Get a order creation transaction by ID
+   * @param orderId The order's identifier
+   * @param creationId The order's creation ID
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{orderId}/creation/{creationId}')
+  public async getorderCreation(@Path() orderId: UUID, creationId: UUID): Promise<TransactionResponse> {
+    const [order] = await this.db.getDemand(orderId)
+    if (!order) throw new NotFound('order')
+
+    const [creation] = await this.db.getTransaction(creationId)
+    if (!creation) throw new NotFound('creation')
+    return creation
   }
 
   /**
@@ -111,18 +128,18 @@ export class order extends Controller {
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
     if (!attachment) throw new NotFound('attachment')
 
-    const { address: selfAddress } = await getMemberBySelf()
-    const [order] = await this.db.insertDemand({
-      owner: selfAddress,
+    const { address, alias } = await getMemberBySelf()
+    const [{ id, state }] = await this.db.insertDemand({
+      owner: address,
       subtype: DemandSubtype.order,
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
     })
 
     return {
-      id: order.id,
-      owner: await getMemberByAddress(selfAddress).then(({ alias }: { alias: string }) => alias),
-      state: order.state,
+      id,
+      owner: alias,
+      state,
       parametersAttachmentId,
     }
   }
