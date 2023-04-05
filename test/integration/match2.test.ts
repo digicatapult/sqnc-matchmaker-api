@@ -117,6 +117,7 @@ describe('match2', () => {
       let match2LocalId: UUID
 
       beforeEach(async () => {
+        // prepare an unallocated order + capacity + local match2
         ipfsMock()
         const {
           body: { id: orderId },
