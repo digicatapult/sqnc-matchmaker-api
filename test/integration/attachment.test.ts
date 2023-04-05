@@ -6,6 +6,7 @@ import createHttpServer from '../../src/server'
 import { get, post, postFile } from '../helper/routeHelper'
 
 import Database from '../../src/lib/db'
+import env from '../../src/env'
 
 const db = new Database().db()
 
@@ -32,7 +33,7 @@ describe('attachment', () => {
       expect(body).to.have.keys(['fields', 'message', 'name'])
       expect(body).to.contain({
         name: 'ValidateError',
-        message: 'Validation failed'
+        message: 'Validation failed',
       })
     })
 
@@ -42,8 +43,20 @@ describe('attachment', () => {
       expect(status).to.equal(404)
       expect(body).to.equal('attachment not found')
     })
+
+    it('returns 400 if upload over limit', async () => {
+      const { status, body } = await postFile(
+        app,
+        '/attachment',
+        Buffer.from('a'.repeat(env.FILE_UPLOAD_MAX_SIZE + 1)),
+        filename
+      )
+
+      expect(status).to.equal(400)
+      expect(body).to.equal(`Over size limit: ${env.FILE_UPLOAD_MAX_SIZE}`)
+    })
   })
-  
+
   describe('uploads and retrieves attachment', () => {
     let octetRes: any
     let jsonRes: any
@@ -109,10 +122,11 @@ describe('attachment', () => {
     })
   })
 
-
   it('attachment as octect with the filename [json]', async () => {
-    const uploadRes = await postFile(app, '/attachment', Buffer.from(blobData), 'json') 
-    const { status, body, header } = await get(app, `/attachment/${uploadRes.body.id}`, { accept: 'application/octet-stream' })
+    const uploadRes = await postFile(app, '/attachment', Buffer.from(blobData), 'json')
+    const { status, body, header } = await get(app, `/attachment/${uploadRes.body.id}`, {
+      accept: 'application/octet-stream',
+    })
 
     expect(status).to.equal(200)
     expect(body.type).to.equal('Buffer')
