@@ -1,5 +1,5 @@
 import sinon from 'sinon'
-import ChainNode from 'src/lib/chainNode'
+import ChainNode from '../../../chainNode'
 
 export const withHappyChainNode = () => {
   const getHeader = sinon.spy(async (hash: string) => {

@@ -1,5 +1,5 @@
 import sinon from 'sinon'
-import Database from 'src/lib/db'
+import Database from '../../../db'
 
 type LastProcessBlockResult = { hash: string; parent: string; height: number } | null
 
