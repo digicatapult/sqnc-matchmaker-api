@@ -15,6 +15,7 @@ export const cleanup = async () => {
 
 export const parametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
 export const seededCapacityId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
+export const seededOrderCreationId = 'ff3af974-7d4d-40b4-86a5-00a2241265cb'
 export const seededTransactionId = '1f3af974-7d4d-40b4-86a5-94a2241265cb'
 export const seededTransactionId2 = 'd65d8e11-150f-4ea4-b778-b920e9dbc378'
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
@@ -142,6 +143,18 @@ export const seed = async () => {
       api_type: TransactionApiType.match2,
       transaction_type: TransactionType.proposal,
       local_id: seededMatch2Id,
+      state: TransactionState.submitted,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+
+  await db.transaction().insert([
+    {
+      id: seededOrderCreationId,
+      api_type: TransactionApiType.order,
+      transaction_type: TransactionType.creation,
+      local_id: 'ff3af974-7d4d-40b4-86a5-00a2241265ff',
       state: TransactionState.submitted,
       created_at: exampleDate,
       updated_at: exampleDate,
