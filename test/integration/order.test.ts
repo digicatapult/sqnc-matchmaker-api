@@ -167,7 +167,6 @@ describe('order', () => {
 
     // check local transaction updates
     const [transaction] = await db.getTransaction(transactionId)
-    expect(transaction.state).to.equal(TransactionState.finalised)
     expect(transaction).to.contain({
       state: 'finalised',
       apiType: 'order',
