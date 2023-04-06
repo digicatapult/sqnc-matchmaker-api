@@ -54,6 +54,22 @@ const transactionColumns = [
 
 const processBlocksColumns = ['hash', 'height', 'parent']
 
+function trim0x(input: ProcessedBlock): ProcessedBlock {
+  return {
+    hash: input.hash.startsWith('0x') ? input.hash.slice(2) : input.hash,
+    height: input.height,
+    parent: input.parent.startsWith('0x') ? input.parent.slice(2) : input.parent,
+  }
+}
+
+function restore0x(input: ProcessedBlock): ProcessedBlock {
+  return {
+    hash: input.hash.startsWith('0x') ? input.hash : `0x${input.hash}`,
+    height: input.height,
+    parent: input.parent.startsWith('0x') ? input.parent : `0x${input.parent}`,
+  }
+}
+
 export default class Database {
   private client: Knex
   private log: Logger
@@ -160,11 +176,11 @@ export default class Database {
       .select(processBlocksColumns)
       .orderBy('height', 'desc')
       .limit(1)
-    return blockRecords[0] || null
+    return blockRecords.length !== 0 ? restore0x(blockRecords[0]) : null
   }
 
   insertProcessedBlock = async (block: ProcessedBlock): Promise<void> => {
-    await this.db().processed_blocks().insert(block)
+    await this.db().processed_blocks().insert(trim0x(block))
   }
 
   withTransaction = (update: (db: Database) => Promise<void>) => {
