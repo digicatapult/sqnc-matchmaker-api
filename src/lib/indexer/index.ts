@@ -171,6 +171,9 @@ export default class Indexer {
     this.logger.debug('Inserting changeset %j for block %s', changeSet, blockHash)
     const header = await this.node.getHeader(blockHash)
     await this.db.withTransaction(async (db) => {
+      if (header.height === 0) {
+        header.parent = header.hash
+      }
       await db.insertProcessedBlock(header)
     })
   }
