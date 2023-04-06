@@ -8,7 +8,7 @@ import { withHappyChainNode, withGetHeaderBoom } from './fixtures/chainNode'
 import Indexer from '../index'
 import sinon from 'sinon'
 
-describe.only('Indexer', function () {
+describe('Indexer', function () {
   let indexer: Indexer
   const logger = withMockLogger()
 

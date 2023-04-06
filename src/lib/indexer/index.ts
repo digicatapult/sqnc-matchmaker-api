@@ -114,18 +114,27 @@ export default class Indexer {
   private async updateUnprocessedBlocks(lastProcessedHash: string | null, lastFinalisedHash: string): Promise<void> {
     this.logger.debug('Updating list of finalised blocks to be processed')
 
+    const unprocessedBlocks = [...this.unprocessedBlocks]
+
     // remove elements up to and including out lastProcessedHash if it's in the unprocessedBlocks array
     // this can happen if another instance is also processing blocks
     if (lastProcessedHash !== null) {
-      const lastProcessedHashIndex = this.unprocessedBlocks.indexOf(lastProcessedHash)
+      const lastProcessedHashIndex = unprocessedBlocks.indexOf(lastProcessedHash)
       if (lastProcessedHashIndex !== -1) {
-        this.unprocessedBlocks.splice(0, lastProcessedHashIndex + 1)
+        unprocessedBlocks.splice(0, lastProcessedHashIndex + 1)
+      }
+
+      if (unprocessedBlocks.length !== 0) {
+        const nextHeader = await this.node.getHeader(unprocessedBlocks[0])
+        if (lastProcessedHash !== nextHeader.parent) {
+          unprocessedBlocks.splice(0, unprocessedBlocks.length)
+        }
       }
     }
 
     // find the earliest hash we know about. This is either the last process hash or the last element in the unprocessedBlocks array
     // if we have lots of blocks to process still
-    const lastKnownHash = this.unprocessedBlocks.at(-1) || lastProcessedHash
+    const lastKnownHash = unprocessedBlocks.at(-1) || lastProcessedHash
     const [{ height: lastKnownIndex }, { height: lastFinalisedIndex }] = await Promise.all([
       lastKnownHash !== null ? this.node.getHeader(lastKnownHash) : Promise.resolve({ height: 0 }),
       this.node.getHeader(lastFinalisedHash),
@@ -133,8 +142,9 @@ export default class Indexer {
 
     // if we know about all the blocks then noop
     // note we allow the finalised block to go backwards so if the node we're talking to isn't up to date
-    // things still to proceed
+    // things still proceed
     if (lastFinalisedIndex <= lastKnownIndex) {
+      this.unprocessedBlocks = unprocessedBlocks
       return
     }
 
@@ -147,10 +157,11 @@ export default class Indexer {
 
     // sanity check that the parent of lastKnown index is indeed what we expect. If not we have a major problem
     if (lastKnownHash !== null && (await this.node.getHeader(newHashes.at(-1) as string)).parent !== lastKnownHash) {
-      throw new Error()
+      this.unprocessedBlocks = []
+      throw new Error('Unexpected error synchronising blocks to be processed')
     }
 
-    this.unprocessedBlocks = this.unprocessedBlocks.concat(newHashes.reverse())
+    this.unprocessedBlocks = unprocessedBlocks.concat(newHashes.reverse())
 
     this.logger.debug(`Found ${this.unprocessedBlocks.length} blocks to be processed`)
     this.logger.trace('Blocks to be processed: %j', this.unprocessedBlocks)
