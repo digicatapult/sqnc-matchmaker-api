@@ -16,8 +16,10 @@ import ChainNode from './lib/chainNode'
     logger,
   })
 
+  const handleBlock = () => Promise.resolve()
+
   if (env.ENABLE_INDEXER) {
-    const indexer = new Indexer({ db: new Database(), logger, node })
+    const indexer = new Indexer({ db: new Database(), logger, node, handleBlock })
     await indexer.start()
   }
 
