@@ -4,16 +4,14 @@ import type { u128 } from '@polkadot/types'
 import { Logger } from 'pino'
 import { HttpResponse } from './error-handler'
 
-import env from '../env'
 import { addFile } from './services/ipfs'
 import type { Payload, Output, Metadata, MetadataFile } from './payload'
-
-const { USER_URI } = env
 
 export interface NodeCtorConfig {
   host: string
   port: number
   logger: Logger
+  userUri: string
 }
 
 interface RoleEnum {
@@ -32,11 +30,13 @@ export default class ChainNode {
   private api: ApiPromise
   private keyring: Keyring
   private logger: Logger
+  private userUri: string
   private roles: RoleEnum[]
 
-  constructor({ host, port, logger }: NodeCtorConfig) {
+  constructor({ host, port, logger, userUri }: NodeCtorConfig) {
     this.logger = logger.child({ module: 'ChainNode' })
     this.provider = new WsProvider(`ws://${host}:${port}`)
+    this.userUri = userUri
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.roles = []
@@ -99,7 +99,7 @@ export default class ChainNode {
   async runProcess({ process, inputs, outputs }: Payload): Promise<number[]> {
     await this.api.isReady
 
-    const account = this.keyring.addFromUri(USER_URI)
+    const account = this.keyring.addFromUri(this.userUri)
 
     const outputsAsMaps = await Promise.all(
       outputs.map(async (output: Output) => [

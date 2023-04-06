@@ -42,6 +42,7 @@ export class CapacityController extends Controller {
       host: env.NODE_HOST,
       port: env.NODE_PORT,
       logger,
+      userUri: env.USER_URI,
     })
   }
 

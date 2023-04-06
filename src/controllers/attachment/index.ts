@@ -21,7 +21,6 @@ import type { Attachment } from '../../models'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import { Readable } from 'node:stream'
 import type { UUID } from '../../models/uuid'
-import env from '../../env'
 
 const parseAccept = (acceptHeader: string) =>
   acceptHeader

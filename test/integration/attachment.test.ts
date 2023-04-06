@@ -6,7 +6,6 @@ import createHttpServer from '../../src/server'
 import { get, post, postFile } from '../helper/routeHelper'
 
 import Database from '../../src/lib/db'
-import env from '../../src/env'
 
 const db = new Database().db()
 
@@ -43,6 +42,7 @@ describe('attachment', () => {
       expect(status).to.equal(404)
       expect(body).to.equal('attachment not found')
     })
+  })
 
   describe('uploads and retrieves attachment', () => {
     let octetRes: any

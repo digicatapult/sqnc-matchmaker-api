@@ -43,6 +43,7 @@ const node = new ChainNode({
   host: env.NODE_HOST,
   port: env.NODE_PORT,
   logger,
+  userUri: env.USER_URI,
 })
 
 describe('match2', () => {

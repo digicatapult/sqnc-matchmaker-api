@@ -14,6 +14,7 @@ import ChainNode from './lib/chainNode'
     host: env.NODE_HOST,
     port: env.NODE_PORT,
     logger,
+    userUri: env.USER_URI,
   })
 
   if (env.ENABLE_INDEXER) {
