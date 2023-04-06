@@ -18,6 +18,8 @@ export type Models<V> = {
 
 export type Query = Knex.QueryBuilder
 
+export type ProcessedBlock = { hash: string; parent: string; height: number }
+
 const demandColumns = [
   'id',
   'owner',
@@ -53,7 +55,7 @@ const transactionColumns = [
 const processBlocksColumns = ['hash', 'height', 'parent']
 
 export default class Database {
-  public client: Knex
+  private client: Knex
   private log: Logger
   public db: () => Models<() => Query>
 
@@ -152,12 +154,26 @@ export default class Database {
     return this.db().match2().where({ id: match2Id }).select(match2Columns)
   }
 
-  getLastProcessedBlock = async (): Promise<{ hash: string; parent: string; height: number } | null> => {
+  getLastProcessedBlock = async (): Promise<ProcessedBlock | null> => {
     const blockRecords = await this.db()
       .processed_blocks()
       .select(processBlocksColumns)
       .orderBy('height', 'desc')
       .limit(1)
     return blockRecords[0] || null
+  }
+
+  insertProcessedBlock = async (block: ProcessedBlock): Promise<void> => {
+    await this.db().processed_blocks().insert(block)
+  }
+
+  withTransaction = (update: (db: Database) => Promise<void>) => {
+    return this.client.transaction(async (trx) => {
+      const decorated: Database = {
+        ...this,
+        client: trx,
+      }
+      await update(decorated)
+    })
   }
 }

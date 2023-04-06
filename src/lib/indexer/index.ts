@@ -3,7 +3,9 @@ import { Logger } from 'pino'
 import type Database from '../db/index'
 import ChainNode from '../chainNode'
 
-export type BlockHandler = (blockHash: string) => Promise<void>
+export type ChangeSet = Record<string, never>
+
+export type BlockHandler = (blockHash: string) => Promise<ChangeSet>
 
 export interface IndexerCtorArgs {
   db: Database
@@ -89,7 +91,8 @@ export default class Indexer {
         await this.updateUnprocessedBlocks(lastProcessedBlock?.hash || null, lastKnownFinalised)
 
         if (this.unprocessedBlocks.length !== 0) {
-          await this.handleBlock(this.unprocessedBlocks[0])
+          const changeSet = await this.handleBlock(this.unprocessedBlocks[0])
+          await this.updateDbWithNewBlock(this.unprocessedBlocks[0], changeSet)
         }
       } catch (err) {
         const asError = err as Error | null
@@ -151,5 +154,13 @@ export default class Indexer {
 
     this.logger.debug(`Found ${this.unprocessedBlocks.length} blocks to be processed`)
     this.logger.trace('Blocks to be processed: %j', this.unprocessedBlocks)
+  }
+
+  private async updateDbWithNewBlock(blockHash: string, changeSet: ChangeSet): Promise<void> {
+    this.logger.debug('Inserting changeset %j for block %s', changeSet, blockHash)
+    const header = await this.node.getHeader(blockHash)
+    await this.db.withTransaction(async (db) => {
+      await db.insertProcessedBlock(header)
+    })
   }
 }

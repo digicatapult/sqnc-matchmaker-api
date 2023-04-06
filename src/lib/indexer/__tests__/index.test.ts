@@ -2,12 +2,11 @@ import { describe, it, afterEach, beforeEach } from 'mocha'
 import { expect } from 'chai'
 
 import { withMockLogger } from './fixtures/logger'
-import { withLastProcessedBlocksByCall } from './fixtures/db'
+import { withLastProcessedBlocksByCall, withInitialLastProcessedBlock } from './fixtures/db'
 import { withHappyChainNode, withGetHeaderBoom } from './fixtures/chainNode'
 
 import Indexer from '../index'
 import sinon from 'sinon'
-
 
 describe.only('Indexer', function () {
   let indexer: Indexer
@@ -19,7 +18,7 @@ describe.only('Indexer', function () {
     })
 
     it('should return null if the db has no processed blocks', async function () {
-      const db = withLastProcessedBlocksByCall([null])
+      const db = withInitialLastProcessedBlock(null)
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
@@ -29,7 +28,7 @@ describe.only('Indexer', function () {
     })
 
     it('should return hash if the db has processed blocks', async function () {
-      const db = withLastProcessedBlocksByCall([{ hash: '1-hash', parent: '0-hash', height: 1 }])
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
@@ -39,7 +38,7 @@ describe.only('Indexer', function () {
     })
 
     it('should handle new blocks immediately', async function () {
-      const db = withLastProcessedBlocksByCall([null])
+      const db = withInitialLastProcessedBlock(null)
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
@@ -51,10 +50,7 @@ describe.only('Indexer', function () {
 
   describe('processNextBlock', function () {
     it('should do nothing and return null if there are no blocks to process', async function () {
-      const db = withLastProcessedBlocksByCall([
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-      ])
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
@@ -67,10 +63,7 @@ describe.only('Indexer', function () {
     })
 
     it("should process next block and return it's hash if there's one block to process", async function () {
-      const db = withLastProcessedBlocksByCall([
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-      ])
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
@@ -84,10 +77,7 @@ describe.only('Indexer', function () {
     })
 
     it("should process next block and return it's hash if there's more than one block to process", async function () {
-      const db = withLastProcessedBlocksByCall([
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-      ])
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
@@ -101,11 +91,7 @@ describe.only('Indexer', function () {
     })
 
     it("should process successive blocks on each call if there's two block to process", async function () {
-      const db = withLastProcessedBlocksByCall([
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '2-hash', parent: '1-hash', height: 2 },
-      ])
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
@@ -121,11 +107,7 @@ describe.only('Indexer', function () {
     })
 
     it("should do nothing if we're up to date after processing blocks", async function () {
-      const db = withLastProcessedBlocksByCall([
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '2-hash', parent: '1-hash', height: 2 },
-      ])
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
@@ -139,7 +121,7 @@ describe.only('Indexer', function () {
       expect(handleBlock.firstCall.args[0]).to.equal('2-hash')
     })
 
-    it("should skip over blocks if another instance processes them", async function () {
+    it('should skip over blocks if another instance processes them', async function () {
       const db = withLastProcessedBlocksByCall([
         { hash: '1-hash', parent: '0-hash', height: 1 },
         { hash: '1-hash', parent: '0-hash', height: 1 },
@@ -159,12 +141,8 @@ describe.only('Indexer', function () {
       expect(handleBlock.secondCall.args[0]).to.equal('5-hash')
     })
 
-    it("should continue to process blocks if last finalised block goes backwards", async function () {
-      const db = withLastProcessedBlocksByCall([
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '2-hash', parent: '1-hash', height: 2 },
-      ])
+    it('should continue to process blocks if last finalised block goes backwards', async function () {
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
@@ -190,17 +168,13 @@ describe.only('Indexer', function () {
       })
 
       it('should retry after configured delay', async function () {
-        const db = withLastProcessedBlocksByCall([
-          { hash: '1-hash', parent: '0-hash', height: 1 },
-          { hash: '1-hash', parent: '0-hash', height: 1 },
-          { hash: '1-hash', parent: '0-hash', height: 1 },
-        ])
+        const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
         const node = withGetHeaderBoom(1)
         const handleBlock = sinon.stub().resolves()
 
         indexer = new Indexer({ db, node, logger, handleBlock })
         await indexer.start()
-        const p = indexer.processNextBlock('2-hash').then(s => s)
+        const p = indexer.processNextBlock('2-hash').then((s) => s)
         clock.tickAsync(1000)
 
         const result = await p
@@ -211,17 +185,13 @@ describe.only('Indexer', function () {
       })
 
       it('should retry if handler goes boom', async function () {
-        const db = withLastProcessedBlocksByCall([
-          { hash: '1-hash', parent: '0-hash', height: 1 },
-          { hash: '1-hash', parent: '0-hash', height: 1 },
-          { hash: '1-hash', parent: '0-hash', height: 1 },
-        ])
+        const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
         const node = withHappyChainNode()
         const handleBlock = sinon.stub().resolves().onCall(0).rejects(new Error('BOOM'))
 
         indexer = new Indexer({ db, node, logger, handleBlock })
         await indexer.start()
-        const p = indexer.processNextBlock('2-hash').then(s => s)
+        const p = indexer.processNextBlock('2-hash').then((s) => s)
         clock.tickAsync(1000)
 
         const result = await p
@@ -233,14 +203,9 @@ describe.only('Indexer', function () {
     })
   })
 
-  describe('processAllBlocks', function() {
-    it("should process all pending blocks", async function () {
-      const db = withLastProcessedBlocksByCall([
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '2-hash', parent: '1-hash', height: 2 },
-        { hash: '3-hash', parent: '2-hash', height: 3 },
-      ])
+  describe('processAllBlocks', function () {
+    it('should process all pending blocks', async function () {
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
@@ -254,11 +219,8 @@ describe.only('Indexer', function () {
       expect(handleBlock.secondCall.args[0]).to.equal('3-hash')
     })
 
-    it("should return null if no blocks to process", async function () {
-      const db = withLastProcessedBlocksByCall([
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-      ])
+    it('should return null if no blocks to process', async function () {
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves()
 
