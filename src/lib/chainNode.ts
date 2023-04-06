@@ -124,7 +124,7 @@ export default class ChainNode {
               const decoded = this.api.registry.findMetaError(dispatchError.asModule)
               reject(new HttpResponse({ message: `Node dispatch error: ${decoded.name}` }))
             } else {
-              reject(Error(dispatchError.toString()))
+              reject(new HttpResponse({ message: `Unknown node dispatch error: ${dispatchError}` }))
             }
           }
 
