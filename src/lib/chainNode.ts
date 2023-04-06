@@ -58,14 +58,16 @@ export default class ChainNode {
   }
 
   async getLastFinalisedBlockHash(): Promise<string> {
+    await this.api.isReady
     const result = await this.api.rpc.chain.getFinalizedHead()
     return result.toHex()
   }
 
   async getHeader(hash: string): Promise<{ hash: string; height: number; parent: string }> {
+    await this.api.isReady
     const result = await this.api.rpc.chain.getHeader(hash)
     return {
-      hash: result.toHex(),
+      hash,
       height: result.number.toNumber(),
       parent: result.parentHash.toHex(),
     }
@@ -191,5 +193,10 @@ export default class ChainNode {
     const lastTokenId = await this.api.query.simpleNFT.lastToken()
 
     return lastTokenId ? parseInt(lastTokenId.toString(), 10) : 0
+  }
+
+  async watchFinalisedBlocks(onNewFinalisedHead: (blockHash: string) => Promise<void>) {
+    await this.api.isReady
+    await this.api.rpc.chain.subscribeFinalizedHeads((header) => onNewFinalisedHead(header.hash.toHex()))
   }
 }
