@@ -83,7 +83,8 @@ export class attachment extends Controller {
   public async get(): Promise<Attachment[]> {
     this.log.debug('retrieving all attachment')
 
-    return (await this.db.attachment()).map(
+    const attachments: Attachment[] = await this.db.attachment()
+    return attachments.map(
       ({ binary_blob, created_at, ...rest }: any): Attachment => ({
         ...rest,
         createdAt: created_at,
@@ -122,8 +123,8 @@ export class attachment extends Controller {
   @Get('/{id}')
   @Response<NotFound>(404)
   @Response<BadRequest>(400)
-  @Produces('application/octet-stream')
   @Produces('application/json')
+  @Produces('application/octet-stream')
   @SuccessResponse(200)
   public async getById(@Request() req: express.Request, @Path() id: UUID): Promise<unknown | Readable> {
     this.log.debug(`attempting to retrieve ${id} attachment`)

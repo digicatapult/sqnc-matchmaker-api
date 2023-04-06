@@ -13,7 +13,7 @@ export const runProcess = async ({ files, ...payload }: { files: RunProcessFile[
   const formData = new FormData()
 
   formData.append('request', JSON.stringify(payload))
-  files.map((f: RunProcessFile) => formData.append('files', f.blob, f.filename))
+  files.map((f: RunProcessFile) => formData.append('files', f.blob, f.filename || 'unknown'))
 
   const res = await fetch(url, {
     method: 'POST',

@@ -63,6 +63,7 @@ describe('transaction', () => {
   })
 
   it('also returns an empty array if 0 transactions found by type', async () => {
+    cleanup()
     const { status, body } = await get(app, '/transaction?apiType=order')
 
     expect(status).to.equal(200)
@@ -91,7 +92,7 @@ describe('transaction', () => {
 
     // TODO create a fixtures
     expect(status).to.equal(200)
-    expect(body.length).to.equal(4)
+    expect(body.length).to.equal(5)
     expect(body).to.deep.include.members([
       {
         id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
