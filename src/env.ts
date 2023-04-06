@@ -23,5 +23,4 @@ export default envalid.cleanEnv(process.env, {
   USER_URI: envalid.str({ devDefault: '//Alice' }),
   IPFS_HOST: envalid.host({ devDefault: 'localhost' }),
   IPFS_PORT: envalid.port({ devDefault: 5001, default: 15001 }),
-  FILE_UPLOAD_MAX_SIZE: envalid.num({ default: 200 * 1024 * 1024 }),
 })

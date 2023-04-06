@@ -103,14 +103,11 @@ export class attachment extends Controller {
 
     if (!req.body && !file) throw new BadRequest('nothing to upload')
 
-    const buffer = Buffer.from(file?.buffer || JSON.stringify(req.body))
-    if (buffer.length > env.FILE_UPLOAD_MAX_SIZE) throw new BadRequest(`Over size limit: ${env.FILE_UPLOAD_MAX_SIZE}`)
-
     const [{ id, filename, binary_blob, created_at }] = await this.db
       .attachment()
       .insert({
         filename: file ? file.originalname : 'json',
-        binary_blob: buffer,
+        binary_blob: Buffer.from(file?.buffer || JSON.stringify(req.body)),
       })
       .returning(['id', 'filename', 'binary_blob', 'created_at'])
 

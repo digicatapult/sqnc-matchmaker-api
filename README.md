@@ -26,7 +26,6 @@ Use a `.env` at root of the repository to set values for the environment variabl
 | USER_URI              |    Y     |           -            | The Substrate `URI` representing the private key to use when making `dscp-node` transactions |
 | IPFS_HOST             |    Y     |           -            | Hostname of the `IPFS` node to use for metadata storage                                      |
 | IPFS_PORT             |    N     |        `15001`         | Port of the `IPFS` node to use for metadata storage                                          |
-| FILE_UPLOAD_MAX_SIZE  |    N     |  `200 * 1024 * 1024`   | The Maximum file upload size (bytes)                                                         |
 
 ## Getting started
 

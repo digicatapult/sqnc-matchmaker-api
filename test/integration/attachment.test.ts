@@ -44,19 +44,6 @@ describe('attachment', () => {
       expect(body).to.equal('attachment not found')
     })
 
-    it('returns 400 if upload over limit', async () => {
-      const { status, body } = await postFile(
-        app,
-        '/attachment',
-        Buffer.from('a'.repeat(env.FILE_UPLOAD_MAX_SIZE + 1)),
-        filename
-      )
-
-      expect(status).to.equal(400)
-      expect(body).to.equal(`Over size limit: ${env.FILE_UPLOAD_MAX_SIZE}`)
-    })
-  })
-
   describe('uploads and retrieves attachment', () => {
     let octetRes: any
     let jsonRes: any
