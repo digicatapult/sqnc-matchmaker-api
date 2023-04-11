@@ -111,7 +111,7 @@ export class CapacityController extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @SuccessResponse('201')
   public async createCapacityOnChain(@Path() capacityId: UUID): Promise<TransactionResponse> {
-    const [capacity] = await this.db.getDemandWithAttachment(capacityId)
+    const [capacity] = await this.db.getDemandWithAttachment(capacityId, DemandSubtype.capacity)
     if (!capacity) throw new NotFound('capacity')
     if (capacity.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
 
