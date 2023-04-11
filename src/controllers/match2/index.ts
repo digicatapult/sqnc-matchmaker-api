@@ -44,6 +44,8 @@ export class Match2Controller extends Controller {
       port: env.NODE_PORT,
       logger,
       userUri: env.USER_URI,
+      ipfsHost: env.IPFS_HOST,
+      ipfsPort: env.IPFS_PORT,
     })
   }
 

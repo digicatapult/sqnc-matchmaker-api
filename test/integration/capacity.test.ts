@@ -30,6 +30,8 @@ const node = new ChainNode({
   port: env.NODE_PORT,
   logger,
   userUri: env.USER_URI,
+  ipfsHost: env.IPFS_HOST,
+  ipfsPort: env.IPFS_PORT,
 })
 
 describe('capacity', () => {

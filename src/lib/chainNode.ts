@@ -6,13 +6,14 @@ import { HttpResponse } from './error-handler'
 
 import Ipfs from './ipfs'
 import type { Payload, Output, Metadata, MetadataFile } from './payload'
-import env from '../env'
 
 export interface NodeCtorConfig {
   host: string
   port: number
   logger: Logger
   userUri: string
+  ipfsHost: string
+  ipfsPort: number
 }
 
 interface RoleEnum {
@@ -35,14 +36,14 @@ export default class ChainNode {
   private roles: RoleEnum[]
   private ipfs: Ipfs
 
-  constructor({ host, port, logger, userUri }: NodeCtorConfig) {
+  constructor({ host, port, logger, userUri, ipfsHost, ipfsPort }: NodeCtorConfig) {
     this.logger = logger.child({ module: 'ChainNode' })
     this.provider = new WsProvider(`ws://${host}:${port}`)
     this.userUri = userUri
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.roles = []
-    this.ipfs = new Ipfs({ host: env.IPFS_HOST, port: env.IPFS_PORT, logger })
+    this.ipfs = new Ipfs({ host: ipfsHost, port: ipfsPort, logger })
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     this.api.isReadyOrError.catch(() => {}) // prevent unhandled promise rejection errors
