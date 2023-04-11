@@ -28,7 +28,7 @@ export class TransactionController extends Controller {
   @Get('/')
   public async getAllTransactions(
     @Query() apiType?: TransactionApiType,
-    status?: TransactionState
+    @Query() status?: TransactionState
   ): Promise<TransactionResponse[]> {
     if (apiType && !status) return await this.db.getTransactionsByType(apiType)
 
