@@ -6,7 +6,7 @@ import { pgConfig } from './knexfile'
 import { DemandState, DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 import { Match2State } from '../../models/match2'
-import { TransactionApiType, TransactionType } from '../../models/transaction'
+import { TransactionApiType, TransactionState, TransactionType } from '../../models/transaction'
 
 const tablesList = ['attachment', 'demand', 'transaction', 'match2', 'processed_blocks'] as const
 type TABLES_TUPLE = typeof tablesList
@@ -126,6 +126,14 @@ export default class Database {
 
   getTransactionsByType = async (apiType: TransactionApiType) => {
     return this.db().transaction().where({ api_type: apiType }).select(transactionColumns)
+  }
+
+  getTransactionsByState = async (state: TransactionState) => {
+    return this.db().transaction().where({ transaction_state: state }).select(transactionColumns)
+  }
+
+  getTransactionsByStateAndType = async (state: TransactionState, apiType: TransactionApiType) => {
+    return this.db().transaction().where({ transaction_state: state, api_type: apiType }).select(transactionColumns)
   }
 
   getTransactionsByLocalId = async (local_id: UUID, transaction_type: TransactionType) => {
