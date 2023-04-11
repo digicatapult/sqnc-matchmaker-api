@@ -4,8 +4,9 @@ import type { u128 } from '@polkadot/types'
 import { Logger } from 'pino'
 import { HttpResponse } from './error-handler'
 
-import { addFile } from './services/ipfs'
+import Ipfs from './ipfs'
 import type { Payload, Output, Metadata, MetadataFile } from './payload'
+import env from '../env'
 
 export interface NodeCtorConfig {
   host: string
@@ -32,6 +33,7 @@ export default class ChainNode {
   private logger: Logger
   private userUri: string
   private roles: RoleEnum[]
+  private ipfs: Ipfs
 
   constructor({ host, port, logger, userUri }: NodeCtorConfig) {
     this.logger = logger.child({ module: 'ChainNode' })
@@ -40,6 +42,7 @@ export default class ChainNode {
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.roles = []
+    this.ipfs = new Ipfs({ host: env.IPFS_HOST, port: env.IPFS_PORT, logger })
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     this.api.isReadyOrError.catch(() => {}) // prevent unhandled promise rejection errors
@@ -174,7 +177,7 @@ export default class ChainNode {
               processedValue = { TokenId: value.value as string }
               break
             case 'FILE':
-              processedValue = { File: await addFile(value.value as MetadataFile) }
+              processedValue = { File: await this.ipfs.addFile(value.value as MetadataFile) }
               break
             default:
             case 'NONE':
