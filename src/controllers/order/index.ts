@@ -98,7 +98,7 @@ export class order extends Controller {
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
   @Get('{orderId}/creation/{creationId}')
-  public async getorderCreation(@Path() orderId: UUID, creationId: UUID): Promise<TransactionResponse> {
+  public async getOrderCreation(@Path() orderId: UUID, creationId: UUID): Promise<TransactionResponse> {
     const [order] = await this.db.getDemand(orderId)
     if (!order) throw new NotFound('order')
 
@@ -115,8 +115,8 @@ export class order extends Controller {
   @Post('{orderId}/creation')
   @Response<NotFound>(404, 'Item not found')
   @SuccessResponse('201')
-  public async createTransaction(@Path() orderId: UUID): Promise<TransactionResponse> {
-    const [order] = await this.db.getDemand(orderId)
+  public async createOrderOnChain(@Path() orderId: UUID): Promise<TransactionResponse> {
+    const [order] = await this.db.getDemandWithAttachment(orderId, DemandSubtype.order)
     if (!order) throw new NotFound('order')
     if (order.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
 

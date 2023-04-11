@@ -63,19 +63,19 @@ export class attachment extends Controller {
   constructor() {
     super()
     this.log = logger.child({ controller: '/attachment' })
-    // TMP will be updated with a wrapper so ORM client independant
+    // TMP will be updated with a wrapper so ORM client independent
     this.db = this.dbClient.db()
   }
 
-  octetResponse(blob: Blob, name: string): Blob {
-    // default to octect-stream or allow error middleware to handle
-    this.setHeader('accept', 'application/octet-stream')
+  octetResponse(buffer: Buffer, name: string): Readable {
+    // default to octet-stream or allow error middleware to handle
     this.setHeader('access-control-expose-headers', 'content-disposition')
     this.setHeader('content-disposition', `attachment; filename="${name}"`)
+    this.setHeader('content-type', 'application/octet-stream')
     this.setHeader('maxAge', `${365 * 24 * 60 * 60 * 1000}`)
     this.setHeader('immutable', 'true')
 
-    return blob
+    return Readable.from(buffer)
   }
 
   @Get('/')
@@ -130,14 +130,14 @@ export class attachment extends Controller {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const [attachment] = await this.db.attachment().where({ id })
     if (!attachment) throw new NotFound('attachment')
-    const { filename, binary_blob } = attachment
+    const { filename, binary_blob }: { filename: string; binary_blob: Buffer } = attachment
 
     const orderedAccept = parseAccept(req.headers.accept || '*/*')
     if (filename === 'json') {
       for (const mimeType of orderedAccept) {
         if (mimeType === 'application/json' || mimeType === 'application/*' || mimeType === '*/*') {
           try {
-            const json = JSON.parse(binary_blob)
+            const json = JSON.parse(binary_blob.toString())
             return json
           } catch (err) {
             this.log.warn(`Unable to parse json file for attachment ${id}`)
