@@ -57,12 +57,12 @@ The following tables exist in the `matchmaker-api` database.
 
 ### `transaction`
 
-| column             | PostgreSQL type | nullable |       default        | description                                             |
-| :----------------- | :-------------- | :------- | :------------------: | :------------------------------------------------------ |
-| `id`               | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment`                  |
-| `local_id`         | `UUID`          | FALSE    |                      | The Match2 id of the transaction                        |
-| `api_type`         | `ENUM`          | FALSE    |                      | The type of transaction (`match2`, `order`, `capacity`) |
-| `transaction_type` | `ENUM`          | FALSE    |                      | The transaction type (creation, proposal, accept)       |
+| column             | PostgreSQL type | nullable |       default        | description                                               |
+| :----------------- | :-------------- | :------- | :------------------: | :-------------------------------------------------------- |
+| `id`               | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `transaction`                   |
+| `local_id`         | `UUID`          | FALSE    |                      | The Match2 or Demand id of the transaction                |
+| `api_type`         | `ENUM`          | FALSE    |                      | The entity of transaction (`match2`, `order`, `capacity`) |
+| `transaction_type` | `ENUM`          | FALSE    |                      | The transaction type (creation, proposal, accept)         |
 
 #### Indexes
 
