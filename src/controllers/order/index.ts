@@ -109,7 +109,6 @@ export class order extends Controller {
   @SuccessResponse('201')
   public async createOrderOnChain(@Path() orderId: UUID): Promise<TransactionResponse> {
     const [order] = await this.db.getDemandWithAttachment(orderId, DemandSubtype.order)
-    console.log(order)
     if (!order) throw new NotFound('order')
     if (order.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
 
