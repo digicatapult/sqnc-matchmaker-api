@@ -211,8 +211,18 @@ describe('transaction', () => {
     ])
   })
 
-  it('returns 422 when invalid param is passed', async () => {
+  it('returns 422 when invalid type is passed', async () => {
     const { status, body } = await get(app, '/transaction?apiType=notAType&status=submitted')
+
+    expect(status).to.equal(422)
+    expect(body).to.contain({
+        name: 'ValidateError',
+        message: 'Validation failed'
+      })
+  })
+
+  it('returns 422 when invalid status is passed', async () => {
+    const { status, body } = await get(app, '/transaction?apiType=capacity&status=notAStatus')
 
     expect(status).to.equal(422)
     expect(body).to.contain({
