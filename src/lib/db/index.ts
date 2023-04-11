@@ -132,8 +132,8 @@ export default class Database {
     return this.db().transaction().where({ state }).select(transactionColumns)
   }
 
-  getTransactionsByStateAndType = async (state: TransactionState, apiType: TransactionApiType) => {
-    return this.db().transaction().where({ state: state, api_type: apiType }).select(transactionColumns)
+  getTransactionsByStateAndType = async (state?: TransactionState, api_type?: TransactionApiType) => {
+    return this.db().transaction().where({ state, api_type }).select(transactionColumns)
   }
 
   getTransactionsByLocalId = async (local_id: UUID, transaction_type: TransactionType) => {

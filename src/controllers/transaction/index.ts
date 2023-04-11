@@ -31,31 +31,11 @@ export class TransactionController extends Controller {
     @Query() apiType?: TransactionApiType,
     @Query() status?: TransactionState
   ): Promise<TransactionResponse[]> {
-    if (
-      apiType &&
-      apiType != undefined &&
-      !status &&
-      Object.values(TransactionApiType).includes(apiType as TransactionApiType)
-    )
-      return await this.db.getTransactionsByType(apiType)
+    if (apiType && !status) return await this.db.getTransactionsByStateAndType(undefined, apiType)
 
-    if (
-      !apiType &&
-      status &&
-      status != undefined &&
-      Object.values(TransactionState).includes(status as TransactionState)
-    )
-      return await this.db.getTransactionsByState(status)
+    if (!apiType && status) return await this.db.getTransactionsByStateAndType(status, undefined)
 
-    // Checks if both are truthy and that both are valid in the enum
-    // Status has to be checked to stop 'Type 'undefined' is not assignable to type 'TransactionState' error
-    if (
-      apiType &&
-      status &&
-      Object.values(TransactionApiType).includes(apiType as TransactionApiType) &&
-      Object.values(TransactionState).includes(status as TransactionState)
-    )
-      return await this.db.getTransactionsByStateAndType(status, apiType)
+    if (apiType && status) return await this.db.getTransactionsByStateAndType(status, apiType)
 
     return await this.db.getTransactions()
   }
