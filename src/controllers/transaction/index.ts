@@ -36,6 +36,7 @@ export class TransactionController extends Controller {
     if (!apiType && status && status != undefined) return await this.db.getTransactionsByState(status)
 
     // Checks if both are truthy and that both are valid in the enum
+    // Status has to be checked to stop 'Type 'undefined' is not assignable to type 'TransactionState' error
     if (
       apiType &&
       status &&
