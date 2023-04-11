@@ -122,18 +122,26 @@ export class order extends Controller {
     if (!order) throw new NotFound('order')
     if (order.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
 
+    const extrinsic = await this.node.prepareRunProcess(demandCreate(order))
+    const hash = extrinsic.hash.toHex()
+    this.log.debug('Transaction hash: %j', hash)
+
     const [transaction] = await this.db.insertTransaction({
       api_type: TransactionApiType.order,
       transaction_type: TransactionType.creation,
       local_id: orderId,
       state: TransactionState.submitted,
+      hash,
     })
 
-    const [tokenId] = await this.node.runProcess(demandCreate(order))
-    await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
+    const updateTransaction = async (state: TransactionState) => {
+      await this.db.updateTransaction(transaction.id, { state })
+    }
 
-    // demand-create returns a single token ID
-    await observeTokenId('DEMAND', orderId, DemandState.created, tokenId, true)
+    this.node.submitRunProcess(extrinsic, updateTransaction).then(async ([tokenId]) => {
+      await observeTokenId('DEMAND', orderId, DemandState.created, tokenId, true)
+    })
+
     return transaction
   }
 

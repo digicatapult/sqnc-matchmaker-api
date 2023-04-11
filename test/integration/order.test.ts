@@ -14,6 +14,7 @@ import Database from '../../src/lib/db'
 import ChainNode from '../../src/lib/chainNode'
 import { logger } from '../../src/lib/logger'
 import env from '../../src/env'
+import { pollTransactionState } from '../helper/poll'
 
 const db = new Database()
 const node = new ChainNode({
@@ -180,16 +181,9 @@ describe('order', () => {
     )
     expect(state).to.equal(TransactionState.submitted)
 
-    // check local transaction updates
-    const [transaction] = await db.getTransaction(transactionId)
-    expect(transaction).to.contain({
-      state: 'finalised',
-      apiType: 'order',
-      transactionType: 'creation',
-    })
+    await pollTransactionState(db, transactionId, TransactionState.finalised)
 
     const [order] = await db.getDemand(orderId)
-    expect(transaction.localId).to.equal(orderId)
     expect(order).to.contain({
       id: orderId,
       state: 'created',
@@ -213,7 +207,6 @@ describe('order', () => {
   })
 
   it('retrieves all order creations', async () => {
-    await post(app, `/order/${seededOrderId}/creation`, {})
     const { status, body } = await get(app, `/order/${seededOrderId}/creation`)
 
     expect(status).to.equal(200)

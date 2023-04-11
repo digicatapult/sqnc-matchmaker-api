@@ -37,6 +37,7 @@ import ChainNode from '../../src/lib/chainNode'
 import { logger } from '../../src/lib/logger'
 import env from '../../src/env'
 import { UUID } from '../../src/models/uuid'
+import { pollTransactionState } from '../helper/poll'
 
 const db = new Database()
 const node = new ChainNode({
@@ -125,16 +126,24 @@ describe('match2', () => {
         const {
           body: { id: orderId },
         } = await post(app, '/order', { parametersAttachmentId })
-        await post(app, `/order/${orderId}/creation`, {})
-        const [order] = await db.getDemand(orderId)
-        orderLocalId = orderId
-        orderOriginalId = order.originalTokenId
+        const {
+          body: { id: orderTransactionId },
+        } = await post(app, `/order/${orderId}/creation`, {})
 
         ipfsMock()
         const {
           body: { id: capacityId },
         } = await post(app, '/capacity', { parametersAttachmentId })
-        await post(app, `/capacity/${capacityId}/creation`, {})
+        const {
+          body: { id: capacityTransactionId },
+        } = await post(app, `/capacity/${capacityId}/creation`, {})
+
+        await pollTransactionState(db, orderTransactionId, TransactionState.finalised)
+        const [order] = await db.getDemand(orderId)
+        orderLocalId = orderId
+        orderOriginalId = order.originalTokenId
+
+        await pollTransactionState(db, capacityTransactionId, TransactionState.finalised)
         const [capacity] = await db.getDemand(capacityId)
         capacityLocalId = capacityId
         capacityOriginalId = capacity.originalTokenId
@@ -158,9 +167,8 @@ describe('match2', () => {
         )
         expect(state).to.equal(TransactionState.submitted)
 
-        // check local transaction updates
-        const [transaction] = await db.getTransaction(transactionId)
-        expect(transaction.state).to.equal(TransactionState.finalised)
+        // wait for block to finalise
+        await pollTransactionState(db, transactionId, TransactionState.finalised)
 
         // check local entities update with token id
         const [demandA] = await db.getDemand(orderLocalId)
@@ -178,15 +186,21 @@ describe('match2', () => {
 
       it('should acceptA then acceptFinal a match2 on-chain', async () => {
         // propose
-        await post(app, `/match2/${match2LocalId}/proposal`, {})
+        const proposal = await post(app, `/match2/${match2LocalId}/proposal`, {})
+
+        // wait for block to finalise
+        await pollTransactionState(db, proposal.body.id, TransactionState.finalised)
+
         const [match2] = await db.getMatch2(match2LocalId)
         const match2OriginalId = match2.originalTokenId
-
         const lastTokenId = await node.getLastTokenId()
 
         // submit accept to chain
         const responseAcceptA = await post(app, `/match2/${match2LocalId}/accept`, {})
         expect(responseAcceptA.status).to.equal(201)
+
+        // wait for block to finalise
+        await pollTransactionState(db, responseAcceptA.body.id, TransactionState.finalised)
 
         // check local entities update with token id
         const [match2AcceptA] = await db.getMatch2(match2LocalId)
@@ -197,6 +211,9 @@ describe('match2', () => {
         // submit 2nd accept to chain
         const responseAcceptFinal = await post(app, `/match2/${match2LocalId}/accept`, {})
         expect(responseAcceptFinal.status).to.equal(201)
+
+        // wait for block to finalise
+        await pollTransactionState(db, responseAcceptFinal.body.id, TransactionState.finalised)
 
         // check local entities update with token id
         const [demandA] = await db.getDemand(orderLocalId)

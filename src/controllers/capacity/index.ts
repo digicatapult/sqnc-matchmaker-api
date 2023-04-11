@@ -117,19 +117,26 @@ export class CapacityController extends Controller {
     if (!capacity) throw new NotFound('capacity')
     if (capacity.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
 
+    const extrinsic = await this.node.prepareRunProcess(demandCreate(capacity))
+    const hash = extrinsic.hash.toHex()
+    this.log.debug('Transaction hash: %j', hash)
+
     const [transaction] = await this.db.insertTransaction({
       api_type: TransactionApiType.capacity,
       transaction_type: TransactionType.creation,
       local_id: capacityId,
       state: TransactionState.submitted,
+      hash,
     })
 
-    // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-    const [tokenId] = await this.node.runProcess(demandCreate(capacity))
-    await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
+    const updateTransaction = async (state: TransactionState) => {
+      await this.db.updateTransaction(transaction.id, { state })
+    }
 
-    // demand-create returns a single token ID
-    await observeTokenId(DEMAND, capacityId, DemandState.created, tokenId, true)
+    this.node.submitRunProcess(extrinsic, updateTransaction).then(async ([tokenId]) => {
+      await observeTokenId(DEMAND, capacityId, DemandState.created, tokenId, true)
+    })
+
     return transaction
   }
 

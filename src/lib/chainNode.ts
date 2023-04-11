@@ -1,7 +1,9 @@
 import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/api'
+import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
 
 import { Logger } from 'pino'
+import { TransactionState } from '../models/transaction'
 import { HttpResponse } from './error-handler'
 
 import Ipfs from './ipfs'
@@ -102,11 +104,7 @@ export default class ChainNode {
     return entry.index
   }
 
-  async runProcess({ process, inputs, outputs }: Payload): Promise<number[]> {
-    await this.api.isReady
-
-    const account = this.keyring.addFromUri(this.userUri)
-
+  async prepareRunProcess({ process, inputs, outputs }: Payload) {
     const outputsAsMaps = await Promise.all(
       outputs.map(async (output: Output) => [
         await this.processRoles(output.roles),
@@ -114,15 +112,25 @@ export default class ChainNode {
       ])
     )
 
-    this.logger.debug('Running Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
+    this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
 
+    await this.api.isReady
+    return this.api.tx.simpleNFT.runProcess(process, inputs, outputsAsMaps)
+  }
+
+  async submitRunProcess(
+    extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>,
+    transactionDbUpdate: (state: TransactionState) => Promise<void>
+  ): Promise<number[]> {
+    const account = this.keyring.addFromUri(this.userUri)
+
+    this.logger.debug('Submitting Transaction %j', extrinsic.hash.toHex())
     return new Promise((resolve, reject) => {
       let unsub: () => void
-      this.api.tx.simpleNFT
-        .runProcess(process, inputs, outputsAsMaps)
-        .signAndSend(account, (result: SubmittableResult) => {
+      extrinsic
+        .signAndSend(account, { nonce: -1 }, (result: SubmittableResult) => {
           this.logger.debug('result.status %s', JSON.stringify(result.status))
-          this.logger.debug('result.status.isInBlock', result.status.isInBlock)
+
           const { dispatchError, status } = result
 
           if (dispatchError) {
@@ -135,6 +143,12 @@ export default class ChainNode {
           }
 
           if (status.isInBlock) {
+            transactionDbUpdate(TransactionState.inBlock)
+          }
+
+          if (status.isFinalized) {
+            transactionDbUpdate(TransactionState.finalised)
+
             const processRanEvent = result.events.find(({ event: { method } }) => method === 'ProcessRan')
             const data = processRanEvent?.event?.data as EventData
             const tokens = data?.outputs?.map((x) => x.toNumber())
