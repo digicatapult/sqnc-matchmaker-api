@@ -32,7 +32,7 @@ export interface DemandResponse {
 
 export interface DemandPayload extends DemandResponse, Attachment {
   subtype: DemandSubtype
-  binary_blob: Blob
+  binary_blob: Buffer
   latestTokenId: number
   originalTokenId: number
 }
