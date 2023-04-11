@@ -160,7 +160,7 @@ describe('transaction', () => {
   })
 
   it('returns all transactions by status', async () => {
-    const { status, body } = await get(app, '/transaction?status=creation')
+    const { status, body } = await get(app, '/transaction?status=submitted')
 
     expect(status).to.equal(200)
     expect(body).to.deep.include.members([
