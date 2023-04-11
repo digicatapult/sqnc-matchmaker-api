@@ -25,16 +25,24 @@ export class TransactionController extends Controller {
    * @Query apiType lists all transactions by that type
    */
   @Response<BadRequest>(400, 'Request was invalid')
+  @Response<NotFound>(404, 'Item not found')
   @Get('/')
   public async getAllTransactions(
     @Query() apiType?: TransactionApiType,
     @Query() status?: TransactionState
   ): Promise<TransactionResponse[]> {
-    if (apiType && !status) return await this.db.getTransactionsByType(apiType)
+    if (apiType && apiType != undefined && !status) return await this.db.getTransactionsByType(apiType)
 
-    if (!apiType && status) return await this.db.getTransactionsByState(status)
+    if (!apiType && status && status != undefined) return await this.db.getTransactionsByState(status)
 
-    if (apiType && status) return await this.db.getTransactionsByStateAndType(status, apiType)
+    // Checks if both are truthy and that both are valid in the enum
+    if (
+      apiType &&
+      status &&
+      Object.values(TransactionApiType).includes(apiType as TransactionApiType) &&
+      Object.values(TransactionState).includes(status as TransactionState)
+    )
+      return await this.db.getTransactionsByStateAndType(status, apiType)
 
     return await this.db.getTransactions()
   }
