@@ -123,7 +123,7 @@ describe('match2', () => {
         const {
           body: { id: orderId },
         } = await post(app, '/order', { parametersAttachmentId })
-        await post(app, `/capacity/${orderId}/creation`, {})
+        await post(app, `/order/${orderId}/creation`, {})
         const [order] = await db.getDemand(orderId)
         orderLocalId = orderId
         orderOriginalId = order.originalTokenId
