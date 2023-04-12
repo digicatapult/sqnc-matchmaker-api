@@ -76,6 +76,9 @@ jobs:
 
   tests:
     name: Run tests
+    strategy:
+      matrix:
+        test-type: [offchain, onchain]
     runs-on: ubuntu-latest
     needs: [preconditions]
     steps:
@@ -102,15 +105,17 @@ jobs:
         with:
           time: '30s'
       - name: Put process flows on-chain
+        if: ${{ matrix.test-type }} == 'onchain'
         run: npm run flows
       - name: Run database migrations
         run: npm run db:migrate
         env:
           NODE_ENV: test
       - name: Run unit tests
+        if: ${{ matrix.test-type }} != 'onchain'
         run: npm run test:unit
       - name: Run integration tests
-        run: npm run test
+        run: npm run test:${{ matrix.test-type }}
 
   check-version:
     name: "Check version"

@@ -67,10 +67,10 @@ jobs:
         run: npm run depcheck
 
   tests:
+    name: Run tests
     strategy:
       matrix:
         test-type: [offchain, onchain]
-    name: Run tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
