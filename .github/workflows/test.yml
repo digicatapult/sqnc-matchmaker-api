@@ -96,12 +96,14 @@ jobs:
         with:
           time: '30s'
       - name: Put process flows on-chain
+        if: ${{ matrix.test-type }} == 'onchain'
         run: npm run flows
       - name: Run database migrations
         run: npm run db:migrate
         env:
           NODE_ENV: test
       - name: Run unit tests
+        if: ${{ matrix.test-type }} != 'onchain'
         run: npm run test:unit
       - name: Run integration tests
         run: npm run test:${{ matrix.test-type }}
