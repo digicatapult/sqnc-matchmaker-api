@@ -133,7 +133,10 @@ export default class Database {
   }
 
   getTransactionsByStateAndType = async (state?: TransactionState, api_type?: TransactionApiType) => {
-    return this.db().transaction().where({ state, api_type }).select(transactionColumns)
+    return this.db()
+      .transaction()
+      .where({ ...(state && { state }), ...(api_type && { api_type }) })
+      .select(transactionColumns)
   }
 
   getTransactionsByLocalId = async (local_id: UUID, transaction_type: TransactionType) => {
