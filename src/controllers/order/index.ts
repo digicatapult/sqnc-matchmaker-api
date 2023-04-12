@@ -123,15 +123,13 @@ export class order extends Controller {
     if (order.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
 
     const extrinsic = await this.node.prepareRunProcess(demandCreate(order))
-    const hash = extrinsic.hash.toHex()
-    this.log.debug('Transaction hash: %j', hash)
 
     const [transaction] = await this.db.insertTransaction({
       api_type: TransactionApiType.order,
       transaction_type: TransactionType.creation,
       local_id: orderId,
       state: TransactionState.submitted,
-      hash,
+      hash: extrinsic.hash.toHex(),
     })
 
     const updateTransaction = async (state: TransactionState) => {

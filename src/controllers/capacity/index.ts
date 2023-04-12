@@ -118,15 +118,13 @@ export class CapacityController extends Controller {
     if (capacity.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
 
     const extrinsic = await this.node.prepareRunProcess(demandCreate(capacity))
-    const hash = extrinsic.hash.toHex()
-    this.log.debug('Transaction hash: %j', hash)
 
     const [transaction] = await this.db.insertTransaction({
       api_type: TransactionApiType.capacity,
       transaction_type: TransactionType.creation,
       local_id: capacityId,
       state: TransactionState.submitted,
-      hash,
+      hash: extrinsic.hash.toHex(),
     })
 
     const updateTransaction = async (state: TransactionState) => {

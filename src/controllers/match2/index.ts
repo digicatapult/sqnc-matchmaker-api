@@ -126,15 +126,13 @@ export class Match2Controller extends Controller {
     validatePreOnChain(demandB, DemandSubtype.capacity, 'DemandB')
 
     const extrinsic = await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
-    const hash = extrinsic.hash.toHex()
-    this.log.debug('Transaction hash: %j', hash)
 
     const [transaction] = await this.db.insertTransaction({
       transaction_type: TransactionType.proposal,
       api_type: TransactionApiType.match2,
       local_id: match2Id,
       state: TransactionState.submitted,
-      hash,
+      hash: extrinsic.hash.toHex(),
     })
 
     const updateTransaction = async (state: TransactionState) => {
@@ -216,15 +214,13 @@ export class Match2Controller extends Controller {
       const newState = ownsDemandA ? Match2State.acceptedA : Match2State.acceptedB
 
       const extrinsic = await this.node.prepareRunProcess(match2AcceptFirst(match2, newState, demandA, demandB))
-      const hash = extrinsic.hash.toHex()
-      this.log.debug('Transaction hash: %j', hash)
 
       const [transaction] = await this.db.insertTransaction({
         transaction_type: TransactionType.accept,
         api_type: TransactionApiType.match2,
         local_id: match2Id,
         state: TransactionState.submitted,
-        hash,
+        hash: extrinsic.hash.toHex(),
       })
 
       const updateTransaction = async (state: TransactionState) => {
@@ -240,15 +236,13 @@ export class Match2Controller extends Controller {
 
     const acceptFinal = async () => {
       const extrinsic = await this.node.prepareRunProcess(match2AcceptFinal(match2, demandA, demandB))
-      const hash = extrinsic.hash.toHex()
-      this.log.debug('Transaction hash: %j', hash)
 
       const [transaction] = await this.db.insertTransaction({
         transaction_type: TransactionType.accept,
         api_type: TransactionApiType.match2,
         local_id: match2Id,
         state: TransactionState.submitted,
-        hash,
+        hash: extrinsic.hash.toHex(),
       })
 
       const updateTransaction = async (state: TransactionState) => {
