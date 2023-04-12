@@ -63,6 +63,7 @@ The following tables exist in the `matchmaker-api` database.
 | `local_id`         | `UUID`          | FALSE    |                      | The Match2 or Demand id of the transaction                |
 | `api_type`         | `ENUM`          | FALSE    |                      | The entity of transaction (`match2`, `order`, `capacity`) |
 | `transaction_type` | `ENUM`          | FALSE    |                      | The transaction type (creation, proposal, accept)         |
+| `hash`             | `CHAR (64)`     | FALSE    |                      | The `hash` of the transaction extrinsic                   |
 
 #### Indexes
 
