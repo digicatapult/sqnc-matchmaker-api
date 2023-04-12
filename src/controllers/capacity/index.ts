@@ -21,20 +21,31 @@ import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
 import { TransactionResponse, TransactionState, TransactionApiType, TransactionType } from '../../models/transaction'
 import { DEMAND } from '../../models/tokenType'
-import { runProcess } from '../..//lib/services/dscpApi'
 import { demandCreate } from '../../lib/payload'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
+import ChainNode from '../../lib/chainNode'
+import env from '../../env'
+
 @Route('capacity')
 @Tags('capacity')
 @Security('bearerAuth')
 export class CapacityController extends Controller {
   log: Logger
   db: Database
+  node: ChainNode
 
   constructor() {
     super()
     this.log = logger.child({ controller: '/capacity' })
     this.db = new Database()
+    this.node = new ChainNode({
+      host: env.NODE_HOST,
+      port: env.NODE_PORT,
+      logger,
+      userUri: env.USER_URI,
+      ipfsHost: env.IPFS_HOST,
+      ipfsPort: env.IPFS_PORT,
+    })
   }
 
   /**
@@ -114,7 +125,7 @@ export class CapacityController extends Controller {
     })
 
     // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-    const [tokenId] = await runProcess(demandCreate(capacity))
+    const [tokenId] = await this.node.runProcess(demandCreate(capacity))
     await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
     // demand-create returns a single token ID

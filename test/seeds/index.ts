@@ -15,20 +15,16 @@ export const cleanup = async () => {
 
 export const parametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
 export const seededCapacityId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
-export const seededCapacityTokenId = 12
 export const seededOrderCreationId = 'ff3af974-7d4d-40b4-86a5-00a2241265cb'
 export const seededTransactionId = '1f3af974-7d4d-40b4-86a5-94a2241265cb'
 export const seededTransactionId2 = 'd65d8e11-150f-4ea4-b778-b920e9dbc378'
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
 export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
 export const seededOrderId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
-export const seededOrderNotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
-export const seededCapacityNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
-export const seededOrderTokenId = 11
+
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
-export const seededMatch2OrderNotOwnedId = 'ffb6a503-353c-40a3-94ce-bb04353b68df'
-export const seededMatch2TokenId = 13
 export const exampleDate = '2023-03-24T10:40:47.317Z'
+export const seededOrderWithTokenId = '64d89075-0059-4a8a-87da-c6715d64d0a9'
 
 export const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
 export const seededCapacityMissingTokenId = 'b2348deb-d967-4317-8637-2867ced70356'
@@ -41,6 +37,12 @@ export const seededMatch2AcceptedFinal = '85a50fd9-f20f-4a61-a7e4-3ad49b7c3f21'
 export const seededMatch2NotAcceptableA = '46d7dbe8-aaef-472e-af9f-ecdd2681d3a5'
 export const seededMatch2NotAcceptableB = '097d3905-72aa-4517-85d2-0091d26fceac'
 export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c9474784d'
+
+const seededOrderNotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
+const seededCapacityNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
+const seededCapacityWithTokenId = 'b005f4a1-400e-410e-aa72-8e97385f63e6'
+const seededMatch2TokenId = 43
+const seededDemandTokenId = 42
 
 export const seed = async () => {
   await cleanup()
@@ -60,8 +62,6 @@ export const seed = async () => {
       subtype: DemandSubtype.capacity,
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
-      latest_token_id: seededCapacityTokenId,
-      original_token_id: seededCapacityTokenId,
     },
   ])
 
@@ -96,8 +96,6 @@ export const seed = async () => {
       subtype: DemandSubtype.order,
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
-      latest_token_id: seededOrderTokenId,
-      original_token_id: seededOrderTokenId,
     },
   ])
 
@@ -108,8 +106,8 @@ export const seed = async () => {
       subtype: DemandSubtype.order,
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
-      latest_token_id: seededOrderTokenId,
-      original_token_id: seededOrderTokenId,
+      latest_token_id: seededDemandTokenId,
+      original_token_id: seededDemandTokenId,
     },
   ])
 
@@ -120,8 +118,8 @@ export const seed = async () => {
       subtype: DemandSubtype.capacity,
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
-      latest_token_id: seededOrderTokenId,
-      original_token_id: seededOrderTokenId,
+      latest_token_id: seededDemandTokenId,
+      original_token_id: seededDemandTokenId,
     },
   ])
 
@@ -133,20 +131,6 @@ export const seed = async () => {
       member_a: selfAddress,
       member_b: selfAddress,
       demand_a_id: seededOrderId,
-      demand_b_id: seededCapacityId,
-      latest_token_id: seededMatch2TokenId,
-      original_token_id: seededMatch2TokenId,
-    },
-  ])
-
-  await db.match2().insert([
-    {
-      id: seededMatch2OrderNotOwnedId,
-      state: Match2State.proposed,
-      optimiser: selfAddress,
-      member_a: notSelfAddress,
-      member_b: selfAddress,
-      demand_a_id: seededOrderNotOwnedId,
       demand_b_id: seededCapacityId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
@@ -206,6 +190,30 @@ export const seed = async () => {
       subtype: DemandSubtype.order,
       state: DemandState.created,
       parameters_attachment_id: parametersAttachmentId,
+    },
+  ])
+
+  await db.demand().insert([
+    {
+      id: seededCapacityWithTokenId,
+      owner: selfAddress,
+      subtype: DemandSubtype.capacity,
+      state: DemandState.created,
+      parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: seededDemandTokenId,
+      original_token_id: seededDemandTokenId,
+    },
+  ])
+
+  await db.demand().insert([
+    {
+      id: seededOrderWithTokenId,
+      owner: selfAddress,
+      subtype: DemandSubtype.order,
+      state: DemandState.created,
+      parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: seededDemandTokenId,
+      original_token_id: seededDemandTokenId,
     },
   ])
 
@@ -273,7 +281,7 @@ export const seed = async () => {
       member_a: notSelfAddress,
       member_b: selfAddress,
       demand_a_id: seededOrderNotOwnedId,
-      demand_b_id: seededCapacityId,
+      demand_b_id: seededCapacityWithTokenId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
     },
@@ -286,7 +294,7 @@ export const seed = async () => {
       optimiser: selfAddress,
       member_a: selfAddress,
       member_b: notSelfAddress,
-      demand_a_id: seededOrderId,
+      demand_a_id: seededOrderWithTokenId,
       demand_b_id: seededCapacityNotOwnedId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
