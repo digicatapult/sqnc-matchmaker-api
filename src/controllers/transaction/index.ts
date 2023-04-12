@@ -31,7 +31,7 @@ export class TransactionController extends Controller {
     @Query() apiType?: TransactionApiType,
     @Query() status?: TransactionState
   ): Promise<TransactionResponse[]> {
-    return await this.db.getTransactionsByStateAndType(status, apiType)
+    return await this.db.getTransactions(status, apiType)
   }
 
   /**
