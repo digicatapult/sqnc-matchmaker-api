@@ -103,7 +103,7 @@ export class attachment extends Controller {
 
     if (!req.body && !file) throw new BadRequest('nothing to upload')
 
-    const [{ id, filename, binary_blob, created_at }]: any[] = await this.db
+    const [{ id, filename, binary_blob, created_at }] = await this.db
       .attachment()
       .insert({
         filename: file ? file.originalname : 'json',

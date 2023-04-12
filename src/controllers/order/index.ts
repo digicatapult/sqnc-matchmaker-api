@@ -20,9 +20,10 @@ import { logger } from '../../lib/logger'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import Database from '../../lib/db'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-import { runProcess } from '../..//lib/services/dscpApi'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
 import { demandCreate } from '../../lib/payload'
+import ChainNode from '../../lib/chainNode'
+import env from '../../env'
 
 @Route('order')
 @Tags('order')
@@ -30,11 +31,20 @@ import { demandCreate } from '../../lib/payload'
 export class order extends Controller {
   log: Logger
   db: Database
+  node: ChainNode
 
   constructor() {
     super()
     this.log = logger.child({ controller: '/order' })
     this.db = new Database()
+    this.node = new ChainNode({
+      host: env.NODE_HOST,
+      port: env.NODE_PORT,
+      logger,
+      userUri: env.USER_URI,
+      ipfsHost: env.IPFS_HOST,
+      ipfsPort: env.IPFS_PORT,
+    })
   }
 
   /**
@@ -119,7 +129,7 @@ export class order extends Controller {
       state: TransactionState.submitted,
     })
 
-    const [tokenId] = await runProcess(demandCreate(order))
+    const [tokenId] = await this.node.runProcess(demandCreate(order))
     await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
 
     // demand-create returns a single token ID

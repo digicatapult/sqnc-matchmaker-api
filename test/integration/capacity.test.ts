@@ -17,17 +17,22 @@ import {
 } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
-import {
-  selfAlias,
-  identitySelfMock,
-  demandCreateMock,
-  apiRunProcessMockError,
-  demandCreateMockTokenId,
-} from '../helper/mock'
+import { selfAlias, identitySelfMock, ipfsMock, ipfsMockError } from '../helper/mock'
 import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
+import ChainNode from '../../src/lib/chainNode'
+import { logger } from '../../src/lib/logger'
+import env from '../../src/env'
 
 const db = new Database()
+const node = new ChainNode({
+  host: env.NODE_HOST,
+  port: env.NODE_PORT,
+  logger,
+  userUri: env.USER_URI,
+  ipfsHost: env.IPFS_HOST,
+  ipfsPort: env.IPFS_PORT,
+})
 
 describe('capacity', () => {
   let app: Express
@@ -85,7 +90,9 @@ describe('capacity', () => {
     })
 
     it('should create a capacity on-chain', async () => {
-      demandCreateMock()
+      ipfsMock()
+      const lastTokenId = await node.getLastTokenId()
+
       // submit to chain
       const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
       expect(response.status).to.equal(201)
@@ -102,8 +109,8 @@ describe('capacity', () => {
 
       // check local capacity updates with token id
       const [capacity] = await db.getDemand(seededCapacityId)
-      expect(capacity.latestTokenId).to.equal(demandCreateMockTokenId)
-      expect(capacity.originalTokenId).to.equal(demandCreateMockTokenId)
+      expect(capacity.latestTokenId).to.equal(lastTokenId + 1)
+      expect(capacity.originalTokenId).to.equal(lastTokenId + 1)
     })
 
     it('it should get a transaction', async () => {
@@ -175,12 +182,6 @@ describe('capacity', () => {
       expect(response.body).to.equal(`Demand must have state: ${DemandState.created}`)
     })
 
-    it('dscp-api error - 500', async () => {
-      apiRunProcessMockError()
-      const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
-      expect(response.status).to.equal(500)
-    })
-
     it('non-existent Creation ID - 404', async () => {
       const response = await get(app, `/capacity/${seededCapacityId}/creation/${nonExistentId}`)
       expect(response.status).to.equal(404)
@@ -194,6 +195,14 @@ describe('capacity', () => {
     it('non-existent Capacity ID should return nothing - 404', async () => {
       const response = await get(app, `/capacity/${nonExistentId}/creation/`)
       expect(response.status).to.equal(404)
+    })
+
+    it('ipfs error - 500', async () => {
+      ipfsMockError()
+
+      const { status, body } = await post(app, `/capacity/${seededCapacityId}/creation`, {})
+      expect(status).to.equal(500)
+      expect(body).to.equal('error')
     })
   })
 })

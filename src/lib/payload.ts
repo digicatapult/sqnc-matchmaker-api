@@ -2,8 +2,25 @@ import { Match2Payload, Match2Response, Match2State } from '../models/match2'
 import { DemandPayload, DemandState } from '../models/demand'
 import * as TokenType from '../models/tokenType'
 
-export const demandCreate = (demand: DemandPayload) => ({
-  files: [{ blob: new Blob([demand.binary_blob]), filename: demand.filename }],
+export interface Payload {
+  process: { id: string; version: number }
+  inputs: number[]
+  outputs: Output[]
+}
+
+export interface Output {
+  roles: Record<string, string>
+  metadata: Metadata
+}
+
+export interface MetadataFile {
+  blob: Blob
+  filename: string
+}
+
+export type Metadata = Record<string, { type: string; value: string | MetadataFile | number }>
+
+export const demandCreate = (demand: DemandPayload): Payload => ({
   process: { id: 'demand-create', version: 1 },
   inputs: [],
   outputs: [
@@ -14,14 +31,13 @@ export const demandCreate = (demand: DemandPayload) => ({
         type: { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: DemandState.created },
         subtype: { type: 'LITERAL', value: demand.subtype },
-        parameters: { type: 'FILE', value: demand.filename },
+        parameters: { type: 'FILE', value: { blob: new Blob([demand.binary_blob]), filename: demand.filename } },
       },
     },
   ],
 })
 
-export const match2Propose = (match2: Match2Response, demandA: DemandPayload, demandB: DemandPayload) => ({
-  files: [],
+export const match2Propose = (match2: Match2Response, demandA: DemandPayload, demandB: DemandPayload): Payload => ({
   process: { id: 'match2-propose', version: 1 },
   inputs: [demandA.latestTokenId, demandB.latestTokenId],
   outputs: [
@@ -63,8 +79,7 @@ export const match2AcceptFirst = (
   newState: Match2State.acceptedA | Match2State.acceptedB,
   demandA: DemandPayload,
   demandB: DemandPayload
-) => ({
-  files: [],
+): Payload => ({
   process: { id: 'match2-accept', version: 1 },
   inputs: [match2.latestTokenId],
   outputs: [
@@ -82,8 +97,7 @@ export const match2AcceptFirst = (
   ],
 })
 
-export const match2AcceptFinal = (match2: Match2Payload, demandA: DemandPayload, demandB: DemandPayload) => ({
-  files: [],
+export const match2AcceptFinal = (match2: Match2Payload, demandA: DemandPayload, demandB: DemandPayload): Payload => ({
   process: { id: 'match2-acceptFinal', version: 1 },
   inputs: [demandA.latestTokenId, demandB.latestTokenId, match2.latestTokenId],
   outputs: [

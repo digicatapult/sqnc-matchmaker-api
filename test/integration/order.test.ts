@@ -5,14 +5,25 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../src/server'
 import { post, get } from '../helper/routeHelper'
-import { seed, parametersAttachmentId, seededOrderId, seededOrderCreationId ,cleanup } from '../seeds'
+import { seed, parametersAttachmentId, seededOrderId, seededOrderCreationId, cleanup } from '../seeds'
 
 import { DemandState } from '../../src/models/demand'
-import { selfAlias, identitySelfMock, demandCreateMock } from '../helper/mock'
+import { selfAlias, identitySelfMock, ipfsMock } from '../helper/mock'
 import { TransactionState } from '../../src/models/transaction'
 import Database from '../../src/lib/db'
+import ChainNode from '../../src/lib/chainNode'
+import { logger } from '../../src/lib/logger'
+import env from '../../src/env'
 
 const db = new Database()
+const node = new ChainNode({
+  host: env.NODE_HOST,
+  port: env.NODE_PORT,
+  logger,
+  userUri: env.USER_URI,
+  ipfsHost: env.IPFS_HOST,
+  ipfsPort: env.IPFS_PORT,
+})
 
 describe('order', () => {
   let res: any
@@ -21,7 +32,6 @@ describe('order', () => {
   before(async function () {
     app = await createHttpServer()
     identitySelfMock()
-    demandCreateMock()
   })
 
   beforeEach(async () => await seed())
@@ -29,11 +39,11 @@ describe('order', () => {
   describe('when requested order or orders do not exist', () => {
     beforeEach(async () => await cleanup())
 
-    it ('returns 200 and an empty array when retrieving all', async () => {
+    it('returns 200 and an empty array when retrieving all', async () => {
       const { status, body } = await get(app, '/order')
 
       expect(status).to.equal(200)
-      expect(body).to.be.an( "array" ).that.is.empty
+      expect(body).to.be.an('array').that.is.empty
     })
 
     it('returns 404 if can not be found by ID', async () => {
@@ -42,7 +52,7 @@ describe('order', () => {
       expect(status).to.equal(404)
       expect(body).to.equal('order not found')
     })
-    // TODO - assert for max number of records 
+    // TODO - assert for max number of records
   })
 
   describe('if attachment can not be found', () => {
@@ -69,7 +79,7 @@ describe('order', () => {
       expect(status).to.equal(422)
       expect(body).to.deep.contain({
         fields: {
-          'orderId': {
+          orderId: {
             message:
               "Not match in '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}'",
             value: '789ad47',
@@ -106,14 +116,14 @@ describe('order', () => {
 
   describe('if order state is not created while posting new creation', () => {
     beforeEach(async () => {
-        await db.insertDemand({
-          id: 'b21f865e-f4e9-4ae2-8944-de691e9eb4d0',
-          owner: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
-          subtype: 'order',
-          state: 'allocated', 
-          parameters_attachment_id: parametersAttachmentId,
-          latest_token_id: 99,
-          original_token_id: 99,
+      await db.insertDemand({
+        id: 'b21f865e-f4e9-4ae2-8944-de691e9eb4d0',
+        owner: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
+        subtype: 'order',
+        state: 'allocated',
+        parameters_attachment_id: parametersAttachmentId,
+        latest_token_id: 99,
+        original_token_id: 99,
       })
     })
 
@@ -133,7 +143,7 @@ describe('order', () => {
     expect(body).to.deep.contain({
       owner: 'test-self',
       state: 'created',
-      parametersAttachmentId: 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
+      parametersAttachmentId: 'a789ad47-91c3-446e-90f9-a7c9b233eaf8',
     })
   })
 
@@ -153,7 +163,12 @@ describe('order', () => {
   })
 
   it('creates an order transaction on chain', async () => {
-    const { body: { id: orderId } } = await post(app, '/order', { parametersAttachmentId })
+    ipfsMock()
+    const lastTokenId = await node.getLastTokenId()
+
+    const {
+      body: { id: orderId },
+    } = await post(app, '/order', { parametersAttachmentId })
 
     // submit to chain
     const response = await post(app, `/order/${orderId}/creation`, {})
@@ -180,8 +195,8 @@ describe('order', () => {
       state: 'created',
       subtype: 'order',
       parametersAttachmentId,
-      latestTokenId: 42,
-      originalTokenId: 42,
+      latestTokenId: lastTokenId + 1,
+      originalTokenId: lastTokenId + 1,
     })
   })
 
