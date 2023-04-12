@@ -112,8 +112,11 @@ export default class Database {
       .where({ 'demand.id': id, subtype })
   }
 
-  insertTransaction = async (transaction: object) => {
-    return this.db().transaction().insert(transaction).returning(transactionColumns)
+  insertTransaction = async ({ hash, ...rest }: { hash: `0x${string}` } & Record<string, string>) => {
+    return this.db()
+      .transaction()
+      .insert({ hash: hash.slice(2), ...rest })
+      .returning(transactionColumns)
   }
 
   getTransaction = async (id: UUID) => {
@@ -137,6 +140,12 @@ export default class Database {
       .update({ ...transaction, updated_at: this.client.fn.now() })
       .where({ id: transactionId })
       .returning('local_id AS localId')
+  }
+
+  updateTransactionState = (transactionId: UUID) => {
+    return async (state: TransactionState) => {
+      await this.updateTransaction(transactionId, { state })
+    }
   }
 
   updateLocalWithTokenId = async (

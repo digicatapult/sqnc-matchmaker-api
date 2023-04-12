@@ -13,6 +13,8 @@ export const cleanup = async () => {
   await db.match2().del()
 }
 
+export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
+
 export const parametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
 export const seededCapacityId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
 export const seededOrderCreationId = 'ff3af974-7d4d-40b4-86a5-00a2241265cb'
@@ -74,6 +76,7 @@ export const seed = async () => {
       state: TransactionState.submitted,
       created_at: exampleDate,
       updated_at: exampleDate,
+      hash: transactionHash,
     },
   ])
 
@@ -86,6 +89,7 @@ export const seed = async () => {
       state: TransactionState.submitted,
       created_at: exampleDate,
       updated_at: exampleDate,
+      hash: transactionHash,
     },
   ])
 
@@ -146,6 +150,7 @@ export const seed = async () => {
       state: TransactionState.submitted,
       created_at: exampleDate,
       updated_at: exampleDate,
+      hash: transactionHash,
     },
   ])
 
@@ -154,10 +159,11 @@ export const seed = async () => {
       id: seededOrderCreationId,
       api_type: TransactionApiType.order,
       transaction_type: TransactionType.creation,
-      local_id: 'ff3af974-7d4d-40b4-86a5-00a2241265ff',
+      local_id: seededOrderId,
       state: TransactionState.submitted,
       created_at: exampleDate,
       updated_at: exampleDate,
+      hash: transactionHash,
     },
   ])
 
@@ -170,6 +176,7 @@ export const seed = async () => {
       state: TransactionState.submitted,
       created_at: exampleDate,
       updated_at: exampleDate,
+      hash: transactionHash,
     },
   ])
 

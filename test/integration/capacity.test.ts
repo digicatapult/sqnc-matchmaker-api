@@ -23,6 +23,7 @@ import Database from '../../src/lib/db'
 import ChainNode from '../../src/lib/chainNode'
 import { logger } from '../../src/lib/logger'
 import env from '../../src/env'
+import { pollTransactionState } from '../helper/poll'
 
 const db = new Database()
 const node = new ChainNode({
@@ -103,9 +104,8 @@ describe('capacity', () => {
       )
       expect(state).to.equal(TransactionState.submitted)
 
-      // check local transaction updates
-      const [transaction] = await db.getTransaction(transactionId)
-      expect(transaction.state).to.equal(TransactionState.finalised)
+      // wait for block to finalise
+      await pollTransactionState(db, transactionId, TransactionState.finalised)
 
       // check local capacity updates with token id
       const [capacity] = await db.getDemand(seededCapacityId)

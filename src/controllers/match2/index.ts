@@ -125,21 +125,22 @@ export class Match2Controller extends Controller {
     const [demandB] = await this.db.getDemand(match2.demandB)
     validatePreOnChain(demandB, DemandSubtype.capacity, 'DemandB')
 
+    const extrinsic = await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
+
     const [transaction] = await this.db.insertTransaction({
       transaction_type: TransactionType.proposal,
       api_type: TransactionApiType.match2,
       local_id: match2Id,
       state: TransactionState.submitted,
+      hash: extrinsic.hash.toHex(),
     })
 
-    // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-    const tokenIds = await this.node.runProcess(match2Propose(match2, demandA, demandB))
-    await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
-
-    // match2-propose returns 3 token IDs
-    await observeTokenId(DEMAND, match2.demandA, DemandState.created, tokenIds[0], false) // order
-    await observeTokenId(DEMAND, match2.demandB, DemandState.created, tokenIds[1], false) // capacity
-    await observeTokenId(MATCH2, match2.id, Match2State.proposed, tokenIds[2], true) // match2
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async (tokenIds) => {
+      // match2-propose returns 3 token IDs
+      await observeTokenId(DEMAND, match2.demandA, DemandState.created, tokenIds[0], false) // order
+      await observeTokenId(DEMAND, match2.demandB, DemandState.created, tokenIds[1], false) // capacity
+      await observeTokenId(MATCH2, match2.id, Match2State.proposed, tokenIds[2], true) // match2
+    })
 
     return transaction
   }
@@ -205,40 +206,42 @@ export class Match2Controller extends Controller {
     const ownsDemandB = demandB.owner === selfAddress
 
     const acceptAB = async () => {
+      const newState = ownsDemandA ? Match2State.acceptedA : Match2State.acceptedB
+
+      const extrinsic = await this.node.prepareRunProcess(match2AcceptFirst(match2, newState, demandA, demandB))
+
       const [transaction] = await this.db.insertTransaction({
         transaction_type: TransactionType.accept,
         api_type: TransactionApiType.match2,
         local_id: match2Id,
         state: TransactionState.submitted,
+        hash: extrinsic.hash.toHex(),
       })
 
-      const newState = ownsDemandA ? Match2State.acceptedA : Match2State.acceptedB
-
-      // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-      const [tokenId] = await this.node.runProcess(match2AcceptFirst(match2, newState, demandA, demandB))
-      await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
-
-      await observeTokenId(MATCH2, match2.id, newState, tokenId, false)
+      this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async ([tokenId]) => {
+        await observeTokenId(MATCH2, match2.id, newState, tokenId, false)
+      })
 
       return transaction
     }
 
     const acceptFinal = async () => {
+      const extrinsic = await this.node.prepareRunProcess(match2AcceptFinal(match2, demandA, demandB))
+
       const [transaction] = await this.db.insertTransaction({
         transaction_type: TransactionType.accept,
         api_type: TransactionApiType.match2,
         local_id: match2Id,
         state: TransactionState.submitted,
+        hash: extrinsic.hash.toHex(),
       })
 
-      // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-      const tokenIds = await this.node.runProcess(match2AcceptFinal(match2, demandA, demandB))
-      await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
-
-      // match2-acceptFinal returns 3 token IDs
-      await observeTokenId(DEMAND, match2.demandA, DemandState.allocated, tokenIds[0], false) // order
-      await observeTokenId(DEMAND, match2.demandB, DemandState.allocated, tokenIds[1], false) // capacity
-      await observeTokenId(MATCH2, match2.id, Match2State.acceptedFinal, tokenIds[2], false) // match2
+      this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async (tokenIds) => {
+        // match2-acceptFinal returns 3 token IDs
+        await observeTokenId(DEMAND, match2.demandA, DemandState.allocated, tokenIds[0], false) // order
+        await observeTokenId(DEMAND, match2.demandB, DemandState.allocated, tokenIds[1], false) // capacity
+        await observeTokenId(MATCH2, match2.id, Match2State.acceptedFinal, tokenIds[2], false) // match2
+      })
 
       return transaction
     }
