@@ -2,10 +2,10 @@ import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import createHttpServer from '../../src/server'
-import { get, post, postFile } from '../helper/routeHelper'
+import createHttpServer from '../../../src/server'
+import { get, post, postFile } from '../../helper/routeHelper'
 
-import Database from '../../src/lib/db'
+import Database from '../../../src/lib/db'
 
 const db = new Database().db()
 

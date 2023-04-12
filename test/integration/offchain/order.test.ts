@@ -3,28 +3,15 @@ import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import createHttpServer from '../../src/server'
-import { post, get } from '../helper/routeHelper'
-import { seed, parametersAttachmentId, seededOrderId, seededOrderCreationId, cleanup } from '../seeds'
+import createHttpServer from '../../../src/server'
+import { post, get } from '../../helper/routeHelper'
+import { seed, parametersAttachmentId, seededOrderId, seededOrderCreationId, cleanup } from '../../seeds'
 
-import { DemandState } from '../../src/models/demand'
-import { selfAlias, identitySelfMock, ipfsMock } from '../helper/mock'
-import { TransactionState } from '../../src/models/transaction'
-import Database from '../../src/lib/db'
-import ChainNode from '../../src/lib/chainNode'
-import { logger } from '../../src/lib/logger'
-import env from '../../src/env'
-import { pollTransactionState } from '../helper/poll'
+import { DemandState } from '../../../src/models/demand'
+import { selfAlias, identitySelfMock } from '../../helper/mock'
+import Database from '../../../src/lib/db'
 
 const db = new Database()
-const node = new ChainNode({
-  host: env.NODE_HOST,
-  port: env.NODE_PORT,
-  logger,
-  userUri: env.USER_URI,
-  ipfsHost: env.IPFS_HOST,
-  ipfsPort: env.IPFS_PORT,
-})
 
 describe('order', () => {
   let res: any
@@ -160,37 +147,6 @@ describe('order', () => {
       parametersAttachmentId,
       state: DemandState.created,
       owner: selfAlias,
-    })
-  })
-
-  it('creates an order transaction on chain', async () => {
-    ipfsMock()
-    const lastTokenId = await node.getLastTokenId()
-
-    const {
-      body: { id: orderId },
-    } = await post(app, '/order', { parametersAttachmentId })
-
-    // submit to chain
-    const response = await post(app, `/order/${orderId}/creation`, {})
-    expect(response.status).to.equal(201)
-
-    const { id: transactionId, state } = response.body
-    expect(transactionId).to.match(
-      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-    )
-    expect(state).to.equal(TransactionState.submitted)
-
-    await pollTransactionState(db, transactionId, TransactionState.finalised)
-
-    const [order] = await db.getDemand(orderId)
-    expect(order).to.contain({
-      id: orderId,
-      state: 'created',
-      subtype: 'order',
-      parametersAttachmentId,
-      latestTokenId: lastTokenId + 1,
-      originalTokenId: lastTokenId + 1,
     })
   })
 

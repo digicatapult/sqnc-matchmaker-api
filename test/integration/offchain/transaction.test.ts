@@ -2,13 +2,9 @@ import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import createHttpServer from '../../src/server'
-import { get } from '../helper/routeHelper'
-import {
-  seed,
-  cleanup,
-  nonExistentId,
-} from '../seeds'
+import createHttpServer from '../../../src/server'
+import { get } from '../../helper/routeHelper'
+import { seed, cleanup, nonExistentId } from '../../seeds'
 
 describe('transaction', () => {
   let app: Express
@@ -34,12 +30,13 @@ describe('transaction', () => {
       expect(body).to.deep.contain({
         fields: {
           transactionId: {
-            message: "Not match in '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}'",
-            value: '123-not-uuid'
-          }
+            message:
+              "Not match in '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}'",
+            value: '123-not-uuid',
+          },
         },
         name: 'ValidateError',
-        message: 'Validation failed'
+        message: 'Validation failed',
       })
     })
   })
@@ -52,7 +49,6 @@ describe('transaction', () => {
       expect(body).to.equal('transaction not found')
     })
   })
-
 
   it('returns empty array if database contains 0 transactions', async () => {
     cleanup()
@@ -70,9 +66,8 @@ describe('transaction', () => {
     expect(body).to.be.an('array').that.is.empty
   })
 
-
   it('returns transaction by id', async () => {
-    const { status, body }= await get(app, '/transaction/1f3af974-7d4d-40b4-86a5-94a2241265cb')
+    const { status, body } = await get(app, '/transaction/1f3af974-7d4d-40b4-86a5-94a2241265cb')
 
     expect(status).to.equal(200)
     expect(body).to.deep.contain({
@@ -82,7 +77,7 @@ describe('transaction', () => {
       apiType: 'capacity',
       transactionType: 'creation',
       submittedAt: '2023-03-24T10:40:47.317Z',
-      updatedAt: '2023-03-24T10:40:47.317Z'
+      updatedAt: '2023-03-24T10:40:47.317Z',
     })
   })
 
@@ -101,7 +96,7 @@ describe('transaction', () => {
         apiType: 'capacity',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
+        updatedAt: '2023-03-24T10:40:47.317Z',
       },
       {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
@@ -110,7 +105,7 @@ describe('transaction', () => {
         apiType: 'capacity',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
+        updatedAt: '2023-03-24T10:40:47.317Z',
       },
       {
         id: '8a5343dc-88a3-4b61-b156-330d52f506f8',
@@ -119,7 +114,7 @@ describe('transaction', () => {
         apiType: 'match2',
         transactionType: 'proposal',
         submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
+        updatedAt: '2023-03-24T10:40:47.317Z',
       },
       {
         id: 'd8eb8a94-222b-4481-b315-1dcbf2e07079',
@@ -128,8 +123,8 @@ describe('transaction', () => {
         apiType: 'match2',
         transactionType: 'accept',
         submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
-      }
+        updatedAt: '2023-03-24T10:40:47.317Z',
+      },
     ])
   })
 
@@ -145,7 +140,7 @@ describe('transaction', () => {
         apiType: 'capacity',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
+        updatedAt: '2023-03-24T10:40:47.317Z',
       },
       {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
@@ -154,8 +149,8 @@ describe('transaction', () => {
         apiType: 'capacity',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
-      }
+        updatedAt: '2023-03-24T10:40:47.317Z',
+      },
     ])
   })
 
@@ -171,7 +166,7 @@ describe('transaction', () => {
         apiType: 'capacity',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
+        updatedAt: '2023-03-24T10:40:47.317Z',
       },
       {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
@@ -180,8 +175,8 @@ describe('transaction', () => {
         apiType: 'capacity',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
-      }
+        updatedAt: '2023-03-24T10:40:47.317Z',
+      },
     ])
   })
 
@@ -197,7 +192,7 @@ describe('transaction', () => {
         apiType: 'capacity',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
+        updatedAt: '2023-03-24T10:40:47.317Z',
       },
       {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
@@ -206,8 +201,8 @@ describe('transaction', () => {
         apiType: 'capacity',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z'
-      }
+        updatedAt: '2023-03-24T10:40:47.317Z',
+      },
     ])
   })
 
@@ -216,9 +211,9 @@ describe('transaction', () => {
 
     expect(status).to.equal(422)
     expect(body).to.contain({
-        name: 'ValidateError',
-        message: 'Validation failed'
-      })
+      name: 'ValidateError',
+      message: 'Validation failed',
+    })
   })
 
   it('returns 422 when invalid status is passed', async () => {
@@ -226,8 +221,8 @@ describe('transaction', () => {
 
     expect(status).to.equal(422)
     expect(body).to.contain({
-        name: 'ValidateError',
-        message: 'Validation failed'
-      })
+      name: 'ValidateError',
+      message: 'Validation failed',
+    })
   })
 })
