@@ -135,12 +135,7 @@ export class Match2Controller extends Controller {
       hash: extrinsic.hash.toHex(),
     })
 
-    const updateTransaction = async (state: TransactionState) => {
-      await this.db.updateTransaction(transaction.id, { state })
-    }
-
-    // intentionally not awaiting
-    this.node.submitRunProcess(extrinsic, updateTransaction).then(async (tokenIds) => {
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async (tokenIds) => {
       // match2-propose returns 3 token IDs
       await observeTokenId(DEMAND, match2.demandA, DemandState.created, tokenIds[0], false) // order
       await observeTokenId(DEMAND, match2.demandB, DemandState.created, tokenIds[1], false) // capacity
@@ -223,11 +218,7 @@ export class Match2Controller extends Controller {
         hash: extrinsic.hash.toHex(),
       })
 
-      const updateTransaction = async (state: TransactionState) => {
-        await this.db.updateTransaction(transaction.id, { state })
-      }
-
-      this.node.submitRunProcess(extrinsic, updateTransaction).then(async ([tokenId]) => {
+      this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async ([tokenId]) => {
         await observeTokenId(MATCH2, match2.id, newState, tokenId, false)
       })
 
@@ -245,11 +236,7 @@ export class Match2Controller extends Controller {
         hash: extrinsic.hash.toHex(),
       })
 
-      const updateTransaction = async (state: TransactionState) => {
-        await this.db.updateTransaction(transaction.id, { state })
-      }
-
-      this.node.submitRunProcess(extrinsic, updateTransaction).then(async (tokenIds) => {
+      this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async (tokenIds) => {
         // match2-acceptFinal returns 3 token IDs
         await observeTokenId(DEMAND, match2.demandA, DemandState.allocated, tokenIds[0], false) // order
         await observeTokenId(DEMAND, match2.demandB, DemandState.allocated, tokenIds[1], false) // capacity

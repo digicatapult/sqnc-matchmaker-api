@@ -132,11 +132,7 @@ export class order extends Controller {
       hash: extrinsic.hash.toHex(),
     })
 
-    const updateTransaction = async (state: TransactionState) => {
-      await this.db.updateTransaction(transaction.id, { state })
-    }
-
-    this.node.submitRunProcess(extrinsic, updateTransaction).then(async ([tokenId]) => {
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async ([tokenId]) => {
       await observeTokenId('DEMAND', orderId, DemandState.created, tokenId, true)
     })
 

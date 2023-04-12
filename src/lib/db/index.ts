@@ -142,6 +142,12 @@ export default class Database {
       .returning('local_id AS localId')
   }
 
+  updateTransactionState = (transactionId: UUID) => {
+    return async (state: TransactionState) => {
+      await this.updateTransaction(transactionId, { state })
+    }
+  }
+
   updateLocalWithTokenId = async (
     table: TABLE,
     localId: UUID,
