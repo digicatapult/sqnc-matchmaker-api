@@ -2,8 +2,8 @@ import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import createHttpServer from '../../src/server'
-import { post, get } from '../helper/routeHelper'
+import createHttpServer from '../../../src/server'
+import { post, get } from '../../helper/routeHelper'
 import {
   seed,
   cleanup,
@@ -14,26 +14,11 @@ import {
   seededTransactionId2,
   exampleDate,
   seededCapacityAlreadyAllocated,
-} from '../seeds'
+} from '../../seeds'
 
-import { DemandState } from '../../src/models/demand'
-import { selfAlias, identitySelfMock, ipfsMock, ipfsMockError } from '../helper/mock'
-import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
-import Database from '../../src/lib/db'
-import ChainNode from '../../src/lib/chainNode'
-import { logger } from '../../src/lib/logger'
-import env from '../../src/env'
-import { pollTransactionState } from '../helper/poll'
-
-const db = new Database()
-const node = new ChainNode({
-  host: env.NODE_HOST,
-  port: env.NODE_PORT,
-  logger,
-  userUri: env.USER_URI,
-  ipfsHost: env.IPFS_HOST,
-  ipfsPort: env.IPFS_PORT,
-})
+import { DemandState } from '../../../src/models/demand'
+import { selfAlias, identitySelfMock, ipfsMockError } from '../../helper/mock'
+import { TransactionState, TransactionApiType, TransactionType } from '../../../src/models/transaction'
 
 describe('capacity', () => {
   let app: Express
@@ -88,29 +73,6 @@ describe('capacity', () => {
         state: DemandState.created,
         parametersAttachmentId,
       })
-    })
-
-    it('should create a capacity on-chain', async () => {
-      ipfsMock()
-      const lastTokenId = await node.getLastTokenId()
-
-      // submit to chain
-      const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
-      expect(response.status).to.equal(201)
-
-      const { id: transactionId, state } = response.body
-      expect(transactionId).to.match(
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-      )
-      expect(state).to.equal(TransactionState.submitted)
-
-      // wait for block to finalise
-      await pollTransactionState(db, transactionId, TransactionState.finalised)
-
-      // check local capacity updates with token id
-      const [capacity] = await db.getDemand(seededCapacityId)
-      expect(capacity.latestTokenId).to.equal(lastTokenId + 1)
-      expect(capacity.originalTokenId).to.equal(lastTokenId + 1)
     })
 
     it('it should get a transaction', async () => {
