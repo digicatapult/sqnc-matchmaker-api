@@ -70,7 +70,7 @@ jobs:
     name: Run tests
     strategy:
       matrix:
-        test-type: [offchain, onchain]
+        test-type: [offchain, onchain, unit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -90,8 +90,10 @@ jobs:
       - name: Build OpenAPI
         run: npm run build
       - name: Setup dependencies
+        if: matrix.test-type != 'unit'
         run: docker-compose up -d
       - name: Sleep
+        if: matrix.test-type != 'unit'
         uses: kibertoad/wait-action@1.0.1
         with:
           time: '30s'
@@ -99,13 +101,11 @@ jobs:
         if: matrix.test-type == 'onchain'
         run: npm run flows
       - name: Run database migrations
+        if: matrix.test-type != 'unit'      
         run: npm run db:migrate
         env:
           NODE_ENV: test
-      - name: Run unit tests
-        if: matrix.test-type != 'onchain'
-        run: npm run test:unit
-      - name: Run integration tests
+      - name: Run tests
         run: npm run test:${{ matrix.test-type }}
 
   check-version:
