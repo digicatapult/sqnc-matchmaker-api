@@ -21,6 +21,7 @@ import type { Attachment } from '../../models'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import { Readable } from 'node:stream'
 import type { UUID } from '../../models/uuid'
+import multer from 'multer'
 
 const parseAccept = (acceptHeader: string) =>
   acceptHeader
@@ -118,6 +119,44 @@ export class attachment extends Controller {
       size: (binary_blob as Buffer).length,
     }
     return result
+  }
+
+  @Post('/uploadFile')
+  @SuccessResponse(201, 'attachment has been created')
+  public async uploadFile(
+    @Request() request: express.Request,
+    @UploadedFile() file?: Express.Multer.File
+  ): Promise<Attachment> {
+    if (!request.body && !request.file && !file) throw new BadRequest('nothing to upload')
+
+    const [{ id, filename, binary_blob, created_at }] = await this.handleFile(request)
+    const result: Attachment = {
+      id,
+      filename,
+      createdAt: created_at,
+      size: (binary_blob as Buffer).length,
+    }
+    return result
+  }
+
+  private handleFile(request: express.Request): Promise<any> {
+    const multerSingle = multer({ limits: { fileSize: 3000 } }).single('file')
+    return new Promise((resolve, reject) => {
+      multerSingle(request, undefined as any, async (error) => {
+        if (error) {
+          reject(error)
+        }
+        resolve(
+          await this.db
+            .attachment()
+            .insert({
+              filename: request.file ? request.file.originalname : 'json',
+              binary_blob: Buffer.from(request.file?.buffer || JSON.stringify(request.body)),
+            })
+            .returning(['id', 'filename', 'binary_blob', 'created_at'])
+        )
+      })
+    })
   }
 
   @Get('/{id}')

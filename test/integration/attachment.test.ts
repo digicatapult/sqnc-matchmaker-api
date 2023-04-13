@@ -121,4 +121,21 @@ describe('attachment', () => {
       'content-disposition': 'attachment; filename="json"',
     })
   })
+
+  it('Multer size test - attachment as octet with the filename [json]', async () => {
+    const uploadRes = await postFile(app, '/attachment/uploadFile', Buffer.from(blobData), 'json')
+    const { status, body, header } = await get(app, `/attachment/${uploadRes.body.id}`, {
+      accept: 'application/octet-stream',
+    })
+
+    expect(status).to.equal(200)
+    expect(Buffer.from(body).toString()).to.equal(blobData)
+    expect(header).to.deep.contain({
+      immutable: 'true',
+      maxage: '31536000000',
+      'content-type': 'application/octet-stream',
+      'access-control-expose-headers': 'content-disposition',
+      'content-disposition': 'attachment; filename="json"',
+    })
+  })
 })
