@@ -80,6 +80,7 @@ jobs:
       matrix:
         test-type: [offchain, onchain, unit]
     runs-on: ubuntu-latest
+    needs: [preconditions]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
