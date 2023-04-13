@@ -7,10 +7,7 @@ import { post } from '../../helper/routeHelper'
 import { seed, cleanup, seededCapacityId, parametersAttachmentId } from '../../seeds'
 
 import { identitySelfMock, ipfsMock } from '../../helper/mock'
-import { Match2State } from '../../../src/models/match2'
-import { TransactionState } from '../../../src/models/transaction'
 import Database from '../../../src/lib/db'
-import { DemandState } from '../../../src/models/demand'
 import ChainNode from '../../../src/lib/chainNode'
 import { logger } from '../../../src/lib/logger'
 import env from '../../../src/env'
@@ -57,10 +54,10 @@ describe('on-chain', function () {
       expect(transactionId).to.match(
         /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
       )
-      expect(state).to.equal(TransactionState.submitted)
+      expect(state).to.equal('submitted')
 
       // wait for block to finalise
-      await pollTransactionState(db, transactionId, TransactionState.finalised)
+      await pollTransactionState(db, transactionId, 'finalised')
 
       // check local capacity updates with token id
       const [capacity] = await db.getDemand(seededCapacityId)
@@ -86,9 +83,9 @@ describe('on-chain', function () {
       expect(transactionId).to.match(
         /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
       )
-      expect(state).to.equal(TransactionState.submitted)
+      expect(state).to.equal('submitted')
 
-      await pollTransactionState(db, transactionId, TransactionState.finalised)
+      await pollTransactionState(db, transactionId, 'finalised')
 
       const [order] = await db.getDemand(orderId)
       expect(order).to.contain({
@@ -127,12 +124,12 @@ describe('on-chain', function () {
         body: { id: capacityTransactionId },
       } = await post(app, `/capacity/${capacityId}/creation`, {})
 
-      await pollTransactionState(db, orderTransactionId, TransactionState.finalised)
+      await pollTransactionState(db, orderTransactionId, 'finalised')
       const [order] = await db.getDemand(orderId)
       orderLocalId = orderId
       orderOriginalId = order.originalTokenId
 
-      await pollTransactionState(db, capacityTransactionId, TransactionState.finalised)
+      await pollTransactionState(db, capacityTransactionId, 'finalised')
       const [capacity] = await db.getDemand(capacityId)
       capacityLocalId = capacityId
       capacityOriginalId = capacity.originalTokenId
@@ -154,10 +151,10 @@ describe('on-chain', function () {
       expect(transactionId).to.match(
         /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
       )
-      expect(state).to.equal(TransactionState.submitted)
+      expect(state).to.equal('submitted')
 
       // wait for block to finalise
-      await pollTransactionState(db, transactionId, TransactionState.finalised)
+      await pollTransactionState(db, transactionId, 'finalised')
 
       // check local entities update with token id
       const [demandA] = await db.getDemand(orderLocalId)
@@ -178,7 +175,7 @@ describe('on-chain', function () {
       const proposal = await post(app, `/match2/${match2LocalId}/proposal`, {})
 
       // wait for block to finalise
-      await pollTransactionState(db, proposal.body.id, TransactionState.finalised)
+      await pollTransactionState(db, proposal.body.id, 'finalised')
 
       const [match2] = await db.getMatch2(match2LocalId)
       const match2OriginalId = match2.originalTokenId
@@ -189,12 +186,12 @@ describe('on-chain', function () {
       expect(responseAcceptA.status).to.equal(201)
 
       // wait for block to finalise
-      await pollTransactionState(db, responseAcceptA.body.id, TransactionState.finalised)
+      await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
 
       // check local entities update with token id
       const [match2AcceptA] = await db.getMatch2(match2LocalId)
       expect(match2AcceptA.latestTokenId).to.equal(lastTokenId + 1)
-      expect(match2AcceptA.state).to.equal(Match2State.acceptedA)
+      expect(match2AcceptA.state).to.equal('acceptedA')
       expect(match2AcceptA.originalTokenId).to.equal(match2OriginalId)
 
       // submit 2nd accept to chain
@@ -202,22 +199,22 @@ describe('on-chain', function () {
       expect(responseAcceptFinal.status).to.equal(201)
 
       // wait for block to finalise
-      await pollTransactionState(db, responseAcceptFinal.body.id, TransactionState.finalised)
+      await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
 
       // check local entities update with token id
       const [demandA] = await db.getDemand(orderLocalId)
       expect(demandA.latestTokenId).to.equal(lastTokenId + 2)
-      expect(demandA.state).to.equal(DemandState.allocated)
+      expect(demandA.state).to.equal('allocated')
       expect(demandA.originalTokenId).to.equal(orderOriginalId)
 
       const [demandB] = await db.getDemand(capacityLocalId)
       expect(demandB.latestTokenId).to.equal(lastTokenId + 3)
-      expect(demandB.state).to.equal(DemandState.allocated)
+      expect(demandB.state).to.equal('allocated')
       expect(demandB.originalTokenId).to.equal(capacityOriginalId)
 
       const [matchAcceptFinal] = await db.getMatch2(match2LocalId)
       expect(matchAcceptFinal.latestTokenId).to.equal(lastTokenId + 4)
-      expect(matchAcceptFinal.state).to.equal(Match2State.acceptedFinal)
+      expect(matchAcceptFinal.state).to.equal('acceptedFinal')
       expect(matchAcceptFinal.originalTokenId).to.equal(match2OriginalId)
     })
   })

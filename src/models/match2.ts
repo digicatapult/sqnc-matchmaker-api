@@ -3,12 +3,7 @@ import { UUID } from './uuid'
 /**
  * The possible states of a Match2
  */
-export enum Match2State {
-  proposed = 'proposed',
-  acceptedA = 'acceptedA',
-  acceptedB = 'acceptedB',
-  acceptedFinal = 'acceptedFinal',
-}
+export type Match2State = 'proposed' | 'acceptedA' | 'acceptedB' | 'acceptedFinal'
 
 /**
  * A Match2 returned by the API

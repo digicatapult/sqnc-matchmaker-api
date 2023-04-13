@@ -14,8 +14,8 @@ import {
 import { Logger } from 'pino'
 
 import { UUID } from '../../models/uuid'
-import { DemandRequest, DemandResponse, DemandState, DemandSubtype } from '../../models/demand'
-import { TransactionResponse, TransactionState, TransactionApiType, TransactionType } from '../../models/transaction'
+import { DemandRequest, DemandResponse } from '../../models/demand'
+import { TransactionResponse } from '../../models/transaction'
 import { logger } from '../../lib/logger'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import Database from '../../lib/db'
@@ -53,7 +53,7 @@ export class order extends Controller {
    */
   @Get('/')
   public async getAll(): Promise<DemandResponse[]> {
-    const order = await this.db.getDemands(DemandSubtype.order)
+    const order = await this.db.getDemands('order')
     const result = await Promise.all(
       order.map(async (order: DemandResponse) => ({
         ...order,
@@ -73,7 +73,7 @@ export class order extends Controller {
     const [order] = await this.db.getDemand(orderId)
     if (!order) throw new NotFound('order')
 
-    return await this.db.getTransactionsByLocalId(orderId, TransactionType.creation)
+    return await this.db.getTransactionsByLocalId(orderId, 'creation')
   }
 
   /**
@@ -118,22 +118,22 @@ export class order extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @SuccessResponse('201')
   public async createOrderOnChain(@Path() orderId: UUID): Promise<TransactionResponse> {
-    const [order] = await this.db.getDemandWithAttachment(orderId, DemandSubtype.order)
+    const [order] = await this.db.getDemandWithAttachment(orderId, 'order')
     if (!order) throw new NotFound('order')
-    if (order.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
+    if (order.state !== 'created') throw new BadRequest(`Demand must have state: ${'created'}`)
 
     const extrinsic = await this.node.prepareRunProcess(demandCreate(order))
 
     const [transaction] = await this.db.insertTransaction({
-      api_type: TransactionApiType.order,
-      transaction_type: TransactionType.creation,
+      api_type: 'order',
+      transaction_type: 'creation',
       local_id: orderId,
-      state: TransactionState.submitted,
+      state: 'submitted',
       hash: extrinsic.hash.toHex(),
     })
 
     this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async ([tokenId]) => {
-      await observeTokenId('DEMAND', orderId, DemandState.created, tokenId, true)
+      await observeTokenId('DEMAND', orderId, 'created', tokenId, true)
     })
 
     return transaction
@@ -156,8 +156,8 @@ export class order extends Controller {
     const { address, alias } = await getMemberBySelf()
     const [{ id, state }] = await this.db.insertDemand({
       owner: address,
-      subtype: DemandSubtype.order,
-      state: DemandState.created,
+      subtype: 'order',
+      state: 'created',
       parameters_attachment_id: parametersAttachmentId,
     })
 

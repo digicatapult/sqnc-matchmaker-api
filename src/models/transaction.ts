@@ -3,12 +3,7 @@ import { UUID } from './uuid'
 /**
  * The possible states of a chain transaction
  */
-export enum TransactionState {
-  submitted = 'submitted',
-  inBlock = 'inBlock',
-  finalised = 'finalised',
-  failed = 'failed',
-}
+export type TransactionState = 'submitted' | 'inBlock' | 'finalised' | 'failed'
 
 /**
  * A transaction returned by the API
@@ -22,14 +17,12 @@ export interface TransactionResponse {
   updatedAt: Date
 }
 
-export enum TransactionApiType {
-  match2 = 'match2',
-  order = 'order',
-  capacity = 'capacity',
-}
+/**
+ * The type of the entity involved in the transaction
+ */
+export type TransactionApiType = 'match2' | 'order' | 'capacity'
 
-export enum TransactionType {
-  creation = 'creation',
-  proposal = 'proposal',
-  accept = 'accept',
-}
+/**
+ * Transaction type - matches the endpoint that initiates the transaction
+ */
+export type TransactionType = 'creation' | 'proposal' | 'accept'

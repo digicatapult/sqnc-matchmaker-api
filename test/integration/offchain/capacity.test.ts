@@ -16,9 +16,7 @@ import {
   seededCapacityAlreadyAllocated,
 } from '../../seeds'
 
-import { DemandState } from '../../../src/models/demand'
 import { selfAlias, identitySelfMock, ipfsMockError } from '../../helper/mock'
-import { TransactionState, TransactionApiType, TransactionType } from '../../../src/models/transaction'
 
 describe('capacity', () => {
   let app: Express
@@ -47,7 +45,7 @@ describe('capacity', () => {
       )
       expect(responseRest).to.deep.equal({
         parametersAttachmentId,
-        state: DemandState.created,
+        state: 'created',
         owner: selfAlias,
       })
     })
@@ -58,7 +56,7 @@ describe('capacity', () => {
       expect(response.body).to.deep.equal({
         id: seededCapacityId,
         owner: selfAlias,
-        state: DemandState.created,
+        state: 'created',
         parametersAttachmentId,
       })
     })
@@ -70,7 +68,7 @@ describe('capacity', () => {
       expect(response.body[0]).to.deep.equal({
         id: seededCapacityId,
         owner: selfAlias,
-        state: DemandState.created,
+        state: 'created',
         parametersAttachmentId,
       })
     })
@@ -80,10 +78,10 @@ describe('capacity', () => {
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededTransactionId,
-        apiType: TransactionApiType.capacity,
-        transactionType: TransactionType.creation,
+        apiType: 'capacity',
+        transactionType: 'creation',
         localId: seededCapacityId,
-        state: TransactionState.submitted,
+        state: 'submitted',
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
@@ -95,19 +93,19 @@ describe('capacity', () => {
       expect(response.body).to.deep.equal([
         {
           id: seededTransactionId,
-          apiType: TransactionApiType.capacity,
-          transactionType: TransactionType.creation,
+          apiType: 'capacity',
+          transactionType: 'creation',
           localId: seededCapacityId,
-          state: TransactionState.submitted,
+          state: 'submitted',
           submittedAt: exampleDate,
           updatedAt: exampleDate,
         },
         {
           id: seededTransactionId2,
-          apiType: TransactionApiType.capacity,
-          transactionType: TransactionType.creation,
+          apiType: 'capacity',
+          transactionType: 'creation',
           localId: seededCapacityId,
-          state: TransactionState.submitted,
+          state: 'submitted',
           submittedAt: exampleDate,
           updatedAt: exampleDate,
         },
@@ -141,7 +139,7 @@ describe('capacity', () => {
     it('incorrect state when creating on-chain - 400', async () => {
       const response = await post(app, `/capacity/${seededCapacityAlreadyAllocated}/creation`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal(`Demand must have state: ${DemandState.created}`)
+      expect(response.body).to.equal(`Demand must have state: ${'created'}`)
     })
 
     it('non-existent Creation ID - 404', async () => {

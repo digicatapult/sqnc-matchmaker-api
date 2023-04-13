@@ -7,7 +7,6 @@ import createHttpServer from '../../../src/server'
 import { post, get } from '../../helper/routeHelper'
 import { seed, parametersAttachmentId, seededOrderId, seededOrderCreationId, cleanup } from '../../seeds'
 
-import { DemandState } from '../../../src/models/demand'
 import { selfAlias, identitySelfMock } from '../../helper/mock'
 import Database from '../../../src/lib/db'
 
@@ -145,7 +144,7 @@ describe('order', () => {
     )
     expect(responseRest).to.deep.equal({
       parametersAttachmentId,
-      state: DemandState.created,
+      state: 'created',
       owner: selfAlias,
     })
   })
