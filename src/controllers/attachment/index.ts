@@ -140,7 +140,7 @@ export class attachment extends Controller {
   }
 
   private handleFile(request: express.Request): Promise<any> {
-    const multerSingle = multer({ limits: { fileSize: 3000 } }).single('file')
+    const multerSingle = multer({ limits: { fileSize: 10 * 1024 * 1024 } }).single('file')
     return new Promise((resolve, reject) => {
       multerSingle(request, undefined as any, async (error) => {
         if (error) {
