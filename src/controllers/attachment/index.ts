@@ -129,7 +129,9 @@ export class attachment extends Controller {
   ): Promise<Attachment> {
     if (!request.body && !request.file && !file) throw new BadRequest('nothing to upload')
 
-    const [{ id, filename, binary_blob, created_at }] = await this.handleFile(request)
+    const [{ id, filename, binary_blob, created_at }] = await this.handleFile(request).then((result) => {
+      return result
+    })
     const result: Attachment = {
       id,
       filename,
@@ -146,15 +148,14 @@ export class attachment extends Controller {
         if (error) {
           reject(error)
         }
-        resolve(
-          await this.db
-            .attachment()
-            .insert({
-              filename: request.file ? request.file.originalname : 'json',
-              binary_blob: Buffer.from(request.file?.buffer || JSON.stringify(request.body)),
-            })
-            .returning(['id', 'filename', 'binary_blob', 'created_at'])
-        )
+        const result: any[] = await this.db
+          .attachment()
+          .insert({
+            filename: request.file ? request.file.originalname : 'json',
+            binary_blob: Buffer.from(request.file?.buffer || JSON.stringify(request.body)),
+          })
+          .returning(['id', 'filename', 'binary_blob', 'created_at'])
+        resolve(result)
       })
     })
   }
