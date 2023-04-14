@@ -5,8 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "build:polkadot": "npm run generate:defs && npm run generate:meta",
-    "generate:defs": "ts-node --skip-project node_modules/.bin/polkadot-types-from-defs --package sample-polkadotjs-typegen/interfaces --input ./src/interfaces --endpoint ./metadata.json",
-    "generate:meta": "ts-node --skip-project node_modules/.bin/polkadot-types-from-chain --package sample-polkadotjs-typegen/interfaces --endpoint ./metadata.json --output ./src/interfaces",
+    "generate:defs": "ts-node --esm  node_modules/.bin/polkadot-types-from-defs --package dscp-matchmaker-api/interfaces  --input ./src/interfaces --endpoint ./metadata.json",
+    "generate:meta": "ts-node --esm  node_modules/.bin/polkadot-types-from-chain --endpoint ./metadata.json --output ./src/interfaces",
     "lint": "eslint .",
     "depcheck": "depcheck",
     "build:tsoa": "tsoa spec-and-routes",
@@ -19,6 +19,7 @@
     "coverage": "c8 npm run test",
     "flows": "npx @digicatapult/dscp-process-management@latest create -h localhost -p 9944 -u //Alice \"$(cat processFlows.json)\""
   },
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/digicatapult/dscp-matchmaker-api.git"

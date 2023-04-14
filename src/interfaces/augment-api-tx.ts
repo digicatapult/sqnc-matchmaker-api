@@ -10,6 +10,7 @@ import type { Bytes, Compact, Option, U8aFixed, Vec, bool, u128, u32, u64, u8 } 
 import type { AnyNumber, IMethod, ITuple } from '@polkadot/types-codec/types';
 import type { OpaquePeerId } from '@polkadot/types/interfaces/imOnline';
 import type { AccountId32, Call, H256, MultiAddress } from '@polkadot/types/interfaces/runtime';
+import type { DscpPalletTraitsProcessFullyQualifiedId, PalletProcessValidationBinaryExpressionTreeBooleanExpressionSymbol, PalletSimpleNftOutput, SpCoreVoid, SpFinalityGrandpaEquivocationProof, SpWeightsWeightV2Weight } from '@polkadot/types/lookup';
 
 export type __AugmentedSubmittable = AugmentedSubmittable<() => unknown>;
 export type __SubmittableExtrinsic<ApiType extends ApiTypes> = SubmittableExtrinsic<ApiType>;

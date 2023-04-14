@@ -10,6 +10,7 @@ import type { BTreeSet, Bytes, Option, U8aFixed, Vec, bool, u128, u32, u64 } fro
 import type { AnyNumber, ITuple } from '@polkadot/types-codec/types';
 import type { OpaquePeerId } from '@polkadot/types/interfaces/imOnline';
 import type { AccountId32, Call, H256 } from '@polkadot/types/interfaces/runtime';
+import type { FrameSupportDispatchPerDispatchClassWeight, FrameSystemAccountInfo, FrameSystemEventRecord, FrameSystemLastRuntimeUpgradeInfo, FrameSystemPhase, PalletBalancesAccountData, PalletBalancesBalanceLock, PalletBalancesReserveData, PalletCollectiveVotes, PalletGrandpaStoredPendingChange, PalletGrandpaStoredState, PalletPreimageRequestStatus, PalletProcessValidationProcess, PalletSchedulerScheduled, PalletSimpleNftToken, SpConsensusAuraSr25519AppSr25519Public, SpRuntimeDigest } from '@polkadot/types/lookup';
 import type { Observable } from '@polkadot/types/types';
 
 export type __AugmentedQuery<ApiType extends ApiTypes> = AugmentedQuery<ApiType, () => unknown>;

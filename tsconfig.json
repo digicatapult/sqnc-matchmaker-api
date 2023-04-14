@@ -2,7 +2,7 @@
   "compilerOptions": {
     "experimentalDecorators": true,
     "target": "es6",
-    "module": "commonjs",
+    "module": "ESNext",
     "rootDir": "./src",
     "baseUrl": "./",
     "moduleResolution": "node",
@@ -21,6 +21,9 @@
       "@polkadot/types/augment": ["src/interfaces/augment-types.ts"],
       "types": ["types"]
     }
+  },
+  "ts-node": {
+    "experimentalSpecifierResolution": "node"
   },
   "exclude": [
     "**/*.test.ts",
