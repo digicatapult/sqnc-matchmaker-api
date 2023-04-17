@@ -9,11 +9,15 @@ import Database from '../../src/lib/db'
 
 const db = new Database().db()
 
+//Current file size set in server is 1mb so anything using over Blob should fail, it doesn't
 describe('attachment', () => {
-  const size = 100
+  const size = 30
   const blobData = 'a'.repeat(size)
+  const overSize = 5000
+  const overBlobData = 'a'.repeat(overSize)
   const filename = 'test.pdf'
   const jsonData = { key: 'it', filename: 'JSON attachment it' }
+  const overSizeJsonData = { key: 'it', filename: 'a'.repeat(overSize) }
   let app: Express
 
   before(async () => {
@@ -122,20 +126,35 @@ describe('attachment', () => {
     })
   })
 
-  it('Multer size test - attachment as octet with the filename [json]', async () => {
-    const uploadRes = await postFile(app, '/attachment/uploadFile', Buffer.from(blobData), 'json')
-    const { status, body, header } = await get(app, `/attachment/${uploadRes.body.id}`, {
+  it('Multer size test (max size set in server) - attachment as octet with the filename [json]', async () => {
+    const uploadRes = await postFile(app, '/attachment/uploadFile', Buffer.from(overBlobData), 'json')
+    const { status } = await get(app, `/attachment/${uploadRes.body.id}`, {
       accept: 'application/octet-stream',
     })
-
-    expect(status).to.equal(200)
-    expect(Buffer.from(body).toString()).to.equal(blobData)
-    expect(header).to.deep.contain({
-      immutable: 'true',
-      maxage: '31536000000',
-      'content-type': 'application/octet-stream',
-      'access-control-expose-headers': 'content-disposition',
-      'content-disposition': 'attachment; filename="json"',
-    })
+    console.log(status)
+    
+    expect(status).to.equal(400)
   })
-})
+
+  it('Multer uploads and retrieves attachment', () => {
+    let octetRes: any
+    let jsonRes: any
+
+    beforeEach(async () => {
+      octetRes = await postFile(app, '/attachment', Buffer.from(blobData), filename)
+      jsonRes = await post(app, '/attachment', overSizeJsonData)
+    })
+
+    it('confirms JSON and octet attachment uploads', () => {
+      // assert octect
+      expect(octetRes.status).to.equal(201)
+      expect(octetRes.body).to.have.property('id')
+      expect(octetRes.body.filename).to.equal(filename)
+      expect(octetRes.body.size).to.equal(size)
+
+      // assert JSON
+      expect(jsonRes.status).to.equal(201)
+      expect(jsonRes.body).to.contain.keys(['id', 'createdAt'])
+      expect(jsonRes.body.filename).to.equal('json')
+    })
+})})
