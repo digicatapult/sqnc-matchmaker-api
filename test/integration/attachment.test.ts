@@ -107,7 +107,7 @@ describe('attachment', () => {
         'content-disposition': 'attachment; filename="test.pdf"',
       })
     })
-  })
+ 
 
   it('attachment as octet with the filename [json]', async () => {
     const uploadRes = await postFile(app, '/attachment', Buffer.from(blobData), 'json')
@@ -141,20 +141,23 @@ describe('attachment', () => {
     let jsonRes: any
 
     beforeEach(async () => {
-      octetRes = await postFile(app, '/attachment', Buffer.from(blobData), filename)
-      jsonRes = await post(app, '/attachment', overSizeJsonData)
+      octetRes = await postFile(app, '/attachment/uploadFile', Buffer.from(blobData), filename)
+      jsonRes = await post(app, '/attachment/uploadFile', overSizeJsonData)
     })
+  
 
     it('confirms JSON and octet attachment uploads', () => {
       // assert octect
-      expect(octetRes.status).to.equal(201)
-      expect(octetRes.body).to.have.property('id')
-      expect(octetRes.body.filename).to.equal(filename)
-      expect(octetRes.body.size).to.equal(size)
+        expect(octetRes.status).to.equal(201)
+        expect(octetRes.body).to.have.property('id')
+        expect(octetRes.body.filename).to.equal(filename)
+        expect(octetRes.body.size).to.equal(size)
 
-      // assert JSON
-      expect(jsonRes.status).to.equal(201)
-      expect(jsonRes.body).to.contain.keys(['id', 'createdAt'])
-      expect(jsonRes.body.filename).to.equal('json')
+        // assert JSON
+        expect(jsonRes.status).to.equal(201)
+        expect(jsonRes.body).to.contain.keys(['id', 'createdAt'])
+        expect(jsonRes.body.filename).to.equal('json')
+      })
     })
-})})
+  })
+})
