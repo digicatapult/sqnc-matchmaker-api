@@ -27,12 +27,69 @@
                     "anyOf": [
                       {
                         "type": "object",
+                        "properties": {
+                          "file":{
+                            "type": "string",
+                            "format": "binary"
+                          }
+                        },
                         "example": {
                           "some": "example JSON"
                         }
                       },
                       {
                         "type": "array",
+                        "properties": {
+                          "file":{
+                            "type": "string",
+                            "format": "binary"
+                          }
+                        },
+                        "items": {
+                          "example": {
+                            "some": "example JSON"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "consumes": [
+              "multipart/form-data",
+              "application/json"
+            ]
+          }
+        },
+        "/attachment/uploadFile": {
+          "post": {
+            "requestBody": {
+              "required": true,
+              "content": {
+                "multipart/form-data": {
+                  "schema": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file":{
+                            "type": "string",
+                            "format": "binary"
+                          }
+                        },
+                        "example": {
+                          "some": "example JSON"
+                        }
+                      },
+                      {
+                        "type": "array",
+                        "properties": {
+                          "file":{
+                            "type": "string",
+                            "format": "binary"
+                          }
+                        },
                         "items": {
                           "example": {
                             "some": "example JSON"

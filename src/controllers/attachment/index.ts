@@ -129,9 +129,16 @@ export class attachment extends Controller {
   ): Promise<Attachment> {
     if (!request.body && !request.file && !file) throw new BadRequest('nothing to upload')
 
-    const [{ id, filename, binary_blob, created_at }] = await this.handleFile(request).then((result) => {
-      return result
-    })
+    await this.handleFile(request)
+
+    const [{ id, filename, binary_blob, created_at }] = await this.db
+      .attachment()
+      .insert({
+        filename: file ? file.originalname : 'json',
+        binary_blob: Buffer.from(file?.buffer || JSON.stringify(request.body)),
+      })
+      .returning(['id', 'filename', 'binary_blob', 'created_at'])
+
     const result: Attachment = {
       id,
       filename,
@@ -142,20 +149,13 @@ export class attachment extends Controller {
   }
 
   private handleFile(request: express.Request): Promise<any> {
-    const multerSingle = multer({ limits: { fileSize: 10 * 1024 * 1024 } }).single('file')
+    const multerSingle = multer({ limits: { fileSize: 10 * 1024 * 1024 } }).array('file')
     return new Promise((resolve, reject) => {
       multerSingle(request, undefined as any, async (error) => {
         if (error) {
           reject(error)
         }
-        const result: any[] = await this.db
-          .attachment()
-          .insert({
-            filename: request.file ? request.file.originalname : 'json',
-            binary_blob: Buffer.from(request.file?.buffer || JSON.stringify(request.body)),
-          })
-          .returning(['id', 'filename', 'binary_blob', 'created_at'])
-        resolve(result)
+        resolve(request)
       })
     })
   }
