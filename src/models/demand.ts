@@ -4,18 +4,12 @@ import { UUID } from './uuid'
 /**
  * The possible types of a Demand
  */
-export enum DemandSubtype {
-  order = 'order',
-  capacity = 'capacity',
-}
+export type DemandSubtype = 'order' | 'capacity'
 
 /**
  * The possible states of a Demand
  */
-export enum DemandState {
-  created = 'created',
-  allocated = 'allocated',
-}
+export type DemandState = 'created' | 'allocated'
 
 /**
  * A Demand returned by the API

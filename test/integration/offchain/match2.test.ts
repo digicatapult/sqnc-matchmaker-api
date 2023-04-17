@@ -28,8 +28,6 @@ import {
 } from '../../seeds'
 
 import { selfAlias, identitySelfMock } from '../../helper/mock'
-import { Match2State } from '../../../src/models/match2'
-import { TransactionState, TransactionApiType, TransactionType } from '../../../src/models/transaction'
 
 describe('match2', () => {
   let app: Express
@@ -57,7 +55,7 @@ describe('match2', () => {
         /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
       )
       expect(responseRest).to.deep.equal({
-        state: Match2State.proposed,
+        state: 'proposed',
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
@@ -71,7 +69,7 @@ describe('match2', () => {
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededMatch2Id,
-        state: Match2State.proposed,
+        state: 'proposed',
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
@@ -86,7 +84,7 @@ describe('match2', () => {
       expect(response.body.length).to.be.greaterThan(0)
       expect(response.body[0]).to.deep.equal({
         id: seededMatch2Id,
-        state: Match2State.proposed,
+        state: 'proposed',
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
@@ -101,10 +99,10 @@ describe('match2', () => {
       expect(response.body.length).to.be.greaterThan(0)
       expect(response.body[0]).to.deep.equal({
         id: seededProposalTransactionId,
-        transactionType: TransactionType.proposal,
-        apiType: TransactionApiType.match2,
+        transactionType: 'proposal',
+        apiType: 'match2',
         localId: seededMatch2Id,
-        state: TransactionState.submitted,
+        state: 'submitted',
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
@@ -115,10 +113,10 @@ describe('match2', () => {
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededAcceptTransactionId,
-        apiType: TransactionApiType.match2,
-        transactionType: TransactionType.accept,
+        apiType: 'match2',
+        transactionType: 'accept',
         localId: seededMatch2Id,
-        state: TransactionState.submitted,
+        state: 'submitted',
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
@@ -130,10 +128,10 @@ describe('match2', () => {
       expect(response.body.length).to.be.greaterThan(0)
       expect(response.body[0]).to.deep.equal({
         id: seededAcceptTransactionId,
-        apiType: TransactionApiType.match2,
-        transactionType: TransactionType.accept,
+        apiType: 'match2',
+        transactionType: 'accept',
         localId: seededMatch2Id,
-        state: TransactionState.submitted,
+        state: 'submitted',
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
@@ -191,7 +189,7 @@ describe('match2', () => {
     it('incorrect state when creating on-chain - 400', async () => {
       const response = await post(app, `/match2/${seededMatch2AcceptedA}/proposal`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal(`Match2 must have state: ${Match2State.proposed}`)
+      expect(response.body).to.equal(`Match2 must have state: ${'proposed'}`)
     })
 
     it('demandA missing token ID - 400', async () => {
@@ -257,7 +255,7 @@ describe('match2', () => {
     it('match2 already acceptedFinal when accepting - 400', async () => {
       const response = await post(app, `/match2/${seededMatch2AcceptedFinal}/accept`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal(`Already ${Match2State.acceptedFinal}`)
+      expect(response.body).to.equal(`Already ${'acceptedFinal'}`)
     })
 
     it('non-existent match2 id when accepting - 404', async () => {

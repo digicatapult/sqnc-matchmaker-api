@@ -1,5 +1,5 @@
-import { Match2Payload, Match2Response, Match2State } from '../models/match2'
-import { DemandPayload, DemandState } from '../models/demand'
+import { Match2Payload, Match2Response } from '../models/match2'
+import { DemandPayload } from '../models/demand'
 import * as TokenType from '../models/tokenType'
 
 export interface Payload {
@@ -29,7 +29,7 @@ export const demandCreate = (demand: DemandPayload): Payload => ({
       metadata: {
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.DEMAND },
-        state: { type: 'LITERAL', value: DemandState.created },
+        state: { type: 'LITERAL', value: 'created' },
         subtype: { type: 'LITERAL', value: demand.subtype },
         parameters: { type: 'FILE', value: { blob: new Blob([demand.binary_blob]), filename: demand.filename } },
       },
@@ -46,7 +46,7 @@ export const match2Propose = (match2: Match2Response, demandA: DemandPayload, de
       metadata: {
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.DEMAND },
-        state: { type: 'LITERAL', value: DemandState.created },
+        state: { type: 'LITERAL', value: 'created' },
         subtype: { type: 'LITERAL', value: demandA.subtype },
         originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId },
       },
@@ -56,7 +56,7 @@ export const match2Propose = (match2: Match2Response, demandA: DemandPayload, de
       metadata: {
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.DEMAND },
-        state: { type: 'LITERAL', value: DemandState.created },
+        state: { type: 'LITERAL', value: 'created' },
         subtype: { type: 'LITERAL', value: demandB.subtype },
         originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId },
       },
@@ -66,7 +66,7 @@ export const match2Propose = (match2: Match2Response, demandA: DemandPayload, de
       metadata: {
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.MATCH2 },
-        state: { type: 'LITERAL', value: Match2State.proposed },
+        state: { type: 'LITERAL', value: 'proposed' },
         demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId },
         demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId },
       },
@@ -76,7 +76,7 @@ export const match2Propose = (match2: Match2Response, demandA: DemandPayload, de
 
 export const match2AcceptFirst = (
   match2: Match2Payload,
-  newState: Match2State.acceptedA | Match2State.acceptedB,
+  newState: 'acceptedA' | 'acceptedB',
   demandA: DemandPayload,
   demandB: DemandPayload
 ): Payload => ({
@@ -106,7 +106,7 @@ export const match2AcceptFinal = (match2: Match2Payload, demandA: DemandPayload,
       metadata: {
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.DEMAND },
-        state: { type: 'LITERAL', value: DemandState.allocated },
+        state: { type: 'LITERAL', value: 'allocated' },
         subtype: { type: 'LITERAL', value: demandA.subtype },
         originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId },
       },
@@ -116,7 +116,7 @@ export const match2AcceptFinal = (match2: Match2Payload, demandA: DemandPayload,
       metadata: {
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.DEMAND },
-        state: { type: 'LITERAL', value: DemandState.allocated },
+        state: { type: 'LITERAL', value: 'allocated' },
         subtype: { type: 'LITERAL', value: demandB.subtype },
         originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId },
       },
@@ -126,7 +126,7 @@ export const match2AcceptFinal = (match2: Match2Payload, demandA: DemandPayload,
       metadata: {
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.MATCH2 },
-        state: { type: 'LITERAL', value: Match2State.acceptedFinal },
+        state: { type: 'LITERAL', value: 'acceptedFinal' },
         demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId },
         demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId },
         originalId: { type: 'TOKEN_ID', value: match2.originalTokenId },

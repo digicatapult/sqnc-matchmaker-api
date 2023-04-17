@@ -1,8 +1,5 @@
 import Database from '../../src/lib/db'
-import { DemandState, DemandSubtype } from '../../src/models/demand'
-import { Match2State } from '../../src/models/match2'
 import { notSelfAddress, selfAddress } from '../helper/mock'
-import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
 
 const db = new Database().db()
 
@@ -61,8 +58,8 @@ export const seed = async () => {
     {
       id: seededCapacityId,
       owner: selfAddress,
-      subtype: DemandSubtype.capacity,
-      state: DemandState.created,
+      subtype: 'capacity',
+      state: 'created',
       parameters_attachment_id: parametersAttachmentId,
     },
   ])
@@ -70,10 +67,10 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededTransactionId,
-      api_type: TransactionApiType.capacity,
-      transaction_type: TransactionType.creation,
+      api_type: 'capacity',
+      transaction_type: 'creation',
       local_id: seededCapacityId,
-      state: TransactionState.submitted,
+      state: 'submitted',
       created_at: exampleDate,
       updated_at: exampleDate,
       hash: transactionHash,
@@ -83,10 +80,10 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededTransactionId2,
-      api_type: TransactionApiType.capacity,
-      transaction_type: TransactionType.creation,
+      api_type: 'capacity',
+      transaction_type: 'creation',
       local_id: seededCapacityId,
-      state: TransactionState.submitted,
+      state: 'submitted',
       created_at: exampleDate,
       updated_at: exampleDate,
       hash: transactionHash,
@@ -97,8 +94,8 @@ export const seed = async () => {
     {
       id: seededOrderId,
       owner: selfAddress,
-      subtype: DemandSubtype.order,
-      state: DemandState.created,
+      subtype: 'order',
+      state: 'created',
       parameters_attachment_id: parametersAttachmentId,
     },
   ])
@@ -107,8 +104,8 @@ export const seed = async () => {
     {
       id: seededOrderNotOwnedId,
       owner: notSelfAddress,
-      subtype: DemandSubtype.order,
-      state: DemandState.created,
+      subtype: 'order',
+      state: 'created',
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
@@ -119,8 +116,8 @@ export const seed = async () => {
     {
       id: seededCapacityNotOwnedId,
       owner: notSelfAddress,
-      subtype: DemandSubtype.capacity,
-      state: DemandState.created,
+      subtype: 'capacity',
+      state: 'created',
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
@@ -130,7 +127,7 @@ export const seed = async () => {
   await db.match2().insert([
     {
       id: seededMatch2Id,
-      state: Match2State.proposed,
+      state: 'proposed',
       optimiser: selfAddress,
       member_a: selfAddress,
       member_b: selfAddress,
@@ -144,10 +141,10 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededProposalTransactionId,
-      api_type: TransactionApiType.match2,
-      transaction_type: TransactionType.proposal,
+      api_type: 'match2',
+      transaction_type: 'proposal',
       local_id: seededMatch2Id,
-      state: TransactionState.submitted,
+      state: 'submitted',
       created_at: exampleDate,
       updated_at: exampleDate,
       hash: transactionHash,
@@ -157,10 +154,10 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededOrderCreationId,
-      api_type: TransactionApiType.order,
-      transaction_type: TransactionType.creation,
+      api_type: 'order',
+      transaction_type: 'creation',
       local_id: seededOrderId,
-      state: TransactionState.submitted,
+      state: 'submitted',
       created_at: exampleDate,
       updated_at: exampleDate,
       hash: transactionHash,
@@ -170,10 +167,10 @@ export const seed = async () => {
   await db.transaction().insert([
     {
       id: seededAcceptTransactionId,
-      api_type: TransactionApiType.match2,
-      transaction_type: TransactionType.accept,
+      api_type: 'match2',
+      transaction_type: 'accept',
       local_id: seededMatch2Id,
-      state: TransactionState.submitted,
+      state: 'submitted',
       created_at: exampleDate,
       updated_at: exampleDate,
       hash: transactionHash,
@@ -184,8 +181,8 @@ export const seed = async () => {
     {
       id: seededCapacityMissingTokenId,
       owner: selfAddress,
-      subtype: DemandSubtype.capacity,
-      state: DemandState.created,
+      subtype: 'capacity',
+      state: 'created',
       parameters_attachment_id: parametersAttachmentId,
     },
   ])
@@ -194,8 +191,8 @@ export const seed = async () => {
     {
       id: seededOrderMissingTokenId,
       owner: selfAddress,
-      subtype: DemandSubtype.order,
-      state: DemandState.created,
+      subtype: 'order',
+      state: 'created',
       parameters_attachment_id: parametersAttachmentId,
     },
   ])
@@ -204,8 +201,8 @@ export const seed = async () => {
     {
       id: seededCapacityWithTokenId,
       owner: selfAddress,
-      subtype: DemandSubtype.capacity,
-      state: DemandState.created,
+      subtype: 'capacity',
+      state: 'created',
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
@@ -216,8 +213,8 @@ export const seed = async () => {
     {
       id: seededOrderWithTokenId,
       owner: selfAddress,
-      subtype: DemandSubtype.order,
-      state: DemandState.created,
+      subtype: 'order',
+      state: 'created',
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
@@ -228,8 +225,8 @@ export const seed = async () => {
     {
       id: seededCapacityAlreadyAllocated,
       owner: selfAddress,
-      subtype: DemandSubtype.capacity,
-      state: DemandState.allocated,
+      subtype: 'capacity',
+      state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
     },
   ])
@@ -238,8 +235,8 @@ export const seed = async () => {
     {
       id: seededOrderAlreadyAllocated,
       owner: selfAddress,
-      subtype: DemandSubtype.order,
-      state: DemandState.allocated,
+      subtype: 'order',
+      state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
     },
   ])
@@ -247,7 +244,7 @@ export const seed = async () => {
   await db.match2().insert([
     {
       id: seededMatch2WithAllocatedDemands,
-      state: Match2State.proposed,
+      state: 'proposed',
       optimiser: selfAddress,
       member_a: selfAddress,
       member_b: selfAddress,
@@ -259,7 +256,7 @@ export const seed = async () => {
   await db.match2().insert([
     {
       id: seededMatch2AcceptedA,
-      state: Match2State.acceptedA,
+      state: 'acceptedA',
       optimiser: selfAddress,
       member_a: selfAddress,
       member_b: selfAddress,
@@ -271,7 +268,7 @@ export const seed = async () => {
   await db.match2().insert([
     {
       id: seededMatch2AcceptedFinal,
-      state: Match2State.acceptedFinal,
+      state: 'acceptedFinal',
       optimiser: selfAddress,
       member_a: selfAddress,
       member_b: selfAddress,
@@ -283,7 +280,7 @@ export const seed = async () => {
   await db.match2().insert([
     {
       id: seededMatch2NotAcceptableA,
-      state: Match2State.acceptedB,
+      state: 'acceptedB',
       optimiser: selfAddress,
       member_a: notSelfAddress,
       member_b: selfAddress,
@@ -297,7 +294,7 @@ export const seed = async () => {
   await db.match2().insert([
     {
       id: seededMatch2NotAcceptableB,
-      state: Match2State.acceptedA,
+      state: 'acceptedA',
       optimiser: selfAddress,
       member_a: selfAddress,
       member_b: notSelfAddress,
@@ -311,7 +308,7 @@ export const seed = async () => {
   await db.match2().insert([
     {
       id: seededMatch2NotAcceptableBoth,
-      state: Match2State.acceptedB,
+      state: 'acceptedB',
       optimiser: selfAddress,
       member_a: notSelfAddress,
       member_b: notSelfAddress,

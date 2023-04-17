@@ -143,11 +143,11 @@ export default class ChainNode {
           }
 
           if (status.isInBlock) {
-            transactionDbUpdate(TransactionState.inBlock)
+            transactionDbUpdate('inBlock')
           }
 
           if (status.isFinalized) {
-            transactionDbUpdate(TransactionState.finalised)
+            transactionDbUpdate('finalised')
 
             const processRanEvent = result.events.find(({ event: { method } }) => method === 'ProcessRan')
             const data = processRanEvent?.event?.data as EventData
@@ -161,6 +161,7 @@ export default class ChainNode {
           unsub = res
         })
         .catch((err) => {
+          transactionDbUpdate('failed')
           this.logger.warn(`Error in run process transaction: ${err}`)
           throw err
         })
