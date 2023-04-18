@@ -13,7 +13,7 @@ describe('attachment', async () => {
   const size = 100
   const blobData = 'a'.repeat(size)
   const filename = 'test.pdf'
-  const overSize = 10242880
+  const overSize = 115343360
   const overSizeBlobData = 'a'.repeat(overSize)
   const jsonData = { key: 'it', filename: 'JSON attachment it' }
   let app: Express
@@ -125,7 +125,7 @@ describe('attachment', async () => {
   })
 
 
-    it('Doesn`t upload files if more than 5mb', async () => {
+    it('Doesn`t upload files if more than 100mb', async () => {
     const uploadRes = await postFile(app, '/attachment', Buffer.from(overSizeBlobData), 'json')
     const { status  } = await get(app, `/attachment/${uploadRes.body.id}`)
     console.log(status)

@@ -6,7 +6,7 @@
   ],
   "multerOpts": {
     "limits": {
-      "fileSize": 5242880
+      "fileSize": 104857600
     }
   },
   "spec": {
