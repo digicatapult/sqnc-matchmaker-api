@@ -11,6 +11,7 @@ import {
   Response,
   SuccessResponse,
   Produces,
+  ValidateError,
 } from 'tsoa'
 import { Logger } from 'pino'
 import express from 'express'
@@ -95,6 +96,7 @@ export class attachment extends Controller {
 
   @Post('/')
   @SuccessResponse(201, 'attachment has been created')
+  @Response<ValidateError>(422, 'Validation Failed')
   public async create(
     @Request() req: express.Request,
     @UploadedFile() file?: Express.Multer.File
