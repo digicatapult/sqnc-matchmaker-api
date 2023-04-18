@@ -13,6 +13,8 @@ describe('attachment', () => {
   const size = 100
   const blobData = 'a'.repeat(size)
   const filename = 'test.pdf'
+  const overSize = 115343360
+  const overSizeBlobData = 'a'.repeat(overSize)
   const jsonData = { key: 'it', filename: 'JSON attachment it' }
   let app: Express
 
@@ -121,4 +123,13 @@ describe('attachment', () => {
       'content-disposition': 'attachment; filename="json"',
     })
   })
+
+
+    it('Doesn`t upload files if more than 100mb', async () => {
+      const uploadRes = await postFile(app, '/attachment', Buffer.from(overSizeBlobData), 'json')
+      const { status, body  } = await get(app, `/attachment/${uploadRes.body.id}`)
+
+      expect(status).to.equal(422)
+      expect(body.toString()).to.deep.contain({message: 'Validation failed'})
+    })
 })
