@@ -9,7 +9,7 @@ import Database from '../../../src/lib/db'
 
 const db = new Database().db()
 
-describe('attachment', async () => {
+describe('attachment', () => {
   const size = 100
   const blobData = 'a'.repeat(size)
   const filename = 'test.pdf'
