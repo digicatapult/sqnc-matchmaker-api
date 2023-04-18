@@ -1,4 +1,5 @@
 import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/api'
+import { blake2AsHex } from '@polkadot/util-crypto'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
 
@@ -9,6 +10,8 @@ import { HttpResponse } from './error-handler'
 import Ipfs from './ipfs'
 import type { Payload, Output, Metadata, MetadataFile } from './payload'
 
+const processRanTopic = blake2AsHex('simpleNFT.ProcessRan')
+
 export interface NodeCtorConfig {
   host: string
   port: number
@@ -16,6 +19,17 @@ export interface NodeCtorConfig {
   userUri: string
   ipfsHost: string
   ipfsPort: number
+}
+
+export interface ProcessRanEvent {
+  callHash: string
+  sender: string
+  process: {
+    id: string
+    version: number
+  }
+  inputs: number[]
+  outputs: number[]
 }
 
 interface RoleEnum {
@@ -115,20 +129,21 @@ export default class ChainNode {
     this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
 
     await this.api.isReady
-    return this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
+    const extrinsic = await this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
+    const account = this.keyring.addFromUri(this.userUri)
+    const signed = await extrinsic.signAsync(account, { nonce: -1 })
+    return signed
   }
 
   async submitRunProcess(
     extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>,
     transactionDbUpdate: (state: TransactionState) => Promise<void>
   ): Promise<number[]> {
-    const account = this.keyring.addFromUri(this.userUri)
-
     this.logger.debug('Submitting Transaction %j', extrinsic.hash.toHex())
     return new Promise((resolve, reject) => {
       let unsub: () => void
       extrinsic
-        .signAndSend(account, { nonce: -1 }, (result: SubmittableResult) => {
+        .send((result: SubmittableResult) => {
           this.logger.debug('result.status %s', JSON.stringify(result.status))
 
           const { dispatchError, status } = result
@@ -217,5 +232,38 @@ export default class ChainNode {
   async watchFinalisedBlocks(onNewFinalisedHead: (blockHash: string) => Promise<void>) {
     await this.api.isReady
     await this.api.rpc.chain.subscribeFinalizedHeads((header) => onNewFinalisedHead(header.hash.toHex()))
+  }
+
+  async getProcessRanEvents(blockhash: string): Promise<ProcessRanEvent[]> {
+    await this.api.isReady
+    const apiAtBlock = await this.api.at(blockhash)
+    const processRanEventIndexes = (await apiAtBlock.query.system.eventTopics(processRanTopic)) as unknown as [
+      never,
+      number
+    ][]
+    if (processRanEventIndexes.length === 0) {
+      return []
+    }
+
+    const block = await this.api.rpc.chain.getBlock(blockhash)
+    const events = (await apiAtBlock.query.system.events()) as unknown as {
+      event: { data: unknown[] }
+      phase: { get asApplyExtrinsic(): number }
+    }[]
+    return processRanEventIndexes.map(([, index]) => {
+      const event = events[index]
+      const extrinsicIndex = event.phase.asApplyExtrinsic
+      const process = event.event.data[1] as { id: string; version: { toNumber: () => number } }
+      return {
+        callHash: block.block.extrinsics[extrinsicIndex].hash.toString(),
+        sender: (event.event.data[0] as { toString: () => string }).toString(),
+        process: {
+          id: Buffer.from(process.id).toString('ascii'),
+          version: process.version.toNumber(),
+        },
+        inputs: (event.event.data[2] as { toNumber: () => number }[]).map((i) => i.toNumber()),
+        outputs: (event.event.data[3] as { toNumber: () => number }[]).map((o) => o.toNumber()),
+      }
+    })
   }
 }

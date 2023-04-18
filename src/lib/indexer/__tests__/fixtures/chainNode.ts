@@ -1,5 +1,28 @@
 import sinon from 'sinon'
-import ChainNode from '../../../chainNode'
+import ChainNode, { ProcessRanEvent } from '../../../chainNode'
+
+export const events2 = [
+  {
+    callHash: 'a',
+    sender: 'b',
+    process: {
+      id: 'c',
+      version: 1,
+    },
+    inputs: [2],
+    outputs: [3],
+  },
+  {
+    callHash: 'd',
+    sender: 'e',
+    process: {
+      id: 'f',
+      version: 4,
+    },
+    inputs: [5],
+    outputs: [6],
+  },
+]
 
 export const withHappyChainNode = () => {
   const getHeader = sinon.spy(async (hash: string) => {
@@ -39,5 +62,11 @@ export const withGetHeaderBoom = (boomOnCallIndex: number) => {
   return {
     getHeader,
     getLastFinalisedBlockHash,
+  } as unknown as ChainNode
+}
+
+export const withProcessRanEvents = (events: ProcessRanEvent[]) => {
+  return {
+    getProcessRanEvents: sinon.stub().resolves(events),
   } as unknown as ChainNode
 }

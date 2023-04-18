@@ -96,6 +96,10 @@ export default class Database {
     return this.db().demand().insert(capacity).returning('*')
   }
 
+  upsertDemand = async (demand: object) => {
+    return this.db().demand().insert(demand).onConflict('id').merge().returning('*')
+  }
+
   getDemands = async (subtype: DemandSubtype) => {
     return this.db().demand().select(demandColumns).where({ subtype })
   }
@@ -168,6 +172,10 @@ export default class Database {
 
   insertMatch2 = async (match2: object) => {
     return this.db().match2().insert(match2).returning(match2Columns)
+  }
+
+  upsertMatch2 = async (match2: object) => {
+    return this.db().match2().insert(match2).onConflict('id').merge().returning('*')
   }
 
   getMatch2s = async () => {
