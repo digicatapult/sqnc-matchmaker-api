@@ -128,8 +128,17 @@ describe('attachment', () => {
     it('Doesn`t upload files if more than 100mb', async () => {
       const uploadRes = await postFile(app, '/attachment', Buffer.from(overSizeBlobData), 'json')
       const { status, body  } = await get(app, `/attachment/${uploadRes.body.id}`)
-
+      
       expect(status).to.equal(422)
-      expect(body.toString()).to.deep.contain({message: 'Validation failed'})
+      expect(body).to.deep.contain({
+        fields: {
+          id: {
+            message: "Not match in '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}'",
+            value: 'undefined'
+          }
+        },
+        name: 'ValidateError',
+        message: 'Validation failed'
+      })
     })
 })
