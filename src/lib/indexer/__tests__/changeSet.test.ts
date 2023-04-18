@@ -39,12 +39,18 @@ describe('changeSet', function () {
       }
       const result = mergeChangeSets(base, update)
       expect(result).to.deep.equal({
-        demands: new Map([['123', { id: '42' }], ['456', { id: '44' }]]),
-        matches: new Map([['123', { id: '43' }], ['456', { id: '45' }]]),
+        demands: new Map([
+          ['123', { id: '42' }],
+          ['456', { id: '44' }],
+        ]),
+        matches: new Map([
+          ['123', { id: '43' }],
+          ['456', { id: '45' }],
+        ]),
       })
     })
 
-    it ('should merge update onto base if entries exist in both', function () {
+    it('should merge update onto base if entries exist in both', function () {
       const update = {
         demands: new Map([['123', { id: '42' }]]),
         matches: new Map([['123', { id: '43' }]]),

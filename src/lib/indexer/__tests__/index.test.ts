@@ -161,8 +161,14 @@ describe('Indexer', function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({
-        demands: new Map([['123', { id: '42' }], ['456', { id: '43' }]]),
-        matches: new Map([['789', { id: '44' }], ['101', { id: '45' }]])
+        demands: new Map([
+          ['123', { id: '42' }],
+          ['456', { id: '43' }],
+        ]),
+        matches: new Map([
+          ['789', { id: '44' }],
+          ['101', { id: '45' }],
+        ]),
       })
 
       indexer = new Indexer({ db, node, logger, handleBlock })

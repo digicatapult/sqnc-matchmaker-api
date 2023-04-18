@@ -37,14 +37,8 @@ describe('BlockHandler', function () {
 
       const result = await blockHandler.handleBlock('123')
       expect(stub.calledTwice).to.equal(true)
-      expect(stub.firstCall.args).to.deep.equal([
-        events[0],
-        {}
-      ])
-      expect(stub.secondCall.args).to.deep.equal([
-        events[1],
-        changeSets[0]
-      ])
+      expect(stub.firstCall.args).to.deep.equal([events[0], {}])
+      expect(stub.secondCall.args).to.deep.equal([events[1], changeSets[0]])
       expect(result).to.deep.equal(changeSets[1])
     })
   })
