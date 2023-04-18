@@ -10,7 +10,7 @@ import { HttpResponse } from './error-handler'
 import Ipfs from './ipfs'
 import type { Payload, Output, Metadata, MetadataFile } from './payload'
 
-const processRanTopic = blake2AsHex('simpleNFT.ProcessRan')
+const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
 export interface NodeCtorConfig {
   host: string
