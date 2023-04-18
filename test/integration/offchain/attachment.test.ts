@@ -124,12 +124,11 @@ describe('attachment', () => {
     })
   })
 
+  it('Doesn`t upload files if more than 100mb', async () => {
+    const uploadRes = await postFile(app, '/attachment', Buffer.from(overSizeBlobData), 'json')
+    const { status, body } = await get(app, `/attachment/${uploadRes.body.id}`)
 
-    it('Doesn`t upload files if more than 100mb', async () => {
-      const uploadRes = await postFile(app, '/attachment', Buffer.from(overSizeBlobData), 'json')
-      const { status, body  } = await get(app, `/attachment/${uploadRes.body.id}`)
-
-      expect(status).to.equal(422)
-      expect(body.toString()).to.deep.contain({message: 'Validation failed'})
-    })
+    expect(status).to.equal(422)
+    expect(body.toString()).to.deep.contain({ message: 'Validation failed' })
+  })
 })
