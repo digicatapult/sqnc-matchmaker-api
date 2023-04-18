@@ -4,7 +4,11 @@
   "controllerPathGlobs": [
     "src/controllers/**/*.ts"
   ],
-  "spec": {
+  "multerOpts": {
+    "limits": {
+      "fileSize": 1024
+    }},  
+    "spec": {
     "outputDirectory": "src",
     "specVersion": 3,
     "securityDefinitions": {
