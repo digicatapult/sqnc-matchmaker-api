@@ -14,6 +14,11 @@
         "bearerFormat": "JWT"
       }
     },
+    "multerOpts": {
+      "limits": {
+        "fileSize": 5242880
+      }
+    },
     "specMerging": "recursive",
     "spec": {
       "paths": {

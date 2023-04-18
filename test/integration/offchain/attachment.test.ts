@@ -9,10 +9,12 @@ import Database from '../../../src/lib/db'
 
 const db = new Database().db()
 
-describe('attachment', () => {
+describe('attachment', async () => {
   const size = 100
   const blobData = 'a'.repeat(size)
   const filename = 'test.pdf'
+  const overSize = 10242880
+  const overSizeBlobData = 'a'.repeat(overSize)
   const jsonData = { key: 'it', filename: 'JSON attachment it' }
   let app: Express
 
@@ -121,4 +123,14 @@ describe('attachment', () => {
       'content-disposition': 'attachment; filename="json"',
     })
   })
+
+
+    it('Doesn`t upload files if more than 5mb', async () => {
+    const uploadRes = await postFile(app, '/attachment', Buffer.from(overSizeBlobData), 'json')
+    const { status  } = await get(app, `/attachment/${uploadRes.body.id}`)
+    console.log(status)
+    expect(status).to.equal(422)
+
+    })
+  
 })
