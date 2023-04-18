@@ -126,11 +126,9 @@ describe('attachment', async () => {
 
 
     it('Doesn`t upload files if more than 100mb', async () => {
-    const uploadRes = await postFile(app, '/attachment', Buffer.from(overSizeBlobData), 'json')
-    const { status  } = await get(app, `/attachment/${uploadRes.body.id}`)
-    console.log(status)
-    expect(status).to.equal(422)
-
+      const uploadRes = await postFile(app, '/attachment', Buffer.from(overSizeBlobData), 'json')
+      const { status  } = await get(app, `/attachment/${uploadRes.body.id}`)
+    
+      expect(status).to.equal(422)
     })
-  
 })
