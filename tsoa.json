@@ -4,6 +4,11 @@
   "controllerPathGlobs": [
     "src/controllers/**/*.ts"
   ],
+  "multerOpts": {
+    "limits": {
+      "fileSize": 5242880
+    }
+  },
   "spec": {
     "outputDirectory": "src",
     "specVersion": 3,
@@ -12,11 +17,6 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
-      }
-    },
-    "multerOpts": {
-      "limits": {
-        "fileSize": 5242880
       }
     },
     "specMerging": "recursive",
