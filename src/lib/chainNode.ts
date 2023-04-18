@@ -115,7 +115,7 @@ export default class ChainNode {
     this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
 
     await this.api.isReady
-    return this.api.tx.simpleNFT.runProcess(process, inputs, outputsAsMaps)
+    return this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
   }
 
   async submitRunProcess(
@@ -209,7 +209,7 @@ export default class ChainNode {
 
   async getLastTokenId() {
     await this.api.isReady
-    const lastTokenId = await this.api.query.simpleNFT.lastToken()
+    const lastTokenId = await this.api.query.utxoNFT.lastToken()
 
     return lastTokenId ? parseInt(lastTokenId.toString(), 10) : 0
   }
