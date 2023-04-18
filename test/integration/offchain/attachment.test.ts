@@ -130,6 +130,6 @@ describe('attachment', async () => {
       const { status, body  } = await get(app, `/attachment/${uploadRes.body.id}`)
       console.log(Buffer.from(body).toString())
       expect(status).to.equal(422)
-      expect(Buffer.from(body).toString()).to.not.equal("Unexpected error thrown in handler: File too large")
+      expect(Buffer.from(body).toString()).to.equal("Unexpected error thrown in handler: File too large")
     })
 })
