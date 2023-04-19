@@ -26,7 +26,7 @@ export interface DemandResponse {
 
 export interface DemandPayload extends DemandResponse, Attachment {
   subtype: DemandSubtype
-  binary_blob: Buffer
+  ipfs_hash: string
   latestTokenId: number
   originalTokenId: number
 }

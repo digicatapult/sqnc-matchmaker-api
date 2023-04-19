@@ -1,4 +1,4 @@
-import { MockAgent, setGlobalDispatcher } from 'undici'
+import { MockAgent, setGlobalDispatcher, getGlobalDispatcher, Dispatcher } from 'undici'
 import env from '../../src/env'
 
 export const selfAlias = 'test-self'
@@ -6,61 +6,112 @@ export const selfAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
 export const notSelfAlias = 'test-not-self'
 export const notSelfAddress = '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty'
 
-const mockAgent = new MockAgent()
-setGlobalDispatcher(mockAgent)
+export function withIdentitySelfMock() {
+  let originalDispatcher: Dispatcher
+  let mockAgent: MockAgent
+  beforeEach(function () {
+    originalDispatcher = getGlobalDispatcher()
+    mockAgent = new MockAgent()
+    setGlobalDispatcher(mockAgent)
+    const mockIdentity = mockAgent.get(`http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`)
+    mockIdentity
+      .intercept({
+        path: '/v1/self',
+        method: 'GET',
+      })
+      .reply(200, {
+        alias: selfAlias,
+        address: selfAddress,
+      })
+      .persist()
 
-const mockIdentity = mockAgent.get(`http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`)
-const mockIpfs = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
+    mockIdentity
+      .intercept({
+        path: `/v1/members/${selfAddress}`,
+        method: 'GET',
+      })
+      .reply(200, {
+        alias: selfAlias,
+        address: selfAddress,
+      })
+      .persist()
 
-export const identitySelfMock = () => {
-  mockIdentity
-    .intercept({
-      path: '/v1/self',
-      method: 'GET',
-    })
-    .reply(200, {
-      alias: selfAlias,
-      address: selfAddress,
-    })
-    .persist()
+    mockIdentity
+      .intercept({
+        path: `/v1/members/${notSelfAddress}`,
+        method: 'GET',
+      })
+      .reply(200, {
+        alias: notSelfAlias,
+        address: notSelfAddress,
+      })
+      .persist()
+  })
 
-  mockIdentity
-    .intercept({
-      path: `/v1/members/${selfAddress}`,
-      method: 'GET',
-    })
-    .reply(200, {
-      alias: selfAlias,
-      address: selfAddress,
-    })
-    .persist()
-
-  mockIdentity
-    .intercept({
-      path: `/v1/members/${notSelfAddress}`,
-      method: 'GET',
-    })
-    .reply(200, {
-      alias: notSelfAlias,
-      address: notSelfAddress,
-    })
-    .persist()
+  afterEach(function () {
+    setGlobalDispatcher(originalDispatcher)
+  })
 }
 
-export const ipfsMock = () => {
-  mockIpfs
-    .intercept({
-      path: '/api/v0/add?cid-version=0&wrap-with-directory=true',
-      method: 'POST',
-    })
-    .reply(200, { Name: '', Hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn', Size: '63052' })
+export const withIpfsMock = (fileContent?: string | object | Buffer) => {
+  let originalDispatcher: Dispatcher
+  let mockAgent: MockAgent
+
+  beforeEach(function () {
+    originalDispatcher = getGlobalDispatcher()
+    mockAgent = new MockAgent()
+    setGlobalDispatcher(mockAgent)
+    const mockIpfs = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
+
+    mockIpfs
+      .intercept({
+        path: '/api/v0/add?cid-version=0&wrap-with-directory=true',
+        method: 'POST',
+      })
+      .reply(200, { Name: '', Hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn', Size: '63052' })
+
+    mockIpfs
+      .intercept({
+        path: '/api/v0/ls?arg=QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
+        method: 'POST',
+      })
+      .reply(200, {
+        Objects: [{ Links: [{ Hash: 'file_hash', Name: 'test' }] }],
+      })
+    if (fileContent) {
+      mockIpfs
+        .intercept({
+          path: '/api/v0/cat?arg=file_hash',
+          method: 'POST',
+        })
+        .reply(200, fileContent)
+    }
+  })
+
+  afterEach(function () {
+    setGlobalDispatcher(originalDispatcher)
+  })
 }
 
-export const ipfsMockError = () => {
-  mockIpfs
-    .intercept({
-      path: '/api/v0/add?cid-version=0&wrap-with-directory=true',
-      method: 'POST',
-    })
-    .reply(500, 'error')
+export const withIpfsMockError = () => {
+  let originalDispatcher: Dispatcher
+  let mockAgent: MockAgent
+
+  beforeEach(function () {
+    originalDispatcher = getGlobalDispatcher()
+    mockAgent = new MockAgent()
+    setGlobalDispatcher(mockAgent)
+    const mockIpfs = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
+
+    mockIpfs
+      .intercept({
+        path: '/api/v0/add?cid-version=0&wrap-with-directory=true',
+        method: 'POST',
+      })
+      .reply(500, 'error')
+  })
+
+  afterEach(function () {
+    setGlobalDispatcher(originalDispatcher)
+  })
 }

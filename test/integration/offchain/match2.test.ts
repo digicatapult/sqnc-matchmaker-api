@@ -27,15 +27,16 @@ import {
   seededOrderWithTokenId,
 } from '../../seeds'
 
-import { selfAlias, identitySelfMock } from '../../helper/mock'
+import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
 
 describe('match2', () => {
   let app: Express
 
   before(async function () {
     app = await createHttpServer()
-    identitySelfMock()
   })
+
+  withIdentitySelfMock()
 
   beforeEach(async function () {
     await seed()

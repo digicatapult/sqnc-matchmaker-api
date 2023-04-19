@@ -61,6 +61,7 @@ export const errorHandler = function errorHandler(
 ): ExResponse | void {
   if (err instanceof ValidateError) {
     logger.warn(`Handled Validation Error for ${req.path}: %s`, JSON.stringify(err.fields))
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { status, ...rest } = err
 
     return res.status(422).send({
