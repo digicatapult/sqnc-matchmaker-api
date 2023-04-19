@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/dscp-matchmaker-api",
-  "version": "0.6.8",
+  "version": "0.6.9",
   "description": "An OpenAPI Matchmaking API service for DSCP",
   "main": "src/index.ts",
   "scripts": {
@@ -40,6 +40,7 @@
   },
   "homepage": "https://github.com/digicatapult/dscp-matchmaker-api#readme",
   "devDependencies": {
+    "@polkadot/typegen": "^10.2.1",
     "@polkadot/types": "^10.3.3",
     "@types/chai": "^4.3.4",
     "@types/cors": "^2.8.13",
