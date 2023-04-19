@@ -11,6 +11,7 @@ import {
   Response,
   SuccessResponse,
   Produces,
+  ValidateError,
 } from 'tsoa'
 import { Logger } from 'pino'
 import express from 'express'
@@ -58,24 +59,24 @@ const parseAccept = (acceptHeader: string) =>
 export class attachment extends Controller {
   log: Logger
   dbClient: Database = new Database()
-  db: Models<Query> | any // TMP this is the only one could not address now
+  db: Models<() => Query> // TMP this is the only one could not address now
 
   constructor() {
     super()
     this.log = logger.child({ controller: '/attachment' })
-    // TMP will be updated with a wrapper so ORM client independant
+    // TMP will be updated with a wrapper so ORM client independent
     this.db = this.dbClient.db()
   }
 
-  octetResponse(blob: Blob, name: string): Blob {
-    // default to octect-stream or allow error middleware to handle
-    this.setHeader('accept', 'application/octet-stream')
+  octetResponse(buffer: Buffer, name: string): Readable {
+    // default to octet-stream or allow error middleware to handle
     this.setHeader('access-control-expose-headers', 'content-disposition')
     this.setHeader('content-disposition', `attachment; filename="${name}"`)
+    this.setHeader('content-type', 'application/octet-stream')
     this.setHeader('maxAge', `${365 * 24 * 60 * 60 * 1000}`)
     this.setHeader('immutable', 'true')
 
-    return blob
+    return Readable.from(buffer)
   }
 
   @Get('/')
@@ -83,7 +84,8 @@ export class attachment extends Controller {
   public async get(): Promise<Attachment[]> {
     this.log.debug('retrieving all attachment')
 
-    return await this.db.attachment().map(
+    const attachments: Attachment[] = await this.db.attachment()
+    return attachments.map(
       ({ binary_blob, created_at, ...rest }: any): Attachment => ({
         ...rest,
         createdAt: created_at,
@@ -94,6 +96,7 @@ export class attachment extends Controller {
 
   @Post('/')
   @SuccessResponse(201, 'attachment has been created')
+  @Response<ValidateError>(422, 'Validation Failed')
   public async create(
     @Request() req: express.Request,
     @UploadedFile() file?: Express.Multer.File
@@ -102,7 +105,7 @@ export class attachment extends Controller {
 
     if (!req.body && !file) throw new BadRequest('nothing to upload')
 
-    const [{ id, filename, binary_blob, created_at }]: any[] = await this.db
+    const [{ id, filename, binary_blob, created_at }] = await this.db
       .attachment()
       .insert({
         filename: file ? file.originalname : 'json',
@@ -122,21 +125,21 @@ export class attachment extends Controller {
   @Get('/{id}')
   @Response<NotFound>(404)
   @Response<BadRequest>(400)
-  @Produces('application/octet-stream')
   @Produces('application/json')
+  @Produces('application/octet-stream')
   @SuccessResponse(200)
   public async getById(@Request() req: express.Request, @Path() id: UUID): Promise<unknown | Readable> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const [attachment] = await this.db.attachment().where({ id })
     if (!attachment) throw new NotFound('attachment')
-    const { filename, binary_blob } = attachment
+    const { filename, binary_blob }: { filename: string; binary_blob: Buffer } = attachment
 
     const orderedAccept = parseAccept(req.headers.accept || '*/*')
     if (filename === 'json') {
       for (const mimeType of orderedAccept) {
         if (mimeType === 'application/json' || mimeType === 'application/*' || mimeType === '*/*') {
           try {
-            const json = JSON.parse(binary_blob)
+            const json = JSON.parse(binary_blob.toString())
             return json
           } catch (err) {
             this.log.warn(`Unable to parse json file for attachment ${id}`)

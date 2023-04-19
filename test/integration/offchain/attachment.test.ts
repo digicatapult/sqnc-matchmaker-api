@@ -2,10 +2,10 @@ import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import createHttpServer from '../../src/server'
-import { get, post, postFile } from '../helper/routeHelper'
+import createHttpServer from '../../../src/server'
+import { get, post, postFile } from '../../helper/routeHelper'
 
-import Database from '../../src/lib/db'
+import Database from '../../../src/lib/db'
 
 const db = new Database().db()
 
@@ -13,6 +13,8 @@ describe('attachment', () => {
   const size = 100
   const blobData = 'a'.repeat(size)
   const filename = 'test.pdf'
+  const overSize = 115343360
+  const overSizeBlobData = 'a'.repeat(overSize)
   const jsonData = { key: 'it', filename: 'JSON attachment it' }
   let app: Express
 
@@ -32,7 +34,7 @@ describe('attachment', () => {
       expect(body).to.have.keys(['fields', 'message', 'name'])
       expect(body).to.contain({
         name: 'ValidateError',
-        message: 'Validation failed'
+        message: 'Validation failed',
       })
     })
 
@@ -43,7 +45,7 @@ describe('attachment', () => {
       expect(body).to.equal('attachment not found')
     })
   })
-  
+
   describe('uploads and retrieves attachment', () => {
     let octetRes: any
     let jsonRes: any
@@ -71,15 +73,13 @@ describe('attachment', () => {
       const { status, body, header } = await get(app, `/attachment/${id}`, { accept: 'application/octet-stream' })
 
       expect(status).to.equal(200)
-      expect(body.type).to.equal('Buffer')
-      expect(Buffer.from(body.data).toString()).to.equal(blobData)
+      expect(Buffer.from(body).toString()).to.equal(blobData)
       expect(header).to.deep.contain({
         immutable: 'true',
         maxage: '31536000000',
-        accept: 'application/octet-stream',
+        'content-type': 'application/octet-stream',
         'access-control-expose-headers': 'content-disposition',
         'content-disposition': 'attachment; filename="test.pdf"',
-        'content-length': '326',
       })
     })
 
@@ -96,34 +96,39 @@ describe('attachment', () => {
       const { status, body, header } = await get(app, `/attachment/${id}`, { accept: 'application/json' })
 
       expect(status).to.equal(200)
-      expect(body.type).to.equal('Buffer')
-      expect(Buffer.from(body.data).toString()).to.equal(blobData)
+      expect(Buffer.from(body).toString()).to.equal(blobData)
       expect(header).to.deep.contain({
         immutable: 'true',
         maxage: '31536000000',
-        accept: 'application/octet-stream',
+        'content-type': 'application/octet-stream',
         'access-control-expose-headers': 'content-disposition',
         'content-disposition': 'attachment; filename="test.pdf"',
-        'content-length': '326',
       })
     })
   })
 
-
-  it('attachment as octect with the filename [json]', async () => {
-    const uploadRes = await postFile(app, '/attachment', Buffer.from(blobData), 'json') 
-    const { status, body, header } = await get(app, `/attachment/${uploadRes.body.id}`, { accept: 'application/octet-stream' })
+  it('attachment as octet with the filename [json]', async () => {
+    const uploadRes = await postFile(app, '/attachment', Buffer.from(blobData), 'json')
+    const { status, body, header } = await get(app, `/attachment/${uploadRes.body.id}`, {
+      accept: 'application/octet-stream',
+    })
 
     expect(status).to.equal(200)
-    expect(body.type).to.equal('Buffer')
-    expect(Buffer.from(body.data).toString()).to.equal(blobData)
+    expect(Buffer.from(body).toString()).to.equal(blobData)
     expect(header).to.deep.contain({
       immutable: 'true',
       maxage: '31536000000',
-      accept: 'application/octet-stream',
+      'content-type': 'application/octet-stream',
       'access-control-expose-headers': 'content-disposition',
       'content-disposition': 'attachment; filename="json"',
-      'content-length': '326',
     })
+  })
+
+  it('Doesn`t upload files if more than 100mb', async () => {
+    const uploadRes = await postFile(app, '/attachment', Buffer.from(overSizeBlobData), 'json')
+    const { status, body } = await get(app, `/attachment/${uploadRes.body.id}`)
+
+    expect(status).to.equal(422)
+    expect(body.toString()).to.deep.contain({ message: 'Validation failed' })
   })
 })

@@ -3,16 +3,22 @@ import type { Logger } from 'pino'
 
 import { logger } from '../logger'
 import { pgConfig } from './knexfile'
-import { DemandSubtype } from '../../models/demand'
+import { DemandState, DemandSubtype } from '../../models/demand'
 import { UUID } from '../../models/uuid'
+import { Match2State } from '../../models/match2'
+import { TransactionApiType, TransactionState, TransactionType } from '../../models/transaction'
 
-const TABLES: string[] = ['attachment', 'demand', 'transaction', 'match2']
+const tablesList = ['attachment', 'demand', 'transaction', 'match2', 'processed_blocks'] as const
+type TABLES_TUPLE = typeof tablesList
+type TABLE = TABLES_TUPLE[number]
 
-export interface Models<V> {
-  [key: string | number]: V[keyof V]
+export type Models<V> = {
+  [key in TABLE]: V
 }
 
 export type Query = Knex.QueryBuilder
+
+export type ProcessedBlock = { hash: string; parent: string; height: number }
 
 const demandColumns = [
   'id',
@@ -46,21 +52,40 @@ const transactionColumns = [
   'updated_at AS updatedAt',
 ]
 
+const processBlocksColumns = ['hash', 'height', 'parent']
+
+function trim0x(input: ProcessedBlock): ProcessedBlock {
+  return {
+    hash: input.hash.startsWith('0x') ? input.hash.slice(2) : input.hash,
+    height: input.height,
+    parent: input.parent.startsWith('0x') ? input.parent.slice(2) : input.parent,
+  }
+}
+
+function restore0x(input: ProcessedBlock): ProcessedBlock {
+  return {
+    hash: input.hash.startsWith('0x') ? input.hash : `0x${input.hash}`,
+    height: input.height,
+    parent: input.parent.startsWith('0x') ? input.parent : `0x${input.parent}`,
+  }
+}
+
 export default class Database {
-  public client: Knex
+  private client: Knex
   private log: Logger
-  public db: () => Models<Query> | any
+  public db: () => Models<() => Query>
 
   constructor() {
     this.log = logger
     this.client = knex(pgConfig)
-    this.db = (models: Models<Query> = {}) => {
-      TABLES.forEach((name: string) => {
-        this.log.debug(`initializing ${name} db model`)
-        models[name] = () => this.client(name)
-      })
-      return models
-    }
+    const models = tablesList.reduce((acc, name) => {
+      this.log.debug(`initializing ${name} db model`)
+      return {
+        [name]: () => this.client(name),
+        ...acc,
+      }
+    }, {}) as Models<() => Query>
+    this.db = () => models
   }
 
   getAttachment = async (parametersAttachmentId: string) => {
@@ -71,6 +96,10 @@ export default class Database {
     return this.db().demand().insert(capacity).returning('*')
   }
 
+  upsertDemand = async (demand: object) => {
+    return this.db().demand().insert(demand).onConflict('id').merge().returning('*')
+  }
+
   getDemands = async (subtype: DemandSubtype) => {
     return this.db().demand().select(demandColumns).where({ subtype })
   }
@@ -79,24 +108,34 @@ export default class Database {
     return this.db().demand().select(demandColumns).where({ id })
   }
 
-  getDemandWithAttachment = async (capacityId: UUID, subtype: DemandSubtype) => {
+  getDemandWithAttachment = async (id: UUID, subtype: DemandSubtype) => {
     return this.db()
       .demand()
       .join('attachment', 'demand.parameters_attachment_id', 'attachment.id')
       .select()
-      .where({ 'demand.id': capacityId, subtype })
+      .where({ 'demand.id': id, subtype })
   }
 
-  insertTransaction = async (transaction: object) => {
-    return this.db().transaction().insert(transaction).returning(transactionColumns)
+  insertTransaction = async ({ hash, ...rest }: { hash: `0x${string}` } & Record<string, string>) => {
+    return this.db()
+      .transaction()
+      .insert({ hash: hash.slice(2), ...rest })
+      .returning(transactionColumns)
   }
 
   getTransaction = async (id: UUID) => {
     return this.db().transaction().select(transactionColumns).where({ id })
   }
 
-  getTransactionsByLocalId = async (local_id: UUID) => {
-    return this.db().transaction().select(transactionColumns).where({ local_id })
+  getTransactions = async (state?: TransactionState, api_type?: TransactionApiType) => {
+    return this.db()
+      .transaction()
+      .where({ ...(state && { state }), ...(api_type && { api_type }) })
+      .select(transactionColumns)
+  }
+
+  getTransactionsByLocalId = async (local_id: UUID, transaction_type: TransactionType) => {
+    return this.db().transaction().select(transactionColumns).where({ local_id, transaction_type })
   }
 
   updateTransaction = async (transactionId: UUID, transaction: object) => {
@@ -107,10 +146,23 @@ export default class Database {
       .returning('local_id AS localId')
   }
 
-  updateLocalWithTokenId = async (table: string, localId: UUID, latestTokenId: number, isNewEntity: boolean) => {
+  updateTransactionState = (transactionId: UUID) => {
+    return async (state: TransactionState) => {
+      await this.updateTransaction(transactionId, { state })
+    }
+  }
+
+  updateLocalWithTokenId = async (
+    table: TABLE,
+    localId: UUID,
+    state: DemandState | Match2State,
+    latestTokenId: number,
+    isNewEntity: boolean
+  ) => {
     return this.db()
       [table]()
       .update({
+        state,
         latest_token_id: latestTokenId,
         ...(isNewEntity && { original_token_id: latestTokenId }),
         updated_at: this.client.fn.now(),
@@ -122,11 +174,38 @@ export default class Database {
     return this.db().match2().insert(match2).returning(match2Columns)
   }
 
+  upsertMatch2 = async (match2: object) => {
+    return this.db().match2().insert(match2).onConflict('id').merge().returning('*')
+  }
+
   getMatch2s = async () => {
     return this.db().match2().select(match2Columns)
   }
 
   getMatch2 = async (match2Id: UUID) => {
     return this.db().match2().where({ id: match2Id }).select(match2Columns)
+  }
+
+  getLastProcessedBlock = async (): Promise<ProcessedBlock | null> => {
+    const blockRecords = await this.db()
+      .processed_blocks()
+      .select(processBlocksColumns)
+      .orderBy('height', 'desc')
+      .limit(1)
+    return blockRecords.length !== 0 ? restore0x(blockRecords[0]) : null
+  }
+
+  insertProcessedBlock = async (block: ProcessedBlock): Promise<void> => {
+    await this.db().processed_blocks().insert(trim0x(block))
+  }
+
+  withTransaction = (update: (db: Database) => Promise<void>) => {
+    return this.client.transaction(async (trx) => {
+      const decorated: Database = {
+        ...this,
+        client: trx,
+      }
+      await update(decorated)
+    })
   }
 }

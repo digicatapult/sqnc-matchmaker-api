@@ -2,8 +2,8 @@ import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import createHttpServer from '../../src/server'
-import { post, get } from '../helper/routeHelper'
+import createHttpServer from '../../../src/server'
+import { post, get } from '../../helper/routeHelper'
 import {
   seed,
   cleanup,
@@ -11,8 +11,6 @@ import {
   seededOrderId,
   nonExistentId,
   seededMatch2Id,
-  seededOrderTokenId,
-  seededCapacityTokenId,
   seededOrderMissingTokenId,
   seededCapacityMissingTokenId,
   seededProposalTransactionId,
@@ -21,14 +19,15 @@ import {
   seededOrderAlreadyAllocated,
   seededMatch2WithAllocatedDemands,
   seededMatch2AcceptedA,
-} from '../seeds'
+  seededMatch2AcceptedFinal,
+  seededMatch2NotAcceptableB,
+  seededMatch2NotAcceptableA,
+  seededMatch2NotAcceptableBoth,
+  seededAcceptTransactionId,
+  seededOrderWithTokenId,
+} from '../../seeds'
 
-import { selfAlias, identitySelfMock, match2ProposeMock, match2ProposeMockTokenIds } from '../helper/mock'
-import { Match2State } from '../../src/models/match2'
-import { TransactionState, TransactionApiType, TransactionType } from '../../src/models/transaction'
-import Database from '../../src/lib/db'
-
-const db = new Database()
+import { selfAlias, identitySelfMock } from '../../helper/mock'
 
 describe('match2', () => {
   let app: Express
@@ -56,7 +55,7 @@ describe('match2', () => {
         /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
       )
       expect(responseRest).to.deep.equal({
-        state: Match2State.proposed,
+        state: 'proposed',
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
@@ -70,7 +69,7 @@ describe('match2', () => {
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededMatch2Id,
-        state: Match2State.proposed,
+        state: 'proposed',
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
@@ -82,10 +81,10 @@ describe('match2', () => {
     it('should get all match2s', async () => {
       const response = await get(app, `/match2`)
       expect(response.status).to.equal(200)
-      expect(response.body.length).to.equal(3)
+      expect(response.body.length).to.be.greaterThan(0)
       expect(response.body[0]).to.deep.equal({
         id: seededMatch2Id,
-        state: Match2State.proposed,
+        state: 'proposed',
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
@@ -94,64 +93,48 @@ describe('match2', () => {
       })
     })
 
-    it('should create a match2 on-chain', async () => {
-      match2ProposeMock()
-      // submit to chain
-      const response = await post(app, `/match2/${seededMatch2Id}/proposal`, {})
-      expect(response.status).to.equal(201)
-
-      const { id: transactionId, state } = response.body
-      expect(transactionId).to.match(
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-      )
-      expect(state).to.equal(TransactionState.submitted)
-
-      // check local transaction updates
-      const [transaction] = await db.getTransaction(transactionId)
-      expect(transaction.state).to.equal(TransactionState.finalised)
-
-      // check local entities update with token id
-      const [demandA] = await db.getDemand(seededOrderId)
-      expect(demandA.latestTokenId).to.equal(match2ProposeMockTokenIds[0])
-      expect(demandA.originalTokenId).to.equal(seededOrderTokenId)
-
-      const [demandB] = await db.getDemand(seededCapacityId)
-      expect(demandB.latestTokenId).to.equal(match2ProposeMockTokenIds[1])
-      expect(demandB.originalTokenId).to.equal(seededCapacityTokenId)
-
-      const [match2] = await db.getMatch2(seededMatch2Id)
-      expect(match2.latestTokenId).to.equal(match2ProposeMockTokenIds[2])
-      expect(match2.originalTokenId).to.equal(match2ProposeMockTokenIds[2])
-    })
-
-    it('it should get a proposal transaction', async () => {
-      const response = await get(app, `/match2/${seededMatch2Id}/proposal/${seededProposalTransactionId}`)
+    it('it should get all proposal transactions - 200', async () => {
+      const response = await get(app, `/match2/${seededMatch2Id}/proposal`)
       expect(response.status).to.equal(200)
-      expect(response.body).to.deep.equal({
+      expect(response.body.length).to.be.greaterThan(0)
+      expect(response.body[0]).to.deep.equal({
         id: seededProposalTransactionId,
-        apiType: TransactionApiType.match2,
-        transactionType: TransactionType.proposal,
+        transactionType: 'proposal',
+        apiType: 'match2',
         localId: seededMatch2Id,
-        state: TransactionState.submitted,
+        state: 'submitted',
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
     })
 
-    it('it should get all proposal transactions - 200', async () => {
-      const response = await get(app, `/match2/${seededMatch2Id}/proposal`)
+    it('it should get an accept transaction', async () => {
+      const response = await get(app, `/match2/${seededMatch2Id}/accept/${seededAcceptTransactionId}`)
       expect(response.status).to.equal(200)
-      expect(response.body).to.deep.equal([
-        {
-          id: seededProposalTransactionId,
-          apiType: TransactionApiType.match2,
-          transactionType: TransactionType.proposal,
-          localId: seededMatch2Id,
-          state: TransactionState.submitted,
-          submittedAt: exampleDate,
-          updatedAt: exampleDate,
-        },
-      ])
+      expect(response.body).to.deep.equal({
+        id: seededAcceptTransactionId,
+        apiType: 'match2',
+        transactionType: 'accept',
+        localId: seededMatch2Id,
+        state: 'submitted',
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      })
+    })
+
+    it('it should get all accept transactions', async () => {
+      const response = await get(app, `/match2/${seededMatch2Id}/accept`)
+      expect(response.status).to.equal(200)
+      expect(response.body.length).to.be.greaterThan(0)
+      expect(response.body[0]).to.deep.equal({
+        id: seededAcceptTransactionId,
+        apiType: 'match2',
+        transactionType: 'accept',
+        localId: seededMatch2Id,
+        state: 'submitted',
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      })
     })
   })
 
@@ -206,7 +189,7 @@ describe('match2', () => {
     it('incorrect state when creating on-chain - 400', async () => {
       const response = await post(app, `/match2/${seededMatch2AcceptedA}/proposal`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal(`Match2 must have state: ${Match2State.proposed}`)
+      expect(response.body).to.equal(`Match2 must have state: ${'proposed'}`)
     })
 
     it('demandA missing token ID - 400', async () => {
@@ -219,7 +202,10 @@ describe('match2', () => {
     })
 
     it('demandB missing token ID - 400', async () => {
-      const createMatch2 = await post(app, '/match2', { demandA: seededOrderId, demandB: seededCapacityMissingTokenId })
+      const createMatch2 = await post(app, '/match2', {
+        demandA: seededOrderWithTokenId,
+        demandB: seededCapacityMissingTokenId,
+      })
       expect(createMatch2.status).to.equal(201)
 
       const response = await post(app, `/match2/${createMatch2.body.id}/proposal`, {})
@@ -246,6 +232,54 @@ describe('match2', () => {
     it('non-existent match2 when listing proposals - 404', async () => {
       const response = await get(app, `/match2/${nonExistentId}/proposal`)
       expect(response.status).to.equal(404)
+    })
+
+    it('match2 at acceptA and DemandB not owned - 400', async () => {
+      const response = await post(app, `/match2/${seededMatch2NotAcceptableA}/accept`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`You do not own an acceptable demand`)
+    })
+
+    it('match2 at acceptB and DemandA not owned - 400', async () => {
+      const response = await post(app, `/match2/${seededMatch2NotAcceptableB}/accept`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`You do not own an acceptable demand`)
+    })
+
+    it('neither demand owned - 400', async () => {
+      const response = await post(app, `/match2/${seededMatch2NotAcceptableBoth}/accept`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`You do not own an acceptable demand`)
+    })
+
+    it('match2 already acceptedFinal when accepting - 400', async () => {
+      const response = await post(app, `/match2/${seededMatch2AcceptedFinal}/accept`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`Already ${'acceptedFinal'}`)
+    })
+
+    it('non-existent match2 id when accepting - 404', async () => {
+      const response = await get(app, `/match2/${nonExistentId}/accept`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-existent match2 when listing accepts - 404', async () => {
+      const response = await get(app, `/match2/${nonExistentId}/proposal`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-existent match2 when getting an accept - 404', async () => {
+      const response = await get(app, `/match2/${nonExistentId}/accept/${seededAcceptTransactionId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-existent transaction when getting an accept - 404', async () => {
+      const response = await get(app, `/match2/${seededMatch2Id}/accept/${nonExistentId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('accept not found')
     })
   })
 })

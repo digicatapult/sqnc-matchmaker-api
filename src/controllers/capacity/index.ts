@@ -15,26 +15,37 @@ import type { Logger } from 'pino'
 
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
-import { DemandResponse, DemandSubtype, DemandRequest, DemandState } from '../../models/demand'
+import { DemandResponse, DemandRequest } from '../../models/demand'
 import { UUID } from '../../models/uuid'
 import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-import { TransactionResponse, TransactionState, TransactionApiType, TransactionType } from '../../models/transaction'
-import { TokenType } from '../../models/tokenType'
-import { runProcess } from '../..//lib/services/dscpApi'
+import { TransactionResponse } from '../../models/transaction'
+import { DEMAND } from '../../models/tokenType'
 import { demandCreate } from '../../lib/payload'
 import { observeTokenId } from '../../lib/services/blockchainWatcher'
+import ChainNode from '../../lib/chainNode'
+import env from '../../env'
+
 @Route('capacity')
 @Tags('capacity')
 @Security('bearerAuth')
 export class CapacityController extends Controller {
   log: Logger
   db: Database
+  node: ChainNode
 
   constructor() {
     super()
     this.log = logger.child({ controller: '/capacity' })
     this.db = new Database()
+    this.node = new ChainNode({
+      host: env.NODE_HOST,
+      port: env.NODE_PORT,
+      logger,
+      userUri: env.USER_URI,
+      ipfsHost: env.IPFS_HOST,
+      ipfsPort: env.IPFS_PORT,
+    })
   }
 
   /**
@@ -56,8 +67,8 @@ export class CapacityController extends Controller {
 
     const [capacity] = await this.db.insertDemand({
       owner: selfAddress,
-      subtype: DemandSubtype.capacity,
-      state: DemandState.created,
+      subtype: 'capacity',
+      state: 'created',
       parameters_attachment_id: parametersAttachmentId,
     })
 
@@ -75,7 +86,7 @@ export class CapacityController extends Controller {
    */
   @Get('/')
   public async getAll(): Promise<DemandResponse[]> {
-    const capacities = await this.db.getDemands(DemandSubtype.capacity)
+    const capacities = await this.db.getDemands('capacity')
     const result = await Promise.all(capacities.map(async (capacity: DemandResponse) => responseWithAlias(capacity)))
     return result
   }
@@ -102,23 +113,24 @@ export class CapacityController extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @SuccessResponse('201')
   public async createCapacityOnChain(@Path() capacityId: UUID): Promise<TransactionResponse> {
-    const [capacity] = await this.db.getDemandWithAttachment(capacityId, DemandSubtype.capacity)
+    const [capacity] = await this.db.getDemandWithAttachment(capacityId, 'capacity')
     if (!capacity) throw new NotFound('capacity')
-    if (capacity.state !== DemandState.created) throw new BadRequest(`Demand must have state: ${DemandState.created}`)
+    if (capacity.state !== 'created') throw new BadRequest(`Demand must have state: ${'created'}`)
+
+    const extrinsic = await this.node.prepareRunProcess(demandCreate(capacity))
 
     const [transaction] = await this.db.insertTransaction({
-      api_type: TransactionApiType.capacity,
-      transaction_type: TransactionType.creation,
+      api_type: 'capacity',
+      transaction_type: 'creation',
       local_id: capacityId,
-      state: TransactionState.submitted,
+      state: 'submitted',
+      hash: extrinsic.hash.toHex(),
     })
 
-    // temp - until there is a blockchain watcher, need to await runProcess to know token IDs
-    const [tokenId] = await runProcess(demandCreate(capacity))
-    await this.db.updateTransaction(transaction.id, { state: TransactionState.finalised })
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async ([tokenId]) => {
+      await observeTokenId(DEMAND, capacityId, 'created', tokenId, true)
+    })
 
-    // demand-create returns a single token ID
-    await observeTokenId(TokenType.DEMAND, capacityId, tokenId, true)
     return transaction
   }
 
@@ -150,7 +162,7 @@ export class CapacityController extends Controller {
     const [capacity] = await this.db.getDemand(capacityId)
     if (!capacity) throw new NotFound('capacity')
 
-    return await this.db.getTransactionsByLocalId(capacityId)
+    return await this.db.getTransactionsByLocalId(capacityId, 'creation')
   }
 }
 
