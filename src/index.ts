@@ -19,10 +19,8 @@ import ChainNode from './lib/chainNode'
     ipfsPort: env.IPFS_PORT,
   })
 
-  const handleBlock = () => Promise.resolve({})
-
   if (env.ENABLE_INDEXER) {
-    const indexer = new Indexer({ db: new Database(), logger, node, handleBlock })
+    const indexer = new Indexer({ db: new Database(), logger, node })
     await indexer.start()
     indexer.processAllBlocks(await node.getLastFinalisedBlockHash()).then(() =>
       node.watchFinalisedBlocks(async (hash) => {

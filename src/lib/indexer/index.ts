@@ -3,7 +3,8 @@ import { Logger } from 'pino'
 import type Database from '../db/index'
 import ChainNode from '../chainNode'
 
-export type ChangeSet = Record<string, never>
+import DefaultBlockHandler from './handleBlock'
+import { ChangeSet } from './changeSet'
 
 export type BlockHandler = (blockHash: string) => Promise<ChangeSet>
 
@@ -11,7 +12,7 @@ export interface IndexerCtorArgs {
   db: Database
   logger: Logger
   node: ChainNode
-  handleBlock: BlockHandler
+  handleBlock?: BlockHandler
   retryDelay?: number
 }
 
@@ -30,8 +31,13 @@ export default class Indexer {
     this.node = node
     this.gen = this.nextBlockProcessor()
     this.unprocessedBlocks = []
-    this.handleBlock = handleBlock
     this.retryDelay = retryDelay || 1000
+    if (handleBlock) {
+      this.handleBlock = handleBlock
+      return
+    }
+    const blockHandler = new DefaultBlockHandler({ node, logger: this.logger })
+    this.handleBlock = blockHandler.handleBlock.bind(blockHandler)
   }
 
   public async start() {
@@ -179,6 +185,18 @@ export default class Indexer {
         })
       }
       await db.insertProcessedBlock(header)
+
+      if (changeSet.demands) {
+        for (const [, demand] of changeSet.demands) {
+          await db.upsertDemand(demand)
+        }
+      }
+
+      if (changeSet.matches) {
+        for (const [, match2] of changeSet.matches) {
+          await db.upsertMatch2(match2)
+        }
+      }
     })
   }
 }

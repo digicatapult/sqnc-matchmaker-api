@@ -1,4 +1,3 @@
-/* eslint disable */
 import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'

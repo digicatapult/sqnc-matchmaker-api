@@ -31,13 +31,19 @@ export const withInitialLastProcessedBlock = (initial: LastProcessBlockResult) =
     lastBlock = block
     return Promise.resolve()
   })
+  const upsertDemand = sinon.stub().resolves()
+  const upsertMatch2 = sinon.stub().resolves()
 
   return {
     getLastProcessedBlock: getMock,
+    upsertDemand,
+    upsertMatch2,
     insertProcessedBlock,
     withTransaction: sinon.spy(async function (fn: (db: Database) => Promise<void>) {
       await fn({
         insertProcessedBlock,
+        upsertDemand,
+        upsertMatch2,
       } as unknown as Database)
     }),
   } as unknown as Database
