@@ -7,7 +7,7 @@ import { errorHandler } from './lib/error-handler'
 import { RegisterRoutes } from './routes'
 import * as swaggerJson from './swagger.json'
 import { startStatusHandlers } from './serviceStatus/index'
-import { serviceState } from './util/statusPoll.js'
+import { serviceState } from './util/statusPoll'
 
 export default async (): Promise<Express> => {
   const app: Express = express()
