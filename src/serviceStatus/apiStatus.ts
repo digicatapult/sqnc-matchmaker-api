@@ -34,11 +34,11 @@ const getStatus = async () => {
   }
 }
 
-const startApiStatus = () =>
+const startIdentityStatus = () =>
   startStatusHandler({
     getStatus,
     pollingPeriodMs: SUBSTRATE_STATUS_POLL_PERIOD_MS,
     serviceTimeoutMs: SUBSTRATE_STATUS_TIMEOUT_MS,
   })
 
-export default startApiStatus
+export default startIdentityStatus
