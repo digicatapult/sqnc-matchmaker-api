@@ -7,8 +7,7 @@ import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
 import { HttpResponse } from './error-handler'
 
-import Ipfs from './ipfs'
-import type { Payload, Output, Metadata, MetadataFile } from './payload'
+import type { Payload, Output, Metadata } from './payload'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
@@ -17,8 +16,6 @@ export interface NodeCtorConfig {
   port: number
   logger: Logger
   userUri: string
-  ipfsHost: string
-  ipfsPort: number
 }
 
 export interface ProcessRanEvent {
@@ -50,16 +47,14 @@ export default class ChainNode {
   private logger: Logger
   private userUri: string
   private roles: RoleEnum[]
-  private ipfs: Ipfs
 
-  constructor({ host, port, logger, userUri, ipfsHost, ipfsPort }: NodeCtorConfig) {
+  constructor({ host, port, logger, userUri }: NodeCtorConfig) {
     this.logger = logger.child({ module: 'ChainNode' })
     this.provider = new WsProvider(`ws://${host}:${port}`)
     this.userUri = userUri
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.roles = []
-    this.ipfs = new Ipfs({ host: ipfsHost, port: ipfsPort, logger })
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     this.api.isReadyOrError.catch(() => {}) // prevent unhandled promise rejection errors
@@ -122,7 +117,7 @@ export default class ChainNode {
     const outputsAsMaps = await Promise.all(
       outputs.map(async (output: Output) => [
         await this.processRoles(output.roles),
-        await this.processMetadata(output.metadata),
+        this.processMetadata(output.metadata),
       ])
     )
 
@@ -195,30 +190,28 @@ export default class ChainNode {
     )
   }
 
-  async processMetadata(metadata: Metadata) {
+  processMetadata(metadata: Metadata) {
     return new Map(
-      await Promise.all(
-        Object.entries(metadata).map(async ([key, value]) => {
-          let processedValue
-          switch (value.type) {
-            case 'LITERAL':
-              processedValue = { Literal: value.value as string }
-              break
-            case 'TOKEN_ID':
-              processedValue = { TokenId: value.value as string }
-              break
-            case 'FILE':
-              processedValue = { File: await this.ipfs.addFile(value.value as MetadataFile) }
-              break
-            default:
-            case 'NONE':
-              processedValue = { None: null }
-              break
-          }
+      Object.entries(metadata).map(([key, value]) => {
+        let processedValue
+        switch (value.type) {
+          case 'LITERAL':
+            processedValue = { Literal: value.value as string }
+            break
+          case 'TOKEN_ID':
+            processedValue = { TokenId: value.value as string }
+            break
+          case 'FILE':
+            processedValue = { File: value.value as string }
+            break
+          default:
+          case 'NONE':
+            processedValue = { None: null }
+            break
+        }
 
-          return [key, processedValue] as readonly [unknown, unknown]
-        })
-      )
+        return [key, processedValue] as readonly [unknown, unknown]
+      })
     )
   }
 

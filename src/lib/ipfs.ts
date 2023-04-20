@@ -1,11 +1,7 @@
-import basex from 'base-x'
 import { Logger } from 'pino'
 
 import type { MetadataFile } from './payload'
 import { HttpResponse } from './error-handler'
-
-const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-const bs58 = basex(BASE58)
 
 interface FilestoreResponse {
   Name: string
@@ -14,11 +10,15 @@ interface FilestoreResponse {
 }
 
 export default class Ipfs {
-  private url: string
+  private addUrl: string
+  private dirUrl: (dirHash: string) => string
+  private fileUrl: (fileHash: string) => string
   private logger: Logger
 
   constructor({ host, port, logger }: { host: string; port: number; logger: Logger }) {
-    this.url = `http://${host}:${port}/api/v0/add?cid-version=0&wrap-with-directory=true`
+    this.addUrl = `http://${host}:${port}/api/v0/add?cid-version=0&wrap-with-directory=true`
+    this.dirUrl = (dirHash) => `http://${host}:${port}/api/v0/ls?arg=${dirHash}`
+    this.fileUrl = (fileHash) => `http://${host}:${port}/api/v0/cat?arg=${fileHash}`
     this.logger = logger.child({ module: 'ipfs' })
   }
 
@@ -26,7 +26,7 @@ export default class Ipfs {
     this.logger.debug('Uploading file %s', filename)
     const form = new FormData()
     form.append('file', blob, filename)
-    const res = await fetch(this.url, {
+    const res = await fetch(this.addUrl, {
       method: 'POST',
       body: form,
     })
@@ -43,18 +43,42 @@ export default class Ipfs {
       .filter((obj) => obj.length > 0)
       .map((obj) => JSON.parse(obj))
 
-    const hash = formatHash(json)
+    const hash = findHash(json)
     this.logger.debug('Upload of file %s succeeded. Hash is %s', filename, hash)
     return hash
   }
+
+  async getFile(hash: string): Promise<MetadataFile> {
+    const dirUrl = this.dirUrl(hash)
+    const dirRes = await fetch(dirUrl, { method: 'POST' })
+    if (!dirRes.ok || !dirRes.body) {
+      throw new Error(`Error fetching directory from IPFS (${dirRes.status}): ${await dirRes.text()}`)
+    }
+
+    // Parse stream of dir data to get the file hash
+    const data = await dirRes.json()
+    const link = data?.Objects?.[0]?.Links?.[0]
+
+    if (!link) {
+      throw new Error(`Error parsing directory from IPFS (${dirRes.status}): ${await dirRes.text()}`)
+    }
+    const fileHash = link.Hash
+    const filename = link.Name
+
+    // Return file
+    const fileUrl = this.fileUrl(fileHash)
+    const fileRes = await fetch(fileUrl, { method: 'POST' })
+    if (!fileRes.ok) throw new Error(`Error fetching file from IPFS (${fileRes.status}): ${await fileRes.text()}`)
+
+    return { blob: await fileRes.blob(), filename }
+  }
 }
 
-const formatHash = (filestoreResponse: FilestoreResponse[]) => {
+const findHash = (filestoreResponse: FilestoreResponse[]) => {
   // directory has no Name
   const dir = filestoreResponse.find((r) => r.Name === '')
   if (dir && dir.Hash && dir.Size) {
-    const decoded = Buffer.from(bs58.decode(dir.Hash))
-    return `0x${decoded.toString('hex').slice(4)}`
+    return dir.Hash
   } else {
     throw new HttpResponse({ code: 500, message: 'ipfs failed to make directory' })
   }

@@ -18,6 +18,6 @@ export interface Attachment {
    * for json files name will be 'json'
    */
   filename: string | 'json'
-  size: number
+  size?: number
   createdAt: Date
 }

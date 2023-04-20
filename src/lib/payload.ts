@@ -1,6 +1,11 @@
+import basex from 'base-x'
+
 import { Match2Payload, Match2Response } from '../models/match2'
 import { DemandPayload } from '../models/demand'
 import * as TokenType from '../models/tokenType'
+
+const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+const bs58 = basex(BASE58)
 
 export interface Payload {
   process: { id: string; version: number }
@@ -18,7 +23,12 @@ export interface MetadataFile {
   filename: string
 }
 
-export type Metadata = Record<string, { type: string; value: string | MetadataFile | number }>
+export type Metadata = Record<string, { type: string; value: string | number }>
+
+const formatHash = (hash: string) => {
+  const decoded = Buffer.from(bs58.decode(hash))
+  return `0x${decoded.toString('hex').slice(4)}`
+}
 
 export const demandCreate = (demand: DemandPayload): Payload => ({
   process: { id: 'demand-create', version: 1 },
@@ -31,7 +41,7 @@ export const demandCreate = (demand: DemandPayload): Payload => ({
         type: { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: 'created' },
         subtype: { type: 'LITERAL', value: demand.subtype },
-        parameters: { type: 'FILE', value: { blob: new Blob([demand.binary_blob]), filename: demand.filename } },
+        parameters: { type: 'FILE', value: formatHash(demand.ipfs_hash) },
       },
     },
   ],

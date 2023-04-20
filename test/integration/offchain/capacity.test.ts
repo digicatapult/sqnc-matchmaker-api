@@ -16,15 +16,16 @@ import {
   seededCapacityAlreadyAllocated,
 } from '../../seeds'
 
-import { selfAlias, identitySelfMock, ipfsMockError } from '../../helper/mock'
+import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
 
 describe('capacity', () => {
   let app: Express
 
   before(async function () {
     app = await createHttpServer()
-    identitySelfMock()
   })
+
+  withIdentitySelfMock()
 
   beforeEach(async function () {
     await seed()
@@ -155,14 +156,6 @@ describe('capacity', () => {
     it('non-existent Capacity ID should return nothing - 404', async () => {
       const response = await get(app, `/capacity/${nonExistentId}/creation/`)
       expect(response.status).to.equal(404)
-    })
-
-    it('ipfs error - 500', async () => {
-      ipfsMockError()
-
-      const { status, body } = await post(app, `/capacity/${seededCapacityId}/creation`, {})
-      expect(status).to.equal(500)
-      expect(body).to.equal('error')
     })
   })
 })
