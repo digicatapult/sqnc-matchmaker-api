@@ -1,5 +1,5 @@
-import startApiStatus from './apiStatus.js'
-import { buildCombinedHandler } from '../util/statusPoll.js'
+import startApiStatus from './apiStatus'
+import { buildCombinedHandler } from '../util/statusPoll'
 
 export const startStatusHandlers = async () => {
   const handlers = new Map()
