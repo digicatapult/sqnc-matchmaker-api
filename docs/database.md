@@ -16,12 +16,13 @@ The following tables exist in the `matchmaker-api` database.
 
 ### `attachment`
 
-| column        | PostgreSQL type           | nullable |       default        | description                            |
-| :------------ | :------------------------ | :------- | :------------------: | :------------------------------------- |
-| `id`          | `UUID`                    | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment` |
-| `filename`    | `CHARACTER VARYING (255)` | FALSE    |          -           | Attachment filename                    |
-| `binary_blob` | `binary`                  | FALSE    |          -           | Attachment file data as binary         |
-| `created_at`  | `dateTime`                | FALSE    |       `now()`        | When the row was first created         |
+| column       | PostgreSQL type           | nullable |       default        | description                            |
+| :----------- | :------------------------ | :------- | :------------------: | :------------------------------------- |
+| `id`         | `UUID`                    | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment` |
+| `filename`   | `CHARACTER VARYING (255)` | FALSE    |          -           | Attachment filename                    |
+| `ipfs_hash`  | `CHARACTER VARYING (255)` | FALSE    |          -           | Attachment CID in IPFS                 |
+| `size`       | `BIG INT`                 | TRUE     |          -           | Size of file in bytes if known         |
+| `created_at` | `dateTime`                | FALSE    |       `now()`        | When the row was first created         |
 
 #### Indexes
 

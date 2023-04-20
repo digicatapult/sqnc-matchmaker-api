@@ -22,6 +22,8 @@ import type { Attachment } from '../../models'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import { Readable } from 'node:stream'
 import type { UUID } from '../../models/uuid'
+import Ipfs from '../../lib/ipfs'
+import env from '../../env'
 
 const parseAccept = (acceptHeader: string) =>
   acceptHeader
@@ -53,12 +55,22 @@ const parseAccept = (acceptHeader: string) =>
     })
     .map(({ mimeType }) => mimeType)
 
+interface DbAttachment extends Omit<Attachment, 'createdAt'> {
+  ipfs_hash: string
+  created_at: Date
+}
+
 @Route('attachment')
 @Tags('attachment')
 @Security('bearerAuth')
 export class attachment extends Controller {
   log: Logger
   dbClient: Database = new Database()
+  ipfs: Ipfs = new Ipfs({
+    host: env.IPFS_HOST,
+    port: env.IPFS_PORT,
+    logger,
+  })
   db: Models<() => Query> // TMP this is the only one could not address now
 
   constructor() {
@@ -84,12 +96,11 @@ export class attachment extends Controller {
   public async get(): Promise<Attachment[]> {
     this.log.debug('retrieving all attachment')
 
-    const attachments: Attachment[] = await this.db.attachment()
+    const attachments: DbAttachment[] = await this.db.attachment()
     return attachments.map(
-      ({ binary_blob, created_at, ...rest }: any): Attachment => ({
+      ({ created_at, ipfs_hash, ...rest }): Attachment => ({
         ...rest,
         createdAt: created_at,
-        size: binary_blob.length,
       })
     )
   }
@@ -105,19 +116,24 @@ export class attachment extends Controller {
 
     if (!req.body && !file) throw new BadRequest('nothing to upload')
 
-    const [{ id, filename, binary_blob, created_at }] = await this.db
+    const filename = file ? file.originalname : 'json'
+    const fileBlob = new Blob([Buffer.from(file?.buffer || JSON.stringify(req.body))])
+    const ipfsHash = await this.ipfs.addFile({ blob: fileBlob, filename })
+
+    const [{ id, created_at }] = await this.db
       .attachment()
       .insert({
-        filename: file ? file.originalname : 'json',
-        binary_blob: Buffer.from(file?.buffer || JSON.stringify(req.body)),
+        filename,
+        ipfs_hash: ipfsHash,
+        size: fileBlob.size,
       })
-      .returning(['id', 'filename', 'binary_blob', 'created_at'])
+      .returning(['id', 'filename', 'created_at'])
 
     const result: Attachment = {
       id,
       filename,
+      size: fileBlob.size,
       createdAt: created_at,
-      size: (binary_blob as Buffer).length,
     }
     return result
   }
@@ -132,25 +148,37 @@ export class attachment extends Controller {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const [attachment] = await this.db.attachment().where({ id })
     if (!attachment) throw new NotFound('attachment')
-    const { filename, binary_blob }: { filename: string; binary_blob: Buffer } = attachment
+    const { filename, ipfs_hash, size }: { filename: string; ipfs_hash: string; size: number } = attachment
+
+    const { blob } = await this.ipfs.getFile(ipfs_hash)
+    const blobBuffer = Buffer.from(await blob.arrayBuffer())
+
+    if (size === null) {
+      try {
+        await this.dbClient.updateAttachmentSize(id, blob.size)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'unknown'
+        this.log.warn('Error updating attachment size: %s', message)
+      }
+    }
 
     const orderedAccept = parseAccept(req.headers.accept || '*/*')
     if (filename === 'json') {
       for (const mimeType of orderedAccept) {
         if (mimeType === 'application/json' || mimeType === 'application/*' || mimeType === '*/*') {
           try {
-            const json = JSON.parse(binary_blob.toString())
+            const json = JSON.parse(blobBuffer.toString())
             return json
           } catch (err) {
             this.log.warn(`Unable to parse json file for attachment ${id}`)
-            return this.octetResponse(binary_blob, filename)
+            return this.octetResponse(blobBuffer, filename)
           }
         }
         if (mimeType === 'application/octet-stream') {
-          return this.octetResponse(binary_blob, filename)
+          return this.octetResponse(blobBuffer, filename)
         }
       }
     }
-    return this.octetResponse(binary_blob, filename)
+    return this.octetResponse(blobBuffer, filename)
   }
 }

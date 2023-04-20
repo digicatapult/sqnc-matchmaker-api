@@ -6,6 +6,7 @@ import createHttpServer from '../../../src/server'
 import { get, post, postFile } from '../../helper/routeHelper'
 
 import Database from '../../../src/lib/db'
+import { withIpfsMockError, withIpfsMock } from '../../helper/mock'
 
 const db = new Database().db()
 
@@ -46,26 +47,21 @@ describe('attachment', () => {
     })
   })
 
-  describe('uploads and retrieves attachment', () => {
+  describe('uploads and retrieves attachment [octet]', () => {
     let octetRes: any
-    let jsonRes: any
+
+    withIpfsMock(blobData)
 
     beforeEach(async () => {
       octetRes = await postFile(app, '/attachment', Buffer.from(blobData), filename)
-      jsonRes = await post(app, '/attachment', jsonData)
     })
 
-    it('confirms JSON and octet attachment uploads', () => {
+    it('confirms JSON attachment uploads', () => {
       // assert octect
       expect(octetRes.status).to.equal(201)
       expect(octetRes.body).to.have.property('id')
       expect(octetRes.body.filename).to.equal(filename)
       expect(octetRes.body.size).to.equal(size)
-
-      // assert JSON
-      expect(jsonRes.status).to.equal(201)
-      expect(jsonRes.body).to.contain.keys(['id', 'createdAt'])
-      expect(jsonRes.body.filename).to.equal('json')
     })
 
     it('returns octet attachment', async () => {
@@ -81,14 +77,6 @@ describe('attachment', () => {
         'access-control-expose-headers': 'content-disposition',
         'content-disposition': 'attachment; filename="test.pdf"',
       })
-    })
-
-    it('returns JSON attachment', async () => {
-      const { id } = jsonRes.body
-      const { status, body } = await get(app, `/attachment/${id}`, { accept: 'application/json' })
-
-      expect(status).to.equal(200)
-      expect(body).to.contain(jsonData)
     })
 
     it('returns octet when JSON.parse fails', async () => {
@@ -107,20 +95,44 @@ describe('attachment', () => {
     })
   })
 
-  it('attachment as octet with the filename [json]', async () => {
-    const uploadRes = await postFile(app, '/attachment', Buffer.from(blobData), 'json')
-    const { status, body, header } = await get(app, `/attachment/${uploadRes.body.id}`, {
-      accept: 'application/octet-stream',
+  describe('uploads and retrieves attachment [json]', () => {
+    let jsonRes: any
+
+    withIpfsMock(jsonData)
+
+    beforeEach(async () => {
+      jsonRes = await post(app, '/attachment', jsonData)
     })
 
-    expect(status).to.equal(200)
-    expect(Buffer.from(body).toString()).to.equal(blobData)
-    expect(header).to.deep.contain({
-      immutable: 'true',
-      maxage: '31536000000',
-      'content-type': 'application/octet-stream',
-      'access-control-expose-headers': 'content-disposition',
-      'content-disposition': 'attachment; filename="json"',
+    it('confirms JSON and octet attachment uploads', () => {
+      // assert JSON
+      expect(jsonRes.status).to.equal(201)
+      expect(jsonRes.body).to.contain.keys(['id', 'createdAt'])
+      expect(jsonRes.body.filename).to.equal('json')
+    })
+
+    it('returns JSON attachment', async () => {
+      const { id } = jsonRes.body
+      const { status, body } = await get(app, `/attachment/${id}`, { accept: 'application/json' })
+
+      expect(status).to.equal(200)
+      expect(body).to.contain(jsonData)
+    })
+
+    it('attachment as octet with the filename [json]', async () => {
+      const { status, body, header } = await get(app, `/attachment/${jsonRes.body.id}`, {
+        accept: 'application/octet-stream',
+      })
+
+      expect(status).to.equal(200)
+      expect(Buffer.from(body).toString()).to.equal('{"key":"it","filename":"JSON attachment it"}')
+      expect(header).to.deep.contain({
+        immutable: 'true',
+        maxage: '31536000000',
+        'content-type': 'application/octet-stream',
+        'access-control-expose-headers': 'content-disposition',
+        'content-disposition': 'attachment; filename="json"',
+      })
     })
   })
 
@@ -130,5 +142,15 @@ describe('attachment', () => {
 
     expect(status).to.equal(422)
     expect(body.toString()).to.deep.contain({ message: 'Validation failed' })
+  })
+
+  describe('IPFS errors', function () {
+    withIpfsMockError()
+
+    it('ipfs error - 500', async () => {
+      const { status, body } = await post(app, '/attachment', jsonData)
+      expect(status).to.equal(500)
+      expect(body).to.equal('error')
+    })
   })
 })

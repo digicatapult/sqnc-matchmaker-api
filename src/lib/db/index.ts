@@ -92,6 +92,10 @@ export default class Database {
     return this.db().attachment().where({ id: parametersAttachmentId })
   }
 
+  updateAttachmentSize = async (id: string, size: number) => {
+    return this.db().attachment().update({ size }).where({ id })
+  }
+
   insertDemand = async (capacity: object) => {
     return this.db().demand().insert(capacity).returning('*')
   }

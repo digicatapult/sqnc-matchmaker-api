@@ -6,7 +6,7 @@ import createHttpServer from '../../../src/server'
 import { post } from '../../helper/routeHelper'
 import { seed, cleanup, seededCapacityId, parametersAttachmentId } from '../../seeds'
 
-import { identitySelfMock, ipfsMock } from '../../helper/mock'
+import { withIdentitySelfMock } from '../../helper/mock'
 import Database from '../../../src/lib/db'
 import ChainNode from '../../../src/lib/chainNode'
 import { logger } from '../../../src/lib/logger'
@@ -20,8 +20,6 @@ const node = new ChainNode({
   port: env.NODE_PORT,
   logger,
   userUri: env.USER_URI,
-  ipfsHost: env.IPFS_HOST,
-  ipfsPort: env.IPFS_PORT,
 })
 
 describe('on-chain', function () {
@@ -30,8 +28,9 @@ describe('on-chain', function () {
 
   before(async function () {
     app = await createHttpServer()
-    identitySelfMock()
   })
+
+  withIdentitySelfMock()
 
   beforeEach(async function () {
     await seed()
@@ -43,7 +42,6 @@ describe('on-chain', function () {
 
   describe('capacity', () => {
     it('should create a capacity on-chain', async () => {
-      ipfsMock()
       const lastTokenId = await node.getLastTokenId()
 
       // submit to chain
@@ -68,7 +66,6 @@ describe('on-chain', function () {
 
   describe('order', () => {
     it('creates an order on chain', async () => {
-      ipfsMock()
       const lastTokenId = await node.getLastTokenId()
 
       const {
@@ -108,7 +105,7 @@ describe('on-chain', function () {
 
     beforeEach(async () => {
       // prepare an unallocated order + capacity + local match2
-      ipfsMock()
+
       const {
         body: { id: orderId },
       } = await post(app, '/order', { parametersAttachmentId })
@@ -116,7 +113,6 @@ describe('on-chain', function () {
         body: { id: orderTransactionId },
       } = await post(app, `/order/${orderId}/creation`, {})
 
-      ipfsMock()
       const {
         body: { id: capacityId },
       } = await post(app, '/capacity', { parametersAttachmentId })

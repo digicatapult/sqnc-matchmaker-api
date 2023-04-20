@@ -50,7 +50,8 @@ export const seed = async () => {
     {
       id: parametersAttachmentId,
       filename: 'test.txt',
-      binary_blob: 9999999,
+      ipfs_hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
+      size: 42,
     },
   ])
 
