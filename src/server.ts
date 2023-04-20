@@ -6,7 +6,7 @@ import { json, urlencoded } from 'body-parser'
 import { errorHandler } from './lib/error-handler'
 import { RegisterRoutes } from './routes'
 import * as swaggerJson from './swagger.json'
-import { startStatusHandlers } from './lib/ServiceWatcher/serviceStatus/index'
+import { startStatusHandlers } from '../src/lib/ServiceWatcher/index'
 import { serviceState } from './lib/util/statusPoll'
 
 export default async (): Promise<Express> => {

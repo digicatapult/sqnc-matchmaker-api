@@ -25,5 +25,4 @@ export default envalid.cleanEnv(process.env, {
   IPFS_PORT: envalid.port({ default: 5001 }),
   WATCHER_POLL_PERIOD_MS: envalid.num({ default: 10 * 1000 }),
   WATCHER_TIMEOUT_MS: envalid.num({ default: 2 * 1000 }),
-  API_VERSION: envalid.str({ default: process.env.npm_package_version }),
 })
