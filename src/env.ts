@@ -1,5 +1,6 @@
 import * as envalid from 'envalid'
 import dotenv from 'dotenv'
+import version from './version.js'
 
 if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: 'test/test.env' })
@@ -23,4 +24,7 @@ export default envalid.cleanEnv(process.env, {
   USER_URI: envalid.str({ devDefault: '//Alice' }),
   IPFS_HOST: envalid.host({ devDefault: 'localhost' }),
   IPFS_PORT: envalid.port({ default: 5001 }),
+  SUBSTRATE_STATUS_POLL_PERIOD_MS: envalid.num({ default: 10 * 1000 }),
+  SUBSTRATE_STATUS_TIMEOUT_MS: envalid.num({ default: 2 * 1000 }),
+  API_VERSION: envalid.str({ default: version }),
 })
