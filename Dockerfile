@@ -25,4 +25,4 @@ RUN npm ci --production
 COPY --from=builder /dscp-matchmaker-api/build .
 
 EXPOSE 80
-CMD [ "node", "./index.js" ]
+CMD [ "npm", "./index.js" ]

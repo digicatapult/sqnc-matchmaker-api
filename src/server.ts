@@ -4,13 +4,10 @@ import { setup, serve } from 'swagger-ui-express'
 import cors from 'cors'
 import { json, urlencoded } from 'body-parser'
 import { errorHandler } from './lib/error-handler'
-import env from '../src/env'
 import { RegisterRoutes } from './routes'
 import * as swaggerJson from './swagger.json'
 import { startStatusHandlers } from './serviceStatus/index.js'
 import { serviceState } from './util/statusPoll.js'
-
-const { API_VERSION } = env
 
 export default async (): Promise<Express> => {
   const app: Express = express()
@@ -24,12 +21,12 @@ export default async (): Promise<Express> => {
   app.use(json())
   app.use(cors())
 
-  app.get('/health', async (req, res) => {
+  app.get('/health', async (_req, res) => {
     const status = statusHandler.status
     const details = statusHandler.detail
     const code = status === serviceState.UP ? 200 : 503
     res.status(code).send({
-      version: API_VERSION,
+      version: process.env.npm_package_version ? process.env.npm_package_version : 'unknown',
       status: serviceStatusStrings[status] || 'error',
       details: Object.fromEntries(
         Object.entries(details).map(([depName, { status, detail }]) => [

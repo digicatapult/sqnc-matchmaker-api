@@ -6,9 +6,12 @@ export const serviceState = {
   
   const stateSymbols: Set<symbol> = new Set(Object.values(serviceState))
   
-  const delay = (delayMs, result) => new Promise((resolve) => setTimeout(resolve, delayMs, result))
+  const delay = (delayMs: number, result: any) => new Promise((resolve) => setTimeout(resolve, delayMs, result))
   
-  const mkStatusGenerator = async function* ({ getStatus, serviceTimeoutMs }) {
+  const mkStatusGenerator = async function* ({ getStatus, serviceTimeoutMs }: {
+    getStatus: any;
+    serviceTimeoutMs: any;
+}) {
     while (true) {
       try {
         const newStatus = await Promise.race([
@@ -38,7 +41,11 @@ export const serviceState = {
     }
   }
   
-  export const startStatusHandler = async ({ pollingPeriodMs, serviceTimeoutMs, getStatus }) => {
+  export const startStatusHandler = async ({ pollingPeriodMs, serviceTimeoutMs, getStatus }: {
+    pollingPeriodMs: any;
+    serviceTimeoutMs: any;
+    getStatus: any;
+    }) => {
     let status: any = null
     const statusGenerator = mkStatusGenerator({ getStatus, serviceTimeoutMs })
     status = (await statusGenerator.next()).value
@@ -69,7 +76,7 @@ export const serviceState = {
     }
   }
   
-  export const buildCombinedHandler = async (handlerMap) => {
+  export const buildCombinedHandler = async (handlerMap: any) => {
     const getStatus = () =>
       [...handlerMap].reduce((accStatus, [, h]) => {
         const handlerStatus = h.status
