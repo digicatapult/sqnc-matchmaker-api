@@ -27,4 +27,6 @@ export default envalid.cleanEnv(process.env, {
   IPFS_STATUS_TIMEOUT_MS: envalid.num({ default: 2 * 1000 }),
   SUBSTRATE_STATUS_POLL_PERIOD_MS: envalid.num({ default: 10 * 1000 }),
   SUBSTRATE_STATUS_TIMEOUT_MS: envalid.num({ default: 2 * 1000 }),
+  IDENTITY_STATUS_POLL_PERIOD_MS: envalid.num({ default: 10 * 1000 }),
+  IDENTITY_STATUS_TIMEOUT_MS: envalid.num({ default: 2 * 1000 }),
 })
