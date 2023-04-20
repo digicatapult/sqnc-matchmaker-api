@@ -1,8 +1,8 @@
-import { startStatusHandler, serviceState } from '../util/statusPoll'
-import { substrateApi } from '../util/substrateApi'
-import env from '../env'
+import { startStatusHandler, serviceState } from '../../util/statusPoll'
+import { substrateApi } from '../../util/substrateApi'
+import env from '../../../env'
 
-const { SUBSTRATE_STATUS_POLL_PERIOD_MS, SUBSTRATE_STATUS_TIMEOUT_MS } = env
+const { WATCHER_POLL_PERIOD_MS, WATCHER_TIMEOUT_MS } = env
 
 const getStatus = async () => {
   await substrateApi.isReadyOrError.catch((error) => {
@@ -37,8 +37,8 @@ const getStatus = async () => {
 const startApiStatus = () =>
   startStatusHandler({
     getStatus,
-    pollingPeriodMs: SUBSTRATE_STATUS_POLL_PERIOD_MS,
-    serviceTimeoutMs: SUBSTRATE_STATUS_TIMEOUT_MS,
+    pollingPeriodMs: WATCHER_POLL_PERIOD_MS,
+    serviceTimeoutMs: WATCHER_TIMEOUT_MS,
   })
 
 export default startApiStatus
