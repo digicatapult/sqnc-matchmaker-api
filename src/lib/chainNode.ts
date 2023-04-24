@@ -3,7 +3,6 @@ import { blake2AsHex } from '@polkadot/util-crypto'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
 import { serviceState } from '../../src/lib/util/statusPoll'
-import env from '../env'
 import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
 import { HttpResponse } from './error-handler'
@@ -48,8 +47,6 @@ export default class ChainNode {
   private logger: Logger
   private userUri: string
   private roles: RoleEnum[]
-  private versionURL: string
-  private peersURL: string
 
   constructor({ host, port, logger, userUri }: NodeCtorConfig) {
     this.logger = logger.child({ module: 'ChainNode' })
@@ -58,8 +55,6 @@ export default class ChainNode {
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.roles = []
-    this.versionURL = `http://${env.IPFS_HOST}:${env.IPFS_PORT}/api/v0/version`
-    this.peersURL = `http://${env.IPFS_HOST}:${env.IPFS_PORT}/api/v0/swarm/peers`
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     this.api.isReadyOrError.catch(() => {}) // prevent unhandled promise rejection errors
@@ -266,37 +261,32 @@ export default class ChainNode {
   }
 
   getStatus = async () => {
-    try {
-      const results = await Promise.all([
-        fetch(this.versionURL, { method: 'POST' }),
-        fetch(this.peersURL, { method: 'POST' }),
-      ])
-      if (results.some((result) => !result.ok)) {
-        return {
-          status: serviceState.DOWN,
-          detail: {
-            message: 'Error getting status from chain node',
-          },
-        }
-      }
-
-      const [versionResult, peersResult]: any = await Promise.all(results.map((r) => r.json()))
-      const peers = peersResult.Peers || []
-      const peerCount = new Set(peers.map((peer: any) => peer.Peer)).size
-      return {
-        status: peerCount === 0 ? serviceState.DOWN : serviceState.UP,
-        detail: {
-          version: versionResult.Version,
-          peerCount: peerCount,
-        },
-      }
-    } catch (err) {
+    await this.api.isReadyOrError.catch((error: any) => {
+      return error
+    })
+    if (!this.api.isConnected) {
       return {
         status: serviceState.DOWN,
         detail: {
-          message: 'Error getting status from chain node',
+          message: 'Cannot connect to substrate node',
         },
       }
+    }
+    const [chain, runtime] = await Promise.all([this.api.runtimeChain, this.api.runtimeVersion])
+    return {
+      status: serviceState.UP,
+      detail: {
+        chain,
+        runtime: {
+          name: runtime.specName,
+          versions: {
+            spec: runtime.specVersion.toNumber(),
+            impl: runtime.implVersion.toNumber(),
+            authoring: runtime.authoringVersion.toNumber(),
+            transaction: runtime.transactionVersion.toNumber(),
+          },
+        },
+      },
     }
   }
 }

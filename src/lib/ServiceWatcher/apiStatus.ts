@@ -13,7 +13,7 @@ const node = new ChainNode({
 
 const startApiStatus = () =>
   startStatusHandler({
-    getStatus: node.getStatus(),
+    getStatus: node.getStatus,
     pollingPeriodMs: WATCHER_POLL_PERIOD_MS,
     serviceTimeoutMs: WATCHER_TIMEOUT_MS,
   })
