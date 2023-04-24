@@ -1,4 +1,10 @@
 export interface Health {
-  req_id: string
-  message: string
+  status: string
+  version: string
+  details: {
+    [k: string]: {
+      status: string
+      detail: string
+    }
+  }
 }

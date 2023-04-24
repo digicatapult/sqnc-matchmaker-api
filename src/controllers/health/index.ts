@@ -25,7 +25,7 @@ export class health extends Controller {
     const statusHandler = await startStatusHandlers()
     const status = statusHandler.status
     const details = statusHandler.detail
-    const response: any = {
+    const response: Health = {
       status: serviceStatusStrings[status] || 'error',
       version: process.env.npm_package_version ? process.env.npm_package_version : 'unknown',
       details: Object.fromEntries(
