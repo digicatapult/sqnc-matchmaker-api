@@ -1,7 +1,8 @@
 import { Logger } from 'pino'
-
+import { serviceState } from '../../src/lib/util/statusPoll'
 import type { MetadataFile } from './payload'
 import { HttpResponse } from './error-handler'
+import env from '../env'
 
 interface FilestoreResponse {
   Name: string
@@ -14,12 +15,16 @@ export default class Ipfs {
   private dirUrl: (dirHash: string) => string
   private fileUrl: (fileHash: string) => string
   private logger: Logger
+  private versionURL: string
+  private peersURL: string
 
   constructor({ host, port, logger }: { host: string; port: number; logger: Logger }) {
     this.addUrl = `http://${host}:${port}/api/v0/add?cid-version=0&wrap-with-directory=true`
     this.dirUrl = (dirHash) => `http://${host}:${port}/api/v0/ls?arg=${dirHash}`
     this.fileUrl = (fileHash) => `http://${host}:${port}/api/v0/cat?arg=${fileHash}`
     this.logger = logger.child({ module: 'ipfs' })
+    this.versionURL = `http://${env.IPFS_HOST}:${env.IPFS_PORT}/api/v0/version`
+    this.peersURL = `http://${env.IPFS_HOST}:${env.IPFS_PORT}/api/v0/swarm/peers`
   }
 
   async addFile({ blob, filename }: MetadataFile): Promise<string> {
@@ -71,6 +76,41 @@ export default class Ipfs {
     if (!fileRes.ok) throw new Error(`Error fetching file from IPFS (${fileRes.status}): ${await fileRes.text()}`)
 
     return { blob: await fileRes.blob(), filename }
+  }
+
+  getStatus = async () => {
+    try {
+      const results = await Promise.all([
+        fetch(this.versionURL, { method: 'POST' }),
+        fetch(this.peersURL, { method: 'POST' }),
+      ])
+      if (results.some((result) => !result.ok)) {
+        return {
+          status: serviceState.DOWN,
+          detail: {
+            message: 'Error getting status from IPFS node',
+          },
+        }
+      }
+
+      const [versionResult, peersResult]: any = await Promise.all(results.map((r) => r.json()))
+      const peers = peersResult.Peers || []
+      const peerCount = new Set(peers.map((peer: any) => peer.Peer)).size
+      return {
+        status: peerCount === 0 ? serviceState.DOWN : serviceState.UP,
+        detail: {
+          version: versionResult.Version,
+          peerCount: peerCount,
+        },
+      }
+    } catch (err) {
+      return {
+        status: serviceState.DOWN,
+        detail: {
+          message: 'Error getting status from IPFS node',
+        },
+      }
+    }
   }
 }
 

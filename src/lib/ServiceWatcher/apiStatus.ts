@@ -1,42 +1,19 @@
-import { startStatusHandler, serviceState } from '../util/statusPoll'
-import { substrateApi } from '../util/substrateApi'
+import { startStatusHandler } from '../util/statusPoll'
 import env from '../../env'
+import ChainNode from '../chainNode'
+import { logger } from '../../lib/logger'
 
 const { WATCHER_POLL_PERIOD_MS, WATCHER_TIMEOUT_MS } = env
-
-const getStatus = async () => {
-  await substrateApi.isReadyOrError.catch((error: any) => {
-    return error
-  })
-  if (!substrateApi.isConnected) {
-    return {
-      status: serviceState.DOWN,
-      detail: {
-        message: 'Cannot connect to substrate node',
-      },
-    }
-  }
-  const [chain, runtime] = await Promise.all([substrateApi.runtimeChain, substrateApi.runtimeVersion])
-  return {
-    status: serviceState.UP,
-    detail: {
-      chain,
-      runtime: {
-        name: runtime.specName,
-        versions: {
-          spec: runtime.specVersion.toNumber(),
-          impl: runtime.implVersion.toNumber(),
-          authoring: runtime.authoringVersion.toNumber(),
-          transaction: runtime.transactionVersion.toNumber(),
-        },
-      },
-    },
-  }
-}
+const node = new ChainNode({
+  host: env.NODE_HOST,
+  port: env.NODE_PORT,
+  logger,
+  userUri: env.USER_URI,
+})
 
 const startApiStatus = () =>
   startStatusHandler({
-    getStatus,
+    getStatus: node.getStatus,
     pollingPeriodMs: WATCHER_POLL_PERIOD_MS,
     serviceTimeoutMs: WATCHER_TIMEOUT_MS,
   })
