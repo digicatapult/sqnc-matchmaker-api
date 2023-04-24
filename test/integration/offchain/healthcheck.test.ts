@@ -13,6 +13,7 @@ describe('health check', () => {
 
   it('should return 200', async () => {
     const response = await get(app, '/health')
+    console.log(response.body)
     expect(response.status).to.equal(200)
   })
 })
