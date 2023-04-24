@@ -22,7 +22,7 @@ RUN npm -g install npm@9.x.x
 
 COPY package*.json ./
 RUN npm ci --production
-COPY --from=builder /dscp-matchmaker-api/build .
+COPY --from=builder /dscp-matchmaker-api/build /build
 
 EXPOSE 80
 CMD [ "npm", "./index.js" ]

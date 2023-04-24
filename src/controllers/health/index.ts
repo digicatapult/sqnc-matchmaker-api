@@ -7,7 +7,6 @@ import { logger } from '../../lib/logger'
 import { startStatusHandlers } from '../../lib/ServiceWatcher/index'
 import { serviceState } from '../../lib/util/statusPoll'
 
-
 @Route('health')
 export class health extends Controller {
   constructor() {
@@ -29,7 +28,7 @@ export class health extends Controller {
     const details = statusHandler.detail
     const code = status === serviceState.UP ? 200 : 503
     return Promise.resolve(
-      res.status(code).send({
+      status(code).send({
         version: process.env.npm_package_version ? process.env.npm_package_version : 'unknown',
         status: serviceStatusStrings[status] || 'error',
         details: Object.fromEntries(

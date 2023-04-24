@@ -1,11 +1,11 @@
-import { startStatusHandler, serviceState } from '../../util/statusPoll'
-import { substrateApi } from '../../util/substrateApi'
-import env from '../../../env'
+import { startStatusHandler, serviceState } from '../util/statusPoll'
+import { substrateApi } from '../util/substrateApi'
+import env from '../../env'
 
 const { WATCHER_POLL_PERIOD_MS, WATCHER_TIMEOUT_MS } = env
 
 const getStatus = async () => {
-  await substrateApi.isReadyOrError.catch((error) => {
+  await substrateApi.isReadyOrError.catch((error: any) => {
     return error
   })
   if (!substrateApi.isConnected) {

@@ -21,7 +21,7 @@ const getStatus = async () => {
 
     const [versionResult, peersResult]: any = await Promise.all(results.map((r) => r.json()))
     const peers = peersResult.Peers || []
-    const peerCount = new Set(peers.map((peer) => peer.Peer)).size
+    const peerCount = new Set(peers.map((peer: any) => peer.Peer)).size
     return {
       status: peerCount === 0 ? serviceState.DOWN : serviceState.UP,
       detail: {
