@@ -1,4 +1,4 @@
-import { Controller, Get, Route } from 'tsoa'
+import { Controller, Get, Route, SuccessResponse } from 'tsoa'
 
 import type { Health } from '../../models'
 import { logger } from '../../lib/logger'
@@ -11,6 +11,7 @@ export class health extends Controller {
     super()
   }
 
+  @SuccessResponse(200)
   @Get('/')
   public async get(): Promise<Health> {
     logger.debug({ msg: 'new request received', controller: '/health' })
@@ -24,21 +25,22 @@ export class health extends Controller {
     const statusHandler = await startStatusHandlers()
     const status = statusHandler.status
     const details = statusHandler.detail
-    const code = status === serviceState.UP ? 200 : 503
-    return Promise.resolve(
-      status(code).send({
-        version: process.env.npm_package_version ? process.env.npm_package_version : 'unknown',
-        status: serviceStatusStrings[status] || 'error',
-        details: Object.fromEntries(
-          Object.entries(details).map(([depName, { status, detail }]) => [
+    const response: any = {
+      status: serviceStatusStrings[status] || 'error',
+      version: process.env.npm_package_version ? process.env.npm_package_version : 'unknown',
+      details: Object.fromEntries(
+        Object.entries(details).map(([depName, { status, detail }]) => {
+          const data = JSON.stringify(detail)
+          return [
             depName,
             {
               status: serviceStatusStrings[status] || 'error',
-              detail,
+              detail: data,
             },
-          ])
-        ),
-      })
-    )
+          ]
+        })
+      ),
+    }
+    return response
   }
 }
