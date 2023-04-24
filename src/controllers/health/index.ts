@@ -1,7 +1,5 @@
-import { Controller, Get, Route, Request } from 'tsoa'
-import { Logger } from 'pino'
+import { Controller, Get, Route } from 'tsoa'
 
-import * as Ex from 'express'
 import type { Health } from '../../models'
 import { logger } from '../../lib/logger'
 import { startStatusHandlers } from '../../lib/ServiceWatcher/index'
@@ -14,7 +12,7 @@ export class health extends Controller {
   }
 
   @Get('/')
-  public async get(@Request() req: Ex.Request & { log: Logger; req_id: string }): Promise<Health> {
+  public async get(): Promise<Health> {
     logger.debug({ msg: 'new request received', controller: '/health' })
 
     const serviceStatusStrings = {
