@@ -1,6 +1,6 @@
 // a temporary placeholder for the blockchain watcher
 
-import { UUID } from '../../models/uuid'
+import { UUID } from '../../models/strings'
 import { TOKEN_TYPE } from '../../models/tokenType'
 import Database from '../db'
 import { DemandState, Match2State } from '../../models'

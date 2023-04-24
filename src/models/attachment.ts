@@ -1,4 +1,4 @@
-import { UUID } from './uuid'
+import { UUID } from './strings'
 
 /**
  * File or JSON attachment
@@ -17,7 +17,7 @@ export interface Attachment {
   /**
    * for json files name will be 'json'
    */
-  filename: string | 'json'
-  size?: number
+  filename: string | 'json' | null
+  size: number | null
   createdAt: Date
 }

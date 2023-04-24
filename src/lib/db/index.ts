@@ -4,7 +4,7 @@ import type { Logger } from 'pino'
 import { logger } from '../logger'
 import { pgConfig } from './knexfile'
 import { DemandState, DemandSubtype } from '../../models/demand'
-import { UUID } from '../../models/uuid'
+import { HEX, UUID } from '../../models/strings'
 import { Match2State } from '../../models/match2'
 import { TransactionApiType, TransactionState, TransactionType } from '../../models/transaction'
 
@@ -18,7 +18,8 @@ export type Models<V> = {
 
 export type Query = Knex.QueryBuilder
 
-export type ProcessedBlock = { hash: string; parent: string; height: number }
+export type ProcessedBlock = { hash: HEX; parent: HEX; height: number }
+export type ProcessedBlockTrimmed = { hash: string; parent: string; height: number }
 
 const demandColumns = [
   'id',
@@ -52,9 +53,19 @@ const transactionColumns = [
   'updated_at AS updatedAt',
 ]
 
+export interface Transaction {
+  id: UUID
+  state: TransactionState
+  localId: UUID
+  apiType: TransactionApiType
+  transactionType: TransactionType
+  submittedAt: Date
+  updatedAt: Date
+}
+
 const processBlocksColumns = ['hash', 'height', 'parent']
 
-function trim0x(input: ProcessedBlock): ProcessedBlock {
+function trim0x(input: ProcessedBlock): ProcessedBlockTrimmed {
   return {
     hash: input.hash.startsWith('0x') ? input.hash.slice(2) : input.hash,
     height: input.height,
@@ -62,11 +73,11 @@ function trim0x(input: ProcessedBlock): ProcessedBlock {
   }
 }
 
-function restore0x(input: ProcessedBlock): ProcessedBlock {
+function restore0x(input: ProcessedBlockTrimmed): ProcessedBlock {
   return {
-    hash: input.hash.startsWith('0x') ? input.hash : `0x${input.hash}`,
+    hash: input.hash.startsWith('0x') ? (input.hash as HEX) : `0x${input.hash}`,
     height: input.height,
-    parent: input.parent.startsWith('0x') ? input.parent : `0x${input.parent}`,
+    parent: input.parent.startsWith('0x') ? (input.parent as HEX) : `0x${input.parent}`,
   }
 }
 
@@ -92,16 +103,20 @@ export default class Database {
     return this.db().attachment().where({ id: parametersAttachmentId })
   }
 
-  updateAttachmentSize = async (id: string, size: number) => {
-    return this.db().attachment().update({ size }).where({ id })
+  updateAttachment = async (id: string, filename: string, size: number) => {
+    return this.db().attachment().update({ filename, size }).where({ id })
+  }
+
+  insertAttachment = async (attachment: object) => {
+    return this.db().attachment().insert(attachment).returning('*')
   }
 
   insertDemand = async (capacity: object) => {
     return this.db().demand().insert(capacity).returning('*')
   }
 
-  upsertDemand = async (demand: object) => {
-    return this.db().demand().insert(demand).onConflict('id').merge().returning('*')
+  updateDemand = async (id: UUID, demand: object) => {
+    return this.db().demand().update(demand).where({ id }).returning('*')
   }
 
   getDemands = async (subtype: DemandSubtype) => {
@@ -120,7 +135,7 @@ export default class Database {
       .where({ 'demand.id': id, subtype })
   }
 
-  insertTransaction = async ({ hash, ...rest }: { hash: `0x${string}` } & Record<string, string>) => {
+  insertTransaction = async ({ hash, ...rest }: { hash: HEX } & Record<string, string>) => {
     return this.db()
       .transaction()
       .insert({ hash: hash.slice(2), ...rest })
@@ -129,6 +144,15 @@ export default class Database {
 
   getTransaction = async (id: UUID) => {
     return this.db().transaction().select(transactionColumns).where({ id })
+  }
+
+  findTransaction = async (callHash: HEX) => {
+    const transactions = (await this.db()
+      .transaction()
+      .select(transactionColumns)
+      .where({ hash: callHash.substring(2) })) as Transaction[]
+
+    return transactions.length !== 0 ? transactions[0] : null
   }
 
   getTransactions = async (state?: TransactionState, api_type?: TransactionApiType) => {
@@ -178,8 +202,8 @@ export default class Database {
     return this.db().match2().insert(match2).returning(match2Columns)
   }
 
-  upsertMatch2 = async (match2: object) => {
-    return this.db().match2().insert(match2).onConflict('id').merge().returning('*')
+  updateMatch2 = async (id: UUID, match2: object) => {
+    return this.db().match2().update(match2).where({ id }).returning('*')
   }
 
   getMatch2s = async () => {
@@ -197,6 +221,15 @@ export default class Database {
       .orderBy('height', 'desc')
       .limit(1)
     return blockRecords.length !== 0 ? restore0x(blockRecords[0]) : null
+  }
+
+  findLocalIdForToken = async (tokenId: number): Promise<UUID | null> => {
+    const result = (await Promise.all([
+      this.db().demand().select(['id']).where({ latest_token_id: tokenId }),
+      this.db().match2().select(['id']).where({ latest_token_id: tokenId }),
+    ])) as { id: UUID }[][]
+    const flatten = result.reduce((acc, set) => [...acc, ...set], [])
+    return flatten[0]?.id || null
   }
 
   insertProcessedBlock = async (block: ProcessedBlock): Promise<void> => {

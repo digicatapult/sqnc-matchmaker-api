@@ -11,7 +11,7 @@ import Database from '../../../src/lib/db'
 import ChainNode from '../../../src/lib/chainNode'
 import { logger } from '../../../src/lib/logger'
 import env from '../../../src/env'
-import { UUID } from '../../../src/models/uuid'
+import { UUID } from '../../../src/models/strings'
 import { pollTransactionState } from '../../helper/poll'
 
 const db = new Database()

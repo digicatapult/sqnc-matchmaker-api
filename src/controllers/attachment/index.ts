@@ -21,7 +21,7 @@ import Database, { Models, Query } from '../../lib/db'
 import type { Attachment } from '../../models'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import { Readable } from 'node:stream'
-import type { UUID } from '../../models/uuid'
+import type { UUID } from '../../models/strings'
 import Ipfs from '../../lib/ipfs'
 import env from '../../env'
 
@@ -148,14 +148,14 @@ export class attachment extends Controller {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const [attachment] = await this.db.attachment().where({ id })
     if (!attachment) throw new NotFound('attachment')
-    const { filename, ipfs_hash, size }: { filename: string; ipfs_hash: string; size: number } = attachment
+    const { filename, ipfs_hash, size }: { filename: string | null; ipfs_hash: string; size: number } = attachment
 
-    const { blob } = await this.ipfs.getFile(ipfs_hash)
+    const { blob, filename: ipfsFilename } = await this.ipfs.getFile(ipfs_hash)
     const blobBuffer = Buffer.from(await blob.arrayBuffer())
 
-    if (size === null) {
+    if (size === null || filename === null) {
       try {
-        await this.dbClient.updateAttachmentSize(id, blob.size)
+        await this.dbClient.updateAttachment(id, ipfsFilename, blob.size)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'unknown'
         this.log.warn('Error updating attachment size: %s', message)
@@ -179,6 +179,6 @@ export class attachment extends Controller {
         }
       }
     }
-    return this.octetResponse(blobBuffer, filename)
+    return this.octetResponse(blobBuffer, filename || ipfsFilename)
   }
 }

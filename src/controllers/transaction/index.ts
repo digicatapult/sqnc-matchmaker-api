@@ -2,7 +2,7 @@ import { Controller, Get, Route, Path, Response, Tags, Security, Query } from 't
 import type { Logger } from 'pino'
 import { logger } from '../../lib/logger'
 import Database from '../../lib/db'
-import { UUID } from '../../models/uuid'
+import { UUID } from '../../models/strings'
 import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { TransactionApiType, TransactionResponse, TransactionState } from '../../models/transaction'
 

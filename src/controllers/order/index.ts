@@ -13,7 +13,7 @@ import {
 } from 'tsoa'
 import { Logger } from 'pino'
 
-import { UUID } from '../../models/uuid'
+import { UUID } from '../../models/strings'
 import { DemandRequest, DemandResponse } from '../../models/demand'
 import { TransactionResponse } from '../../models/transaction'
 import { logger } from '../../lib/logger'
