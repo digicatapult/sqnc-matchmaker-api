@@ -275,7 +275,7 @@ export default class ChainNode {
         return {
           status: serviceState.DOWN,
           detail: {
-            message: 'Error getting status from IPFS node',
+            message: 'Error getting status from chain node',
           },
         }
       }
@@ -294,7 +294,7 @@ export default class ChainNode {
       return {
         status: serviceState.DOWN,
         detail: {
-          message: 'Error getting status from IPFS node',
+          message: 'Error getting status from chain node',
         },
       }
     }
