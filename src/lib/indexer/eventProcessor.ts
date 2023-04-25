@@ -76,7 +76,7 @@ const DefaultEventProcessors: EventProcessors = {
 
     const newDemands = [
       { id: inputs[0].localId, tokenId: outputs[0].id },
-      { id: inputs[0].localId, tokenId: outputs[1].id },
+      { id: inputs[1].localId, tokenId: outputs[1].id },
     ]
     const newMatchId = outputs[2].id
     const newMatch = outputs[2]
