@@ -11,7 +11,7 @@ export class health extends Controller {
     super()
   }
 
-  @Response<typeof ServiceUnavailable>(503)
+  @Response<ServiceUnavailable>(503)
   @SuccessResponse(200)
   @Get('/')
   public async get(): Promise<Health> {
@@ -43,8 +43,8 @@ export class health extends Controller {
         })
       ),
     }
-    if (serviceStatusStrings[status] == 'down') throw ServiceUnavailable(response)
-    if (serviceStatusStrings[status] == 'error') throw ServiceUnavailable(response)
+    if (serviceStatusStrings[status] == 'down') throw new ServiceUnavailable(response)
+    if (serviceStatusStrings[status] == 'error') throw new ServiceUnavailable(response)
     return response
   }
 }

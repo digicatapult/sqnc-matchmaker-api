@@ -1,5 +1,6 @@
 import { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 import { ValidateError } from 'tsoa'
+import { Health } from '../../models'
 
 import { logger } from '../logger'
 
@@ -53,10 +54,11 @@ export class BadRequest extends HttpResponse implements IBadRequest {
   }
 }
 
-export function ServiceUnavailable(info: object) {
-  logger.warn('Error thrown in handler: health watcher')
-  let response!: ExResponse
-  return response.status(503).send(info)
+export class ServiceUnavailable extends HttpResponse {
+  constructor(data: Health) {
+    const message: string = JSON.stringify(data).replace(/\\/g, '')
+    super({ code: 503, message })
+  }
 }
 
 export const errorHandler = function errorHandler(
