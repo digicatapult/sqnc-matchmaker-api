@@ -72,6 +72,14 @@ export default class ChainNode {
     })
   }
 
+  getApi(): ApiPromise {
+    return this.api
+  }
+
+  getKeyring(): Keyring {
+    return this.keyring
+  }
+
   async getLastFinalisedBlockHash(): Promise<string> {
     await this.api.isReady
     const result = await this.api.rpc.chain.getFinalizedHead()
