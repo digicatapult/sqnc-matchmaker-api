@@ -2,7 +2,7 @@ import { describe, beforeEach, afterEach, it } from 'mocha'
 import sinon from 'sinon'
 import { expect } from 'chai'
 
-import { serviceState, startStatusHandler, buildCombinedHandler } from '../../../../src/lib/util/statusPoll'
+import { serviceState, startStatusHandler, buildCombinedHandler } from '../../../../src/lib/ServiceWatcher/statusPoll'
 
 const okStatus = (i) => ({
   status: serviceState.UP,

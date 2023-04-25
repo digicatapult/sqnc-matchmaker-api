@@ -2,7 +2,7 @@ import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/ap
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
-import { serviceState } from '../../src/lib/util/statusPoll'
+import { serviceState } from './ServiceWatcher/statusPoll'
 import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
 import { HttpResponse } from './error-handler'

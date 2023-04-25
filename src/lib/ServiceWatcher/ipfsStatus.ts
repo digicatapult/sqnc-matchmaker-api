@@ -1,4 +1,4 @@
-import { startStatusHandler } from '../util/statusPoll'
+import { startStatusHandler } from './statusPoll'
 import env from '../../env'
 import Ipfs from '../ipfs'
 import { logger } from '../../lib/logger'

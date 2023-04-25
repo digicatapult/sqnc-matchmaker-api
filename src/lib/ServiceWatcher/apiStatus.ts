@@ -1,4 +1,4 @@
-import { startStatusHandler } from '../util/statusPoll'
+import { startStatusHandler } from './statusPoll'
 import env from '../../env'
 import ChainNode from '../chainNode'
 import { logger } from '../../lib/logger'

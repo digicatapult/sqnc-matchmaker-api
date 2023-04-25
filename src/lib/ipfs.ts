@@ -1,8 +1,7 @@
 import { Logger } from 'pino'
-import { serviceState } from '../../src/lib/util/statusPoll'
+import { serviceState } from './ServiceWatcher/statusPoll'
 import type { MetadataFile } from './payload'
 import { HttpResponse } from './error-handler'
-import env from '../env'
 
 interface FilestoreResponse {
   Name: string
@@ -23,8 +22,8 @@ export default class Ipfs {
     this.dirUrl = (dirHash) => `http://${host}:${port}/api/v0/ls?arg=${dirHash}`
     this.fileUrl = (fileHash) => `http://${host}:${port}/api/v0/cat?arg=${fileHash}`
     this.logger = logger.child({ module: 'ipfs' })
-    this.versionURL = `http://${env.IPFS_HOST}:${env.IPFS_PORT}/api/v0/version`
-    this.peersURL = `http://${env.IPFS_HOST}:${env.IPFS_PORT}/api/v0/swarm/peers`
+    this.versionURL = `http://${host}:${port}/api/v0/version`
+    this.peersURL = `http://${host}:${port}/api/v0/swarm/peers`
   }
 
   async addFile({ blob, filename }: MetadataFile): Promise<string> {

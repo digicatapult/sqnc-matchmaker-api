@@ -1,9 +1,11 @@
-import { Controller, Get, Route, SuccessResponse } from 'tsoa'
+import { Controller, Get, Response, Route, SuccessResponse } from 'tsoa'
 
 import type { Health } from '../../models'
 import { logger } from '../../lib/logger'
 import { startStatusHandlers } from '../../lib/ServiceWatcher/index'
-import { serviceState } from '../../lib/util/statusPoll'
+import { serviceState } from '../../lib/ServiceWatcher/statusPoll'
+import { ServiceUnavailable } from '../../lib/error-handler/index'
+
 
 @Route('health')
 export class health extends Controller {
@@ -11,6 +13,7 @@ export class health extends Controller {
     super()
   }
 
+  @Response<ServiceUnavailable>(503)
   @SuccessResponse(200)
   @Get('/')
   public async get(): Promise<Health> {
@@ -25,6 +28,10 @@ export class health extends Controller {
     const statusHandler = await startStatusHandlers()
     const status = statusHandler.status
     const details = statusHandler.detail
+
+    if (serviceStatusStrings[status] == 'down') throw new ServiceUnavailable('Service is down')
+    if (serviceStatusStrings[status] == 'error') throw new ServiceUnavailable('Service Error')
+
     const response: Health = {
       status: serviceStatusStrings[status] || 'error',
       version: process.env.npm_package_version ? process.env.npm_package_version : 'unknown',
