@@ -17,11 +17,6 @@ interface IBadRequest {
   name: string
 }
 
-interface IServiceUnavailable {
-  message?: string
-  name: string
-}
-
 export class HttpResponse extends Error {
   public code: number
   public message: string
@@ -58,10 +53,10 @@ export class BadRequest extends HttpResponse implements IBadRequest {
   }
 }
 
-export class ServiceUnavailable extends HttpResponse implements IServiceUnavailable {
-  constructor(message = 'Service Unavailable Error') {
-    super({ code: 503, message })
-  }
+export function ServiceUnavailable(info: object) {
+  logger.warn('Error thrown in handler: health watcher')
+  let response!: ExResponse
+  return response.status(503).send(info)
 }
 
 export const errorHandler = function errorHandler(
