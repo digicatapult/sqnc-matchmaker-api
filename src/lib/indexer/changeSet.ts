@@ -21,6 +21,7 @@ export type DemandRecord =
       type: 'update'
       id: string
       state: string
+      original_token_id?: number
       latest_token_id: number
     }
 
@@ -41,6 +42,7 @@ export type MatchRecord =
       type: 'update'
       id: string
       state: string
+      original_token_id?: number
       latest_token_id: number
     }
 

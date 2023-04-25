@@ -116,7 +116,14 @@ export default class Database {
   }
 
   updateDemand = async (id: UUID, demand: object) => {
-    return this.db().demand().update(demand).where({ id }).returning('*')
+    return this.db()
+      .demand()
+      .update({
+        ...demand,
+        updated_at: new Date(),
+      })
+      .where({ id })
+      .returning('*')
   }
 
   getDemands = async (subtype: DemandSubtype) => {
@@ -203,7 +210,14 @@ export default class Database {
   }
 
   updateMatch2 = async (id: UUID, match2: object) => {
-    return this.db().match2().update(match2).where({ id }).returning('*')
+    return this.db()
+      .match2()
+      .update({
+        ...match2,
+        updated_at: new Date(),
+      })
+      .where({ id })
+      .returning('*')
   }
 
   getMatch2s = async () => {

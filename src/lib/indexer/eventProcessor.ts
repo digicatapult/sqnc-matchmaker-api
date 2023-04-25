@@ -41,7 +41,9 @@ const DefaultEventProcessors: EventProcessors = {
     if (transaction) {
       const id = transaction.localId
       return {
-        demands: new Map([[id, { type: 'update', id, state: 'created', latest_token_id: newDemandId }]]),
+        demands: new Map([
+          [id, { type: 'update', id, state: 'created', latest_token_id: newDemandId, original_token_id: newDemandId }],
+        ]),
       }
     }
 
