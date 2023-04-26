@@ -111,8 +111,50 @@ const DefaultEventProcessors: EventProcessors = {
       matches: new Map([[match.id, match]]),
     }
   },
-  'match2-accept': () => ({}),
-  'match2-acceptFinal': () => ({}),
+  'match2-accept': (version, _transaction, inputs, outputs) => {
+    if (version !== 1) {
+      throw new Error(`Incompatible version ${version} for match2-accept process`)
+    }
+
+    const localId = inputs[0].localId
+    const match = outputs[0]
+
+    return {
+      matches: new Map([
+        [
+          localId,
+          {
+            id: localId,
+            type: 'update',
+            latest_token_id: match.id,
+            state: getOrError(match.metadata, 'state'),
+          },
+        ],
+      ]),
+    }
+  },
+  'match2-acceptFinal': (version, _transaction, inputs, outputs) => {
+    if (version !== 1) {
+      throw new Error(`Incompatible version ${version} for match2-acceptFinal process`)
+    }
+
+    const demandALocalId = inputs[0].localId
+    const demandAId = outputs[0].id
+    const demandBLocalId = inputs[1].localId
+    const demandBId = outputs[1].id
+    const matchLocalId = inputs[2].localId
+    const matchId = outputs[2].id
+
+    return {
+      demands: new Map([
+        [demandALocalId, { type: 'update', id: demandALocalId, latest_token_id: demandAId, state: 'allocated' }],
+        [demandBLocalId, { type: 'update', id: demandBLocalId, latest_token_id: demandBId, state: 'allocated' }],
+      ]),
+      matches: new Map([
+        [matchLocalId, { type: 'update', id: matchLocalId, latest_token_id: matchId, state: 'acceptedFinal' }],
+      ]),
+    }
+  },
 }
 
 export default DefaultEventProcessors

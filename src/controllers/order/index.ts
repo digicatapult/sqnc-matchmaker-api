@@ -20,7 +20,6 @@ import { logger } from '../../lib/logger'
 import { BadRequest, NotFound } from '../../lib/error-handler'
 import Database from '../../lib/db'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-import { observeTokenId } from '../../lib/services/blockchainWatcher'
 import { demandCreate } from '../../lib/payload'
 import ChainNode from '../../lib/chainNode'
 import env from '../../env'
@@ -130,9 +129,7 @@ export class order extends Controller {
       hash: extrinsic.hash.toHex(),
     })
 
-    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async ([tokenId]) => {
-      await observeTokenId('DEMAND', orderId, 'created', tokenId, true)
-    })
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
 
     return transaction
   }

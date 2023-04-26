@@ -20,8 +20,6 @@ import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity
 import { Match2Request, Match2Response } from '../../models/match2'
 import { UUID } from '../../models/strings'
 import { TransactionResponse } from '../../models/transaction'
-import { MATCH2, DEMAND } from '../../models/tokenType'
-import { observeTokenId } from '../../lib/services/blockchainWatcher'
 import { match2AcceptFinal, match2AcceptFirst, match2Propose } from '../../lib/payload'
 import { DemandPayload, DemandSubtype } from '../../models/demand'
 import ChainNode from '../../lib/chainNode'
@@ -133,12 +131,7 @@ export class Match2Controller extends Controller {
       hash: extrinsic.hash.toHex(),
     })
 
-    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async (tokenIds) => {
-      // match2-propose returns 3 token IDs
-      await observeTokenId(DEMAND, match2.demandA, 'created', tokenIds[0], false) // order
-      await observeTokenId(DEMAND, match2.demandB, 'created', tokenIds[1], false) // capacity
-      await observeTokenId(MATCH2, match2.id, 'proposed', tokenIds[2], true) // match2
-    })
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
 
     return transaction
   }
@@ -216,10 +209,7 @@ export class Match2Controller extends Controller {
         hash: extrinsic.hash.toHex(),
       })
 
-      this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async ([tokenId]) => {
-        await observeTokenId(MATCH2, match2.id, newState, tokenId, false)
-      })
-
+      this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
       return transaction
     }
 
@@ -234,13 +224,7 @@ export class Match2Controller extends Controller {
         hash: extrinsic.hash.toHex(),
       })
 
-      this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async (tokenIds) => {
-        // match2-acceptFinal returns 3 token IDs
-        await observeTokenId(DEMAND, match2.demandA, 'allocated', tokenIds[0], false) // order
-        await observeTokenId(DEMAND, match2.demandB, 'allocated', tokenIds[1], false) // capacity
-        await observeTokenId(MATCH2, match2.id, 'acceptedFinal', tokenIds[2], false) // match2
-      })
-
+      this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
       return transaction
     }
 

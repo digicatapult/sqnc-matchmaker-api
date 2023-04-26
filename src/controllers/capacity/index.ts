@@ -20,9 +20,7 @@ import { UUID } from '../../models/strings'
 import { BadRequest, NotFound } from '../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
 import { TransactionResponse } from '../../models/transaction'
-import { DEMAND } from '../../models/tokenType'
 import { demandCreate } from '../../lib/payload'
-import { observeTokenId } from '../../lib/services/blockchainWatcher'
 import ChainNode from '../../lib/chainNode'
 import env from '../../env'
 
@@ -125,9 +123,7 @@ export class CapacityController extends Controller {
       hash: extrinsic.hash.toHex(),
     })
 
-    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id)).then(async ([tokenId]) => {
-      await observeTokenId(DEMAND, capacityId, 'created', tokenId, true)
-    })
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
 
     return transaction
   }
