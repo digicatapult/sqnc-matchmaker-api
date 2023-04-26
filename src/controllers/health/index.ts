@@ -33,12 +33,11 @@ export class health extends Controller {
       version: process.env.npm_package_version ? process.env.npm_package_version : 'unknown',
       details: Object.fromEntries(
         Object.entries(details).map(([depName, { status, detail }]) => {
-          const data = JSON.stringify(detail)
           return [
             depName,
             {
               status: serviceStatusStrings[status] || 'error',
-              detail: data,
+              detail: detail,
             },
           ]
         })

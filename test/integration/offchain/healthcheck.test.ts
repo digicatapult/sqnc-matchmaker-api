@@ -133,6 +133,7 @@ describe('health check', () => {
     it('service down', async function () {
       const actualResult = await get(app, '/health')
       const response = healthResponses.ipfsDown(getSpecVersion(actualResult))
+      console.log(actualResult.body.details.api.detail)
       expect(actualResult.status).to.equal(response.code)
       expect(actualResult.body).to.deep.equal(response.body)
     })

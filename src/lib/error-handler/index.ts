@@ -84,7 +84,7 @@ export const errorHandler = function errorHandler(
   }
   if (err instanceof ServiceUnavailable) {
     logger.warn('Error thrown in Health Watcher')
-    return res.status(err.code).send(err.data)
+    return res.status(err.code).json(err.data)
   }
   if (err instanceof HttpResponse) {
     logger.warn('Error thrown in handler: %s', err.message)
