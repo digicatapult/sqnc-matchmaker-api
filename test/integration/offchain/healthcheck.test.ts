@@ -19,8 +19,8 @@ const node = new ChainNode({
 
 const api = node.getApi()
 
-const getSpecVersion = (actualResult: any) => actualResult?.body?.details?.api?.detail?.runtime?.versions?.spec
-const getIpfsVersion = (actualResult: any) => actualResult?.body?.details?.ipfs?.detail?.version
+const getSpecVersion = (actualResult: any) => actualResult?._body?.details?.api?.detail?.runtime?.versions?.spec
+const getIpfsVersion = (actualResult: any) => actualResult?._body?.details?.ipfs?.detail?.version
 
 describe('health check', () => {
   before(async () => {

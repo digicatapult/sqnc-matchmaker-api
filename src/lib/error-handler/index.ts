@@ -1,6 +1,7 @@
 import { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 import { ValidateError } from 'tsoa'
 import { Health } from '../../models'
+//import { Health } from '../../models'
 
 import { logger } from '../logger'
 
@@ -54,15 +55,23 @@ export class BadRequest extends HttpResponse implements IBadRequest {
   }
 }
 
-export class ServiceUnavailable extends HttpResponse {
-  constructor(data: Health) {
-    const message: string = JSON.stringify(data).replace(/\\/g, '')
-    super({ code: 503, message })
+export class ServiceUnavailable {
+  public res!: ExResponse
+  public code: number
+  public data: Health
+
+  constructor(code: number, data: Health) {
+    this.code = code
+    this.data = data
+  }
+
+  sendResponse(res: ExResponse) {
+    return res.status(this.code).send(this.data)
   }
 }
 
 export const errorHandler = function errorHandler(
-  err: Error & { code: number },
+  err: Error & { code: number; data?: object },
   req: ExRequest,
   res: ExResponse,
   next: NextFunction

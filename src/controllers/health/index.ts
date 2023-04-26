@@ -26,6 +26,7 @@ export class health extends Controller {
     const statusHandler = await startStatusHandlers()
     const status = statusHandler.status
     const details = statusHandler.detail
+    const code = status === serviceState.UP ? 200 : 503
 
     const response: Health = {
       status: serviceStatusStrings[status] || 'error',
@@ -43,8 +44,8 @@ export class health extends Controller {
         })
       ),
     }
-    if (serviceStatusStrings[status] == 'down') throw new ServiceUnavailable(response)
-    if (serviceStatusStrings[status] == 'error') throw new ServiceUnavailable(response)
+    if (serviceStatusStrings[status] == 'down') throw new ServiceUnavailable(code, response).sendResponse
+    if (serviceStatusStrings[status] == 'error') throw new ServiceUnavailable(code, response).sendResponse
     return response
   }
 }
