@@ -55,13 +55,13 @@ export class BadRequest extends HttpResponse implements IBadRequest {
   }
 }
 
-export class ServiceUnavailable extends Error {
+export class ServiceUnavailable extends HttpResponse {
   public res!: ExResponse
   public code: number
   public data: Health
 
   constructor(code: number, data: Health) {
-    super()
+    super({ code: 503, message: '' })
     this.code = code
     this.data = data
   }
@@ -87,6 +87,10 @@ export const errorHandler = function errorHandler(
       message: 'Validation failed',
     })
   }
+  if (err instanceof ServiceUnavailable) {
+    logger.warn('Error thrown in Health Watcher')
+    return res.status(err.code).send(err.data)
+  }
   if (err instanceof HttpResponse) {
     logger.warn('Error thrown in handler: %s', err.message)
 
@@ -96,9 +100,6 @@ export const errorHandler = function errorHandler(
     logger.error('Unexpected error thrown in handler: %s', err.message)
 
     return res.status(500).json(err)
-  }
-  if (err instanceof ServiceUnavailable){
-
   }
 
   next()

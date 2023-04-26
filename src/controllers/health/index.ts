@@ -44,8 +44,8 @@ export class health extends Controller {
         })
       ),
     }
-    if (serviceStatusStrings[status] == 'down') throw new ServiceUnavailable(code, response).sendResponse
-    if (serviceStatusStrings[status] == 'error') throw new ServiceUnavailable(code, response).sendResponse
+    if (serviceStatusStrings[status] == 'down') throw new ServiceUnavailable(code, response)
+    if (serviceStatusStrings[status] == 'error') throw new ServiceUnavailable(code, response)
     return response
   }
 }
