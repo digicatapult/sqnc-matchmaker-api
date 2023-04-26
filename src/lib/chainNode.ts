@@ -5,7 +5,6 @@ import type { u128 } from '@polkadot/types'
 
 import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
-import { HttpResponse } from './error-handler'
 
 import type { Payload, Output, Metadata } from './payload'
 
@@ -144,12 +143,15 @@ export default class ChainNode {
           const { dispatchError, status } = result
 
           if (dispatchError) {
+            transactionDbUpdate('failed')
             if (dispatchError.isModule) {
               const decoded = this.api.registry.findMetaError(dispatchError.asModule)
-              reject(new HttpResponse({ message: `Node dispatch error: ${decoded.name}` }))
+              reject(new Error(`Node dispatch error: ${decoded.name}`))
             } else {
-              reject(new HttpResponse({ message: `Unknown node dispatch error: ${dispatchError}` }))
+              reject(new Error(`Unknown node dispatch error: ${dispatchError}`))
             }
+            unsub()
+            return
           }
 
           if (status.isInBlock) {
@@ -163,8 +165,8 @@ export default class ChainNode {
             const data = processRanEvent?.event?.data as EventData
             const tokens = data?.outputs?.map((x) => x.toNumber())
 
-            unsub()
             tokens ? resolve(tokens) : reject(Error('No token IDs returned'))
+            unsub()
           }
         })
         .then((res) => {
