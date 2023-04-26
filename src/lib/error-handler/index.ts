@@ -55,12 +55,13 @@ export class BadRequest extends HttpResponse implements IBadRequest {
   }
 }
 
-export class ServiceUnavailable {
+export class ServiceUnavailable extends Error {
   public res!: ExResponse
   public code: number
   public data: Health
 
   constructor(code: number, data: Health) {
+    super()
     this.code = code
     this.data = data
   }
@@ -95,6 +96,9 @@ export const errorHandler = function errorHandler(
     logger.error('Unexpected error thrown in handler: %s', err.message)
 
     return res.status(500).json(err)
+  }
+  if (err instanceof ServiceUnavailable){
+
   }
 
   next()
