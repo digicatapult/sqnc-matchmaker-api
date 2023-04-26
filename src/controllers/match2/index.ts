@@ -29,7 +29,7 @@ import env from '../../env'
 
 @Route('match2')
 @Tags('match2')
-@Security('bearerAuth')
+@Security('BearerAuth')
 export class Match2Controller extends Controller {
   log: Logger
   db: Database
