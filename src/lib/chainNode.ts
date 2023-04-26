@@ -123,7 +123,7 @@ export default class ChainNode {
     this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
 
     await this.api.isReady
-    const extrinsic = await this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
+    const extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
     const account = this.keyring.addFromUri(this.userUri)
     const signed = await extrinsic.signAsync(account, { nonce: -1 })
     return signed
