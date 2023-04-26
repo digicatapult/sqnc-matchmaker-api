@@ -1,9 +1,7 @@
 {
   "entryFile": "src/index.ts",
   "noImplicitAdditionalProperties": "throw-on-extras",
-  "controllerPathGlobs": [
-    "src/controllers/**/*.ts"
-  ],
+  "controllerPathGlobs": ["src/controllers/**/*.ts"],
   "multerOpts": {
     "limits": {
       "fileSize": 104857600
@@ -27,6 +25,17 @@
             "requestBody": {
               "required": true,
               "content": {
+                "multipart/form-data": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string",
+                        "format": "binary"
+                      }
+                    }
+                  }
+                },
                 "application/json": {
                   "schema": {
                     "anyOf": [
@@ -48,11 +57,7 @@
                   }
                 }
               }
-            },
-            "consumes": [
-              "multipart/form-data",
-              "application/json"
-            ]
+            }
           }
         },
         "/attachment/{id}": {
