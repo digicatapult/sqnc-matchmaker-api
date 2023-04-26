@@ -11,7 +11,7 @@
     "outputDirectory": "src",
     "specVersion": 3,
     "securityDefinitions": {
-      "bearerAuth": {
+      "BearerAuth": {
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
