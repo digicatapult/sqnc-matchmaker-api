@@ -56,7 +56,6 @@ export class BadRequest extends HttpResponse implements IBadRequest {
 }
 
 export class ServiceUnavailable extends HttpResponse {
-  public res!: ExResponse
   public code: number
   public data: Health
 
@@ -64,10 +63,6 @@ export class ServiceUnavailable extends HttpResponse {
     super({ code: 503, message: '' })
     this.code = code
     this.data = data
-  }
-
-  sendResponse(res: ExResponse) {
-    return res.status(this.code).send(this.data)
   }
 }
 
