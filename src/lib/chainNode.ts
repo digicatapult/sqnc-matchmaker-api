@@ -159,13 +159,17 @@ export default class ChainNode {
           }
 
           if (status.isFinalized) {
-            transactionDbUpdate('finalised')
-
             const processRanEvent = result.events.find(({ event: { method } }) => method === 'ProcessRan')
             const data = processRanEvent?.event?.data as EventData
             const tokens = data?.outputs?.map((x) => x.toNumber())
 
-            tokens ? resolve(tokens) : reject(Error('No token IDs returned'))
+            if (tokens) {
+              transactionDbUpdate('finalised')
+              resolve(tokens)
+            } else {
+              transactionDbUpdate('failed')
+              reject(Error('No token IDs returned'))
+            }
             unsub()
           }
         })
