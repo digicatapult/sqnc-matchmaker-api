@@ -1,4 +1,4 @@
-import { UUID } from './uuid'
+import { UUID } from './strings'
 
 /**
  * The possible states of a Match2
