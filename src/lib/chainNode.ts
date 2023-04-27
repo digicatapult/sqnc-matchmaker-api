@@ -247,10 +247,10 @@ export default class ChainNode {
     }
 
     const block: SignedBlock = await this.api.rpc.chain.getBlock(blockhash)
-    const events: AugmentedQueries<'promise'> = await apiAtBlock.query.system.events()
+    const events: Vec<FrameSystemEventRecord> = await apiAtBlock.query.system.events()
 
     // TODO need help here with .map / codec - could not figure out
-    return processRanEventIndexes.map(([, index]: [unknown, EventIndex]) => {
+    return processRanEventIndexes.map(([, index]: [unknown, number]) => {
       const event: FrameSystemEventRecord = events[index] // TODO ???
       const extrinsicIndex: u32 = event.phase.asApplyExtrinsic
       const process = event.event.data[1] as unknown as DscpPalletTraitsProcessFullyQualifiedId

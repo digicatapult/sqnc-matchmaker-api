@@ -10,7 +10,7 @@ import * as TokenType from '../models/tokenType'
 const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 const bs58 = basex(BASE58)
 
-type MetadataType = 'LITERAL' | 'FILE' | 'TOKEN_ID'
+type MetadataType = 'LITERAL' | 'FILE' | 'TOKEN_ID' | 'NONE'
 export type Metadata = Record<string, { type: MetadataType; value: number | string | MetadataFile }>
 export interface Output {
   roles: Record<string, string>
