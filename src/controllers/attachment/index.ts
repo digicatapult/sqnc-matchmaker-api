@@ -62,7 +62,7 @@ interface DbAttachment extends Omit<Attachment, 'createdAt'> {
 
 @Route('attachment')
 @Tags('attachment')
-@Security('bearerAuth')
+@Security('BearerAuth')
 export class attachment extends Controller {
   log: Logger
   dbClient: Database = new Database()

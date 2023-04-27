@@ -26,7 +26,7 @@ import env from '../../env'
 
 @Route('order')
 @Tags('order')
-@Security('bearerAuth')
+@Security('BearerAuth')
 export class order extends Controller {
   log: Logger
   db: Database

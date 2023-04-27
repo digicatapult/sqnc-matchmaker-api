@@ -26,7 +26,7 @@ import env from '../../env'
 
 @Route('capacity')
 @Tags('capacity')
-@Security('bearerAuth')
+@Security('BearerAuth')
 export class CapacityController extends Controller {
   log: Logger
   db: Database
