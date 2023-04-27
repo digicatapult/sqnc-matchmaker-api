@@ -3,6 +3,7 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server'
+import Indexer from '../../../src/lib/indexer'
 import { post } from '../../helper/routeHelper'
 import { seed, cleanup, seededCapacityId, parametersAttachmentId } from '../../seeds'
 
@@ -25,9 +26,28 @@ const node = new ChainNode({
 describe('on-chain', function () {
   this.timeout(60000)
   let app: Express
+  let indexer: Indexer
 
   before(async function () {
     app = await createHttpServer()
+    const node = new ChainNode({
+      host: env.NODE_HOST,
+      port: env.NODE_PORT,
+      logger,
+      userUri: env.USER_URI,
+    })
+
+    indexer = new Indexer({ db: new Database(), logger, node })
+    await indexer.start()
+    indexer.processAllBlocks(await node.getLastFinalisedBlockHash()).then(() =>
+      node.watchFinalisedBlocks(async (hash) => {
+        await indexer.processAllBlocks(hash)
+      })
+    )
+  })
+
+  after(async function () {
+    await indexer.close()
   })
 
   withIdentitySelfMock()

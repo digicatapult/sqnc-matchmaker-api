@@ -28,5 +28,9 @@ export const pollTransactionState = async (
     return new Promise((resolve) => setTimeout(resolve, delay)).then(poll)
   }
 
-  return poll()
+  return poll().then((value) => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(value), delay)
+    })
+  })
 }
