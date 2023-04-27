@@ -14,7 +14,11 @@ import type { Codec } from '@polkadot/types-codec/types'
 
 import Ipfs from './ipfs'
 import type { Payload, Output, MetadataFile, Metadata } from './payload'
-import type { DscpNodeRuntimeRole ,FrameSystemEventRecord, DscpPalletTraitsProcessFullyQualifiedId } from '@polkadot/types/lookup'
+import type {
+  DscpNodeRuntimeRole,
+  FrameSystemEventRecord,
+  DscpPalletTraitsProcessFullyQualifiedId,
+} from '@polkadot/types/lookup'
 import { u32 } from '@polkadot/types-codec'
 import { Registry } from '@polkadot/types/types'
 import { ILookup } from '@polkadot/types-create/types'
@@ -32,7 +36,7 @@ export interface NodeCtorConfig {
 }
 
 export interface ProcessRanEvent {
-  callHash: CallHash,
+  callHash: CallHash
   sender: DscpNodeRuntimeRole
   process: DscpPalletTraitsProcessFullyQualifiedId
   inputs: u128
@@ -40,8 +44,8 @@ export interface ProcessRanEvent {
 }
 
 interface RoleEnum {
-  name: string | undefined  /* TYPE */ 
-  index: number | undefined  /* TYPE */ 
+  name: string | undefined /* TYPE */
+  index: number | undefined /* TYPE */
 }
 
 type EventData =
@@ -104,7 +108,7 @@ export default class ChainNode {
     await this.api.isReady
 
     const registry: Registry = this.api.registry
-    const lookup /*: ILookup */ = registry.lookup as unknown as ILookup// TODO not sure if this is error or not, might be just linting
+    const lookup /*: ILookup */ = registry.lookup as unknown as ILookup // TODO not sure if this is error or not, might be just linting
     const lookupId = registry.getDefinition('DscpNodeRuntimeRole') as `Lookup${number}`
 
     const rolesEnum = lookup.getTypeDef(lookupId).sub
@@ -244,7 +248,7 @@ export default class ChainNode {
   async getProcessRanEvents(blockhash: string): Promise<ProcessRanEvent[]> {
     await this.api.isReady
     const apiAtBlock: ApiDecoration<'promise'> = await this.api.at(blockhash)
-    const processRanEventIndexes = await apiAtBlock.query.system.eventTopics(processRanTopic) as unknown as Codec
+    const processRanEventIndexes = (await apiAtBlock.query.system.eventTopics(processRanTopic)) as unknown as Codec
     if (Array.isArray(processRanEventIndexes) && processRanEventIndexes.length === 0) {
       return []
     }

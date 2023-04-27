@@ -7,12 +7,12 @@ import * as TokenType from '../models/tokenType'
 
 type MetadataType = 'LITERAL' | 'FILE' | 'TOKEN_ID'
 
-export type Metadata = Record<string, { type: MetadataType, value: number | string | MetadataFile }>
+export type Metadata = Record<string, { type: MetadataType; value: number | string | MetadataFile }>
 
 export interface Output {
   roles: Record<string, string>
-  metadata: Metadata,
-} 
+  metadata: Metadata
+}
 
 export interface Payload {
   process: DscpPalletTraitsProcessFullyQualifiedId
@@ -24,7 +24,6 @@ export interface MetadataFile {
   blob: Blob
   filename: string
 }
-
 
 export const demandCreate = (demand: DemandPayload): Payload => ({
   process: { id: 'demand-create', version: 1 } as unknown as DscpPalletTraitsProcessFullyQualifiedId,
