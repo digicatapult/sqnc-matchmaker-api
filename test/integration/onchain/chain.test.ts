@@ -37,6 +37,18 @@ describe('on-chain', function () {
       userUri: env.USER_URI,
     })
 
+    const blockHash = await node.getLastFinalisedBlockHash()
+    const blockHeader = await node.getHeader(blockHash)
+    await db
+      .insertProcessedBlock({
+        hash: blockHash,
+        height: blockHeader.height,
+        parent: blockHash,
+      })
+      .catch(() => {
+        // intentional ignorance of errors
+      })
+
     indexer = new Indexer({ db: new Database(), logger, node })
     await indexer.start()
     indexer.processAllBlocks(await node.getLastFinalisedBlockHash()).then(() =>

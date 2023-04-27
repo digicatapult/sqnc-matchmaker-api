@@ -84,7 +84,7 @@ export default class ChainNode {
     })
   }
 
-  async getLastFinalisedBlockHash(): Promise<string> {
+  async getLastFinalisedBlockHash(): Promise<HEX> {
     await this.api.isReady
     const result = await this.api.rpc.chain.getFinalizedHead()
     return result.toHex()
