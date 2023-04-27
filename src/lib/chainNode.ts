@@ -3,13 +3,12 @@ import { blake2AsHex } from '@polkadot/util-crypto'
 import { ApiDecoration, SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128, Vec } from '@polkadot/types'
 import type { CallHash } from '@polkadot/types/interfaces/runtime'
-import type { EventIndex } from '@polkadot/types/interfaces/system'
+// import type { EventIndex } from '@polkadot/types/interfaces/system'
 
 import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
 import { HttpResponse } from './error-handler'
 import type { SignedBlock } from '@polkadot/types/interfaces/runtime'
-import type { AugmentedQueries } from '@polkadot/api/types'
 import type { Codec } from '@polkadot/types-codec/types'
 
 import type { Payload, Output, Metadata } from './payload'
@@ -249,7 +248,6 @@ export default class ChainNode {
     const block: SignedBlock = await this.api.rpc.chain.getBlock(blockhash)
     const events: Vec<FrameSystemEventRecord> = await apiAtBlock.query.system.events()
 
-    // TODO need help here with .map / codec - could not figure out
     return processRanEventIndexes.map(([, index]: [unknown, number]) => {
       const event: FrameSystemEventRecord = events[index] // TODO ???
       const extrinsicIndex: u32 = event.phase.asApplyExtrinsic
