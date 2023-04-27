@@ -27,7 +27,7 @@ import env from '../../env'
 
 @Route('order')
 @Tags('order')
-@Security('bearerAuth')
+@Security('BearerAuth')
 export class order extends Controller {
   log: Logger
   db: Database
@@ -42,8 +42,6 @@ export class order extends Controller {
       port: env.NODE_PORT,
       logger,
       userUri: env.USER_URI,
-      ipfsHost: env.IPFS_HOST,
-      ipfsPort: env.IPFS_PORT,
     })
   }
 

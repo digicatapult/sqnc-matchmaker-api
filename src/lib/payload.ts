@@ -1,3 +1,5 @@
+import basex from 'base-x'
+
 import { Match2Payload, Match2Response } from '../models/match2'
 import { DemandPayload } from '../models/demand'
 import type { DscpPalletTraitsProcessFullyQualifiedId } from '@polkadot/types/lookup'
@@ -5,10 +7,11 @@ import type { u128, Vec } from '@polkadot/types'
 
 import * as TokenType from '../models/tokenType'
 
+const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+const bs58 = basex(BASE58)
+
 type MetadataType = 'LITERAL' | 'FILE' | 'TOKEN_ID'
-
 export type Metadata = Record<string, { type: MetadataType; value: number | string | MetadataFile }>
-
 export interface Output {
   roles: Record<string, string>
   metadata: Metadata
@@ -25,6 +28,11 @@ export interface MetadataFile {
   filename: string
 }
 
+const formatHash = (hash: string) => {
+  const decoded = Buffer.from(bs58.decode(hash))
+  return `0x${decoded.toString('hex').slice(4)}`
+}
+
 export const demandCreate = (demand: DemandPayload): Payload => ({
   process: { id: 'demand-create', version: 1 } as unknown as DscpPalletTraitsProcessFullyQualifiedId,
   outputs: [
@@ -35,7 +43,7 @@ export const demandCreate = (demand: DemandPayload): Payload => ({
         type: { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: 'created' },
         subtype: { type: 'LITERAL', value: demand.subtype },
-        parameters: { type: 'FILE', value: { blob: new Blob([demand.binary_blob]), filename: demand.filename } },
+        parameters: { type: 'FILE', value: formatHash(demand.ipfs_hash) },
       },
     },
   ],

@@ -6,7 +6,7 @@ import createHttpServer from '../../../src/server'
 import { post, get } from '../../helper/routeHelper'
 import { seed, parametersAttachmentId, seededOrderId, seededOrderCreationId, cleanup } from '../../seeds'
 
-import { selfAlias, identitySelfMock } from '../../helper/mock'
+import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
 import Database from '../../../src/lib/db'
 
 const db = new Database()
@@ -17,8 +17,9 @@ describe('order', () => {
 
   before(async function () {
     app = await createHttpServer()
-    identitySelfMock()
   })
+
+  withIdentitySelfMock()
 
   beforeEach(async () => await seed())
 

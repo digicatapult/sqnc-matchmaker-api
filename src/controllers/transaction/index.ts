@@ -8,7 +8,7 @@ import { TransactionApiType, TransactionResponse, TransactionState } from '../..
 
 @Route('transaction')
 @Tags('transaction')
-@Security('bearerAuth')
+@Security('BearerAuth')
 export class TransactionController extends Controller {
   log: Logger
   db: Database

@@ -15,8 +15,6 @@ import ChainNode from './lib/chainNode'
     port: env.NODE_PORT,
     logger,
     userUri: env.USER_URI,
-    ipfsHost: env.IPFS_HOST,
-    ipfsPort: env.IPFS_PORT,
   })
 
   if (env.ENABLE_INDEXER) {

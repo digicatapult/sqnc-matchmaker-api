@@ -12,6 +12,8 @@
   },
   "rules": {
     "prettier/prettier": "error",
+    "no-unused-vars": ["warn", { "ignoreRestSiblings": true }],
+    "@typescript-eslint/no-unused-vars": ["warn", { "ignoreRestSiblings": true }],
     "no-console": 2
   },
   "overrides": [
