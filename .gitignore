@@ -1,4 +1,4 @@
-config/local.json
+metadata.json
 
 node_modules/
 build
