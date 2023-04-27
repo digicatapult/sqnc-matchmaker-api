@@ -87,7 +87,9 @@ const DefaultEventProcessors: EventProcessors = {
         demands: new Map(
           newDemands.map(({ id, tokenId }) => [id, { type: 'update', id, state: 'created', latest_token_id: tokenId }])
         ),
-        matches: new Map([[id, { type: 'update', id, state: 'proposed', latest_token_id: newMatchId }]]),
+        matches: new Map([
+          [id, { type: 'update', id, state: 'proposed', latest_token_id: newMatchId, original_token_id: newMatchId }],
+        ]),
       }
     }
 

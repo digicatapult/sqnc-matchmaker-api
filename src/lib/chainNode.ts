@@ -39,7 +39,7 @@ interface RoleEnum {
 interface SubstrateToken {
   id: number
   metadata: {
-    [key in string]: { literal: string } | { file: string } | { tokenId: string } | { None: null }
+    [key in string]: { literal: string } | { file: string } | { tokenId: number } | { None: null }
   }
   roles: {
     [key in 'Owner' | 'MemberA' | 'MemberB' | 'Optimiser']: string
@@ -279,7 +279,11 @@ export default class ChainNode {
     const metadata = new Map(
       Object.entries(token.metadata).map(([keyHex, entry]) => {
         const key = Buffer.from(keyHex.substring(2), 'hex').toString('utf8')
-        const valueHex = Object.entries(entry)[0][1] || '0x'
+        const [valueKey, valueRaw] = Object.entries(entry)[0]
+        if (valueKey === 'None' || valueKey === 'tokenId') {
+          return [key, valueRaw]
+        }
+        const valueHex = valueRaw || '0x'
         const value = Buffer.from(valueHex.substring(2), 'hex').toString('utf8')
         return [key, value]
       })

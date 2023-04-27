@@ -102,7 +102,9 @@ describe('eventProcessor', function () {
           ['id_1', { type: 'update', id: 'id_1', state: 'created', latest_token_id: 3 }],
           ['id_2', { type: 'update', id: 'id_2', state: 'created', latest_token_id: 4 }],
         ]),
-        matches: new Map([['id_42', { type: 'update', id: 'id_42', state: 'proposed', latest_token_id: 5 }]]),
+        matches: new Map([
+          ['id_42', { type: 'update', id: 'id_42', state: 'proposed', latest_token_id: 5, original_token_id: 5 }],
+        ]),
       })
     })
 
