@@ -9,6 +9,7 @@ import { responses as healthResponses } from '../../helper/healthHelper'
 import env from '../../../src/env'
 import { logger } from '../../../src/lib/logger'
 import ChainNode from '../../../src/lib/chainNode'
+import { withOkMock, withIpfsMockError, withSubstrateMockError } from '../../helper/mockHealth'
 
 const node = new ChainNode({
   host: env.NODE_HOST,
@@ -23,18 +24,10 @@ const getSpecVersion = (actualResult: any) => actualResult?._body?.details?.api?
 const getIpfsVersion = (actualResult: any) => actualResult?._body?.details?.ipfs?.detail?.version
 
 describe('health check', () => {
-  before(async () => {
-    nock.disableNetConnect()
-    nock.enableNetConnect((host) => host.includes('127.0.0.1') || host.includes('localhost'))
-  })
-
-  afterEach(() => {
-    nock.abortPendingRequests()
-    nock.cleanAll()
-  })
-
   describe('happy path', function () {
     let app: Express
+
+    withOkMock()
 
     before(async function () {
       app = await createHttpServer()
@@ -63,6 +56,8 @@ describe('health check', () => {
         stub.restore()
       }
     })
+
+    withSubstrateMockError()
 
     before(async function () {
       app = await createHttpServer()
@@ -114,26 +109,15 @@ describe('health check', () => {
   describe('ipfs service down', function () {
     let app: Express
 
-    before(function () {
-      nock.disableNetConnect()
-      nock.enableNetConnect((host) => {
-        return host !== `${env.IPFS_HOST}:${env.IPFS_PORT}`
-      })
-    })
-
-    after(function () {
-      nock.cleanAll()
-      nock.enableNetConnect()
-    })
-
     before(async function () {
       app = await createHttpServer()
     })
 
+    withIpfsMockError()
+
     it('service down', async function () {
       const actualResult = await get(app, '/health')
       const response = healthResponses.ipfsDown(getSpecVersion(actualResult))
-      console.log(actualResult.body.details.api.detail)
       expect(actualResult.status).to.equal(response.code)
       expect(actualResult.body).to.deep.equal(response.body)
     })
