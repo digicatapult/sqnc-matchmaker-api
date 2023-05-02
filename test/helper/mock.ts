@@ -53,6 +53,31 @@ export function withIdentitySelfMock() {
   })
 }
 
+export function withIdentityNullSelf() {
+  let originalDispatcher: Dispatcher
+  let mockAgent: MockAgent
+  beforeEach(function () {
+    originalDispatcher = getGlobalDispatcher()
+    mockAgent = new MockAgent()
+    setGlobalDispatcher(mockAgent)
+    const mockIdentity = mockAgent.get(`http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`)
+    mockIdentity
+      .intercept({
+        path: '/v1/self',
+        method: 'GET',
+      })
+      .reply(200, {
+        alias: null,
+        address: selfAddress,
+      })
+      .persist()
+  })
+
+  afterEach(function () {
+    setGlobalDispatcher(originalDispatcher)
+  })
+}
+
 export const withIpfsMock = (fileContent?: string | object | Buffer) => {
   let originalDispatcher: Dispatcher
   let mockAgent: MockAgent

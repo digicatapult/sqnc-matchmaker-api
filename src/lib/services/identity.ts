@@ -7,7 +7,11 @@ const getMemberByAlias = async (alias: string) => {
   const res = await fetch(`${URL_PREFIX}/members/${encodeURIComponent(alias)}`)
 
   if (res.ok) {
-    return await res.json()
+    const { address, alias } = await res.json()
+    return {
+      address,
+      alias: alias ? alias : address,
+    }
   }
 
   if (res.status === 404) {
@@ -21,7 +25,11 @@ const getMemberBySelf = async () => {
   const res = await fetch(`${URL_PREFIX}/self`)
 
   if (res.ok) {
-    return await res.json()
+    const { address, alias } = await res.json()
+    return {
+      address,
+      alias: alias ? alias : address,
+    }
   }
 
   throw new HttpResponse({})
