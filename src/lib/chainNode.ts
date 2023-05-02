@@ -7,6 +7,7 @@ import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
 
 import type { Payload, Output, Metadata } from './payload'
+import { HEX } from '../models/strings'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
@@ -18,7 +19,8 @@ export interface NodeCtorConfig {
 }
 
 export interface ProcessRanEvent {
-  callHash: string
+  callHash: HEX
+  blockHash: HEX
   sender: string
   process: {
     id: string
@@ -31,6 +33,16 @@ export interface ProcessRanEvent {
 interface RoleEnum {
   name: string | undefined
   index: number | undefined
+}
+
+interface SubstrateToken {
+  id: number
+  metadata: {
+    [key in string]: { literal: string } | { file: string } | { tokenId: number } | { None: null }
+  }
+  roles: {
+    [key in 'Owner' | 'MemberA' | 'MemberB' | 'Optimiser']: string
+  }
 }
 
 type EventData =
@@ -71,13 +83,13 @@ export default class ChainNode {
     })
   }
 
-  async getLastFinalisedBlockHash(): Promise<string> {
+  async getLastFinalisedBlockHash(): Promise<HEX> {
     await this.api.isReady
     const result = await this.api.rpc.chain.getFinalizedHead()
     return result.toHex()
   }
 
-  async getHeader(hash: string): Promise<{ hash: string; height: number; parent: string }> {
+  async getHeader(hash: HEX): Promise<{ hash: HEX; height: number; parent: HEX }> {
     await this.api.isReady
     const result = await this.api.rpc.chain.getHeader(hash)
     return {
@@ -233,7 +245,7 @@ export default class ChainNode {
     await this.api.rpc.chain.subscribeFinalizedHeads((header) => onNewFinalisedHead(header.hash.toHex()))
   }
 
-  async getProcessRanEvents(blockhash: string): Promise<ProcessRanEvent[]> {
+  async getProcessRanEvents(blockhash: HEX): Promise<ProcessRanEvent[]> {
     await this.api.isReady
     const apiAtBlock = await this.api.at(blockhash)
     const processRanEventIndexes = (await apiAtBlock.query.system.eventTopics(processRanTopic)) as unknown as [
@@ -254,7 +266,8 @@ export default class ChainNode {
       const extrinsicIndex = event.phase.asApplyExtrinsic
       const process = event.event.data[1] as { id: string; version: { toNumber: () => number } }
       return {
-        callHash: block.block.extrinsics[extrinsicIndex].hash.toString(),
+        callHash: block.block.extrinsics[extrinsicIndex].hash.toString() as HEX,
+        blockHash: blockhash,
         sender: (event.event.data[0] as { toString: () => string }).toString(),
         process: {
           id: Buffer.from(process.id).toString('ascii'),
@@ -264,5 +277,29 @@ export default class ChainNode {
         outputs: (event.event.data[3] as { toNumber: () => number }[]).map((o) => o.toNumber()),
       }
     })
+  }
+
+  async getToken(tokenId: number, blockHash: HEX | null = null) {
+    const api = blockHash ? await this.api.at(blockHash) : this.api
+    const token = (await api.query.utxoNFT.tokensById(tokenId)).toJSON() as unknown as SubstrateToken
+    const metadata = new Map(
+      Object.entries(token.metadata).map(([keyHex, entry]) => {
+        const key = Buffer.from(keyHex.substring(2), 'hex').toString('utf8')
+        const [valueKey, valueRaw] = Object.entries(entry)[0]
+        if (valueKey === 'None' || valueKey === 'tokenId') {
+          return [key, valueRaw]
+        }
+        const valueHex = valueRaw || '0x'
+        const value = Buffer.from(valueHex.substring(2), 'hex').toString('utf8')
+        return [key, value]
+      })
+    )
+    const roles = new Map(Object.entries(token.roles).map(([role, account]) => [role.toLowerCase(), account]))
+
+    return {
+      id: token.id,
+      metadata,
+      roles,
+    }
   }
 }

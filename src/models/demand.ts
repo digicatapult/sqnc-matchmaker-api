@@ -1,5 +1,5 @@
 import { Attachment } from './attachment'
-import { UUID } from './uuid'
+import { UUID } from './strings'
 
 /**
  * The possible types of a Demand

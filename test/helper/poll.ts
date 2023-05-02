@@ -1,6 +1,6 @@
 import Database from '../../src/lib/db'
 import { TransactionState, TransactionResponse } from '../../src/models/transaction'
-import { UUID } from '../../src/models/uuid'
+import { UUID } from '../../src/models/strings'
 
 export const pollTransactionState = async (
   db: Database,
@@ -28,5 +28,9 @@ export const pollTransactionState = async (
     return new Promise((resolve) => setTimeout(resolve, delay)).then(poll)
   }
 
-  return poll()
+  return poll().then((value) => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(value), delay)
+    })
+  })
 }

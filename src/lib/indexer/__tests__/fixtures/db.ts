@@ -31,20 +31,36 @@ export const withInitialLastProcessedBlock = (initial: LastProcessBlockResult) =
     lastBlock = block
     return Promise.resolve()
   })
-  const upsertDemand = sinon.stub().resolves()
-  const upsertMatch2 = sinon.stub().resolves()
+  const updateDemand = sinon.stub().resolves()
+  const updateMatch2 = sinon.stub().resolves()
+  const insertDemand = sinon.stub().resolves()
+  const insertMatch2 = sinon.stub().resolves()
+  const insertAttachment = sinon.stub().resolves()
 
   return {
     getLastProcessedBlock: getMock,
-    upsertDemand,
-    upsertMatch2,
+    updateDemand,
+    updateMatch2,
+    insertDemand,
+    insertMatch2,
+    insertAttachment,
     insertProcessedBlock,
     withTransaction: sinon.spy(async function (fn: (db: Database) => Promise<void>) {
       await fn({
         insertProcessedBlock,
-        upsertDemand,
-        upsertMatch2,
+        updateDemand,
+        updateMatch2,
+        insertDemand,
+        insertMatch2,
+        insertAttachment,
       } as unknown as Database)
     }),
+  } as unknown as Database
+}
+
+export const withTransactionMatchingTokensInDb = (tx: null | object, tokens: Map<number, string | null>) => {
+  return {
+    findTransaction: sinon.stub().resolves(tx),
+    findLocalIdForToken: sinon.stub().callsFake((id: number) => Promise.resolve(tokens.get(id))),
   } as unknown as Database
 }
