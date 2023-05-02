@@ -2,9 +2,9 @@ import { Controller, Get, Route, Request } from 'tsoa'
 import { Logger } from 'pino'
 
 import * as Ex from 'express'
-import type { Health } from '../../../models'
-import { logger } from '../../../lib/logger'
-@Route('v1/health')
+import type { Health } from '../../models'
+import { logger } from '../../lib/logger'
+@Route('health')
 export class health extends Controller {
   constructor() {
     super()
