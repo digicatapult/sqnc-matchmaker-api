@@ -13,18 +13,18 @@ import {
 } from 'tsoa'
 import type { Logger } from 'pino'
 
-import { logger } from '../../lib/logger'
-import Database from '../../lib/db'
-import { DemandResponse, DemandRequest } from '../../models/demand'
-import { UUID } from '../../models/strings'
-import { BadRequest, NotFound } from '../../lib/error-handler/index'
-import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-import { TransactionResponse } from '../../models/transaction'
-import { demandCreate } from '../../lib/payload'
-import ChainNode from '../../lib/chainNode'
-import env from '../../env'
+import { logger } from '../../../lib/logger'
+import Database from '../../../lib/db'
+import { DemandResponse, DemandRequest } from '../../../models/demand'
+import { UUID } from '../../../models/strings'
+import { BadRequest, NotFound } from '../../../lib/error-handler/index'
+import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
+import { TransactionResponse } from '../../../models/transaction'
+import { demandCreate } from '../../../lib/payload'
+import ChainNode from '../../../lib/chainNode'
+import env from '../../../env'
 
-@Route('capacity')
+@Route('v1/capacity')
 @Tags('capacity')
 @Security('BearerAuth')
 export class CapacityController extends Controller {
