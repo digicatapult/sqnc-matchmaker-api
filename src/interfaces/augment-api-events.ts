@@ -10,7 +10,7 @@ import type { Bytes, Null, Option, Result, U8aFixed, Vec, bool, u128, u32, u64 }
 import type { ITuple } from '@polkadot/types-codec/types';
 import type { OpaquePeerId } from '@polkadot/types/interfaces/imOnline';
 import type { AccountId32, H256 } from '@polkadot/types/interfaces/runtime';
-import type { FrameSupportDispatchDispatchInfo, FrameSupportTokensMiscBalanceStatus, PalletProcessValidationBinaryExpressionTreeBooleanExpressionSymbol, SpFinalityGrandpaAppPublic, SpRuntimeDispatchError } from '@polkadot/types/lookup';
+import type { DscpPalletTraitsProcessFullyQualifiedId, FrameSupportDispatchDispatchInfo, FrameSupportTokensMiscBalanceStatus, PalletProcessValidationBinaryExpressionTreeBooleanExpressionSymbol, SpFinalityGrandpaAppPublic, SpRuntimeDispatchError } from '@polkadot/types/lookup';
 
 export type __AugmentedEvent<ApiType extends ApiTypes> = AugmentedEvent<ApiType>;
 
@@ -232,20 +232,6 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
-    simpleNFT: {
-      /**
-       * A token was burnt.
-       **/
-      Burnt: AugmentedEvent<ApiType, [u128, AccountId32, Vec<u128>]>;
-      /**
-       * A token was issued.
-       **/
-      Minted: AugmentedEvent<ApiType, [u128, AccountId32, Vec<u128>]>;
-      /**
-       * Generic event
-       **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
     sudo: {
       /**
        * The \[sudoer\] just switched identity; the old key is supplied if one existed.
@@ -325,6 +311,16 @@ declare module '@polkadot/api-base/types/events' {
        * a tally (yes votes and no votes given respectively as `MemberCount`).
        **/
       Voted: AugmentedEvent<ApiType, [account: AccountId32, proposalHash: H256, voted: bool, yes: u32, no: u32], { account: AccountId32, proposalHash: H256, voted: bool, yes: u32, no: u32 }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    utxoNFT: {
+      /**
+       * A process was successfully run
+       **/
+      ProcessRan: AugmentedEvent<ApiType, [sender: AccountId32, process: DscpPalletTraitsProcessFullyQualifiedId, inputs: Vec<u128>, outputs: Vec<u128>], { sender: AccountId32, process: DscpPalletTraitsProcessFullyQualifiedId, inputs: Vec<u128>, outputs: Vec<u128> }>;
       /**
        * Generic event
        **/

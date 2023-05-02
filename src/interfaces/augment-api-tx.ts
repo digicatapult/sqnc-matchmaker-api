@@ -10,7 +10,7 @@ import type { Bytes, Compact, Option, U8aFixed, Vec, bool, u128, u32, u64, u8 } 
 import type { AnyNumber, IMethod, ITuple } from '@polkadot/types-codec/types';
 import type { OpaquePeerId } from '@polkadot/types/interfaces/imOnline';
 import type { AccountId32, Call, H256, MultiAddress } from '@polkadot/types/interfaces/runtime';
-import type { DscpPalletTraitsProcessFullyQualifiedId, PalletProcessValidationBinaryExpressionTreeBooleanExpressionSymbol, PalletSimpleNftOutput, SpCoreVoid, SpFinalityGrandpaEquivocationProof, SpWeightsWeightV2Weight } from '@polkadot/types/lookup';
+import type { DscpPalletTraitsProcessFullyQualifiedId, PalletProcessValidationBinaryExpressionTreeBooleanExpressionSymbol, PalletUtxoNftOutput, SpCoreVoid, SpFinalityGrandpaEquivocationProof, SpWeightsWeightV2Weight } from '@polkadot/types/lookup';
 
 export type __AugmentedSubmittable = AugmentedSubmittable<() => unknown>;
 export type __SubmittableExtrinsic<ApiType extends ApiTypes> = SubmittableExtrinsic<ApiType>;
@@ -402,13 +402,6 @@ declare module '@polkadot/api-base/types/submittable' {
        **/
       [key: string]: SubmittableExtrinsicFunction<ApiType>;
     };
-    simpleNFT: {
-      runProcess: AugmentedSubmittable<(process: DscpPalletTraitsProcessFullyQualifiedId | { id?: any; version?: any } | string | Uint8Array, inputs: Vec<u128> | (u128 | AnyNumber | Uint8Array)[], outputs: Vec<PalletSimpleNftOutput> | (PalletSimpleNftOutput | { roles?: any; metadata?: any } | string | Uint8Array)[]) => SubmittableExtrinsic<ApiType>, [DscpPalletTraitsProcessFullyQualifiedId, Vec<u128>, Vec<PalletSimpleNftOutput>]>;
-      /**
-       * Generic tx
-       **/
-      [key: string]: SubmittableExtrinsicFunction<ApiType>;
-    };
     sudo: {
       /**
        * Authenticates the current sudo key and sets the given AccountId (`new`) as the new sudo
@@ -671,6 +664,13 @@ declare module '@polkadot/api-base/types/submittable' {
       [key: string]: SubmittableExtrinsicFunction<ApiType>;
     };
     transactionPaymentFree: {
+      /**
+       * Generic tx
+       **/
+      [key: string]: SubmittableExtrinsicFunction<ApiType>;
+    };
+    utxoNFT: {
+      runProcess: AugmentedSubmittable<(process: DscpPalletTraitsProcessFullyQualifiedId | { id?: any; version?: any } | string | Uint8Array, inputs: Vec<u128> | (u128 | AnyNumber | Uint8Array)[], outputs: Vec<PalletUtxoNftOutput> | (PalletUtxoNftOutput | { roles?: any; metadata?: any } | string | Uint8Array)[]) => SubmittableExtrinsic<ApiType>, [DscpPalletTraitsProcessFullyQualifiedId, Vec<u128>, Vec<PalletUtxoNftOutput>]>;
       /**
        * Generic tx
        **/

@@ -4,7 +4,8 @@
   "description": "An OpenAPI Matchmaking API service for DSCP",
   "main": "src/index.ts",
   "scripts": {
-    "build:polkadot": "npm run generate:defs && npm run generate:meta",
+    "build:polkadot": "npm run generate:json && npm run generate:defs && npm run generate:meta",
+    "generate:json": "curl -H \"Content-Type: application/json\" -d '{\"id\":\"1\", \"jsonrpc\":\"2.0\", \"method\": \"state_getMetadata\", \"params\":[]}' http://localhost:9933 > metadata.json",
     "generate:defs": "ts-node --esm  node_modules/.bin/polkadot-types-from-defs --package dscp-matchmaker-api/interfaces  --input ./src/interfaces --endpoint ./metadata.json",
     "generate:meta": "ts-node --esm  node_modules/.bin/polkadot-types-from-chain --endpoint ./metadata.json --output ./src/interfaces",
     "lint": "eslint .",
@@ -42,6 +43,7 @@
   "devDependencies": {
     "@polkadot/api-base": "^10.4.1",
     "@polkadot/rpc-core": "^10.4.1",
+    "@polkadot/typegen": "^10.5.1",
     "@polkadot/types": "^10.4.1",
     "@polkadot/types-codec": "^10.4.1",
     "@polkadot/types-create": "^10.4.1",

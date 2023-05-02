@@ -255,16 +255,27 @@ export default {
     }
   },
   /**
-   * Lookup40: pallet_simple_nft::pallet::Event<T>
+   * Lookup40: pallet_utxo_nft::pallet::Event<T>
    **/
-  PalletSimpleNftEvent: {
+  PalletUtxoNftEvent: {
     _enum: {
-      Minted: '(u128,AccountId32,Vec<u128>)',
-      Burnt: '(u128,AccountId32,Vec<u128>)'
+      ProcessRan: {
+        sender: 'AccountId32',
+        process: 'DscpPalletTraitsProcessFullyQualifiedId',
+        inputs: 'Vec<u128>',
+        outputs: 'Vec<u128>'
+      }
     }
   },
   /**
-   * Lookup43: pallet_process_validation::pallet::Event<T>
+   * Lookup41: dscp_pallet_traits::ProcessFullyQualifiedId<bounded_collections::bounded_vec::BoundedVec<T, S>, ProcessVersion>
+   **/
+  DscpPalletTraitsProcessFullyQualifiedId: {
+    id: 'Bytes',
+    version: 'u32'
+  },
+  /**
+   * Lookup45: pallet_process_validation::pallet::Event<T>
    **/
   PalletProcessValidationEvent: {
     _enum: {
@@ -273,7 +284,7 @@ export default {
     }
   },
   /**
-   * Lookup46: pallet_process_validation::binary_expression_tree::BooleanExpressionSymbol<dscp_node_runtime::Role, bounded_collections::bounded_vec::BoundedVec<T, S>, dscp_node_runtime::MetadataValue<TokenId>, dscp_node_runtime::MetadataValueType>
+   * Lookup47: pallet_process_validation::binary_expression_tree::BooleanExpressionSymbol<dscp_node_runtime::Role, bounded_collections::bounded_vec::BoundedVec<T, S>, dscp_node_runtime::MetadataValue<TokenId>, dscp_node_runtime::MetadataValueType>
    **/
   PalletProcessValidationBinaryExpressionTreeBooleanExpressionSymbol: {
     _enum: {
@@ -282,13 +293,13 @@ export default {
     }
   },
   /**
-   * Lookup47: dscp_node_runtime::Role
+   * Lookup48: dscp_node_runtime::Role
    **/
   DscpNodeRuntimeRole: {
     _enum: ['Owner', 'Customer', 'AdditiveManufacturer', 'Laboratory', 'Buyer', 'Supplier', 'Reviewer', 'Optimiser', 'MemberA', 'MemberB']
   },
   /**
-   * Lookup48: dscp_node_runtime::MetadataValue<TokenId>
+   * Lookup49: dscp_node_runtime::MetadataValue<TokenId>
    **/
   DscpNodeRuntimeMetadataValue: {
     _enum: {
@@ -299,19 +310,19 @@ export default {
     }
   },
   /**
-   * Lookup49: dscp_node_runtime::MetadataValueType
+   * Lookup50: dscp_node_runtime::MetadataValueType
    **/
   DscpNodeRuntimeMetadataValueType: {
     _enum: ['File', 'Literal', 'TokenId', 'None']
   },
   /**
-   * Lookup50: pallet_process_validation::binary_expression_tree::BooleanOperator
+   * Lookup51: pallet_process_validation::binary_expression_tree::BooleanOperator
    **/
   PalletProcessValidationBinaryExpressionTreeBooleanOperator: {
     _enum: ['Null', 'Identity', 'TransferL', 'TransferR', 'NotL', 'NotR', 'And', 'Nand', 'Or', 'Nor', 'Xor', 'Xnor', 'ImplicationL', 'ImplicationR', 'InhibitionL', 'InhibitionR']
   },
   /**
-   * Lookup51: pallet_process_validation::restrictions::Restriction<dscp_node_runtime::Role, bounded_collections::bounded_vec::BoundedVec<T, S>, dscp_node_runtime::MetadataValue<TokenId>, dscp_node_runtime::MetadataValueType>
+   * Lookup52: pallet_process_validation::restrictions::Restriction<dscp_node_runtime::Role, bounded_collections::bounded_vec::BoundedVec<T, S>, dscp_node_runtime::MetadataValue<TokenId>, dscp_node_runtime::MetadataValueType>
    **/
   PalletProcessValidationRestrictionsRestriction: {
     _enum: {
@@ -382,7 +393,7 @@ export default {
     }
   },
   /**
-   * Lookup54: pallet_node_authorization::pallet::Event<T>
+   * Lookup55: pallet_node_authorization::pallet::Event<T>
    **/
   PalletNodeAuthorizationEvent: {
     _enum: {
@@ -423,7 +434,7 @@ export default {
     }
   },
   /**
-   * Lookup59: pallet_preimage::pallet::Event<T>
+   * Lookup60: pallet_preimage::pallet::Event<T>
    **/
   PalletPreimageEvent: {
     _enum: {
@@ -448,7 +459,7 @@ export default {
     }
   },
   /**
-   * Lookup60: pallet_scheduler::pallet::Event<T>
+   * Lookup61: pallet_scheduler::pallet::Event<T>
    **/
   PalletSchedulerEvent: {
     _enum: {
@@ -480,7 +491,7 @@ export default {
     }
   },
   /**
-   * Lookup63: pallet_symmetric_key::pallet::Event<T>
+   * Lookup64: pallet_symmetric_key::pallet::Event<T>
    **/
   PalletSymmetricKeyEvent: {
     _enum: {
@@ -488,13 +499,13 @@ export default {
     }
   },
   /**
-   * Lookup65: pallet_membership::pallet::Event<T, I>
+   * Lookup66: pallet_membership::pallet::Event<T, I>
    **/
   PalletMembershipEvent: {
     _enum: ['MemberAdded', 'MemberRemoved', 'MembersSwapped', 'MembersReset', 'KeyChanged', 'Dummy']
   },
   /**
-   * Lookup66: pallet_collective::pallet::Event<T, I>
+   * Lookup67: pallet_collective::pallet::Event<T, I>
    **/
   PalletCollectiveEvent: {
     _enum: {
@@ -533,7 +544,7 @@ export default {
     }
   },
   /**
-   * Lookup67: pallet_doas::pallet::Event<T>
+   * Lookup68: pallet_doas::pallet::Event<T>
    **/
   PalletDoasEvent: {
     _enum: {
@@ -542,7 +553,7 @@ export default {
     }
   },
   /**
-   * Lookup68: frame_system::Phase
+   * Lookup69: frame_system::Phase
    **/
   FrameSystemPhase: {
     _enum: {
@@ -552,14 +563,14 @@ export default {
     }
   },
   /**
-   * Lookup71: frame_system::LastRuntimeUpgradeInfo
+   * Lookup72: frame_system::LastRuntimeUpgradeInfo
    **/
   FrameSystemLastRuntimeUpgradeInfo: {
     specVersion: 'Compact<u32>',
     specName: 'Text'
   },
   /**
-   * Lookup74: frame_system::pallet::Call<T>
+   * Lookup75: frame_system::pallet::Call<T>
    **/
   FrameSystemCall: {
     _enum: {
@@ -594,7 +605,7 @@ export default {
     }
   },
   /**
-   * Lookup78: frame_system::limits::BlockWeights
+   * Lookup79: frame_system::limits::BlockWeights
    **/
   FrameSystemLimitsBlockWeights: {
     baseBlock: 'SpWeightsWeightV2Weight',
@@ -602,7 +613,7 @@ export default {
     perClass: 'FrameSupportDispatchPerDispatchClassWeightsPerClass'
   },
   /**
-   * Lookup79: frame_support::dispatch::PerDispatchClass<frame_system::limits::WeightsPerClass>
+   * Lookup80: frame_support::dispatch::PerDispatchClass<frame_system::limits::WeightsPerClass>
    **/
   FrameSupportDispatchPerDispatchClassWeightsPerClass: {
     normal: 'FrameSystemLimitsWeightsPerClass',
@@ -610,7 +621,7 @@ export default {
     mandatory: 'FrameSystemLimitsWeightsPerClass'
   },
   /**
-   * Lookup80: frame_system::limits::WeightsPerClass
+   * Lookup81: frame_system::limits::WeightsPerClass
    **/
   FrameSystemLimitsWeightsPerClass: {
     baseExtrinsic: 'SpWeightsWeightV2Weight',
@@ -619,13 +630,13 @@ export default {
     reserved: 'Option<SpWeightsWeightV2Weight>'
   },
   /**
-   * Lookup82: frame_system::limits::BlockLength
+   * Lookup83: frame_system::limits::BlockLength
    **/
   FrameSystemLimitsBlockLength: {
     max: 'FrameSupportDispatchPerDispatchClassU32'
   },
   /**
-   * Lookup83: frame_support::dispatch::PerDispatchClass<T>
+   * Lookup84: frame_support::dispatch::PerDispatchClass<T>
    **/
   FrameSupportDispatchPerDispatchClassU32: {
     normal: 'u32',
@@ -633,14 +644,14 @@ export default {
     mandatory: 'u32'
   },
   /**
-   * Lookup84: sp_weights::RuntimeDbWeight
+   * Lookup85: sp_weights::RuntimeDbWeight
    **/
   SpWeightsRuntimeDbWeight: {
     read: 'u64',
     write: 'u64'
   },
   /**
-   * Lookup85: sp_version::RuntimeVersion
+   * Lookup86: sp_version::RuntimeVersion
    **/
   SpVersionRuntimeVersion: {
     specName: 'Text',
@@ -653,13 +664,13 @@ export default {
     stateVersion: 'u8'
   },
   /**
-   * Lookup91: frame_system::pallet::Error<T>
+   * Lookup92: frame_system::pallet::Error<T>
    **/
   FrameSystemError: {
     _enum: ['InvalidSpecName', 'SpecVersionNeedsToIncrease', 'FailedToExtractRuntimeVersion', 'NonDefaultComposite', 'NonZeroRefCount', 'CallFiltered']
   },
   /**
-   * Lookup93: pallet_timestamp::pallet::Call<T>
+   * Lookup94: pallet_timestamp::pallet::Call<T>
    **/
   PalletTimestampCall: {
     _enum: {
@@ -669,15 +680,15 @@ export default {
     }
   },
   /**
-   * Lookup95: sp_consensus_aura::sr25519::app_sr25519::Public
+   * Lookup96: sp_consensus_aura::sr25519::app_sr25519::Public
    **/
   SpConsensusAuraSr25519AppSr25519Public: 'SpCoreSr25519Public',
   /**
-   * Lookup96: sp_core::sr25519::Public
+   * Lookup97: sp_core::sr25519::Public
    **/
   SpCoreSr25519Public: '[u8;32]',
   /**
-   * Lookup99: pallet_grandpa::StoredState<N>
+   * Lookup100: pallet_grandpa::StoredState<N>
    **/
   PalletGrandpaStoredState: {
     _enum: {
@@ -694,7 +705,7 @@ export default {
     }
   },
   /**
-   * Lookup100: pallet_grandpa::StoredPendingChange<N, Limit>
+   * Lookup101: pallet_grandpa::StoredPendingChange<N, Limit>
    **/
   PalletGrandpaStoredPendingChange: {
     scheduledAt: 'u32',
@@ -703,7 +714,7 @@ export default {
     forced: 'Option<u32>'
   },
   /**
-   * Lookup103: pallet_grandpa::pallet::Call<T>
+   * Lookup104: pallet_grandpa::pallet::Call<T>
    **/
   PalletGrandpaCall: {
     _enum: {
@@ -722,14 +733,14 @@ export default {
     }
   },
   /**
-   * Lookup104: sp_finality_grandpa::EquivocationProof<primitive_types::H256, N>
+   * Lookup105: sp_finality_grandpa::EquivocationProof<primitive_types::H256, N>
    **/
   SpFinalityGrandpaEquivocationProof: {
     setId: 'u64',
     equivocation: 'SpFinalityGrandpaEquivocation'
   },
   /**
-   * Lookup105: sp_finality_grandpa::Equivocation<primitive_types::H256, N>
+   * Lookup106: sp_finality_grandpa::Equivocation<primitive_types::H256, N>
    **/
   SpFinalityGrandpaEquivocation: {
     _enum: {
@@ -738,7 +749,7 @@ export default {
     }
   },
   /**
-   * Lookup106: finality_grandpa::Equivocation<sp_finality_grandpa::app::Public, finality_grandpa::Prevote<primitive_types::H256, N>, sp_finality_grandpa::app::Signature>
+   * Lookup107: finality_grandpa::Equivocation<sp_finality_grandpa::app::Public, finality_grandpa::Prevote<primitive_types::H256, N>, sp_finality_grandpa::app::Signature>
    **/
   FinalityGrandpaEquivocationPrevote: {
     roundNumber: 'u64',
@@ -747,22 +758,22 @@ export default {
     second: '(FinalityGrandpaPrevote,SpFinalityGrandpaAppSignature)'
   },
   /**
-   * Lookup107: finality_grandpa::Prevote<primitive_types::H256, N>
+   * Lookup108: finality_grandpa::Prevote<primitive_types::H256, N>
    **/
   FinalityGrandpaPrevote: {
     targetHash: 'H256',
     targetNumber: 'u32'
   },
   /**
-   * Lookup108: sp_finality_grandpa::app::Signature
+   * Lookup109: sp_finality_grandpa::app::Signature
    **/
   SpFinalityGrandpaAppSignature: 'SpCoreEd25519Signature',
   /**
-   * Lookup109: sp_core::ed25519::Signature
+   * Lookup110: sp_core::ed25519::Signature
    **/
   SpCoreEd25519Signature: '[u8;64]',
   /**
-   * Lookup112: finality_grandpa::Equivocation<sp_finality_grandpa::app::Public, finality_grandpa::Precommit<primitive_types::H256, N>, sp_finality_grandpa::app::Signature>
+   * Lookup113: finality_grandpa::Equivocation<sp_finality_grandpa::app::Public, finality_grandpa::Precommit<primitive_types::H256, N>, sp_finality_grandpa::app::Signature>
    **/
   FinalityGrandpaEquivocationPrecommit: {
     roundNumber: 'u64',
@@ -771,24 +782,24 @@ export default {
     second: '(FinalityGrandpaPrecommit,SpFinalityGrandpaAppSignature)'
   },
   /**
-   * Lookup113: finality_grandpa::Precommit<primitive_types::H256, N>
+   * Lookup114: finality_grandpa::Precommit<primitive_types::H256, N>
    **/
   FinalityGrandpaPrecommit: {
     targetHash: 'H256',
     targetNumber: 'u32'
   },
   /**
-   * Lookup115: sp_core::Void
+   * Lookup116: sp_core::Void
    **/
   SpCoreVoid: 'Null',
   /**
-   * Lookup116: pallet_grandpa::pallet::Error<T>
+   * Lookup117: pallet_grandpa::pallet::Error<T>
    **/
   PalletGrandpaError: {
     _enum: ['PauseFailed', 'ResumeFailed', 'ChangePending', 'TooSoon', 'InvalidKeyOwnershipProof', 'InvalidEquivocationProof', 'DuplicateOffenceReport']
   },
   /**
-   * Lookup118: pallet_balances::BalanceLock<Balance>
+   * Lookup119: pallet_balances::BalanceLock<Balance>
    **/
   PalletBalancesBalanceLock: {
     id: '[u8;8]',
@@ -796,20 +807,20 @@ export default {
     reasons: 'PalletBalancesReasons'
   },
   /**
-   * Lookup119: pallet_balances::Reasons
+   * Lookup120: pallet_balances::Reasons
    **/
   PalletBalancesReasons: {
     _enum: ['Fee', 'Misc', 'All']
   },
   /**
-   * Lookup122: pallet_balances::ReserveData<ReserveIdentifier, Balance>
+   * Lookup123: pallet_balances::ReserveData<ReserveIdentifier, Balance>
    **/
   PalletBalancesReserveData: {
     id: '[u8;8]',
     amount: 'u128'
   },
   /**
-   * Lookup124: pallet_balances::pallet::Call<T, I>
+   * Lookup125: pallet_balances::pallet::Call<T, I>
    **/
   PalletBalancesCall: {
     _enum: {
@@ -842,17 +853,17 @@ export default {
     }
   },
   /**
-   * Lookup129: pallet_balances::pallet::Error<T, I>
+   * Lookup130: pallet_balances::pallet::Error<T, I>
    **/
   PalletBalancesError: {
     _enum: ['VestingBalance', 'LiquidityRestrictions', 'InsufficientBalance', 'ExistentialDeposit', 'KeepAlive', 'ExistingVestingSchedule', 'DeadAccount', 'TooManyReserves']
   },
   /**
-   * Lookup130: pallet_transaction_payment_free::pallet::Call<T>
+   * Lookup131: pallet_transaction_payment_free::pallet::Call<T>
    **/
   PalletTransactionPaymentFreeCall: 'Null',
   /**
-   * Lookup131: pallet_sudo::pallet::Call<T>
+   * Lookup132: pallet_sudo::pallet::Call<T>
    **/
   PalletSudoCall: {
     _enum: {
@@ -876,28 +887,21 @@ export default {
     }
   },
   /**
-   * Lookup133: pallet_simple_nft::pallet::Call<T>
+   * Lookup134: pallet_utxo_nft::pallet::Call<T>
    **/
-  PalletSimpleNftCall: {
+  PalletUtxoNftCall: {
     _enum: {
       run_process: {
         process: 'DscpPalletTraitsProcessFullyQualifiedId',
         inputs: 'Vec<u128>',
-        outputs: 'Vec<PalletSimpleNftOutput>'
+        outputs: 'Vec<PalletUtxoNftOutput>'
       }
     }
   },
   /**
-   * Lookup134: dscp_pallet_traits::ProcessFullyQualifiedId<bounded_collections::bounded_vec::BoundedVec<T, S>, ProcessVersion>
+   * Lookup136: pallet_utxo_nft::output::Output<MaxRoleCount, sp_core::crypto::AccountId32, dscp_node_runtime::Role, MaxMetadataCount, bounded_collections::bounded_vec::BoundedVec<T, S>, dscp_node_runtime::MetadataValue<TokenId>>
    **/
-  DscpPalletTraitsProcessFullyQualifiedId: {
-    id: 'Bytes',
-    version: 'u32'
-  },
-  /**
-   * Lookup136: pallet_simple_nft::output::Output<MaxRoleCount, sp_core::crypto::AccountId32, dscp_node_runtime::Role, MaxMetadataCount, bounded_collections::bounded_vec::BoundedVec<T, S>, dscp_node_runtime::MetadataValue<TokenId>>
-   **/
-  PalletSimpleNftOutput: {
+  PalletUtxoNftOutput: {
     roles: 'BTreeMap<DscpNodeRuntimeRole, AccountId32>',
     metadata: 'BTreeMap<Bytes, DscpNodeRuntimeMetadataValue>'
   },
@@ -1130,9 +1134,9 @@ export default {
     _enum: ['RequireSudo']
   },
   /**
-   * Lookup159: pallet_simple_nft::token::Token<MaxRoleCount, sp_core::crypto::AccountId32, dscp_node_runtime::Role, TokenId, BlockNumber, MaxMetadataCount, bounded_collections::bounded_vec::BoundedVec<T, S>, dscp_node_runtime::MetadataValue<TokenId>, MaxParentCount, MaxChildCount>
+   * Lookup159: pallet_utxo_nft::token::Token<MaxRoleCount, sp_core::crypto::AccountId32, dscp_node_runtime::Role, TokenId, BlockNumber, MaxMetadataCount, bounded_collections::bounded_vec::BoundedVec<T, S>, dscp_node_runtime::MetadataValue<TokenId>, MaxParentCount, MaxChildCount>
    **/
-  PalletSimpleNftToken: {
+  PalletUtxoNftToken: {
     id: 'u128',
     roles: 'BTreeMap<DscpNodeRuntimeRole, AccountId32>',
     creator: 'AccountId32',
@@ -1143,9 +1147,9 @@ export default {
     children: 'Option<Vec<u128>>'
   },
   /**
-   * Lookup161: pallet_simple_nft::pallet::Error<T>
+   * Lookup161: pallet_utxo_nft::pallet::Error<T>
    **/
-  PalletSimpleNftError: {
+  PalletUtxoNftError: {
     _enum: ['NotOwned', 'AlreadyBurnt', 'TooManyMetadataItems', 'NoDefaultRole', 'OutOfBoundsParent', 'DuplicateParents', 'ProcessInvalid', 'InvalidInput']
   },
   /**

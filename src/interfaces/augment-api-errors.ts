@@ -215,44 +215,6 @@ declare module '@polkadot/api-base/types/errors' {
        **/
       [key: string]: AugmentedError<ApiType>;
     };
-    simpleNFT: {
-      /**
-       * Mutation was attempted on token that has already been burnt
-       **/
-      AlreadyBurnt: AugmentedError<ApiType>;
-      /**
-       * Attempted to set the same parent on multiple tokens to mint
-       **/
-      DuplicateParents: AugmentedError<ApiType>;
-      /**
-       * An invalid input token id was provided
-       **/
-      InvalidInput: AugmentedError<ApiType>;
-      /**
-       * Token mint was attempted without setting a default role
-       **/
-      NoDefaultRole: AugmentedError<ApiType>;
-      /**
-       * Mutation was attempted on token not owned by origin
-       **/
-      NotOwned: AugmentedError<ApiType>;
-      /**
-       * Index for the consumed token to set as parent is out of bounds
-       **/
-      OutOfBoundsParent: AugmentedError<ApiType>;
-      /**
-       * Process failed validation checks
-       **/
-      ProcessInvalid: AugmentedError<ApiType>;
-      /**
-       * Token mint was attempted with too many metadata items
-       **/
-      TooManyMetadataItems: AugmentedError<ApiType>;
-      /**
-       * Generic error
-       **/
-      [key: string]: AugmentedError<ApiType>;
-    };
     sudo: {
       /**
        * Sender must be the Sudo account
@@ -338,6 +300,44 @@ declare module '@polkadot/api-base/types/errors' {
        * The given weight bound for the proposal was too low.
        **/
       WrongProposalWeight: AugmentedError<ApiType>;
+      /**
+       * Generic error
+       **/
+      [key: string]: AugmentedError<ApiType>;
+    };
+    utxoNFT: {
+      /**
+       * Mutation was attempted on token that has already been burnt
+       **/
+      AlreadyBurnt: AugmentedError<ApiType>;
+      /**
+       * Attempted to set the same parent on multiple tokens to mint
+       **/
+      DuplicateParents: AugmentedError<ApiType>;
+      /**
+       * An invalid input token id was provided
+       **/
+      InvalidInput: AugmentedError<ApiType>;
+      /**
+       * Token mint was attempted without setting a default role
+       **/
+      NoDefaultRole: AugmentedError<ApiType>;
+      /**
+       * Mutation was attempted on token not owned by origin
+       **/
+      NotOwned: AugmentedError<ApiType>;
+      /**
+       * Index for the consumed token to set as parent is out of bounds
+       **/
+      OutOfBoundsParent: AugmentedError<ApiType>;
+      /**
+       * Process failed validation checks
+       **/
+      ProcessInvalid: AugmentedError<ApiType>;
+      /**
+       * Token mint was attempted with too many metadata items
+       **/
+      TooManyMetadataItems: AugmentedError<ApiType>;
       /**
        * Generic error
        **/

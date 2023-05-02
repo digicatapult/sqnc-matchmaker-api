@@ -95,16 +95,6 @@ declare module '@polkadot/api-base/types/consts' {
        **/
       [key: string]: Codec;
     };
-    simpleNFT: {
-      maxInputCount: u32 & AugmentedConst<ApiType>;
-      maxMetadataCount: u32 & AugmentedConst<ApiType>;
-      maxOutputCount: u32 & AugmentedConst<ApiType>;
-      maxRoleCount: u32 & AugmentedConst<ApiType>;
-      /**
-       * Generic const
-       **/
-      [key: string]: Codec;
-    };
     system: {
       /**
        * Maximum number of block number to block hash mappings to keep (oldest pruned first).
@@ -147,6 +137,16 @@ declare module '@polkadot/api-base/types/consts' {
        * double this period on default settings.
        **/
       minimumPeriod: u64 & AugmentedConst<ApiType>;
+      /**
+       * Generic const
+       **/
+      [key: string]: Codec;
+    };
+    utxoNFT: {
+      maxInputCount: u32 & AugmentedConst<ApiType>;
+      maxMetadataCount: u32 & AugmentedConst<ApiType>;
+      maxOutputCount: u32 & AugmentedConst<ApiType>;
+      maxRoleCount: u32 & AugmentedConst<ApiType>;
       /**
        * Generic const
        **/
