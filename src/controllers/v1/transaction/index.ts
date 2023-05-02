@@ -1,12 +1,12 @@
 import { Controller, Get, Route, Path, Response, Tags, Security, Query } from 'tsoa'
 import type { Logger } from 'pino'
-import { logger } from '../../lib/logger'
-import Database from '../../lib/db'
-import { UUID } from '../../models/strings'
-import { BadRequest, NotFound } from '../../lib/error-handler/index'
-import { TransactionApiType, TransactionResponse, TransactionState } from '../../models/transaction'
+import { logger } from '../../../lib/logger'
+import Database from '../../../lib/db'
+import { UUID } from '../../../models/strings'
+import { BadRequest, NotFound } from '../../../lib/error-handler/index'
+import { TransactionApiType, TransactionResponse, TransactionState } from '../../../models/transaction'
 
-@Route('transaction')
+@Route('v1/transaction')
 @Tags('transaction')
 @Security('BearerAuth')
 export class TransactionController extends Controller {

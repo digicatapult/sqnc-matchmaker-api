@@ -20,7 +20,7 @@
     "specMerging": "recursive",
     "spec": {
       "paths": {
-        "/attachment": {
+        "/v1/attachment": {
           "post": {
             "requestBody": {
               "required": true,
@@ -60,7 +60,7 @@
             }
           }
         },
-        "/attachment/{id}": {
+        "/v1/attachment/{id}": {
           "get": {
             "responses": {
               "200": {

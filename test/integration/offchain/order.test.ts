@@ -27,14 +27,14 @@ describe('order', () => {
     beforeEach(async () => await cleanup())
 
     it('returns 200 and an empty array when retrieving all', async () => {
-      const { status, body } = await get(app, '/order')
+      const { status, body } = await get(app, '/v1/order')
 
       expect(status).to.equal(200)
       expect(body).to.be.an('array').that.is.empty
     })
 
     it('returns 404 if can not be found by ID', async () => {
-      const { status, body } = await get(app, '/order/807d1184-9670-4fb0-bb33-28582e5467b2')
+      const { status, body } = await get(app, '/v1/order/807d1184-9670-4fb0-bb33-28582e5467b2')
 
       expect(status).to.equal(404)
       expect(body).to.equal('order not found')
@@ -44,7 +44,7 @@ describe('order', () => {
 
   describe('if attachment can not be found', () => {
     beforeEach(async () => {
-      res = await post(app, '/order', { parametersAttachmentId: 'a789ad47-91c3-446e-90f9-a7c9b233ea88' })
+      res = await post(app, '/v1/order', { parametersAttachmentId: 'a789ad47-91c3-446e-90f9-a7c9b233ea88' })
     })
 
     it('returns 404 along with the message', () => {
@@ -57,7 +57,7 @@ describe('order', () => {
 
   describe('if invalid order uuid', () => {
     beforeEach(async () => {
-      res = await get(app, '/order/789ad47')
+      res = await get(app, '/v1/order/789ad47')
     })
 
     it('returns 422 along with validation error', async () => {
@@ -80,7 +80,7 @@ describe('order', () => {
 
   describe('if invalid attachment uuid', () => {
     beforeEach(async () => {
-      res = await post(app, '/order', { parametersAttachmentId: 'a789ad47' })
+      res = await post(app, '/v1/order', { parametersAttachmentId: 'a789ad47' })
     })
 
     it('returns 422 along with validation error', () => {
@@ -115,7 +115,7 @@ describe('order', () => {
     })
 
     it('returns 400 along with bad request message', async () => {
-      const { status, body } = await post(app, '/order/b21f865e-f4e9-4ae2-8944-de691e9eb4d0/creation', {})
+      const { status, body } = await post(app, '/v1/order/b21f865e-f4e9-4ae2-8944-de691e9eb4d0/creation', {})
 
       expect(status).to.equal(400)
       expect(body).to.equal('Demand must have state: created')
@@ -123,7 +123,7 @@ describe('order', () => {
   })
 
   it('retrieves order by id', async () => {
-    const { status, body } = await post(app, '/order', { parametersAttachmentId })
+    const { status, body } = await post(app, '/v1/order', { parametersAttachmentId })
 
     expect(status).to.equal(201)
     expect(body).to.have.property('id')
@@ -135,7 +135,7 @@ describe('order', () => {
   })
 
   it('should create an order demand', async () => {
-    const response = await post(app, '/order', { parametersAttachmentId })
+    const response = await post(app, '/v1/order', { parametersAttachmentId })
     const { id: responseId, ...responseRest } = response.body
 
     expect(response.status).to.equal(201)
@@ -150,7 +150,7 @@ describe('order', () => {
   })
 
   it('retrieves order creation', async () => {
-    const { status, body: creation } = await get(app, `/order/${seededOrderId}/creation/${seededOrderCreationId}`)
+    const { status, body: creation } = await get(app, `/v1/order/${seededOrderId}/creation/${seededOrderCreationId}`)
 
     expect(status).to.equal(200)
     expect(creation).to.include.keys(['id', 'localId', 'submittedAt', 'updatedAt'])
@@ -162,7 +162,7 @@ describe('order', () => {
   })
 
   it('retrieves all order creations', async () => {
-    const { status, body } = await get(app, `/order/${seededOrderId}/creation`)
+    const { status, body } = await get(app, `/v1/order/${seededOrderId}/creation`)
 
     expect(status).to.equal(200)
     expect(body[0]).to.deep.contain({

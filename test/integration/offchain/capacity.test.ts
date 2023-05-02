@@ -37,7 +37,7 @@ describe('capacity', () => {
 
   describe('happy path', () => {
     it('should create a capacity', async () => {
-      const response = await post(app, '/capacity', { parametersAttachmentId })
+      const response = await post(app, '/v1/capacity', { parametersAttachmentId })
       expect(response.status).to.equal(201)
 
       const { id: responseId, ...responseRest } = response.body
@@ -52,7 +52,7 @@ describe('capacity', () => {
     })
 
     it('should get a capacity', async () => {
-      const response = await get(app, `/capacity/${seededCapacityId}`)
+      const response = await get(app, `/v1/capacity/${seededCapacityId}`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededCapacityId,
@@ -63,7 +63,7 @@ describe('capacity', () => {
     })
 
     it('should get all capacities', async () => {
-      const response = await get(app, `/capacity`)
+      const response = await get(app, `/v1/capacity`)
       expect(response.status).to.equal(200)
       expect(response.body.length).to.be.greaterThan(0)
       expect(response.body[0]).to.deep.equal({
@@ -75,7 +75,7 @@ describe('capacity', () => {
     })
 
     it('it should get a transaction', async () => {
-      const response = await get(app, `/capacity/${seededCapacityId}/creation/${seededTransactionId}`)
+      const response = await get(app, `/v1/capacity/${seededCapacityId}/creation/${seededTransactionId}`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededTransactionId,
@@ -89,7 +89,7 @@ describe('capacity', () => {
     })
 
     it('it should get all transactions from a capacity ID - 200', async () => {
-      const response = await get(app, `/capacity/${seededCapacityId}/creation/`)
+      const response = await get(app, `/v1/capacity/${seededCapacityId}/creation/`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal([
         {
@@ -116,45 +116,45 @@ describe('capacity', () => {
 
   describe('sad path', () => {
     it('invalid attachment uuid - 422', async () => {
-      const response = await post(app, '/capacity', { parametersAttachmentId: 'invalid' })
+      const response = await post(app, '/v1/capacity', { parametersAttachmentId: 'invalid' })
       expect(response.status).to.equal(422)
       expect(response.body.message).to.equal('Validation failed')
     })
 
     it('non-existent attachment - 400', async () => {
-      const response = await post(app, '/capacity', { parametersAttachmentId: nonExistentId })
+      const response = await post(app, '/v1/capacity', { parametersAttachmentId: nonExistentId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Attachment id not found')
     })
 
     it('non-existent capacity id - 404', async () => {
-      const response = await get(app, `/capacity/${nonExistentId}`)
+      const response = await get(app, `/v1/capacity/${nonExistentId}`)
       expect(response.status).to.equal(404)
     })
 
     it('non-existent capacity id when creating on-chain - 404', async () => {
-      const response = await post(app, `/capacity/${nonExistentId}/creation`, {})
+      const response = await post(app, `/v1/capacity/${nonExistentId}/creation`, {})
       expect(response.status).to.equal(404)
     })
 
     it('incorrect state when creating on-chain - 400', async () => {
-      const response = await post(app, `/capacity/${seededCapacityAlreadyAllocated}/creation`, {})
+      const response = await post(app, `/v1/capacity/${seededCapacityAlreadyAllocated}/creation`, {})
       expect(response.status).to.equal(400)
       expect(response.body).to.equal(`Demand must have state: ${'created'}`)
     })
 
     it('non-existent Creation ID - 404', async () => {
-      const response = await get(app, `/capacity/${seededCapacityId}/creation/${nonExistentId}`)
+      const response = await get(app, `/v1/capacity/${seededCapacityId}/creation/${nonExistentId}`)
       expect(response.status).to.equal(404)
     })
 
     it('non-existent Capacity ID when using a Creation ID - 404', async () => {
-      const response = await get(app, `/capacity/${nonExistentId}/creation/${seededTransactionId}`)
+      const response = await get(app, `/v1/capacity/${nonExistentId}/creation/${seededTransactionId}`)
       expect(response.status).to.equal(404)
     })
 
     it('non-existent Capacity ID should return nothing - 404', async () => {
-      const response = await get(app, `/capacity/${nonExistentId}/creation/`)
+      const response = await get(app, `/v1/capacity/${nonExistentId}/creation/`)
       expect(response.status).to.equal(404)
     })
   })
