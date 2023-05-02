@@ -72,6 +72,27 @@ describe('on-chain', function () {
     await cleanup()
   })
 
+  describe('chainNode', () => {
+    it('should set transaction as failed if dispatch error', async () => {
+      // use invalid process to cause a dispatch error
+      const invalidProcess = { id: 'invalid', version: 1 }
+      const extrinsic = await node.prepareRunProcess({ process: invalidProcess, inputs: [], outputs: [] })
+      const [transaction] = await db.insertTransaction({
+        api_type: 'capacity',
+        transaction_type: 'creation',
+        local_id: seededCapacityId,
+        state: 'submitted',
+        hash: extrinsic.hash.toHex(),
+      })
+
+      node.submitRunProcess(extrinsic, db.updateTransactionState(transaction.id))
+
+      // wait for dispatch error
+      const failedTransaction = await pollTransactionState(db, transaction.id, 'failed')
+      expect(failedTransaction.state).to.equal('failed')
+    })
+  })
+
   describe('capacity', () => {
     it('should create a capacity on-chain', async () => {
       const lastTokenId = await node.getLastTokenId()
