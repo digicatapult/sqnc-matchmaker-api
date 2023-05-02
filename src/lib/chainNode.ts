@@ -21,6 +21,8 @@ import { u32 } from '@polkadot/types-codec'
 import { Registry } from '@polkadot/types/types'
 import { ILookup } from '@polkadot/types-create/types'
 import { HEX } from '../models/strings'
+//import type { AugmentedEvents } from '@polkadot/api-base/types/events'
+//type UtxoNftProcessRanEvent = AugmentedEvents<'promise'>['utxoNFT']['ProcessRan']
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 // const a: __AugmentedQuery<'promise'> = {}
@@ -146,7 +148,7 @@ export default class ChainNode {
     this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
 
     await this.api.isReady
-    const extrinsic = await this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
+    const extrinsic = await this.api.tx.utxoNFT.runProcess(process, input, outputsAsMaps)
     const account = this.keyring.addFromUri(this.userUri)
     const signed = await extrinsic.signAsync(account, { nonce: -1 })
     return signed
