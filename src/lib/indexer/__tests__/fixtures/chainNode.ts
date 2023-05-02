@@ -1,9 +1,10 @@
 import sinon from 'sinon'
 import ChainNode, { ProcessRanEvent } from '../../../chainNode'
 
-export const events2 = [
+export const events2: ProcessRanEvent[] = [
   {
-    callHash: 'a',
+    callHash: '0x0a',
+    blockHash: '0x0b',
     sender: 'b',
     process: {
       id: 'c',
@@ -13,7 +14,8 @@ export const events2 = [
     outputs: [3],
   },
   {
-    callHash: 'd',
+    callHash: '0x0c',
+    blockHash: '0x0d',
     sender: 'e',
     process: {
       id: 'f',
@@ -68,5 +70,21 @@ export const withGetHeaderBoom = (boomOnCallIndex: number) => {
 export const withProcessRanEvents = (events: ProcessRanEvent[]) => {
   return {
     getProcessRanEvents: sinon.stub().resolves(events),
+  } as unknown as ChainNode
+}
+
+export const withGetTokenResponses = (blockHash: string, tokens: Set<number>) => {
+  return {
+    getToken: sinon.stub().callsFake((id: number, hash: string) =>
+      Promise.resolve(
+        hash === blockHash && tokens.has(id)
+          ? {
+              id,
+              roles: new Map(),
+              metadata: new Map(),
+            }
+          : null
+      )
+    ),
   } as unknown as ChainNode
 }

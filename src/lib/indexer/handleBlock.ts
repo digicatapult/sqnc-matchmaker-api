@@ -1,33 +1,32 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 import { Logger } from 'pino'
-// import Database from '../db'
-import ChainNode, { ProcessRanEvent } from '../chainNode'
+import Database from '../db'
+import ChainNode from '../chainNode'
 
-import defaultEventProcessors, { ValidateProcessName, EventProcessors } from './eventProcessor'
-import { ChangeSet, mergeChangeSets } from './changeSet'
+import { ChangeSet } from './changeSet'
+import EventHandler from './handleEvent'
+import { HEX } from '../../models/strings'
 
 export interface BlockHandlerCtorArgs {
-  // db: Database
+  db: Database
   logger: Logger
   node: ChainNode
-  eventProcessors?: EventProcessors
+  eventHandler?: EventHandler
 }
 
 export default class BlockHandler {
   private logger: Logger
-  // private db: Database
   private node: ChainNode
-  private eventProcessors: EventProcessors
+  private eventHandler: EventHandler
 
-  constructor({ logger, node, eventProcessors }: BlockHandlerCtorArgs) {
+  constructor({ db, logger, node, eventHandler }: BlockHandlerCtorArgs) {
     this.logger = logger.child({ module: 'blockHandler' })
-    // this.db = db
     this.node = node
-    this.eventProcessors = eventProcessors || defaultEventProcessors
+    this.eventHandler = eventHandler || new EventHandler({ logger, db, node })
   }
 
-  public async handleBlock(blockHash: string): Promise<ChangeSet> {
+  public async handleBlock(blockHash: HEX): Promise<ChangeSet> {
     this.logger.debug('Getting events for block %s', blockHash)
     // find ProcessRan events events
     const events = await this.node.getProcessRanEvents(blockHash)
@@ -37,29 +36,9 @@ export default class BlockHandler {
       this.logger.debug('ProcessRan event from call %s', event.callHash)
       this.logger.trace('ProcessRan event from call %s details: %j', event.callHash, event)
       const acc = await accP
-      return await this.handleEvent(event, acc)
+      return await this.eventHandler.handleEvent(event, acc)
     }, Promise.resolve({}))
 
     return changeSet
-  }
-
-  private async handleEvent(event: ProcessRanEvent, currentChangeSet: ChangeSet) {
-    // process changeset for event
-    if (!ValidateProcessName(event.process.id)) {
-      throw new Error()
-    }
-
-    // lookup transaction from call hash in db
-
-    // lookup inputs from db and merge with changeset
-
-    // get output tokens from node
-
-    const eventChangeSet = this.eventProcessors[event.process.id](event.process.version)
-
-    // merge currentChangeSet with eventChangeSet
-    const changeSet = mergeChangeSets(currentChangeSet, eventChangeSet)
-
-    return Promise.resolve(changeSet)
   }
 }

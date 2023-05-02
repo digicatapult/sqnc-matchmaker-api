@@ -20,6 +20,7 @@ import type {
 import { u32 } from '@polkadot/types-codec'
 import { Registry } from '@polkadot/types/types'
 import { ILookup } from '@polkadot/types-create/types'
+import { HEX } from '../models/strings'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 // const a: __AugmentedQuery<'promise'> = {}
@@ -37,11 +38,22 @@ export interface ProcessRanEvent {
   process: DscpPalletTraitsProcessFullyQualifiedId
   inputs: u128
   outputs: Vec<u128>
+  blockHash: HEX
 }
 
 interface RoleEnum {
   name: string | undefined /* TYPE */
   index: number | undefined /* TYPE */
+}
+
+interface SubstrateToken {
+  id: number
+  metadata: {
+    [key in string]: { literal: string } | { file: string } | { tokenId: number } | { None: null }
+  }
+  roles: {
+    [key in 'Owner' | 'MemberA' | 'MemberB' | 'Optimiser']: string
+  }
 }
 
 type EventData =
@@ -82,13 +94,13 @@ export default class ChainNode {
     })
   }
 
-  async getLastFinalisedBlockHash(): Promise<string> {
+  async getLastFinalisedBlockHash(): Promise<HEX> {
     await this.api.isReady
     const result = await this.api.rpc.chain.getFinalizedHead()
     return result.toHex()
   }
 
-  async getHeader(hash: string): Promise<{ hash: string; height: number; parent: string }> {
+  async getHeader(hash: HEX): Promise<{ hash: HEX; height: number; parent: HEX }> {
     await this.api.isReady
     const result = await this.api.rpc.chain.getHeader(hash)
     return {
@@ -237,7 +249,7 @@ export default class ChainNode {
     await this.api.rpc.chain.subscribeFinalizedHeads((header) => onNewFinalisedHead(header.hash.toHex()))
   }
 
-  async getProcessRanEvents(blockhash: string): Promise<ProcessRanEvent[]> {
+  async getProcessRanEvents(blockhash: HEX): Promise<ProcessRanEvent[]> {
     await this.api.isReady
     const apiAtBlock: ApiDecoration<'promise'> = await this.api.at(blockhash)
     const processRanEventIndexes = (await apiAtBlock.query.system.eventTopics(processRanTopic)) as unknown as Codec
@@ -254,8 +266,11 @@ export default class ChainNode {
       const process = event.event.data[1] as unknown as DscpPalletTraitsProcessFullyQualifiedId
 
       return {
-        callHash: block.block.extrinsics[extrinsicIndex as unknown as number].hash.toString(),
-        sender: event.event.data[0].toString(),
+        // callHash: block.block.extrinsics[extrinsicIndex as unknown as number].hash.toString(),
+        // sender: event.event.data[0].toString(),
+        callHash: block.block.extrinsics[extrinsicIndex.toNumber()].hash.toString() as HEX,
+        blockHash: blockhash,
+        sender: (event.event.data[0] as { toString: () => string }).toString(),
         process: {
           id: Buffer.from(process.id).toString('ascii'),
           version: process.version.toNumber(),
@@ -264,5 +279,29 @@ export default class ChainNode {
         outputs: event.event.data[3],
       }
     })
+  }
+
+  async getToken(tokenId: number, blockHash: HEX | null = null) {
+    const api = blockHash ? await this.api.at(blockHash) : this.api
+    const token = (await api.query.utxoNFT.tokensById(tokenId)).toJSON() as unknown as SubstrateToken
+    const metadata = new Map(
+      Object.entries(token.metadata).map(([keyHex, entry]) => {
+        const key = Buffer.from(keyHex.substring(2), 'hex').toString('utf8')
+        const [valueKey, valueRaw] = Object.entries(entry)[0]
+        if (valueKey === 'None' || valueKey === 'tokenId') {
+          return [key, valueRaw]
+        }
+        const valueHex = valueRaw || '0x'
+        const value = Buffer.from(valueHex.substring(2), 'hex').toString('utf8')
+        return [key, value]
+      })
+    )
+    const roles = new Map(Object.entries(token.roles).map(([role, account]) => [role.toLowerCase(), account]))
+
+    return {
+      id: token.id,
+      metadata,
+      roles,
+    }
   }
 }

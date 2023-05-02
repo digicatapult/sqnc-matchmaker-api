@@ -5,8 +5,9 @@ import ChainNode from '../chainNode'
 
 import DefaultBlockHandler from './handleBlock'
 import { ChangeSet } from './changeSet'
+import { HEX } from '../../models/strings'
 
-export type BlockHandler = (blockHash: string) => Promise<ChangeSet>
+export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 
 export interface IndexerCtorArgs {
   db: Database
@@ -22,7 +23,7 @@ export default class Indexer {
   private node: ChainNode
   private gen: AsyncGenerator<string | null, void, string>
   private handleBlock: BlockHandler
-  private unprocessedBlocks: string[]
+  private unprocessedBlocks: HEX[]
   private retryDelay: number
 
   constructor({ db, logger, node, handleBlock, retryDelay }: IndexerCtorArgs) {
@@ -36,7 +37,7 @@ export default class Indexer {
       this.handleBlock = handleBlock
       return
     }
-    const blockHandler = new DefaultBlockHandler({ node, logger: this.logger })
+    const blockHandler = new DefaultBlockHandler({ db, node, logger: this.logger })
     this.handleBlock = blockHandler.handleBlock.bind(blockHandler)
   }
 
@@ -85,11 +86,11 @@ export default class Indexer {
   // yields the hash of the processed block
   // main benefit of using a generator is it funnels all triggers from any source into a single
   // serialised async flow
-  private async *nextBlockProcessor(): AsyncGenerator<string | null, void, string> {
+  private async *nextBlockProcessor(): AsyncGenerator<string | null, void, HEX> {
     const lastProcessedBlock = await this.db.getLastProcessedBlock()
-    this.unprocessedBlocks = [lastProcessedBlock?.hash].filter((x): x is string => !!x)
+    this.unprocessedBlocks = [lastProcessedBlock?.hash].filter((x): x is HEX => !!x)
 
-    const loopFn = async (lastKnownFinalised: string): Promise<void> => {
+    const loopFn = async (lastKnownFinalised: HEX): Promise<void> => {
       try {
         const lastProcessedBlock = await this.db.getLastProcessedBlock()
         this.logger.debug('Last processed block: %s', lastProcessedBlock?.hash)
@@ -117,7 +118,7 @@ export default class Indexer {
     }
   }
 
-  private async updateUnprocessedBlocks(lastProcessedHash: string | null, lastFinalisedHash: string): Promise<void> {
+  private async updateUnprocessedBlocks(lastProcessedHash: HEX | null, lastFinalisedHash: HEX): Promise<void> {
     this.logger.debug('Updating list of finalised blocks to be processed')
 
     const unprocessedBlocks = [...this.unprocessedBlocks]
@@ -157,12 +158,12 @@ export default class Indexer {
     // get the new hashes based on the difference in block height
     const newHashes = [lastFinalisedHash]
     for (let i = lastFinalisedIndex; i > lastKnownIndex + 1; i--) {
-      const lastChild = await this.node.getHeader(newHashes.at(-1) as string)
+      const lastChild = await this.node.getHeader(newHashes.at(-1) as HEX)
       newHashes.push(lastChild.parent)
     }
 
     // sanity check that the parent of lastKnown index is indeed what we expect. If not we have a major problem
-    if (lastKnownHash !== null && (await this.node.getHeader(newHashes.at(-1) as string)).parent !== lastKnownHash) {
+    if (lastKnownHash !== null && (await this.node.getHeader(newHashes.at(-1) as HEX)).parent !== lastKnownHash) {
       this.unprocessedBlocks = []
       throw new Error('Unexpected error synchronising blocks to be processed')
     }
@@ -173,7 +174,7 @@ export default class Indexer {
     this.logger.trace('Blocks to be processed: %j', this.unprocessedBlocks)
   }
 
-  private async updateDbWithNewBlock(blockHash: string, changeSet: ChangeSet): Promise<void> {
+  private async updateDbWithNewBlock(blockHash: HEX, changeSet: ChangeSet): Promise<void> {
     this.logger.debug('Inserting changeset %j for block %s', changeSet, blockHash)
     const header = await this.node.getHeader(blockHash)
     await this.db.withTransaction(async (db) => {
@@ -186,15 +187,42 @@ export default class Indexer {
       }
       await db.insertProcessedBlock(header)
 
+      if (changeSet.attachments) {
+        for (const [, demand] of changeSet.attachments) {
+          const { type, ...record } = demand
+          switch (type) {
+            case 'insert':
+              await db.insertAttachment(record)
+              break
+          }
+        }
+      }
+
       if (changeSet.demands) {
         for (const [, demand] of changeSet.demands) {
-          await db.upsertDemand(demand)
+          const { type, ...record } = demand
+          switch (type) {
+            case 'insert':
+              await db.insertDemand(record)
+              break
+            case 'update':
+              await db.updateDemand(record.id, record)
+              break
+          }
         }
       }
 
       if (changeSet.matches) {
         for (const [, match2] of changeSet.matches) {
-          await db.upsertMatch2(match2)
+          const { type, ...record } = match2
+          switch (type) {
+            case 'insert':
+              await db.insertMatch2(record)
+              break
+            case 'update':
+              await db.updateMatch2(record.id, record)
+              break
+          }
         }
       }
     })

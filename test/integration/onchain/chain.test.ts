@@ -3,6 +3,7 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server'
+import Indexer from '../../../src/lib/indexer'
 import { post } from '../../helper/routeHelper'
 import { seed, cleanup, seededCapacityId, parametersAttachmentId } from '../../seeds'
 
@@ -11,7 +12,7 @@ import Database from '../../../src/lib/db'
 import ChainNode from '../../../src/lib/chainNode'
 import { logger } from '../../../src/lib/logger'
 import env from '../../../src/env'
-import { UUID } from '../../../src/models/uuid'
+import { UUID } from '../../../src/models/strings'
 import { pollTransactionState } from '../../helper/poll'
 
 const db = new Database()
@@ -25,9 +26,40 @@ const node = new ChainNode({
 describe('on-chain', function () {
   this.timeout(60000)
   let app: Express
+  let indexer: Indexer
 
   before(async function () {
     app = await createHttpServer()
+    const node = new ChainNode({
+      host: env.NODE_HOST,
+      port: env.NODE_PORT,
+      logger,
+      userUri: env.USER_URI,
+    })
+
+    const blockHash = await node.getLastFinalisedBlockHash()
+    const blockHeader = await node.getHeader(blockHash)
+    await db
+      .insertProcessedBlock({
+        hash: blockHash,
+        height: blockHeader.height,
+        parent: blockHash,
+      })
+      .catch(() => {
+        // intentional ignorance of errors
+      })
+
+    indexer = new Indexer({ db: new Database(), logger, node })
+    await indexer.start()
+    indexer.processAllBlocks(await node.getLastFinalisedBlockHash()).then(() =>
+      node.watchFinalisedBlocks(async (hash) => {
+        await indexer.processAllBlocks(hash)
+      })
+    )
+  })
+
+  after(async function () {
+    await indexer.close()
   })
 
   withIdentitySelfMock()

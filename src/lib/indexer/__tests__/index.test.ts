@@ -162,12 +162,16 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({
         demands: new Map([
-          ['123', { id: '42' }],
-          ['456', { id: '43' }],
+          ['123', { type: 'update', id: '42' }],
+          ['456', { type: 'update', id: '43' }],
         ]),
         matches: new Map([
-          ['789', { id: '44' }],
-          ['101', { id: '45' }],
+          ['789', { type: 'update', id: '44' }],
+          ['101', { type: 'update', id: '45' }],
+        ]),
+        attachments: new Map([
+          ['111', { type: 'insert', id: '46' }],
+          ['121', { type: 'insert', id: '47' }],
         ]),
       })
 
@@ -175,13 +179,52 @@ describe('Indexer', function () {
       await indexer.start()
       await indexer.processNextBlock('2-hash')
 
-      expect((db.upsertDemand as sinon.SinonStub).calledTwice).to.equal(true)
-      expect((db.upsertDemand as sinon.SinonStub).firstCall.args[0]).to.deep.equal({ id: '42' })
-      expect((db.upsertDemand as sinon.SinonStub).secondCall.args[0]).to.deep.equal({ id: '43' })
+      expect((db.updateDemand as sinon.SinonStub).calledTwice).to.equal(true)
+      expect((db.updateDemand as sinon.SinonStub).firstCall.args).to.deep.equal(['42', { id: '42' }])
+      expect((db.updateDemand as sinon.SinonStub).secondCall.args).to.deep.equal(['43', { id: '43' }])
 
-      expect((db.upsertMatch2 as sinon.SinonStub).calledTwice).to.equal(true)
-      expect((db.upsertMatch2 as sinon.SinonStub).firstCall.args[0]).to.deep.equal({ id: '44' })
-      expect((db.upsertMatch2 as sinon.SinonStub).secondCall.args[0]).to.deep.equal({ id: '45' })
+      expect((db.updateMatch2 as sinon.SinonStub).calledTwice).to.equal(true)
+      expect((db.updateMatch2 as sinon.SinonStub).firstCall.args).to.deep.equal(['44', { id: '44' }])
+      expect((db.updateMatch2 as sinon.SinonStub).secondCall.args).to.deep.equal(['45', { id: '45' }])
+
+      expect((db.insertAttachment as sinon.SinonStub).calledTwice).to.equal(true)
+      expect((db.insertAttachment as sinon.SinonStub).firstCall.args).to.deep.equal([{ id: '46' }])
+      expect((db.insertAttachment as sinon.SinonStub).secondCall.args).to.deep.equal([{ id: '47' }])
+    })
+
+    it('should insert demands and match2 entries from changeset', async function () {
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const node = withHappyChainNode()
+      const handleBlock = sinon.stub().resolves({
+        demands: new Map([
+          ['123', { type: 'insert', id: '42' }],
+          ['456', { type: 'insert', id: '43' }],
+        ]),
+        matches: new Map([
+          ['789', { type: 'insert', id: '44' }],
+          ['101', { type: 'insert', id: '45' }],
+        ]),
+        attachments: new Map([
+          ['111', { type: 'insert', id: '46' }],
+          ['121', { type: 'insert', id: '47' }],
+        ]),
+      })
+
+      indexer = new Indexer({ db, node, logger, handleBlock })
+      await indexer.start()
+      await indexer.processNextBlock('2-hash')
+
+      expect((db.insertDemand as sinon.SinonStub).calledTwice).to.equal(true)
+      expect((db.insertDemand as sinon.SinonStub).firstCall.args[0]).to.deep.equal({ id: '42' })
+      expect((db.insertDemand as sinon.SinonStub).secondCall.args[0]).to.deep.equal({ id: '43' })
+
+      expect((db.insertMatch2 as sinon.SinonStub).calledTwice).to.equal(true)
+      expect((db.insertMatch2 as sinon.SinonStub).firstCall.args[0]).to.deep.equal({ id: '44' })
+      expect((db.insertMatch2 as sinon.SinonStub).secondCall.args[0]).to.deep.equal({ id: '45' })
+
+      expect((db.insertAttachment as sinon.SinonStub).calledTwice).to.equal(true)
+      expect((db.insertAttachment as sinon.SinonStub).firstCall.args[0]).to.deep.equal({ id: '46' })
+      expect((db.insertAttachment as sinon.SinonStub).secondCall.args[0]).to.deep.equal({ id: '47' })
     })
 
     describe('exception cases', function () {

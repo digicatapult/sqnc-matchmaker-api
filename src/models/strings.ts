@@ -4,3 +4,10 @@
  * @format uuid
  */
 export type UUID = string
+
+/**
+ * Hex string with 0x prefix
+ * @pattern 0x[0-9a-zA-Z]+
+ * @format hex
+ */
+export type HEX = `0x${string}`
