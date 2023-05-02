@@ -15,15 +15,15 @@ import {
 } from 'tsoa'
 import { Logger } from 'pino'
 import express from 'express'
-
-import { logger } from '../../lib/logger'
-import Database, { Models, Query } from '../../lib/db'
-import type { Attachment } from '../../models'
-import { BadRequest, NotFound } from '../../lib/error-handler'
 import { Readable } from 'node:stream'
-import type { UUID } from '../../models/strings'
-import Ipfs from '../../lib/ipfs'
-import env from '../../env'
+
+import { logger } from '../../../lib/logger'
+import Database, { Models, Query } from '../../../lib/db'
+import type { Attachment } from '../../../models'
+import { BadRequest, NotFound } from '../../../lib/error-handler'
+import type { UUID } from '../../../models/strings'
+import Ipfs from '../../../lib/ipfs'
+import env from '../../../env'
 
 const parseAccept = (acceptHeader: string) =>
   acceptHeader
@@ -60,7 +60,7 @@ interface DbAttachment extends Omit<Attachment, 'createdAt'> {
   created_at: Date
 }
 
-@Route('attachment')
+@Route('v1/attachment')
 @Tags('attachment')
 @Security('BearerAuth')
 export class attachment extends Controller {

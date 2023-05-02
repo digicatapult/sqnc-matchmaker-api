@@ -13,19 +13,19 @@ import {
 } from 'tsoa'
 import type { Logger } from 'pino'
 
-import { logger } from '../../lib/logger'
-import Database from '../../lib/db'
-import { BadRequest, HttpResponse, NotFound } from '../../lib/error-handler/index'
-import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-import { Match2Request, Match2Response } from '../../models/match2'
-import { UUID } from '../../models/strings'
-import { TransactionResponse } from '../../models/transaction'
-import { match2AcceptFinal, match2AcceptFirst, match2Propose } from '../../lib/payload'
-import { DemandPayload, DemandSubtype } from '../../models/demand'
-import ChainNode from '../../lib/chainNode'
-import env from '../../env'
+import { logger } from '../../../lib/logger'
+import Database from '../../../lib/db'
+import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index'
+import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
+import { Match2Request, Match2Response } from '../../../models/match2'
+import { UUID } from '../../../models/strings'
+import { TransactionResponse } from '../../../models/transaction'
+import { match2AcceptFinal, match2AcceptFirst, match2Propose } from '../../../lib/payload'
+import { DemandPayload, DemandSubtype } from '../../../models/demand'
+import ChainNode from '../../../lib/chainNode'
+import env from '../../../env'
 
-@Route('match2')
+@Route('v1/match2')
 @Tags('match2')
 @Security('BearerAuth')
 export class Match2Controller extends Controller {

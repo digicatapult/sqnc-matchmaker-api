@@ -108,9 +108,9 @@ npm run flows
 
 These are the top level physical concepts in the system. They are the top level RESTful path segments. Note that different states of an entity will **NOT** be represented as different top level entities.
 
-- `capacity`
-- `order`
-- `match2`
+- `v1/capacity`
+- `v1/order`
+- `v1/match2`
 
 Additionally, there is the `attachment` entity which returns an `id` to be used when preparing entity updates to attach files.
 
@@ -118,30 +118,30 @@ Additionally, there is the `attachment` entity which returns an `id` to be used 
 
 Entity queries allow the API user to list those entities (including a query) and to get a specific entity. For `order` for example:
 
-- `GET /capacity` - get all capacities
-- `GET /capacity/{capacityId}` - get a capacity by ID
+- `GET /v1/capacity` - get all capacities
+- `GET /v1/capacity/{capacityId}` - get a capacity by ID
 
 ### Entity creation
 
 Allows the creation of an initial local state for an entity. Note this is essentially just to establish an internal identifier for the entity and **the state is not shared across the blockchain network at this point**.
 
-- `POST /capacity`
+- `POST /v1/capacity`
 
 ### Entity updates
 
 Allows different kind of updates to be prepared and applied to an entity. For example, a `capacity` must be submitted via a `creation` action.
 
-- `POST /capacity/{capacityId}/creation` - create a creation `creation` transaction and send it to the blockchain.
-- `GET /capacity/{capacityId}/creation` - list a capacity's `creation` transactions and their status.
-- `GET /capacity/{capacityId}/creation/{creationId}` - get the details of a capacity `creation` transaction.
+- `POST /v1/capacity/{capacityId}/creation` - create a creation `creation` transaction and send it to the blockchain.
+- `GET /v1/capacity/{capacityId}/creation` - list a capacity's `creation` transactions and their status.
+- `GET /v1/capacity/{capacityId}/creation/{creationId}` - get the details of a capacity `creation` transaction.
 
 ### Attachment API
 
 The last top level entity `attachment`, which accepts a `multipart/form-data` payload for uploading a file or `application/json` for uploading JSON as a file. This will return an `id` that can then be used when preparing entity updates to attach files.
 
-- `POST /attachment` - upload a file.
-- `GET /attachment` - list all attachments.
-- `GET /attachment/{attachmentId}` - download an attachment.
+- `POST /v1/attachment` - upload a file.
+- `GET /v1/attachment` - list all attachments.
+- `GET /v1/attachment/{attachmentId}` - download an attachment.
 
 ## Demo scenario
 

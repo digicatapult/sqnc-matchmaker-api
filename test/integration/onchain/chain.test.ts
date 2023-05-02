@@ -77,7 +77,7 @@ describe('on-chain', function () {
       const lastTokenId = await node.getLastTokenId()
 
       // submit to chain
-      const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
+      const response = await post(app, `/v1/capacity/${seededCapacityId}/creation`, {})
       expect(response.status).to.equal(201)
 
       const { id: transactionId, state } = response.body
@@ -102,10 +102,10 @@ describe('on-chain', function () {
 
       const {
         body: { id: orderId },
-      } = await post(app, '/order', { parametersAttachmentId })
+      } = await post(app, '/v1/order', { parametersAttachmentId })
 
       // submit to chain
-      const response = await post(app, `/order/${orderId}/creation`, {})
+      const response = await post(app, `/v1/order/${orderId}/creation`, {})
       expect(response.status).to.equal(201)
 
       const { id: transactionId, state } = response.body
@@ -140,17 +140,17 @@ describe('on-chain', function () {
 
       const {
         body: { id: orderId },
-      } = await post(app, '/order', { parametersAttachmentId })
+      } = await post(app, '/v1/order', { parametersAttachmentId })
       const {
         body: { id: orderTransactionId },
-      } = await post(app, `/order/${orderId}/creation`, {})
+      } = await post(app, `/v1/order/${orderId}/creation`, {})
 
       const {
         body: { id: capacityId },
-      } = await post(app, '/capacity', { parametersAttachmentId })
+      } = await post(app, '/v1/capacity', { parametersAttachmentId })
       const {
         body: { id: capacityTransactionId },
-      } = await post(app, `/capacity/${capacityId}/creation`, {})
+      } = await post(app, `/v1/capacity/${capacityId}/creation`, {})
 
       await pollTransactionState(db, orderTransactionId, 'finalised')
       const [order] = await db.getDemand(orderId)
@@ -164,7 +164,7 @@ describe('on-chain', function () {
 
       const {
         body: { id: match2Id },
-      } = await post(app, '/match2', { demandA: orderId, demandB: capacityId })
+      } = await post(app, '/v1/match2', { demandA: orderId, demandB: capacityId })
       match2LocalId = match2Id
     })
 
@@ -172,7 +172,7 @@ describe('on-chain', function () {
       const lastTokenId = await node.getLastTokenId()
 
       // submit to chain
-      const response = await post(app, `/match2/${match2LocalId}/proposal`, {})
+      const response = await post(app, `/v1/match2/${match2LocalId}/proposal`, {})
       expect(response.status).to.equal(201)
 
       const { id: transactionId, state } = response.body
@@ -200,7 +200,7 @@ describe('on-chain', function () {
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
       // propose
-      const proposal = await post(app, `/match2/${match2LocalId}/proposal`, {})
+      const proposal = await post(app, `/v1/match2/${match2LocalId}/proposal`, {})
 
       // wait for block to finalise
       await pollTransactionState(db, proposal.body.id, 'finalised')
@@ -210,7 +210,7 @@ describe('on-chain', function () {
       const lastTokenId = await node.getLastTokenId()
 
       // submit accept to chain
-      const responseAcceptA = await post(app, `/match2/${match2LocalId}/accept`, {})
+      const responseAcceptA = await post(app, `/v1/match2/${match2LocalId}/accept`, {})
       expect(responseAcceptA.status).to.equal(201)
 
       // wait for block to finalise
@@ -223,7 +223,7 @@ describe('on-chain', function () {
       expect(match2AcceptA.originalTokenId).to.equal(match2OriginalId)
 
       // submit 2nd accept to chain
-      const responseAcceptFinal = await post(app, `/match2/${match2LocalId}/accept`, {})
+      const responseAcceptFinal = await post(app, `/v1/match2/${match2LocalId}/accept`, {})
       expect(responseAcceptFinal.status).to.equal(201)
 
       // wait for block to finalise

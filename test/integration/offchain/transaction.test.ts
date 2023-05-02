@@ -24,7 +24,7 @@ describe('transaction', () => {
   // handling all errors - error handling reflects whats in code, 422 first because being handled by TSOA/OPEN-API
   describe('if transaction id is not UUID or bad request', () => {
     it('returns 422 along with validation error', async () => {
-      const { status, body } = await get(app, '/transaction/123-not-uuid')
+      const { status, body } = await get(app, '/v1/transaction/123-not-uuid')
 
       expect(status).to.equal(422)
       expect(body).to.deep.contain({
@@ -43,7 +43,7 @@ describe('transaction', () => {
 
   describe('when requested transaction can not be found', () => {
     it('returns 404 along with the message', async () => {
-      const { status, body } = await get(app, `/transaction/${nonExistentId}`)
+      const { status, body } = await get(app, `/v1/transaction/${nonExistentId}`)
 
       expect(status).to.equal(404)
       expect(body).to.equal('transaction not found')
@@ -52,7 +52,7 @@ describe('transaction', () => {
 
   it('returns empty array if database contains 0 transactions', async () => {
     cleanup()
-    const { status, body } = await get(app, '/transaction')
+    const { status, body } = await get(app, '/v1/transaction')
 
     expect(status).to.equal(200)
     expect(body).to.be.an('array').that.is.empty
@@ -60,14 +60,14 @@ describe('transaction', () => {
 
   it('also returns an empty array if 0 transactions found by type', async () => {
     cleanup()
-    const { status, body } = await get(app, '/transaction?apiType=order')
+    const { status, body } = await get(app, '/v1/transaction?apiType=order')
 
     expect(status).to.equal(200)
     expect(body).to.be.an('array').that.is.empty
   })
 
   it('returns transaction by id', async () => {
-    const { status, body } = await get(app, '/transaction/1f3af974-7d4d-40b4-86a5-94a2241265cb')
+    const { status, body } = await get(app, '/v1/transaction/1f3af974-7d4d-40b4-86a5-94a2241265cb')
 
     expect(status).to.equal(200)
     expect(body).to.deep.contain({
@@ -83,7 +83,7 @@ describe('transaction', () => {
 
   // TODO assert for limit (when set on the db)
   it('returns all transactions', async () => {
-    const { status, body } = await get(app, '/transaction')
+    const { status, body } = await get(app, '/v1/transaction')
 
     // TODO create a fixtures
     expect(status).to.equal(200)
@@ -129,7 +129,7 @@ describe('transaction', () => {
   })
 
   it('returns transactions by type', async () => {
-    const { status, body } = await get(app, '/transaction?apiType=capacity')
+    const { status, body } = await get(app, '/v1/transaction?apiType=capacity')
 
     expect(status).to.equal(200)
     expect(body).to.deep.include.members([
@@ -155,7 +155,7 @@ describe('transaction', () => {
   })
 
   it('returns transactions by status', async () => {
-    const { status, body } = await get(app, '/transaction?status=submitted')
+    const { status, body } = await get(app, '/v1/transaction?status=submitted')
 
     expect(status).to.equal(200)
     expect(body).to.deep.include.members([
@@ -181,7 +181,7 @@ describe('transaction', () => {
   })
 
   it('returns transactions by status and type', async () => {
-    const { status, body } = await get(app, '/transaction?apiType=capacity&status=submitted')
+    const { status, body } = await get(app, '/v1/transaction?apiType=capacity&status=submitted')
 
     expect(status).to.equal(200)
     expect(body).to.deep.include.members([
@@ -207,7 +207,7 @@ describe('transaction', () => {
   })
 
   it('returns 422 when invalid type is passed', async () => {
-    const { status, body } = await get(app, '/transaction?apiType=notAType&status=submitted')
+    const { status, body } = await get(app, '/v1/transaction?apiType=notAType&status=submitted')
 
     expect(status).to.equal(422)
     expect(body).to.contain({
@@ -217,7 +217,7 @@ describe('transaction', () => {
   })
 
   it('returns 422 when invalid status is passed', async () => {
-    const { status, body } = await get(app, '/transaction?apiType=capacity&status=notAStatus')
+    const { status, body } = await get(app, '/v1/transaction?apiType=capacity&status=notAStatus')
 
     expect(status).to.equal(422)
     expect(body).to.contain({

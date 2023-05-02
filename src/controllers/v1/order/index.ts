@@ -13,18 +13,18 @@ import {
 } from 'tsoa'
 import { Logger } from 'pino'
 
-import { UUID } from '../../models/strings'
-import { DemandRequest, DemandResponse } from '../../models/demand'
-import { TransactionResponse } from '../../models/transaction'
-import { logger } from '../../lib/logger'
-import { BadRequest, NotFound } from '../../lib/error-handler'
-import Database from '../../lib/db'
-import { getMemberByAddress, getMemberBySelf } from '../../lib/services/identity'
-import { demandCreate } from '../../lib/payload'
-import ChainNode from '../../lib/chainNode'
-import env from '../../env'
+import { UUID } from '../../../models/strings'
+import { DemandRequest, DemandResponse } from '../../../models/demand'
+import { TransactionResponse } from '../../../models/transaction'
+import { logger } from '../../../lib/logger'
+import { BadRequest, NotFound } from '../../../lib/error-handler'
+import Database from '../../../lib/db'
+import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
+import { demandCreate } from '../../../lib/payload'
+import ChainNode from '../../../lib/chainNode'
+import env from '../../../env'
 
-@Route('order')
+@Route('v1/order')
 @Tags('order')
 @Security('BearerAuth')
 export class order extends Controller {
