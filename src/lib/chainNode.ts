@@ -5,7 +5,6 @@ import type { u128 } from '@polkadot/types'
 
 import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
-import { HttpResponse } from './error-handler'
 
 import type { Payload, Output, Metadata } from './payload'
 import { HEX } from '../models/strings'
@@ -136,7 +135,7 @@ export default class ChainNode {
     this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
 
     await this.api.isReady
-    const extrinsic = await this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
+    const extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
     const account = this.keyring.addFromUri(this.userUri)
     const signed = await extrinsic.signAsync(account, { nonce: -1 })
     return signed
@@ -156,12 +155,15 @@ export default class ChainNode {
           const { dispatchError, status } = result
 
           if (dispatchError) {
+            transactionDbUpdate('failed')
             if (dispatchError.isModule) {
               const decoded = this.api.registry.findMetaError(dispatchError.asModule)
-              reject(new HttpResponse({ message: `Node dispatch error: ${decoded.name}` }))
+              reject(new Error(`Node dispatch error: ${decoded.name}`))
             } else {
-              reject(new HttpResponse({ message: `Unknown node dispatch error: ${dispatchError}` }))
+              reject(new Error(`Unknown node dispatch error: ${dispatchError}`))
             }
+            unsub()
+            return
           }
 
           if (status.isInBlock) {
@@ -169,14 +171,18 @@ export default class ChainNode {
           }
 
           if (status.isFinalized) {
-            transactionDbUpdate('finalised')
-
             const processRanEvent = result.events.find(({ event: { method } }) => method === 'ProcessRan')
             const data = processRanEvent?.event?.data as EventData
             const tokens = data?.outputs?.map((x) => x.toNumber())
 
+            if (tokens) {
+              transactionDbUpdate('finalised')
+              resolve(tokens)
+            } else {
+              transactionDbUpdate('failed')
+              reject(Error('No token IDs returned'))
+            }
             unsub()
-            tokens ? resolve(tokens) : reject(Error('No token IDs returned'))
           }
         })
         .then((res) => {
