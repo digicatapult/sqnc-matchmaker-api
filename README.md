@@ -143,17 +143,30 @@ The last top level entity `attachment`, which accepts a `multipart/form-data` pa
 - `GET /v1/attachment` - list all attachments.
 - `GET /v1/attachment/{attachmentId}` - download an attachment.
 
-## Demo scenario
+## Demo scenario
 
-Run `docker compose up -d` to start the required dependencies to demo `dscp-matchmaker-api`.
+Run `docker compose -f docker-compose-3-persona.yml up -d` to start the required dependencies to fully demo `dscp-matchmaker-api`.
 
-The demo involves three personas: `MemberA`, `MemberB` and an `Optimiser`. For the purposes of the demo, a single set of `dscp` services will be used and all three personas will use the same development node address. In the real world each persona would be running their own set of `dscp` services and each use a unique node address.
+The demo involves three personas: `MemberA`, `MemberB` and an `Optimiser`. Each persona has a set of `dscp` services:
 
-Before transacting, an alias (a human-friendly name) must be set for the pre-configured dev node address `5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY` using the `dscp-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. Either use the [identity service swagger](http://localhost:3002/v1/swagger/#/members/put_members__address_) or run:
+- dscp-matchmaker-api (+ PostgreSQL)
+- dscp-node
+- dscp-ipfs
+- dscp-identity-service (+ PostgreSQL)
+
+The container names are prefixed with the persona e.g. `member-a-ipfs`. Services are networked so that only the `dscp-node` and `dscp-ipfs` instances communicate cross-persona. Each persona uses a `substrate` well-known identity for their `dscp-node`:
+
+```
+"MemberA": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", // alice
+"MemberB": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", // bob
+"Optimiser": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", // charlie
+```
+
+Before transacting, aliases (a human-friendly names) can be set using each persona's `dscp-identity-service` for the pre-configured node addresses. The value for alias doesn't matter, it just needs some value e.g. `self`. For example, to set the self address for `MemberA`, you can either use the [identity service swagger](http://localhost:3011/v1/swagger/#/members/put_members__address_) or run:
 
 ```
 curl -X 'PUT' \
-  'http://localhost:3002/v1/members/5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY' \
+  'http://localhost:3011/v1/members/5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -161,7 +174,9 @@ curl -X 'PUT' \
 }'
 ```
 
-Also process flows must be added to the chain with `npm run flows`. Process flows validate transactions that affect the chain.
+The docker compose automatically adds process flows. Process flows validate transactions that affect the chain.
+
+API steps
 
 1. `MemberA` wants to create a `capacity`, which includes a parameters file to the parameters of the available capacity they have. The parameters file will be used by `Optimiser` when matching `capacity` with a `order`. First `MemberA` must upload this parameters file to their local database with `POST /attachment`.
 2. They use the returned `id` for `parametersAttachmentId` in the request body to `POST /capacity`. At this point, the `capacity` only exists in the `MemberA` database.
@@ -170,5 +185,3 @@ Also process flows must be added to the chain with `npm run flows`. Process flow
 5. When `MemberB` is ready for the `order` to exist on chain they `POST order/{id}/creation`.
 6. `Optimiser` can now create a `match2` that matches a single `capacity` with a single `order`. They supply these as an `id` for `demandA` and `demandB`. It doesn't matter which is `demandA` and which is `demandB`.
 7. When `Optimiser` is ready for the `match2` to exist on chain they `POST match2/{id}/propose`.
-
-//TODO the accept steps

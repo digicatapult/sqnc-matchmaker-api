@@ -1,0 +1,390 @@
+version: '3'
+
+networks:
+  chain:
+    ipam:
+      driver: default
+  ipfs:
+    ipam:
+      driver: default
+  member-a:
+    ipam:
+      driver: default
+  
+  member-b:
+    ipam:
+      driver: default
+
+  optimiser:
+    ipam:
+      driver: default
+
+
+services:
+
+# --------------------------------------------------------- member-a
+  member-a-ipfs:
+    image: digicatapult/dscp-ipfs:latest
+    container_name: member-a-ipfs
+    ports:
+      - 4002:4001
+      - 8082:8080
+      - 5002:5001
+    volumes:
+      - ipfs:/ipfs
+    environment:
+      - NODE_HOST=member-a-node
+      - |
+        IPFS_SWARM_KEY=/key/swarm/psk/1.0.0/
+        /base16/
+        0000000000000000000000000000000000000000000000000000000000000000
+    networks: ['member-a', 'ipfs']
+
+  member-a-postgres-matchmaker-api:
+    image: postgres:15.2-alpine
+    container_name: member-a-postgres-matchmaker-api
+    ports:
+      - 5432:5432
+    volumes:
+      - member-a-matchmaker-api-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=dscp-matchmaker-api
+    networks: ['member-a']
+  
+  member-a-postgres-identity:
+    image: postgres:15.2-alpine
+    container_name: member-a-postgres-identity
+    ports:
+      - 5433:5432
+    volumes:
+      - member-a-identity-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=dscp-identity
+    networks: ['member-a']
+  
+  member-a-identity:
+    image: digicatapult/dscp-identity-service:latest
+    container_name: member-a-identity
+    command: /bin/sh -c "
+      sleep 10 &&
+      npx knex migrate:latest &&
+      node app/index.js"
+    ports:
+      - 3011:3011
+    depends_on:
+      - member-a-node
+      - member-a-postgres-identity
+    environment:
+      - PORT=3011
+      - API_HOST=member-a-node
+      - API_PORT=9944
+      - DB_HOST=member-a-postgres-identity
+      - DB_PORT=5432
+      - DB_NAME=dscp-identity
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+      - AUTH_TYPE=${AUTH_TYPE:-NONE}
+    networks: ['member-a']
+
+  member-a-node:
+    image: digicatapult/dscp-node:latest
+    container_name: member-a-node
+    command:
+      --base-path /data
+      --alice
+      --unsafe-ws-external
+      --unsafe-rpc-external
+      --rpc-cors all
+      --node-key 0000000000000000000000000000000000000000000000000000000000000001
+    ports:
+      - 30333:30333
+      - 9944:9944
+      - 9933:9933
+    restart: on-failure
+    networks: ['member-a', 'chain']
+
+  member-a-matchmaker-api:
+    container_name: member-a-matchmaker-api
+    build:
+      context: './'
+      dockerfile: 'Dockerfile'
+    command: /bin/sh -c "
+      sleep 10 &&
+      npx knex migrate:latest --knexfile lib/db/knexfile &&
+      npx @digicatapult/dscp-process-management@latest create -h member-a-node -p 9944 -u //Alice \"$(cat processFlows.json)\" &&
+      node ./index.js"
+    environment:
+      - PORT=3001
+      - NODE_HOST=member-a-node
+      - NODE_PORT=9944
+      - DB_HOST=member-a-postgres-matchmaker-api
+      - DB_PORT=5432
+      - DB_NAME=dscp-matchmaker-api
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - IDENTITY_SERVICE_HOST=member-a-identity
+      - IDENTITY_SERVICE_PORT=3011
+      - IPFS_HOST=ipfs
+      - IPFS_PORT=5001
+      - USER_URI=//Alice
+    ports:
+      - 3001:3001
+    depends_on:
+      - member-a-node
+      - member-a-identity
+      - member-a-postgres-matchmaker-api
+      - ipfs
+    restart: on-failure
+    networks: ['member-a', 'ipfs']
+
+# --------------------------------------------------------- member-b
+
+  member-b-ipfs:
+    image: digicatapult/dscp-ipfs:latest
+    container_name: member-b-ipfs
+    ports:
+      - 4012:4001
+      - 8092:8080
+      - 5012:5001
+    volumes:
+      - ipfs:/ipfs
+    environment:
+      - NODE_HOST=member-b-node
+      - |
+        IPFS_SWARM_KEY=/key/swarm/psk/1.0.0/
+        /base16/
+        0000000000000000000000000000000000000000000000000000000000000000
+    networks: ['member-b', 'ipfs']
+  member-b-postgres-matchmaker-api:
+    image: postgres:15.2-alpine
+    container_name: member-b-postgres-matchmaker-api
+    ports:
+      - 5442:5432
+    volumes:
+      - member-b-matchmaker-api-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=dscp-matchmaker-api
+    networks: ['member-b']
+  
+  member-b-postgres-identity:
+    image: postgres:15.2-alpine
+    container_name: member-b-postgres-identity
+    ports:
+      - 5443:5432
+    volumes:
+      - member-b-identity-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=dscp-identity
+    networks: ['member-b']
+
+  member-b-identity:
+    image: digicatapult/dscp-identity-service:latest
+    container_name: member-b-identity
+    command: /bin/sh -c "
+      sleep 10 &&
+      npx knex migrate:latest &&
+      node app/index.js"
+    ports:
+      - 3012:3012
+    depends_on:
+      - member-b-node
+      - member-b-postgres-identity
+    environment:
+      - PORT=3012
+      - API_HOST=member-b-node
+      - API_PORT=9944
+      - DB_HOST=member-b-postgres-identity
+      - DB_PORT=5432
+      - DB_NAME=dscp-identity
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - SELF_ADDRESS=5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
+      - AUTH_TYPE=${AUTH_TYPE:-NONE}
+    networks: ['member-b']
+
+  member-b-node:
+    image: digicatapult/dscp-node:latest
+    container_name: member-b-node
+    command:
+      --base-path /data/
+      --bob
+      --unsafe-ws-external
+      --unsafe-rpc-external
+      --rpc-cors all
+      --node-key 0000000000000000000000000000000000000000000000000000000000000002
+      --bootnodes /dns4/alice/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+    ports:
+      - 31333:30333
+      - 10044:9944
+      - 10033:9933
+    restart: on-failure
+    networks: ['member-b', 'chain']
+
+  member-b-matchmaker-api:
+    container_name: member-b-matchmaker-api
+    build:
+      context: './'
+      dockerfile: 'Dockerfile'
+    command: /bin/sh -c "
+      sleep 10 &&
+      npx knex migrate:latest --knexfile lib/db/knexfile &&
+      node ./index.js"
+    environment:
+      - PORT=3002
+      - NODE_HOST=member-b-node
+      - NODE_PORT=9944
+      - DB_HOST=member-b-postgres-matchmaker-api
+      - DB_PORT=5432
+      - DB_NAME=dscp-matchmaker-api
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - IDENTITY_SERVICE_HOST=member-b-identity
+      - IDENTITY_SERVICE_PORT=3012
+      - IPFS_HOST=ipfs
+      - IPFS_PORT=5001
+      - USER_URI=//Bob
+    ports:
+      - 3002:3002
+    depends_on:
+      - member-b-node
+      - member-b-identity
+      - member-b-postgres-matchmaker-api
+      - ipfs
+    restart: on-failure
+    networks: ['member-b', 'ipfs']
+
+
+# --------------------------------------------------------- optimiser
+
+  optimiser-postgres-matchmaker-api:
+    image: postgres:15.2-alpine
+    container_name: optimiser-postgres-matchmaker-api
+    ports:
+      - 5452:5432
+    volumes:
+      - optimiser-matchmaker-api-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=dscp-matchmaker-api
+    networks: ['optimiser']
+  
+  optimiser-postgres-identity:
+    image: postgres:15.2-alpine
+    container_name: optimiser-postgres-identity
+    ports:
+      - 5453:5432
+    volumes:
+      - optimiser-identity-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=dscp-identity
+    networks: ['optimiser']
+
+  optimiser-identity:
+    image: digicatapult/dscp-identity-service:latest
+    container_name: optimiser-identity
+    command: /bin/sh -c "
+      sleep 10 &&
+      npx knex migrate:latest &&
+      node app/index.js"
+    ports:
+      - 3021:3021
+    depends_on:
+      - optimiser-node
+      - optimiser-postgres-identity
+    environment:
+      - PORT=3021
+      - API_HOST=optimiser-node
+      - API_PORT=9944
+      - DB_HOST=optimiser-postgres-identity
+      - DB_PORT=5432
+      - DB_NAME=dscp-identity
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - SELF_ADDRESS=5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y
+      - AUTH_TYPE=${AUTH_TYPE:-NONE}
+    networks: ['optimiser']
+  optimiser-node:
+    image: digicatapult/dscp-node:latest
+    container_name: optimiser-node
+    command:
+      --base-path /data/
+      --charlie
+      --unsafe-ws-external
+      --unsafe-rpc-external
+      --rpc-cors all
+      --node-key 0000000000000000000000000000000000000000000000000000000000000003
+      --bootnodes /dns4/alice/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+    ports:
+      - 32333:30333
+      - 10144:9944
+      - 10133:9933
+    restart: on-failure
+    networks: ['optimiser', 'chain']
+
+  ipfs:
+    image: ipfs/go-ipfs:v0.18.1
+    container_name: ipfs
+    environment:
+      - |
+        IPFS_SWARM_KEY=/key/swarm/psk/1.0.0/
+        /base16/
+        0000000000000000000000000000000000000000000000000000000000000000
+    ports:
+      - 4001:4001
+      - 8080:8080
+      - 5001:5001
+    networks: ['ipfs']
+
+  optimiser-matchmaker-api:
+    container_name: optimiser-matchmaker-api
+    build:
+      context: './'
+      dockerfile: 'Dockerfile'
+    command: /bin/sh -c "
+      sleep 10 &&
+      npx knex migrate:latest --knexfile lib/db/knexfile &&
+      node ./index.js"
+    environment:
+      - PORT=3003
+      - NODE_HOST=optimiser-node
+      - NODE_PORT=9944
+      - DB_HOST=optimiser-postgres-matchmaker-api
+      - DB_PORT=5432
+      - DB_NAME=dscp-matchmaker-api
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - IDENTITY_SERVICE_HOST=optimiser-identity
+      - IDENTITY_SERVICE_PORT=3022
+      - IPFS_HOST=ipfs
+      - IPFS_PORT=5001
+      - USER_URI=//Charlie
+    ports:
+      - 3003:3003
+    depends_on:
+      - optimiser-node
+      - optimiser-identity
+      - optimiser-postgres-matchmaker-api
+      - ipfs
+    restart: on-failure
+    networks: ['optimiser', 'ipfs']
+
+volumes:
+  member-a-matchmaker-api-storage:
+  member-a-identity-storage:
+  member-b-matchmaker-api-storage:
+  member-b-identity-storage:
+  optimiser-matchmaker-api-storage:
+  optimiser-identity-storage:
+  ipfs:
