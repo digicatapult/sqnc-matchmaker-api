@@ -120,8 +120,8 @@ Additionally, there is the `attachment` entity which returns an `id` to be used 
 
 Entity queries allow the API user to list those entities (including a query) and to get a specific entity. For `demandA` for example:
 
-- `GET /v1/demandA` - get all capacities
-- `GET /v1/demandA/{demandAId}` - get a demandB by ID
+- `GET /v1/demandA` - get all demandAs
+- `GET /v1/demandA/{demandAId}` - get a demandA by ID
 
 ### Entity creation
 
@@ -167,7 +167,7 @@ curl -X 'PUT' \
 
 Also process flows must be added to the chain with `npm run flows`. Process flows validate transactions that affect the chain.
 
-1. `MemberA` wants to create a `demandA`, which includes a parameters file to the parameters of the available demandB they have. The parameters file will be used by `Optimiser` when matching `demandA` with a `demandA`. First `MemberA` must upload this parameters file to their local database with `POST /attachment`.
+1. `MemberA` wants to create a `demandA`, which includes a parameters file to the parameters of the available demandA they have. The parameters file will be used by `Optimiser` when matching `demandA` with a `demandB`. First `MemberA` must upload this parameters file to their local database with `POST /attachment`.
 2. They use the returned `id` for `parametersAttachmentId` in the request body to `POST /demandA`. At this point, the `demandA` only exists in the `MemberA` database.
 3. When `MemberA` is ready for the `demandA` to exist on chain they `POST demandA/{demandAId}/creation`. `MemberB` and `Optimiser` can now see the `demandA` if their node is running and connected.
 4. `MemberB` creates an `demandB` in a similar manner to creating a `demandA`. It includes a parameters file to describe the parameters of their demandB.
