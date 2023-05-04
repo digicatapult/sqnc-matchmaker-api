@@ -42,7 +42,7 @@ describe('eventProcessor', function () {
             roles: new Map([['owner', '123']]),
             metadata: new Map([
               ['parameters', 'a'],
-              ['subtype', 'capacity'],
+              ['subtype', 'demand_b'],
             ]),
           },
         ]
@@ -62,7 +62,7 @@ describe('eventProcessor', function () {
         type: 'insert',
         id: demandId,
         owner: '123',
-        subtype: 'capacity',
+        subtype: 'demand_b',
         state: 'created',
         parameters_attachment_id: attachmentId,
         latest_token_id: 1,

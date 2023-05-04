@@ -33,15 +33,15 @@ export interface Match2Payload extends Match2Response {
 }
 
 /**
- * The required properties of a request to create a Match2. demandA is an order. demandB is a capacity.
+ * The required properties of a request to create a Match2
  */
 export interface Match2Request {
   /**
-   * ID of the order
+   * ID of the demandA
    */
   demandA: UUID
   /**
-   * ID of the capacity
+   * ID of the demandB
    */
   demandB: UUID
 }
