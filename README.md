@@ -167,7 +167,7 @@ Container names are prefixed with the persona e.g. `member-a-node`. Services are
 "Optimiser": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", // charlie
 ```
 
-The docker compose automatically adds process flows using `MemberA`. Process flows validate transactions that affect the chain.
+The `docker compose` automatically adds process flows using `MemberA`. Process flows validate transactions that affect the chain.
 
 ### Identities
 
@@ -189,6 +189,8 @@ Each persona's identity service:
 - [MemberB](http://localhost:8011/v1/swagger/)
 - [Optimiser](http://localhost:8021/v1/swagger/)
 
+By default, if no alias is set, the alias is the same as the node address.
+
 ### Using the matchmaker API
 
 The environment is now ready to run through a demo scenario using each persona's matchmaker APIs:
@@ -200,13 +202,13 @@ The environment is now ready to run through a demo scenario using each persona's
 Note the meaning in the API of `demandA` and `demandB` are abstract and use-case dependent. For example in the case of a logistics matching service where one provider has an `order` to be moved and another has some `capacity` to move orders one might represent an `order` as a `demandA` and a `capacity` as a `demandB`.
 
 1. `MemberA` wants to create a `demandA`, which includes a parameters file that details the parameters of the available demandA they have. The parameters file will be used by `Optimiser` when matching `demandA` with a `demandB`. First `MemberA` must upload this parameters file to their local database with [`POST /v1/attachment`](http://localhost:8000/swagger/#/attachment/Create).
-2. They use the returned `id` for `parametersAttachmentId` in the request body to [`POST /v1/demandA`](http://localhost:8000/swagger/#/demandA/CreateDemandA). At this point, the `demandA` only exists in the `MemberA` database.
+2. They use the returned `id` for `parametersAttachmentId` in the request body to [`POST /v1/demandA`](http://localhost:8000/swagger/#/demandA/Create). At this point, the `demandA` only exists in the `MemberA` database.
 3. When `MemberA` is ready for the `demandA` to exist on chain they [`POST /v1/demandA/{demandAId}/creation`](http://localhost:8000/swagger/#/demandA/CreateDemandAOnChain).
 4. Putting something on chain creates a local `transaction` database entry which records the status of block finalisation. Every route that puts something on chain returns a transaction `id`. These routes also have an accompanying `GET` route that returns all of the transactions of that transaction type e.g. [`GET /v1/demandA/{demandAId}/creation`](http://localhost:8000/swagger/#/demandA/GetAllTransactions) returns the details of all `demandA` creation transactions. The transaction `id` can be supplied to [`GET /v1/demandA/{demandAId}/creation/{creationId}`](http://localhost:8000/swagger/#/demandA/GetDemandACreation) to get that specific transaction. Alternatively [`GET /v1/transaction`](http://localhost:8000/swagger/#/transaction/GetAllTransactions) can be used to get all transactions of any type.
 5. Once the block has finalised, The indexers running on `MemberB` and `Optimiser`'s `dscp-matchmaker-api` will process the block containing the new `demandA` and update their local databases (assuming their `dscp-node` instance is running and connected). They will be able to see the new `demandA` with [`GET /v1/demandA`](http://localhost:8010/swagger/#/demandA/GetAll).
-6. `MemberB` creates a [`demandB`]http://localhost:8010/swagger/#/demandB/Create) in a similar manner to creating a `demandA`. It includes a parameters file to describe the parameters of their `demandB`.
+6. `MemberB` creates a [`demandB`](http://localhost:8010/swagger/#/demandB/CreateDemandB)) in a similar manner to creating a `demandA`. It includes a parameters file to describe the parameters of their `demandB`.
 7. When `MemberB` is ready for the `demandB` to exist on chain they [`POST /v1/demandB/{id}/creation`](http://localhost:8010/swagger/#/demandB/CreateDemandBOnChain).
-8. `Optimiser` can now create a [`match2`](http://localhost:8020/swagger/#/match2/ProposeMatch2) that matches a single `demandA` with a single `demandB`. They supply these as an `id` for `demandA` and `demandB`.
+8. `Optimiser` can now create a [`match2`](http://localhost:8020/swagger/#/match2/ProposeMatch2) that matches a single `demandA` with a single `demandB`. They supply their local `id` for `demandA` and `demandB`.
 9. When `Optimiser` is ready for the `match2` to exist on chain they [`POST /v1/match2/{id}/proposal`](http://localhost:8020/swagger/#/match2/ProposeMatch2OnChain).
 10. Either `MemberA` or `MemberB` can accept the `match2` with [`POST /v1/match2/{id}/accept`](http://localhost:8000/swagger/#/match2/AcceptMatch2OnChain). It doesn't matter which member accepts first.
 11. Once the second member accepts, we have a successful match! The `match2` state changes to `acceptedFinal` and `demandA` + `demandB` state moves to `allocated`. These demands can no longer be used in a new `match2`.

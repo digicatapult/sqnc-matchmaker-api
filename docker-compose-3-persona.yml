@@ -17,7 +17,6 @@ networks:
     ipam:
       driver: default
 
-
 services:
 # -------------------------------------------------------------------- member-a
   member-a-postgres-matchmaker-api:
@@ -122,7 +121,7 @@ services:
     restart: on-failure
     networks: ['member-a', 'ipfs']
 
-# --------------------------------------------------------- member-b
+# -------------------------------------------------------------------- member-b
   member-b-postgres-matchmaker-api:
     image: postgres:15.2-alpine
     container_name: member-b-postgres-matchmaker-api
@@ -225,8 +224,7 @@ services:
     restart: on-failure
     networks: ['member-b', 'ipfs']
 
-
-# --------------------------------------------------------- optimiser
+# ------------------------------------------------------------------- optimiser
 
   optimiser-postgres-matchmaker-api:
     image: postgres:15.2-alpine
@@ -329,8 +327,7 @@ services:
     restart: on-failure
     networks: ['optimiser', 'ipfs']
 
-# --------------------------------------------------------- ipfs
-
+# ------------------------------------------------------------------------ ipfs
   ipfs:
     image: ipfs/go-ipfs:v0.18.1
     container_name: ipfs
