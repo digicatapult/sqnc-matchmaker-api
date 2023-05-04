@@ -70,7 +70,7 @@
             "index": 0,
             "metadataKey": "subtype",
             "metadataValue": {
-              "Literal": "order"
+              "Literal": "demand_a"
             }
           }
         }
@@ -81,7 +81,7 @@
             "index": 0,
             "metadataKey": "subtype",
             "metadataValue": {
-              "Literal": "capacity"
+              "Literal": "demand_b"
             }
           }
         }
@@ -163,7 +163,7 @@
             "index": 0,
             "metadataKey": "subtype",
             "metadataValue": {
-              "Literal": "order"
+              "Literal": "demand_a"
             }
           }
         }
@@ -302,7 +302,7 @@
             "index": 1,
             "metadataKey": "subtype",
             "metadataValue": {
-              "Literal": "capacity"
+              "Literal": "demand_b"
             }
           }
         }
@@ -838,7 +838,7 @@
             "index": 0,
             "metadataKey": "subtype",
             "metadataValue": {
-              "Literal": "order"
+              "Literal": "demand_a"
             }
           }
         }
@@ -978,7 +978,7 @@
             "index": 1,
             "metadataKey": "subtype",
             "metadataValue": {
-              "Literal": "capacity"
+              "Literal": "demand_b"
             }
           }
         }

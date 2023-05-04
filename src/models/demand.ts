@@ -4,7 +4,7 @@ import { UUID } from './strings'
 /**
  * The possible types of a Demand
  */
-export type DemandSubtype = 'order' | 'capacity'
+export type DemandSubtype = 'demand_a' | 'demand_b'
 
 /**
  * The possible states of a Demand

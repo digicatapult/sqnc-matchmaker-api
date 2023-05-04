@@ -20,7 +20,7 @@ export interface TransactionResponse {
 /**
  * The type of the entity involved in the transaction
  */
-export type TransactionApiType = 'match2' | 'order' | 'capacity'
+export type TransactionApiType = 'match2' | 'demand_a' | 'demand_b'
 
 /**
  * Transaction type - matches the endpoint that initiates the transaction

@@ -111,8 +111,8 @@ export default class Database {
     return this.db().attachment().insert(attachment).returning('*')
   }
 
-  insertDemand = async (capacity: object) => {
-    return this.db().demand().insert(capacity).returning('*')
+  insertDemand = async (demand: object) => {
+    return this.db().demand().insert(demand).returning('*')
   }
 
   updateDemand = async (id: UUID, demand: object) => {

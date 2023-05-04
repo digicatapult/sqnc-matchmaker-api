@@ -60,7 +60,7 @@ describe('transaction', () => {
 
   it('also returns an empty array if 0 transactions found by type', async () => {
     cleanup()
-    const { status, body } = await get(app, '/v1/transaction?apiType=order')
+    const { status, body } = await get(app, '/v1/transaction?apiType=demand_a')
 
     expect(status).to.equal(200)
     expect(body).to.be.an('array').that.is.empty
@@ -74,7 +74,7 @@ describe('transaction', () => {
       id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
       state: 'submitted',
       localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-      apiType: 'capacity',
+      apiType: 'demand_b',
       transactionType: 'creation',
       submittedAt: '2023-03-24T10:40:47.317Z',
       updatedAt: '2023-03-24T10:40:47.317Z',
@@ -93,7 +93,7 @@ describe('transaction', () => {
         id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-        apiType: 'capacity',
+        apiType: 'demand_b',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z',
@@ -102,7 +102,7 @@ describe('transaction', () => {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-        apiType: 'capacity',
+        apiType: 'demand_b',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z',
@@ -129,7 +129,7 @@ describe('transaction', () => {
   })
 
   it('returns transactions by type', async () => {
-    const { status, body } = await get(app, '/v1/transaction?apiType=capacity')
+    const { status, body } = await get(app, '/v1/transaction?apiType=demand_b')
 
     expect(status).to.equal(200)
     expect(body).to.deep.include.members([
@@ -137,7 +137,7 @@ describe('transaction', () => {
         id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-        apiType: 'capacity',
+        apiType: 'demand_b',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z',
@@ -146,7 +146,7 @@ describe('transaction', () => {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-        apiType: 'capacity',
+        apiType: 'demand_b',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z',
@@ -163,7 +163,7 @@ describe('transaction', () => {
         id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-        apiType: 'capacity',
+        apiType: 'demand_b',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z',
@@ -172,7 +172,7 @@ describe('transaction', () => {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-        apiType: 'capacity',
+        apiType: 'demand_b',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z',
@@ -181,7 +181,7 @@ describe('transaction', () => {
   })
 
   it('returns transactions by status and type', async () => {
-    const { status, body } = await get(app, '/v1/transaction?apiType=capacity&status=submitted')
+    const { status, body } = await get(app, '/v1/transaction?apiType=demand_b&status=submitted')
 
     expect(status).to.equal(200)
     expect(body).to.deep.include.members([
@@ -189,7 +189,7 @@ describe('transaction', () => {
         id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-        apiType: 'capacity',
+        apiType: 'demand_b',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z',
@@ -198,7 +198,7 @@ describe('transaction', () => {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
         state: 'submitted',
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
-        apiType: 'capacity',
+        apiType: 'demand_b',
         transactionType: 'creation',
         submittedAt: '2023-03-24T10:40:47.317Z',
         updatedAt: '2023-03-24T10:40:47.317Z',
@@ -217,7 +217,7 @@ describe('transaction', () => {
   })
 
   it('returns 422 when invalid status is passed', async () => {
-    const { status, body } = await get(app, '/v1/transaction?apiType=capacity&status=notAStatus')
+    const { status, body } = await get(app, '/v1/transaction?apiType=demand_b&status=notAStatus')
 
     expect(status).to.equal(422)
     expect(body).to.contain({

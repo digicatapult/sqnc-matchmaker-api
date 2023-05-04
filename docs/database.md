@@ -32,17 +32,17 @@ The following tables exist in the `matchmaker-api` database.
 
 ### `demand`
 
-| column                     | PostgreSQL type | nullable |       default        | description                               |
-| :------------------------- | :-------------- | :------- | :------------------: | :---------------------------------------- |
-| `id`                       | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment`    |
-| `owner`                    | `STRING (48)`   | FALSE    |          -           | Demand owner name                         |
-| `subtype`                  | `ENUM`          | FALSE    |          -           | The demand subtype (`order`, `capacity`)  |
-| `state`                    | `ENUM`          | FALSE    |          -           | The demand state (`created`, `allocated`) |
-| `parameters_attachment_id` | `UUID`          | FALSE    |          -           | The ID of the associated attachment       |
-| `latest_token_id`          | `INT`           | TRUE     |          -           | Possible current token ID                 |
-| `original_token_id`        | `INT`           | TRUE     |          -           | Possible original token ID                |
-| `created_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was first created            |
-| `updated_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was last updated             |
+| column                     | PostgreSQL type | nullable |       default        | description                                 |
+| :------------------------- | :-------------- | :------- | :------------------: | :------------------------------------------ |
+| `id`                       | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment`      |
+| `owner`                    | `STRING (48)`   | FALSE    |          -           | Demand owner name                           |
+| `subtype`                  | `ENUM`          | FALSE    |          -           | The demand subtype (`demand_a`, `demand_b`) |
+| `state`                    | `ENUM`          | FALSE    |          -           | The demand state (`created`, `allocated`)   |
+| `parameters_attachment_id` | `UUID`          | FALSE    |          -           | The ID of the associated attachment         |
+| `latest_token_id`          | `INT`           | TRUE     |          -           | Possible current token ID                   |
+| `original_token_id`        | `INT`           | TRUE     |          -           | Possible original token ID                  |
+| `created_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was first created              |
+| `updated_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was last updated               |
 
 #### Indexes
 
@@ -58,13 +58,13 @@ The following tables exist in the `matchmaker-api` database.
 
 ### `transaction`
 
-| column             | PostgreSQL type | nullable |       default        | description                                               |
-| :----------------- | :-------------- | :------- | :------------------: | :-------------------------------------------------------- |
-| `id`               | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `transaction`                   |
-| `local_id`         | `UUID`          | FALSE    |                      | The Match2 or Demand id of the transaction                |
-| `api_type`         | `ENUM`          | FALSE    |                      | The entity of transaction (`match2`, `order`, `capacity`) |
-| `transaction_type` | `ENUM`          | FALSE    |                      | The transaction type (creation, proposal, accept)         |
-| `hash`             | `CHAR (64)`     | FALSE    |                      | The `hash` of the transaction extrinsic                   |
+| column             | PostgreSQL type | nullable |       default        | description                                                  |
+| :----------------- | :-------------- | :------- | :------------------: | :----------------------------------------------------------- |
+| `id`               | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `transaction`                      |
+| `local_id`         | `UUID`          | FALSE    |                      | The Match2 or Demand id of the transaction                   |
+| `api_type`         | `ENUM`          | FALSE    |                      | The entity of transaction (`match2`, `demand_a`, `demand_b`) |
+| `transaction_type` | `ENUM`          | FALSE    |                      | The transaction type (creation, proposal, accept)            |
+| `hash`             | `CHAR (64)`     | FALSE    |                      | The `hash` of the transaction extrinsic                      |
 
 #### Indexes
 
