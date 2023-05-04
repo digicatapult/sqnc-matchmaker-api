@@ -2,7 +2,7 @@
 
 ## Description
 
-A `Node.js` typescript template with open api implementation
+An API facilitating a distributed heterogeneous pairwise matchmaking service utilising the [Distributed Supply Chain Platform](https://github.com/digicatapult/dscp-documentation)
 
 ## Configuration
 
@@ -108,32 +108,34 @@ npm run flows
 
 These are the top level physical concepts in the system. They are the top level RESTful path segments. Note that different states of an entity will **NOT** be represented as different top level entities.
 
-- `v1/capacity`
-- `v1/order`
+- `v1/demandA`
+- `v1/demandB`
 - `v1/match2`
+
+Note the meaning in the API of `demandA` and `demandB` are abstract and use-case dependent. For example in the case of a logistics matching service where one provider has an `order` to be moved and another has some `capacity` to move orders one might represent an  `order` as a `demandA` and a `capacity` as a `demandB`. Interpretation of these labels is entirely by convention.
 
 Additionally, there is the `attachment` entity which returns an `id` to be used when preparing entity updates to attach files.
 
 ### Entity queries
 
-Entity queries allow the API user to list those entities (including a query) and to get a specific entity. For `order` for example:
+Entity queries allow the API user to list those entities (including a query) and to get a specific entity. For `demandA` for example:
 
-- `GET /v1/capacity` - get all capacities
-- `GET /v1/capacity/{capacityId}` - get a capacity by ID
+- `GET /v1/demandA` - get all demandAs
+- `GET /v1/demandA/{demandAId}` - get a demandA by ID
 
 ### Entity creation
 
 Allows the creation of an initial local state for an entity. Note this is essentially just to establish an internal identifier for the entity and **the state is not shared across the blockchain network at this point**.
 
-- `POST /v1/capacity`
+- `POST /v1/demandB`
 
 ### Entity updates
 
-Allows different kind of updates to be prepared and applied to an entity. For example, a `capacity` must be submitted via a `creation` action.
+Allows different kind of updates to be prepared and applied to an entity. For example, a `demandB` must be submitted via a `creation` action.
 
-- `POST /v1/capacity/{capacityId}/creation` - create a creation `creation` transaction and send it to the blockchain.
-- `GET /v1/capacity/{capacityId}/creation` - list a capacity's `creation` transactions and their status.
-- `GET /v1/capacity/{capacityId}/creation/{creationId}` - get the details of a capacity `creation` transaction.
+- `POST /v1/demandB/{demandBId}/creation` - create a creation `creation` transaction and send it to the blockchain.
+- `GET /v1/demandB/{demandBId}/creation` - list a demandB's `creation` transactions and their status.
+- `GET /v1/demandB/{demandBId}/creation/{creationId}` - get the details of a demandB `creation` transaction.
 
 ### Attachment API
 
@@ -149,6 +151,8 @@ Run `docker compose up -d` to start the required dependencies to demo `dscp-matc
 
 The demo involves three personas: `MemberA`, `MemberB` and an `Optimiser`. For the purposes of the demo, a single set of `dscp` services will be used and all three personas will use the same development node address. In the real world each persona would be running their own set of `dscp` services and each use a unique node address.
 
+Note the meaning in the API of `demandA` and `demandB` are abstract and use-case dependent. For example in the case of a logistics matching service where one provider has an `order` to be moved and another has some `capacity` to move orders one might represent an  `order` as a `demandA` and a `capacity` as a `demandB`.
+
 Before transacting, an alias (a human-friendly name) must be set for the pre-configured dev node address `5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY` using the `dscp-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. Either use the [identity service swagger](http://localhost:3002/v1/swagger/#/members/put_members__address_) or run:
 
 ```
@@ -163,12 +167,12 @@ curl -X 'PUT' \
 
 Also process flows must be added to the chain with `npm run flows`. Process flows validate transactions that affect the chain.
 
-1. `MemberA` wants to create a `capacity`, which includes a parameters file to the parameters of the available capacity they have. The parameters file will be used by `Optimiser` when matching `capacity` with a `order`. First `MemberA` must upload this parameters file to their local database with `POST /attachment`.
-2. They use the returned `id` for `parametersAttachmentId` in the request body to `POST /capacity`. At this point, the `capacity` only exists in the `MemberA` database.
-3. When `MemberA` is ready for the `capacity` to exist on chain they `POST capacity/{capacityId}/creation`. `MemberB` and `Optimiser` can now see the `capacity` if their node is running and connected.
-4. `MemberB` creates an `order` in a similar manner to creating a `capacity`. It includes a parameters file to describe the parameters of their order.
-5. When `MemberB` is ready for the `order` to exist on chain they `POST order/{id}/creation`.
-6. `Optimiser` can now create a `match2` that matches a single `capacity` with a single `order`. They supply these as an `id` for `demandA` and `demandB`. It doesn't matter which is `demandA` and which is `demandB`.
+1. `MemberA` wants to create a `demandA`, which includes a parameters file to the parameters of the available demandA they have. The parameters file will be used by `Optimiser` when matching `demandA` with a `demandB`. First `MemberA` must upload this parameters file to their local database with `POST /attachment`.
+2. They use the returned `id` for `parametersAttachmentId` in the request body to `POST /demandA`. At this point, the `demandA` only exists in the `MemberA` database.
+3. When `MemberA` is ready for the `demandA` to exist on chain they `POST demandA/{demandAId}/creation`. `MemberB` and `Optimiser` can now see the `demandA` if their node is running and connected.
+4. `MemberB` creates an `demandB` in a similar manner to creating a `demandA`. It includes a parameters file to describe the parameters of their demandB.
+5. When `MemberB` is ready for the `demandB` to exist on chain they `POST demandB/{id}/creation`.
+6. `Optimiser` can now create a `match2` that matches a single `demandA` with a single `demandB`. They supply these as an `id` for `demandA` and `demandB`
 7. When `Optimiser` is ready for the `match2` to exist on chain they `POST match2/{id}/propose`.
 
 //TODO the accept steps

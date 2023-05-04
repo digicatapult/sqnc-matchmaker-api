@@ -4,14 +4,14 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server'
 import { post, get } from '../../helper/routeHelper'
-import { seed, parametersAttachmentId, seededOrderId, seededOrderCreationId, cleanup } from '../../seeds'
+import { seed, parametersAttachmentId, seededDemandAId, seededDemandACreationId, cleanup } from '../../seeds'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
 import Database from '../../../src/lib/db'
 
 const db = new Database()
 
-describe('order', () => {
+describe('demandA', () => {
   let res: any
   let app: Express
 
@@ -23,28 +23,28 @@ describe('order', () => {
 
   beforeEach(async () => await seed())
 
-  describe('when requested order or orders do not exist', () => {
+  describe('when requested demandA or demandAs do not exist', () => {
     beforeEach(async () => await cleanup())
 
     it('returns 200 and an empty array when retrieving all', async () => {
-      const { status, body } = await get(app, '/v1/order')
+      const { status, body } = await get(app, '/v1/demandA')
 
       expect(status).to.equal(200)
       expect(body).to.be.an('array').that.is.empty
     })
 
     it('returns 404 if can not be found by ID', async () => {
-      const { status, body } = await get(app, '/v1/order/807d1184-9670-4fb0-bb33-28582e5467b2')
+      const { status, body } = await get(app, '/v1/demandA/807d1184-9670-4fb0-bb33-28582e5467b2')
 
       expect(status).to.equal(404)
-      expect(body).to.equal('order not found')
+      expect(body).to.equal('demandA not found')
     })
     // TODO - assert for max number of records
   })
 
   describe('if attachment can not be found', () => {
     beforeEach(async () => {
-      res = await post(app, '/v1/order', { parametersAttachmentId: 'a789ad47-91c3-446e-90f9-a7c9b233ea88' })
+      res = await post(app, '/v1/demandA', { parametersAttachmentId: 'a789ad47-91c3-446e-90f9-a7c9b233ea88' })
     })
 
     it('returns 404 along with the message', () => {
@@ -55,9 +55,9 @@ describe('order', () => {
     })
   })
 
-  describe('if invalid order uuid', () => {
+  describe('if invalid demandA uuid', () => {
     beforeEach(async () => {
-      res = await get(app, '/v1/order/789ad47')
+      res = await get(app, '/v1/demandA/789ad47')
     })
 
     it('returns 422 along with validation error', async () => {
@@ -66,7 +66,7 @@ describe('order', () => {
       expect(status).to.equal(422)
       expect(body).to.deep.contain({
         fields: {
-          orderId: {
+          demandAId: {
             message:
               "Not match in '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}'",
             value: '789ad47',
@@ -80,7 +80,7 @@ describe('order', () => {
 
   describe('if invalid attachment uuid', () => {
     beforeEach(async () => {
-      res = await post(app, '/v1/order', { parametersAttachmentId: 'a789ad47' })
+      res = await post(app, '/v1/demandA', { parametersAttachmentId: 'a789ad47' })
     })
 
     it('returns 422 along with validation error', () => {
@@ -101,12 +101,12 @@ describe('order', () => {
     })
   })
 
-  describe('if order state is not created while posting new creation', () => {
+  describe('if demandA state is not created while posting new creation', () => {
     beforeEach(async () => {
       await db.insertDemand({
         id: 'b21f865e-f4e9-4ae2-8944-de691e9eb4d0',
         owner: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
-        subtype: 'order',
+        subtype: 'demand_a',
         state: 'allocated',
         parameters_attachment_id: parametersAttachmentId,
         latest_token_id: 99,
@@ -115,15 +115,15 @@ describe('order', () => {
     })
 
     it('returns 400 along with bad request message', async () => {
-      const { status, body } = await post(app, '/v1/order/b21f865e-f4e9-4ae2-8944-de691e9eb4d0/creation', {})
+      const { status, body } = await post(app, '/v1/demandA/b21f865e-f4e9-4ae2-8944-de691e9eb4d0/creation', {})
 
       expect(status).to.equal(400)
       expect(body).to.equal('Demand must have state: created')
     })
   })
 
-  it('retrieves order by id', async () => {
-    const { status, body } = await post(app, '/v1/order', { parametersAttachmentId })
+  it('retrieves demandA by id', async () => {
+    const { status, body } = await post(app, '/v1/demandA', { parametersAttachmentId })
 
     expect(status).to.equal(201)
     expect(body).to.have.property('id')
@@ -134,8 +134,8 @@ describe('order', () => {
     })
   })
 
-  it('should create an order demand', async () => {
-    const response = await post(app, '/v1/order', { parametersAttachmentId })
+  it('should create an demandA demand', async () => {
+    const response = await post(app, '/v1/demandA', { parametersAttachmentId })
     const { id: responseId, ...responseRest } = response.body
 
     expect(response.status).to.equal(201)
@@ -149,26 +149,29 @@ describe('order', () => {
     })
   })
 
-  it('retrieves order creation', async () => {
-    const { status, body: creation } = await get(app, `/v1/order/${seededOrderId}/creation/${seededOrderCreationId}`)
+  it('retrieves demandA creation', async () => {
+    const { status, body: creation } = await get(
+      app,
+      `/v1/demandA/${seededDemandAId}/creation/${seededDemandACreationId}`
+    )
 
     expect(status).to.equal(200)
     expect(creation).to.include.keys(['id', 'localId', 'submittedAt', 'updatedAt'])
     expect(creation).to.contain({
       state: 'submitted',
-      apiType: 'order',
+      apiType: 'demand_a',
       transactionType: 'creation',
     })
   })
 
-  it('retrieves all order creations', async () => {
-    const { status, body } = await get(app, `/v1/order/${seededOrderId}/creation`)
+  it('retrieves all demandA creations', async () => {
+    const { status, body } = await get(app, `/v1/demandA/${seededDemandAId}/creation`)
 
     expect(status).to.equal(200)
     expect(body[0]).to.deep.contain({
       state: 'submitted',
-      localId: seededOrderId,
-      apiType: 'order',
+      localId: seededDemandAId,
+      apiType: 'demand_a',
       transactionType: 'creation',
     })
   })

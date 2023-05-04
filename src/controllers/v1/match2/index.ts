@@ -46,7 +46,7 @@ export class Match2Controller extends Controller {
   }
 
   /**
-   * A Member proposes a new match2 for an order and a capacity by referencing each demand.
+   * A Member proposes a new match2 for a demandA and a demandB by referencing each demand.
    * @summary Propose a new match2
    */
   @Post()
@@ -57,10 +57,10 @@ export class Match2Controller extends Controller {
     @Body() { demandA: demandAId, demandB: demandBId }: Match2Request
   ): Promise<Match2Response> {
     const [demandA] = await this.db.getDemand(demandAId)
-    validatePreLocal(demandA, 'order', 'DemandA')
+    validatePreLocal(demandA, 'demand_a', 'DemandA')
 
     const [demandB] = await this.db.getDemand(demandBId)
-    validatePreLocal(demandB, 'capacity', 'DemandB')
+    validatePreLocal(demandB, 'demand_b', 'DemandB')
 
     const { address: selfAddress } = await getMemberBySelf()
 
@@ -116,10 +116,10 @@ export class Match2Controller extends Controller {
     if (match2.state !== 'proposed') throw new BadRequest(`Match2 must have state: ${'proposed'}`)
 
     const [demandA] = await this.db.getDemand(match2.demandA)
-    validatePreOnChain(demandA, 'order', 'DemandA')
+    validatePreOnChain(demandA, 'demand_a', 'DemandA')
 
     const [demandB] = await this.db.getDemand(match2.demandB)
-    validatePreOnChain(demandB, 'capacity', 'DemandB')
+    validatePreOnChain(demandB, 'demand_b', 'DemandB')
 
     const extrinsic = await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
 
@@ -187,10 +187,10 @@ export class Match2Controller extends Controller {
     if (state === 'acceptedFinal') throw new BadRequest(`Already ${'acceptedFinal'}`)
 
     const [demandA] = await this.db.getDemand(match2.demandA)
-    validatePreOnChain(demandA, 'order', 'DemandA')
+    validatePreOnChain(demandA, 'demand_a', 'DemandA')
 
     const [demandB] = await this.db.getDemand(match2.demandB)
-    validatePreOnChain(demandB, 'capacity', 'DemandB')
+    validatePreOnChain(demandB, 'demand_b', 'DemandB')
 
     const { address: selfAddress } = await getMemberBySelf()
     const ownsDemandA = demandA.owner === selfAddress

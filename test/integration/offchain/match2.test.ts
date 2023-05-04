@@ -7,16 +7,16 @@ import { post, get } from '../../helper/routeHelper'
 import {
   seed,
   cleanup,
-  seededCapacityId,
-  seededOrderId,
+  seededDemandBId,
+  seededDemandAId,
   nonExistentId,
   seededMatch2Id,
-  seededOrderMissingTokenId,
-  seededCapacityMissingTokenId,
+  seededDemandAMissingTokenId,
+  seededDemandBMissingTokenId,
   seededProposalTransactionId,
   exampleDate,
-  seededCapacityAlreadyAllocated,
-  seededOrderAlreadyAllocated,
+  seededDemandBAlreadyAllocated,
+  seededDemandAAlreadyAllocated,
   seededMatch2WithAllocatedDemands,
   seededMatch2AcceptedA,
   seededMatch2AcceptedFinal,
@@ -24,7 +24,7 @@ import {
   seededMatch2NotAcceptableA,
   seededMatch2NotAcceptableBoth,
   seededAcceptTransactionId,
-  seededOrderWithTokenId,
+  seededDemandAWithTokenId,
 } from '../../seeds'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
@@ -48,7 +48,7 @@ describe('match2', () => {
 
   describe('happy path', () => {
     it('should create a match2', async () => {
-      const response = await post(app, '/v1/match2', { demandA: seededOrderId, demandB: seededCapacityId })
+      const response = await post(app, '/v1/match2', { demandA: seededDemandAId, demandB: seededDemandBId })
       expect(response.status).to.equal(201)
 
       const { id: responseId, ...responseRest } = response.body
@@ -60,8 +60,8 @@ describe('match2', () => {
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
-        demandA: seededOrderId,
-        demandB: seededCapacityId,
+        demandA: seededDemandAId,
+        demandB: seededDemandBId,
       })
     })
 
@@ -74,8 +74,8 @@ describe('match2', () => {
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
-        demandA: seededOrderId,
-        demandB: seededCapacityId,
+        demandA: seededDemandAId,
+        demandB: seededDemandBId,
       })
     })
 
@@ -89,8 +89,8 @@ describe('match2', () => {
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
-        demandA: seededOrderId,
-        demandB: seededCapacityId,
+        demandA: seededDemandAId,
+        demandB: seededDemandBId,
       })
     })
 
@@ -141,33 +141,33 @@ describe('match2', () => {
 
   describe('sad path', () => {
     it('non-existent demandA - 400', async () => {
-      const response = await post(app, '/v1/match2', { demandA: nonExistentId, demandB: seededCapacityId })
+      const response = await post(app, '/v1/match2', { demandA: nonExistentId, demandB: seededDemandBId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('DemandA not found')
     })
 
     it('non-existent demandB - 400', async () => {
-      const response = await post(app, '/v1/match2', { demandA: seededOrderId, demandB: nonExistentId })
+      const response = await post(app, '/v1/match2', { demandA: seededDemandAId, demandB: nonExistentId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('DemandB not found')
     })
 
-    it('demandA not an order - 400', async () => {
-      const response = await post(app, '/v1/match2', { demandA: seededCapacityId, demandB: seededCapacityId })
+    it('demandA not an demandA - 400', async () => {
+      const response = await post(app, '/v1/match2', { demandA: seededDemandBId, demandB: seededDemandBId })
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('DemandA must be order')
+      expect(response.body).to.equal('DemandA must be demand_a')
     })
 
-    it('demandB not a capacity - 400', async () => {
-      const response = await post(app, '/v1/match2', { demandA: seededOrderId, demandB: seededOrderId })
+    it('demandB not a demandB - 400', async () => {
+      const response = await post(app, '/v1/match2', { demandA: seededDemandAId, demandB: seededDemandAId })
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('DemandB must be capacity')
+      expect(response.body).to.equal('DemandB must be demand_b')
     })
 
     it('demandA allocated - 400', async () => {
       const response = await post(app, '/v1/match2', {
-        demandA: seededOrderAlreadyAllocated,
-        demandB: seededCapacityId,
+        demandA: seededDemandAAlreadyAllocated,
+        demandB: seededDemandBId,
       })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('DemandA is already allocated')
@@ -175,15 +175,15 @@ describe('match2', () => {
 
     it('demandB allocated - 400', async () => {
       const response = await post(app, '/v1/match2', {
-        demandA: seededOrderId,
-        demandB: seededCapacityAlreadyAllocated,
+        demandA: seededDemandAId,
+        demandB: seededDemandBAlreadyAllocated,
       })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('DemandB is already allocated')
     })
 
     it('invalid demand uuid - 422', async () => {
-      const response = await post(app, '/v1/match2', { demandA: 'invalid', demandB: seededCapacityId })
+      const response = await post(app, '/v1/match2', { demandA: 'invalid', demandB: seededDemandBId })
       expect(response.status).to.equal(422)
       expect(response.body.message).to.equal('Validation failed')
     })
@@ -201,8 +201,8 @@ describe('match2', () => {
 
     it('demandA missing token ID - 400', async () => {
       const createMatch2 = await post(app, '/v1/match2', {
-        demandA: seededOrderMissingTokenId,
-        demandB: seededCapacityId,
+        demandA: seededDemandAMissingTokenId,
+        demandB: seededDemandBId,
       })
       expect(createMatch2.status).to.equal(201)
 
@@ -213,8 +213,8 @@ describe('match2', () => {
 
     it('demandB missing token ID - 400', async () => {
       const createMatch2 = await post(app, '/v1/match2', {
-        demandA: seededOrderWithTokenId,
-        demandB: seededCapacityMissingTokenId,
+        demandA: seededDemandAWithTokenId,
+        demandB: seededDemandBMissingTokenId,
       })
       expect(createMatch2.status).to.equal(201)
 
