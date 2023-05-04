@@ -147,6 +147,8 @@ The last top level entity `attachment`, which accepts a `multipart/form-data` pa
 
 ## Demo scenario
 
+### Services
+
 Run `docker compose -f docker-compose-3-persona.yml up -d` to start the required dependencies to fully demo `dscp-matchmaker-api`.
 
 The demo involves three personas: `MemberA`, `MemberB` and an `Optimiser`. Each persona has a set of `dscp` services:
@@ -165,9 +167,11 @@ Container names are prefixed with the persona e.g. `member-a-node`. Services are
 "Optimiser": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", // charlie
 ```
 
-Before transacting, aliases (a human-friendly names) can be set for the pre-configured node addresses using each persona's `dscp-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. For example, to set the self address for `MemberA`, you can either use the [identity service swagger](http://localhost:8001/v1/swagger/#/members/put_members__address_) or run:
+The docker compose automatically adds process flows using `MemberA`. Process flows validate transactions that affect the chain.
 
-Before transacting, an alias (a human-friendly name) must be set for the pre-configured dev node address `5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY` using the `dscp-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. Either use the [identity service swagger](http://localhost:3002/v1/swagger/#/members/put_members__address_) or run:
+### Identities
+
+Before transacting, aliases (a human-friendly names) can be set for the pre-configured node addresses using each persona's `dscp-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. For example, to set the self address for `MemberA`, you can either use the [identity service swagger](http://localhost:8001/v1/swagger/#/members/put_members__address_) or run:
 
 ```
 curl -X 'PUT' \
@@ -185,15 +189,7 @@ Each persona's identity service:
 - [MemberB](http://localhost:8011/v1/swagger/)
 - [Optimiser](http://localhost:8021/v1/swagger/)
 
-1. `MemberA` wants to create a `demandA`, which includes a parameters file to the parameters of the available demandA they have. The parameters file will be used by `Optimiser` when matching `demandA` with a `demandB`. First `MemberA` must upload this parameters file to their local database with `POST /attachment`.
-2. They use the returned `id` for `parametersAttachmentId` in the request body to `POST /demandA`. At this point, the `demandA` only exists in the `MemberA` database.
-3. When `MemberA` is ready for the `demandA` to exist on chain they `POST demandA/{demandAId}/creation`. `MemberB` and `Optimiser` can now see the `demandA` if their node is running and connected.
-4. `MemberB` creates an `demandB` in a similar manner to creating a `demandA`. It includes a parameters file to describe the parameters of their demandB.
-5. When `MemberB` is ready for the `demandB` to exist on chain they `POST demandB/{id}/creation`.
-6. `Optimiser` can now create a `match2` that matches a single `demandA` with a single `demandB`. They supply these as an `id` for `demandA` and `demandB`
-7. When `Optimiser` is ready for the `match2` to exist on chain they `POST match2/{id}/propose`.
-
-The docker compose automatically adds process flows using `MemberA`. Process flows validate transactions that affect the chain.
+### Using the matchmaker API
 
 The environment is now ready to run through a demo scenario using each persona's matchmaker APIs:
 

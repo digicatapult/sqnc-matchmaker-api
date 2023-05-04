@@ -10,18 +10,16 @@ networks:
   member-a:
     ipam:
       driver: default
-  
   member-b:
     ipam:
       driver: default
-
   optimiser:
     ipam:
       driver: default
 
 
 services:
-# --------------------------------------------------------- member-a
+# -------------------------------------------------------------------- member-a
   member-a-postgres-matchmaker-api:
     image: postgres:15.2-alpine
     container_name: member-a-postgres-matchmaker-api

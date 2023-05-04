@@ -16,16 +16,17 @@ RUN npm run build
 # service 
 FROM node:lts-alpine as service
 
-RUN apk add --update coreutils
-
 WORKDIR /dscp-matchmaker-api
 
+RUN apk add --update coreutils
 RUN npm -g install npm@9.x.x
 
 COPY package*.json ./
 COPY processFlows.json ./
+
 RUN npm ci --production
 RUN npm install @digicatapult/dscp-process-management@latest
+
 COPY --from=builder /dscp-matchmaker-api/build .
 
 EXPOSE 80
