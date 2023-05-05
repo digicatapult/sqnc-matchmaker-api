@@ -122,9 +122,9 @@ describe('eventProcessor', function () {
           {
             id: 5,
             roles: new Map([
-              ['Optimiser', 'o'],
-              ['MemberA', 'a'],
-              ['MemberB', 'b'],
+              ['optimiser', 'o'],
+              ['membera', 'a'],
+              ['memberb', 'b'],
             ]),
             metadata: new Map([
               ['demandA', 'da'],
@@ -150,8 +150,8 @@ describe('eventProcessor', function () {
         member_a: 'a',
         member_b: 'b',
         state: 'proposed',
-        demand_a_id: 'da',
-        demand_b_id: 'db',
+        demand_a_id: 'id_1',
+        demand_b_id: 'id_2',
         latest_token_id: 5,
         original_token_id: 5,
       })
