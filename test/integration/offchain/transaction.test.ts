@@ -129,7 +129,7 @@ describe('transaction', () => {
   })
 
   it('should filter transactions based on updated date', async () => {
-    const { status, body } = await get(app, `/v1/transaction?updatedSince=2023-01-01T00:00:00.000Z`)
+    const { status, body } = await get(app, `/v1/transaction?updated_since=2023-01-01T00:00:00.000Z`)
     expect(status).to.equal(200)
     expect(body).to.deep.equal([])
   })
@@ -213,7 +213,7 @@ describe('transaction', () => {
   })
 
   it('returns 422 with invalid updatedSince', async () => {
-    const { status, body } = await get(app, `/v1/transaction?updatedSince=foo`)
+    const { status, body } = await get(app, `/v1/transaction?updated_since=foo`)
     expect(status).to.equal(422)
     expect(body).to.contain({
       name: 'ValidateError',

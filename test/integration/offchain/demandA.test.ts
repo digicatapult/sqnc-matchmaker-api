@@ -52,7 +52,7 @@ describe('demandA', () => {
 
   describe('if updatedSince is not a date', () => {
     it('returns 422', async () => {
-      const { status, body } = await get(app, `/v1/demandA?updatedSince=foo`)
+      const { status, body } = await get(app, `/v1/demandA?updated_since=foo`)
       expect(status).to.equal(422)
       expect(body).to.contain({
         name: 'ValidateError',
@@ -77,7 +77,7 @@ describe('demandA', () => {
     })
 
     it('filters based on updated date', async () => {
-      const { status, body } = await get(app, `/v1/demandA?updatedSince=2023-01-01T00:00:00.000Z`)
+      const { status, body } = await get(app, `/v1/demandA?updated_since=2023-01-01T00:00:00.000Z`)
       expect(status).to.equal(200)
       expect(body).to.deep.equal([])
     })
@@ -208,14 +208,14 @@ describe('demandA', () => {
   it('filters demandA creations based on updated date', async () => {
     const { status, body } = await get(
       app,
-      `/v1/demandA/${seededDemandAId}/creation?updatedSince=2023-01-01T00:00:00.000Z`
+      `/v1/demandA/${seededDemandAId}/creation?updated_since=2023-01-01T00:00:00.000Z`
     )
     expect(status).to.equal(200)
     expect(body).to.deep.equal([])
   })
 
   it('demandA creations with invalid updatedSince returns 422', async () => {
-    const { status, body } = await get(app, `/v1/demandA/${seededDemandAId}/creation?updatedSince=foo`)
+    const { status, body } = await get(app, `/v1/demandA/${seededDemandAId}/creation?updated_since=foo`)
     expect(status).to.equal(422)
     expect(body).to.contain({
       name: 'ValidateError',

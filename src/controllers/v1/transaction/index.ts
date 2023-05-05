@@ -31,14 +31,14 @@ export class TransactionController extends Controller {
   public async getAllTransactions(
     @Query() apiType?: TransactionApiType,
     @Query() status?: TransactionState,
-    @Query() updatedSince?: DATE
+    @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
     const query: { state?: TransactionState; apiType?: TransactionApiType; updatedSince?: Date } = {
       state: status,
       apiType,
     }
-    if (updatedSince) {
-      query.updatedSince = parseDateParam(updatedSince)
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
     }
 
     return await this.db.getTransactions(query)

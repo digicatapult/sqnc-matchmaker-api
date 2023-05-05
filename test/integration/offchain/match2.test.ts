@@ -100,7 +100,7 @@ describe('match2', () => {
     })
 
     it('should filter based on updated date', async () => {
-      const { status, body } = await get(app, `/v1/match2?updatedSince=2023-01-01T00:00:00.000Z`)
+      const { status, body } = await get(app, `/v1/match2?updated_since=2023-01-01T00:00:00.000Z`)
       expect(status).to.equal(200)
       expect(body).to.deep.equal([])
     })
@@ -123,7 +123,7 @@ describe('match2', () => {
     it('should filter accept transactions based on updated date', async () => {
       const { status, body } = await get(
         app,
-        `/v1/match2/${seededMatch2Id}/proposal?updatedSince=2023-01-01T00:00:00.000Z`
+        `/v1/match2/${seededMatch2Id}/proposal?updated_since=2023-01-01T00:00:00.000Z`
       )
       expect(status).to.equal(200)
       expect(body).to.deep.equal([])
@@ -161,7 +161,7 @@ describe('match2', () => {
     it('should filter accept transactions based on updated date', async () => {
       const { status, body } = await get(
         app,
-        `/v1/match2/${seededMatch2Id}/accept?updatedSince=2023-01-01T00:00:00.000Z`
+        `/v1/match2/${seededMatch2Id}/accept?updated_since=2023-01-01T00:00:00.000Z`
       )
       expect(status).to.equal(200)
       expect(body).to.deep.equal([])
@@ -170,7 +170,7 @@ describe('match2', () => {
 
   describe('sad path', () => {
     it('if updatedSince is not a date returns 422', async () => {
-      const { status, body } = await get(app, `/v1/match2?updatedSince=foo`)
+      const { status, body } = await get(app, `/v1/match2?updated_since=foo`)
       expect(status).to.equal(422)
       expect(body).to.contain({
         name: 'ValidateError',
@@ -283,7 +283,7 @@ describe('match2', () => {
     })
 
     it('list proposals with invalid updatedSince - 422', async () => {
-      const { status, body } = await get(app, `/v1/match2/${seededMatch2AcceptedA}/proposal?updatedSince=foo`)
+      const { status, body } = await get(app, `/v1/match2/${seededMatch2AcceptedA}/proposal?updated_since=foo`)
       expect(status).to.equal(422)
       expect(body).to.contain({
         name: 'ValidateError',
@@ -328,7 +328,7 @@ describe('match2', () => {
     })
 
     it('list accepts with invalid updatedSince - 422', async () => {
-      const { status, body } = await get(app, `/v1/match2/${seededMatch2AcceptedA}/accept?updatedSince=foo`)
+      const { status, body } = await get(app, `/v1/match2/${seededMatch2AcceptedA}/accept?updated_since=foo`)
       expect(status).to.equal(422)
       expect(body).to.contain({
         name: 'ValidateError',

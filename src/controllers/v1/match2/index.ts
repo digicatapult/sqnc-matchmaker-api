@@ -85,10 +85,10 @@ export class Match2Controller extends Controller {
    * @summary List match2s
    */
   @Get('/')
-  public async getAll(@Query() updatedSince?: DATE): Promise<Match2Response[]> {
+  public async getAll(@Query() updated_since?: DATE): Promise<Match2Response[]> {
     const query: { updatedSince?: Date } = {}
-    if (updatedSince) {
-      query.updatedSince = parseDateParam(updatedSince)
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
     }
 
     const match2s = await this.db.getMatch2s(query)
@@ -174,15 +174,15 @@ export class Match2Controller extends Controller {
   @Get('{match2Id}/proposal')
   public async getMatch2Proposals(
     @Path() match2Id: UUID,
-    @Query() updatedSince?: DATE
+    @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
     const query: {
       localId: UUID
       transactionType: TransactionType
       updatedSince?: Date
     } = { localId: match2Id, transactionType: 'proposal' }
-    if (updatedSince) {
-      query.updatedSince = parseDateParam(updatedSince)
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
     }
 
     const [match2] = await this.db.getMatch2(match2Id)
@@ -293,14 +293,14 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
   @Get('{match2Id}/accept')
-  public async getMatch2Accepts(@Path() match2Id: UUID, @Query() updatedSince?: DATE): Promise<TransactionResponse[]> {
+  public async getMatch2Accepts(@Path() match2Id: UUID, @Query() updated_since?: DATE): Promise<TransactionResponse[]> {
     const query: {
       localId: UUID
       transactionType: TransactionType
       updatedSince?: Date
     } = { localId: match2Id, transactionType: 'accept' }
-    if (updatedSince) {
-      query.updatedSince = parseDateParam(updatedSince)
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
     }
 
     const [match2] = await this.db.getMatch2(match2Id)

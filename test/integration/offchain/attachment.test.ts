@@ -48,7 +48,7 @@ describe('attachment', () => {
     })
 
     it('returns 422 with invalid updatedSince date', async () => {
-      const { status, body } = await get(app, `/v1/attachment?updatedSince=foo`)
+      const { status, body } = await get(app, `/v1/attachment?updated_since=foo`)
       expect(status).to.equal(422)
       expect(body).to.contain({
         name: 'ValidateError',
@@ -74,7 +74,7 @@ describe('attachment', () => {
     })
 
     it('filters attachments based on created date', async () => {
-      const { status, body } = await get(app, `/v1/attachment?updatedSince=2023-01-01T00:00:00.000Z`)
+      const { status, body } = await get(app, `/v1/attachment?updated_since=2023-01-01T00:00:00.000Z`)
       expect(status).to.equal(200)
       expect(body).to.deep.equal([])
     })

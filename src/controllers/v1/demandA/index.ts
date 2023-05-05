@@ -51,10 +51,10 @@ export class demandA extends Controller {
    * @summary List demandAs
    */
   @Get('/')
-  public async getAll(@Query() updatedSince?: DATE): Promise<DemandResponse[]> {
+  public async getAll(@Query() updated_since?: DATE): Promise<DemandResponse[]> {
     const query: { subtype: DemandSubtype; updatedSince?: Date } = { subtype: 'demand_a' }
-    if (updatedSince) {
-      query.updatedSince = parseDateParam(updatedSince)
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
     }
 
     const demandAs = await this.db.getDemands(query)
@@ -68,14 +68,14 @@ export class demandA extends Controller {
    * @param demandAId The demandA's identifier
    */
   @Get('{demandAId}/creation')
-  public async getAllTransactions(@Path() demandAId: UUID, @Query() updatedSince?: DATE): Promise<DemandResponse[]> {
+  public async getAllTransactions(@Path() demandAId: UUID, @Query() updated_since?: DATE): Promise<DemandResponse[]> {
     const query: {
       localId: UUID
       transactionType: TransactionType
       updatedSince?: Date
     } = { localId: demandAId, transactionType: 'creation' }
-    if (updatedSince) {
-      query.updatedSince = parseDateParam(updatedSince)
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
     }
 
     const [demandA] = await this.db.getDemand(demandAId)

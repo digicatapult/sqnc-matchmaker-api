@@ -80,7 +80,7 @@ describe('demandB', () => {
     })
 
     it('should filter based on updated date', async () => {
-      const { status, body } = await get(app, `/v1/demandB?updatedSince=2023-01-01T00:00:00.000Z`)
+      const { status, body } = await get(app, `/v1/demandB?updated_since=2023-01-01T00:00:00.000Z`)
       expect(status).to.equal(200)
       expect(body).to.deep.equal([])
     })
@@ -127,7 +127,7 @@ describe('demandB', () => {
     it('should filter demandB creations based on updated date', async () => {
       const { status, body } = await get(
         app,
-        `/v1/demandB/${seededDemandBId}/creation?updatedSince=2023-01-01T00:00:00.000Z`
+        `/v1/demandB/${seededDemandBId}/creation?updated_since=2023-01-01T00:00:00.000Z`
       )
       expect(status).to.equal(200)
       expect(body).to.deep.equal([])
@@ -136,7 +136,7 @@ describe('demandB', () => {
 
   describe('sad path', () => {
     it('if updatedSince is not a date returns 422', async () => {
-      const { status, body } = await get(app, `/v1/demandB?updatedSince=foo`)
+      const { status, body } = await get(app, `/v1/demandB?updated_since=foo`)
       expect(status).to.equal(422)
       expect(body).to.contain({
         name: 'ValidateError',
@@ -167,7 +167,7 @@ describe('demandB', () => {
     })
 
     it('demandB creations with invalid updatedSince - 422', async () => {
-      const { status, body } = await get(app, `/v1/demandB/${seededDemandBId}/creation?updatedSince=foo`)
+      const { status, body } = await get(app, `/v1/demandB/${seededDemandBId}/creation?updated_since=foo`)
       expect(status).to.equal(422)
       expect(body).to.contain({
         name: 'ValidateError',

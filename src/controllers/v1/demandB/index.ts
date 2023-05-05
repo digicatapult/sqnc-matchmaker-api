@@ -85,10 +85,10 @@ export class DemandBController extends Controller {
    * @summary List demandBs
    */
   @Get('/')
-  public async getAll(@Query() updatedSince?: DATE): Promise<DemandResponse[]> {
+  public async getAll(@Query() updated_since?: DATE): Promise<DemandResponse[]> {
     const query: { subtype: DemandSubtype; updatedSince?: Date } = { subtype: 'demand_b' }
-    if (updatedSince) {
-      query.updatedSince = parseDateParam(updatedSince)
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
     }
 
     const demandBs = await this.db.getDemands(query)
@@ -163,15 +163,15 @@ export class DemandBController extends Controller {
   @Get('{demandBId}/creation/')
   public async getTransactionsFromDemandAB(
     @Path() demandBId: UUID,
-    @Query() updatedSince?: DATE
+    @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
     const query: {
       localId: UUID
       transactionType: TransactionType
       updatedSince?: Date
     } = { localId: demandBId, transactionType: 'creation' }
-    if (updatedSince) {
-      query.updatedSince = parseDateParam(updatedSince)
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
     }
 
     const [demandAB] = await this.db.getDemand(demandBId)

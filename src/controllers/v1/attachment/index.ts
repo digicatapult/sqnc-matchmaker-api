@@ -92,10 +92,10 @@ export class attachment extends Controller {
 
   @Get('/')
   @SuccessResponse(200, 'returns all attachment')
-  public async get(@Query() updatedSince?: DATE): Promise<Attachment[]> {
+  public async get(@Query() updated_since?: DATE): Promise<Attachment[]> {
     const query: { updatedSince?: Date } = {}
-    if (updatedSince) {
-      query.updatedSince = parseDateParam(updatedSince)
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
     }
 
     this.log.debug('retrieving all attachment')
