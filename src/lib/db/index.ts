@@ -16,7 +16,7 @@ export type Models<V> = {
   [key in TABLE]: V
 }
 
-export type Query = Knex.QueryBuilder
+export type QueryBuilder = Knex.QueryBuilder
 
 export type ProcessedBlock = { hash: HEX; parent: HEX; height: number }
 export type ProcessedBlockTrimmed = { hash: string; parent: string; height: number }
@@ -29,7 +29,33 @@ const demandColumns = [
   'parameters_attachment_id AS parametersAttachmentId',
   'latest_token_id AS latestTokenId',
   'original_token_id AS originalTokenId',
+  'created_at AS createdAt',
+  'updated_at AS updatedAt',
 ]
+
+export interface DemandRow {
+  id: string
+  owner: string
+  state: DemandState
+  subtype: DemandSubtype
+  parametersAttachmentId: UUID
+  latestTokenId: number | null
+  originalTokenId: number | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface DemandWithAttachmentRow {
+  owner: string
+  parametersAttachmentId: UUID
+  state: DemandState
+  filename: string | 'json' | null
+  size: number | null
+  subtype: DemandSubtype
+  ipfs_hash: string
+  latestTokenId: number
+  originalTokenId: number
+}
 
 const match2Columns = [
   'id',
@@ -41,7 +67,23 @@ const match2Columns = [
   'demand_b_id AS demandB',
   'latest_token_id AS latestTokenId',
   'original_token_id AS originalTokenId',
+  'created_at AS createdAt',
+  'updated_at AS updatedAt',
 ]
+
+export interface Match2Row {
+  id: UUID
+  state: Match2State
+  optimiser: string
+  memberA: string
+  memberB: string
+  demandA: UUID
+  demandB: UUID
+  latestTokenId: number | null
+  originalTokenId: number | null
+  createdAt: Date
+  updatedAt: Date
+}
 
 const transactionColumns = [
   'id',
@@ -84,7 +126,7 @@ function restore0x(input: ProcessedBlockTrimmed): ProcessedBlock {
 export default class Database {
   private client: Knex
   private log: Logger
-  public db: () => Models<() => Query>
+  public db: () => Models<() => QueryBuilder>
 
   constructor() {
     this.log = logger
@@ -95,8 +137,14 @@ export default class Database {
         [name]: () => this.client(name),
         ...acc,
       }
-    }, {}) as Models<() => Query>
+    }, {}) as Models<() => QueryBuilder>
     this.db = () => models
+  }
+
+  getAttachments = async ({ updatedSince }: { updatedSince?: Date } = {}) => {
+    const query = this.db().attachment()
+    // note the use of created_at here since attachments are immutable
+    return updatedSince ? query.where('created_at', '>', updatedSince) : query
   }
 
   getAttachment = async (parametersAttachmentId: string) => {
@@ -126,15 +174,25 @@ export default class Database {
       .returning('*')
   }
 
-  getDemands = async (subtype: DemandSubtype) => {
-    return this.db().demand().select(demandColumns).where({ subtype })
+  getDemands = async ({
+    subtype,
+    updatedSince,
+  }: {
+    subtype: DemandSubtype
+    updatedSince?: Date
+  }): Promise<DemandRow[]> => {
+    const query = this.db().demand().select(demandColumns).where({ subtype })
+    if (updatedSince) {
+      return query.where('updated_at', '>', updatedSince)
+    }
+    return query
   }
 
-  getDemand = async (id: UUID) => {
+  getDemand = async (id: UUID): Promise<[DemandRow] | []> => {
     return this.db().demand().select(demandColumns).where({ id })
   }
 
-  getDemandWithAttachment = async (id: UUID, subtype: DemandSubtype) => {
+  getDemandWithAttachment = async (id: UUID, subtype: DemandSubtype): Promise<DemandWithAttachmentRow[]> => {
     return this.db()
       .demand()
       .join('attachment', 'demand.parameters_attachment_id', 'attachment.id')
@@ -162,15 +220,45 @@ export default class Database {
     return transactions.length !== 0 ? transactions[0] : null
   }
 
-  getTransactions = async (state?: TransactionState, api_type?: TransactionApiType) => {
-    return this.db()
-      .transaction()
-      .where({ ...(state && { state }), ...(api_type && { api_type }) })
-      .select(transactionColumns)
+  getTransactions = async ({
+    state,
+    apiType,
+    updatedSince,
+  }: {
+    state?: TransactionState
+    apiType?: TransactionApiType
+    updatedSince?: Date
+  }) => {
+    let query = this.db().transaction().select(transactionColumns)
+    if (state) {
+      query = query.where({ state })
+    }
+    if (apiType) {
+      query = query.where({ api_type: apiType })
+    }
+    if (updatedSince) {
+      query = query.where('updated_at', '>', updatedSince)
+    }
+    return query
   }
 
-  getTransactionsByLocalId = async (local_id: UUID, transaction_type: TransactionType) => {
-    return this.db().transaction().select(transactionColumns).where({ local_id, transaction_type })
+  getTransactionsByLocalId = async ({
+    localId,
+    transactionType,
+    updatedSince,
+  }: {
+    localId: UUID
+    transactionType: TransactionType
+    updatedSince?: Date
+  }) => {
+    const query = this.db()
+      .transaction()
+      .select(transactionColumns)
+      .where({ local_id: localId, transaction_type: transactionType })
+    if (updatedSince) {
+      return query.where('updated_at', '>', updatedSince)
+    }
+    return query
   }
 
   updateTransaction = async (transactionId: UUID, transaction: object) => {
@@ -205,8 +293,9 @@ export default class Database {
       .where({ id: localId })
   }
 
-  insertMatch2 = async (match2: object) => {
-    return this.db().match2().insert(match2).returning(match2Columns)
+  insertMatch2 = async (match2: object): Promise<[Match2Row]> => {
+    const [result] = await this.db().match2().insert(match2).returning(match2Columns)
+    return [result]
   }
 
   updateMatch2 = async (id: UUID, match2: object) => {
@@ -220,12 +309,16 @@ export default class Database {
       .returning('*')
   }
 
-  getMatch2s = async () => {
-    return this.db().match2().select(match2Columns)
+  getMatch2s = async ({ updatedSince }: { updatedSince?: Date } = {}): Promise<Match2Row[]> => {
+    const query = this.db().match2().select(match2Columns)
+    if (updatedSince) {
+      return query.where('updated_at', '>', updatedSince)
+    }
+    return query
   }
 
-  getMatch2 = async (match2Id: UUID) => {
-    return this.db().match2().where({ id: match2Id }).select(match2Columns)
+  getMatch2 = async (match2Id: UUID): Promise<[Match2Row] | []> => {
+    return this.db().match2().select(match2Columns).where({ id: match2Id })
   }
 
   getLastProcessedBlock = async (): Promise<ProcessedBlock | null> => {

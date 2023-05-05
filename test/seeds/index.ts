@@ -22,7 +22,7 @@ export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
 export const seededDemandAId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
 
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
-export const exampleDate = '2023-03-24T10:40:47.317Z'
+export const exampleDate = '2023-01-01T00:00:00.000Z'
 export const seededDemandAWithTokenId = '64d89075-0059-4a8a-87da-c6715d64d0a9'
 
 export const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
@@ -52,6 +52,7 @@ export const seed = async () => {
       filename: 'test.txt',
       ipfs_hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
       size: 42,
+      created_at: exampleDate,
     },
   ])
 
@@ -62,6 +63,8 @@ export const seed = async () => {
       subtype: 'demand_b',
       state: 'created',
       parameters_attachment_id: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -98,6 +101,8 @@ export const seed = async () => {
       subtype: 'demand_a',
       state: 'created',
       parameters_attachment_id: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -110,6 +115,8 @@ export const seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -122,6 +129,8 @@ export const seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -136,6 +145,8 @@ export const seed = async () => {
       demand_b_id: seededDemandBId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -185,6 +196,8 @@ export const seed = async () => {
       subtype: 'demand_b',
       state: 'created',
       parameters_attachment_id: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -195,6 +208,8 @@ export const seed = async () => {
       subtype: 'demand_a',
       state: 'created',
       parameters_attachment_id: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -207,6 +222,8 @@ export const seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -219,6 +236,8 @@ export const seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -229,6 +248,8 @@ export const seed = async () => {
       subtype: 'demand_b',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -239,6 +260,8 @@ export const seed = async () => {
       subtype: 'demand_a',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -251,6 +274,8 @@ export const seed = async () => {
       member_b: selfAddress,
       demand_a_id: seededDemandAAlreadyAllocated,
       demand_b_id: seededDemandBAlreadyAllocated,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -263,6 +288,8 @@ export const seed = async () => {
       member_b: selfAddress,
       demand_a_id: seededDemandAId,
       demand_b_id: seededDemandBId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -275,6 +302,8 @@ export const seed = async () => {
       member_b: selfAddress,
       demand_a_id: seededDemandAId,
       demand_b_id: seededDemandBId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -289,6 +318,8 @@ export const seed = async () => {
       demand_b_id: seededDemandBWithTokenId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -303,6 +334,8 @@ export const seed = async () => {
       demand_b_id: seededDemandBNotOwnedId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 
@@ -317,6 +350,8 @@ export const seed = async () => {
       demand_b_id: seededDemandBNotOwnedId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
     },
   ])
 }

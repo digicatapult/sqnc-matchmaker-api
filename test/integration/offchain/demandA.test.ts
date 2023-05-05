@@ -4,10 +4,18 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server'
 import { post, get } from '../../helper/routeHelper'
-import { seed, parametersAttachmentId, seededDemandAId, seededDemandACreationId, cleanup } from '../../seeds'
+import {
+  seed,
+  parametersAttachmentId,
+  seededDemandAId,
+  seededDemandACreationId,
+  cleanup,
+  exampleDate,
+} from '../../seeds'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
 import Database from '../../../src/lib/db'
+import { assertIsoDate, assertUUID } from '../../helper/assertions'
 
 const db = new Database()
 
@@ -40,6 +48,39 @@ describe('demandA', () => {
       expect(body).to.equal('demandA not found')
     })
     // TODO - assert for max number of records
+  })
+
+  describe('if updatedSince is not a date', () => {
+    it('returns 422', async () => {
+      const { status, body } = await get(app, `/v1/demandA?updated_since=foo`)
+      expect(status).to.equal(422)
+      expect(body).to.contain({
+        name: 'ValidateError',
+        message: 'Validation failed',
+      })
+    })
+  })
+
+  describe('list demandAs', () => {
+    it('returns list', async () => {
+      const { status, body } = await get(app, `/v1/demandA`)
+      expect(status).to.equal(200)
+      expect(body).to.be.an('array')
+      expect(body.find(({ id }: { id: string }) => id === seededDemandAId)).to.deep.equal({
+        createdAt: exampleDate,
+        id: seededDemandAId,
+        owner: selfAlias,
+        parametersAttachmentId: parametersAttachmentId,
+        state: 'created',
+        updatedAt: exampleDate,
+      })
+    })
+
+    it('filters based on updated date', async () => {
+      const { status, body } = await get(app, `/v1/demandA?updated_since=2023-01-01T00:00:00.000Z`)
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([])
+    })
   })
 
   describe('if attachment can not be found', () => {
@@ -122,26 +163,14 @@ describe('demandA', () => {
     })
   })
 
-  it('retrieves demandA by id', async () => {
-    const { status, body } = await post(app, '/v1/demandA', { parametersAttachmentId })
-
-    expect(status).to.equal(201)
-    expect(body).to.have.property('id')
-    expect(body).to.deep.contain({
-      owner: 'test-self',
-      state: 'created',
-      parametersAttachmentId: 'a789ad47-91c3-446e-90f9-a7c9b233eaf8',
-    })
-  })
-
   it('should create an demandA demand', async () => {
     const response = await post(app, '/v1/demandA', { parametersAttachmentId })
-    const { id: responseId, ...responseRest } = response.body
+    const { id: responseId, createdAt, updatedAt, ...responseRest } = response.body
 
     expect(response.status).to.equal(201)
-    expect(responseId).to.match(
-      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-    )
+    assertUUID(responseId)
+    assertIsoDate(createdAt)
+    assertIsoDate(updatedAt)
     expect(responseRest).to.deep.equal({
       parametersAttachmentId,
       state: 'created',
@@ -173,6 +202,24 @@ describe('demandA', () => {
       localId: seededDemandAId,
       apiType: 'demand_a',
       transactionType: 'creation',
+    })
+  })
+
+  it('filters demandA creations based on updated date', async () => {
+    const { status, body } = await get(
+      app,
+      `/v1/demandA/${seededDemandAId}/creation?updated_since=2023-01-01T00:00:00.000Z`
+    )
+    expect(status).to.equal(200)
+    expect(body).to.deep.equal([])
+  })
+
+  it('demandA creations with invalid updatedSince returns 422', async () => {
+    const { status, body } = await get(app, `/v1/demandA/${seededDemandAId}/creation?updated_since=foo`)
+    expect(status).to.equal(422)
+    expect(body).to.contain({
+      name: 'ValidateError',
+      message: 'Validation failed',
     })
   })
 })

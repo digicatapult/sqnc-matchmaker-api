@@ -76,8 +76,8 @@ describe('transaction', () => {
       localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
       apiType: 'demand_b',
       transactionType: 'creation',
-      submittedAt: '2023-03-24T10:40:47.317Z',
-      updatedAt: '2023-03-24T10:40:47.317Z',
+      submittedAt: '2023-01-01T00:00:00.000Z',
+      updatedAt: '2023-01-01T00:00:00.000Z',
     })
   })
 
@@ -95,8 +95,8 @@ describe('transaction', () => {
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
         apiType: 'demand_b',
         transactionType: 'creation',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
+        submittedAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
       },
       {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
@@ -104,8 +104,8 @@ describe('transaction', () => {
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
         apiType: 'demand_b',
         transactionType: 'creation',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
+        submittedAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
       },
       {
         id: '8a5343dc-88a3-4b61-b156-330d52f506f8',
@@ -113,8 +113,8 @@ describe('transaction', () => {
         localId: 'f960e4a1-6182-4dd3-8ac2-6f3fad995551',
         apiType: 'match2',
         transactionType: 'proposal',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
+        submittedAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
       },
       {
         id: 'd8eb8a94-222b-4481-b315-1dcbf2e07079',
@@ -122,10 +122,16 @@ describe('transaction', () => {
         localId: 'f960e4a1-6182-4dd3-8ac2-6f3fad995551',
         apiType: 'match2',
         transactionType: 'accept',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
+        submittedAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
       },
     ])
+  })
+
+  it('should filter transactions based on updated date', async () => {
+    const { status, body } = await get(app, `/v1/transaction?updated_since=2023-01-01T00:00:00.000Z`)
+    expect(status).to.equal(200)
+    expect(body).to.deep.equal([])
   })
 
   it('returns transactions by type', async () => {
@@ -139,8 +145,8 @@ describe('transaction', () => {
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
         apiType: 'demand_b',
         transactionType: 'creation',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
+        submittedAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
       },
       {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
@@ -148,8 +154,8 @@ describe('transaction', () => {
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
         apiType: 'demand_b',
         transactionType: 'creation',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
+        submittedAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
       },
     ])
   })
@@ -165,8 +171,8 @@ describe('transaction', () => {
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
         apiType: 'demand_b',
         transactionType: 'creation',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
+        submittedAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
       },
       {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
@@ -174,8 +180,8 @@ describe('transaction', () => {
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
         apiType: 'demand_b',
         transactionType: 'creation',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
+        submittedAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
       },
     ])
   })
@@ -191,8 +197,8 @@ describe('transaction', () => {
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
         apiType: 'demand_b',
         transactionType: 'creation',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
+        submittedAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
       },
       {
         id: 'd65d8e11-150f-4ea4-b778-b920e9dbc378',
@@ -200,10 +206,19 @@ describe('transaction', () => {
         localId: '0f5af074-7d4d-40b4-86a5-17a2391303cb',
         apiType: 'demand_b',
         transactionType: 'creation',
-        submittedAt: '2023-03-24T10:40:47.317Z',
-        updatedAt: '2023-03-24T10:40:47.317Z',
+        submittedAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
       },
     ])
+  })
+
+  it('returns 422 with invalid updatedSince', async () => {
+    const { status, body } = await get(app, `/v1/transaction?updated_since=foo`)
+    expect(status).to.equal(422)
+    expect(body).to.contain({
+      name: 'ValidateError',
+      message: 'Validation failed',
+    })
   })
 
   it('returns 422 when invalid type is passed', async () => {

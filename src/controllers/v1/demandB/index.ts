@@ -10,19 +10,21 @@ import {
   SuccessResponse,
   Tags,
   Security,
+  Query,
 } from 'tsoa'
 import type { Logger } from 'pino'
 
 import { logger } from '../../../lib/logger'
-import Database from '../../../lib/db'
-import { DemandResponse, DemandRequest } from '../../../models/demand'
-import { UUID } from '../../../models/strings'
+import Database, { DemandRow } from '../../../lib/db'
+import { DemandResponse, DemandRequest, DemandSubtype } from '../../../models/demand'
+import { DATE, UUID } from '../../../models/strings'
 import { BadRequest, NotFound } from '../../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
-import { TransactionResponse } from '../../../models/transaction'
+import { TransactionResponse, TransactionType } from '../../../models/transaction'
 import { demandCreate } from '../../../lib/payload'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
+import { parseDateParam } from '../../../lib/utils/queryParams'
 
 @Route('v1/demandB')
 @Tags('demandB')
@@ -73,17 +75,24 @@ export class DemandBController extends Controller {
       owner: selfAlias,
       state: demandB.state,
       parametersAttachmentId,
+      createdAt: demandB.created_at.toISOString(),
+      updatedAt: demandB.updated_at.toISOString(),
     }
   }
 
   /**
    * Returns the details of all demandB demands.
-   * @summary List all demandB demands
+   * @summary List demandBs
    */
   @Get('/')
-  public async getAll(): Promise<DemandResponse[]> {
-    const capacities = await this.db.getDemands('demand_b')
-    const result = await Promise.all(capacities.map(async (demandB: DemandResponse) => responseWithAlias(demandB)))
+  public async getAll(@Query() updated_since?: DATE): Promise<DemandResponse[]> {
+    const query: { subtype: DemandSubtype; updatedSince?: Date } = { subtype: 'demand_b' }
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
+    }
+
+    const demandBs = await this.db.getDemands(query)
+    const result = await Promise.all(demandBs.map(async (demandB) => responseWithAlias(demandB)))
     return result
   }
 
@@ -152,15 +161,27 @@ export class DemandBController extends Controller {
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
   @Get('{demandBId}/creation/')
-  public async getTransactionsFromDemandAB(@Path() demandBId: UUID): Promise<TransactionResponse[]> {
+  public async getTransactionsFromDemandAB(
+    @Path() demandBId: UUID,
+    @Query() updated_since?: DATE
+  ): Promise<TransactionResponse[]> {
+    const query: {
+      localId: UUID
+      transactionType: TransactionType
+      updatedSince?: Date
+    } = { localId: demandBId, transactionType: 'creation' }
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
+    }
+
     const [demandAB] = await this.db.getDemand(demandBId)
     if (!demandAB) throw new NotFound('demandAB')
 
-    return await this.db.getTransactionsByLocalId(demandBId, 'creation')
+    return await this.db.getTransactionsByLocalId(query)
   }
 }
 
-const responseWithAlias = async (demandB: DemandResponse): Promise<DemandResponse> => {
+const responseWithAlias = async (demandB: DemandRow): Promise<DemandResponse> => {
   const { alias: ownerAlias } = await getMemberByAddress(demandB.owner)
 
   return {
@@ -168,5 +189,7 @@ const responseWithAlias = async (demandB: DemandResponse): Promise<DemandRespons
     owner: ownerAlias,
     state: demandB.state,
     parametersAttachmentId: demandB.parametersAttachmentId,
+    createdAt: demandB.createdAt.toISOString(),
+    updatedAt: demandB.updatedAt.toISOString(),
   }
 }
