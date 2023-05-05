@@ -28,6 +28,7 @@ import {
 } from '../../seeds'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
+import { assertIsoDate, assertUUID } from '../../helper/assertions'
 
 describe('match2', () => {
   let app: Express
@@ -51,10 +52,10 @@ describe('match2', () => {
       const response = await post(app, '/v1/match2', { demandA: seededDemandAId, demandB: seededDemandBId })
       expect(response.status).to.equal(201)
 
-      const { id: responseId, ...responseRest } = response.body
-      expect(responseId).to.match(
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-      )
+      const { id: responseId, createdAt, updatedAt, ...responseRest } = response.body
+      assertUUID(responseId)
+      assertIsoDate(createdAt)
+      assertIsoDate(updatedAt)
       expect(responseRest).to.deep.equal({
         state: 'proposed',
         optimiser: selfAlias,
@@ -76,6 +77,8 @@ describe('match2', () => {
         memberB: selfAlias,
         demandA: seededDemandAId,
         demandB: seededDemandBId,
+        createdAt: exampleDate,
+        updatedAt: exampleDate,
       })
     })
 
@@ -91,7 +94,15 @@ describe('match2', () => {
         memberB: selfAlias,
         demandA: seededDemandAId,
         demandB: seededDemandBId,
+        createdAt: exampleDate,
+        updatedAt: exampleDate,
       })
+    })
+
+    it('should filter based on updated date', async () => {
+      const { status, body } = await get(app, `/v1/match2?updatedSince=2023-01-01T00:00:00.000Z`)
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([])
     })
 
     it('it should get all proposal transactions - 200', async () => {
@@ -107,6 +118,15 @@ describe('match2', () => {
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
+    })
+
+    it('should filter accept transactions based on updated date', async () => {
+      const { status, body } = await get(
+        app,
+        `/v1/match2/${seededMatch2Id}/proposal?updatedSince=2023-01-01T00:00:00.000Z`
+      )
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([])
     })
 
     it('it should get an accept transaction', async () => {
@@ -137,9 +157,27 @@ describe('match2', () => {
         updatedAt: exampleDate,
       })
     })
+
+    it('should filter accept transactions based on updated date', async () => {
+      const { status, body } = await get(
+        app,
+        `/v1/match2/${seededMatch2Id}/accept?updatedSince=2023-01-01T00:00:00.000Z`
+      )
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([])
+    })
   })
 
   describe('sad path', () => {
+    it('if updatedSince is not a date returns 422', async () => {
+      const { status, body } = await get(app, `/v1/match2?updatedSince=foo`)
+      expect(status).to.equal(422)
+      expect(body).to.contain({
+        name: 'ValidateError',
+        message: 'Validation failed',
+      })
+    })
+
     it('non-existent demandA - 400', async () => {
       const response = await post(app, '/v1/match2', { demandA: nonExistentId, demandB: seededDemandBId })
       expect(response.status).to.equal(400)
@@ -244,6 +282,15 @@ describe('match2', () => {
       expect(response.status).to.equal(404)
     })
 
+    it('list proposals with invalid updatedSince - 422', async () => {
+      const { status, body } = await get(app, `/v1/match2/${seededMatch2AcceptedA}/proposal?updatedSince=foo`)
+      expect(status).to.equal(422)
+      expect(body).to.contain({
+        name: 'ValidateError',
+        message: 'Validation failed',
+      })
+    })
+
     it('match2 at acceptA and DemandB not owned - 400', async () => {
       const response = await post(app, `/v1/match2/${seededMatch2NotAcceptableA}/accept`, {})
       expect(response.status).to.equal(400)
@@ -275,9 +322,18 @@ describe('match2', () => {
     })
 
     it('non-existent match2 when listing accepts - 404', async () => {
-      const response = await get(app, `/v1/match2/${nonExistentId}/proposal`)
+      const response = await get(app, `/v1/match2/${nonExistentId}/accept`)
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('match2 not found')
+    })
+
+    it('list accepts with invalid updatedSince - 422', async () => {
+      const { status, body } = await get(app, `/v1/match2/${seededMatch2AcceptedA}/accept?updatedSince=foo`)
+      expect(status).to.equal(422)
+      expect(body).to.contain({
+        name: 'ValidateError',
+        message: 'Validation failed',
+      })
     })
 
     it('non-existent match2 when getting an accept - 404', async () => {

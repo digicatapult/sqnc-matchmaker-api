@@ -10,20 +10,22 @@ import {
   Tags,
   Security,
   Path,
+  Query,
 } from 'tsoa'
 import type { Logger } from 'pino'
 
 import { logger } from '../../../lib/logger'
-import Database from '../../../lib/db'
+import Database, { DemandRow, Match2Row } from '../../../lib/db'
 import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
 import { Match2Request, Match2Response } from '../../../models/match2'
-import { UUID } from '../../../models/strings'
-import { TransactionResponse } from '../../../models/transaction'
+import { DATE, UUID } from '../../../models/strings'
+import { TransactionResponse, TransactionType } from '../../../models/transaction'
 import { match2AcceptFinal, match2AcceptFirst, match2Propose } from '../../../lib/payload'
-import { DemandPayload, DemandSubtype } from '../../../models/demand'
+import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
+import { parseDateParam } from '../../../lib/utils/queryParams'
 
 @Route('v1/match2')
 @Tags('match2')
@@ -56,11 +58,13 @@ export class Match2Controller extends Controller {
   public async proposeMatch2(
     @Body() { demandA: demandAId, demandB: demandBId }: Match2Request
   ): Promise<Match2Response> {
-    const [demandA] = await this.db.getDemand(demandAId)
-    validatePreLocal(demandA, 'demand_a', 'DemandA')
+    const [maybeDemandA] = await this.db.getDemand(demandAId)
+    validatePreLocal(maybeDemandA, 'demand_a', 'DemandA')
+    const demandA = maybeDemandA as DemandRow
 
-    const [demandB] = await this.db.getDemand(demandBId)
-    validatePreLocal(demandB, 'demand_b', 'DemandB')
+    const [maybeDemandB] = await this.db.getDemand(demandBId)
+    validatePreLocal(maybeDemandB, 'demand_b', 'DemandB')
+    const demandB = maybeDemandB as DemandRow
 
     const { address: selfAddress } = await getMemberBySelf()
 
@@ -78,12 +82,17 @@ export class Match2Controller extends Controller {
 
   /**
    * Returns the details of all match2s.
-   * @summary List all match2s
+   * @summary List match2s
    */
   @Get('/')
-  public async getAll(): Promise<Match2Response[]> {
-    const match2s = await this.db.getMatch2s()
-    const result = await Promise.all(match2s.map(async (match2: Match2Response) => responseWithAliases(match2)))
+  public async getAll(@Query() updatedSince?: DATE): Promise<Match2Response[]> {
+    const query: { updatedSince?: Date } = {}
+    if (updatedSince) {
+      query.updatedSince = parseDateParam(updatedSince)
+    }
+
+    const match2s = await this.db.getMatch2s(query)
+    const result = await Promise.all(match2s.map(async (match2) => responseWithAliases(match2)))
     return result
   }
 
@@ -115,11 +124,13 @@ export class Match2Controller extends Controller {
     if (!match2) throw new NotFound('match2')
     if (match2.state !== 'proposed') throw new BadRequest(`Match2 must have state: ${'proposed'}`)
 
-    const [demandA] = await this.db.getDemand(match2.demandA)
-    validatePreOnChain(demandA, 'demand_a', 'DemandA')
+    const [maybeDemandA] = await this.db.getDemand(match2.demandA)
+    validatePreOnChain(maybeDemandA, 'demand_a', 'DemandA')
+    const demandA = maybeDemandA as DemandRow
 
-    const [demandB] = await this.db.getDemand(match2.demandB)
-    validatePreOnChain(demandB, 'demand_b', 'DemandB')
+    const [maybeDemandB] = await this.db.getDemand(match2.demandB)
+    validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
+    const demandB = maybeDemandB as DemandRow
 
     const extrinsic = await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
 
@@ -161,11 +172,23 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
   @Get('{match2Id}/proposal')
-  public async getMatch2Proposals(@Path() match2Id: UUID): Promise<TransactionResponse[]> {
+  public async getMatch2Proposals(
+    @Path() match2Id: UUID,
+    @Query() updatedSince?: DATE
+  ): Promise<TransactionResponse[]> {
+    const query: {
+      localId: UUID
+      transactionType: TransactionType
+      updatedSince?: Date
+    } = { localId: match2Id, transactionType: 'proposal' }
+    if (updatedSince) {
+      query.updatedSince = parseDateParam(updatedSince)
+    }
+
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
 
-    return await this.db.getTransactionsByLocalId(match2Id, 'proposal')
+    return await this.db.getTransactionsByLocalId(query)
   }
 
   /**
@@ -186,11 +209,13 @@ export class Match2Controller extends Controller {
 
     if (state === 'acceptedFinal') throw new BadRequest(`Already ${'acceptedFinal'}`)
 
-    const [demandA] = await this.db.getDemand(match2.demandA)
-    validatePreOnChain(demandA, 'demand_a', 'DemandA')
+    const [maybeDemandA] = await this.db.getDemand(match2.demandA)
+    validatePreOnChain(maybeDemandA, 'demand_a', 'DemandA')
+    const demandA = maybeDemandA as DemandRow
 
-    const [demandB] = await this.db.getDemand(match2.demandB)
-    validatePreOnChain(demandB, 'demand_b', 'DemandB')
+    const [maybeDemandB] = await this.db.getDemand(match2.demandB)
+    validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
+    const demandB = maybeDemandB as DemandRow
 
     const { address: selfAddress } = await getMemberBySelf()
     const ownsDemandA = demandA.owner === selfAddress
@@ -268,15 +293,24 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
   @Get('{match2Id}/accept')
-  public async getMatch2Accepts(@Path() match2Id: UUID): Promise<TransactionResponse[]> {
+  public async getMatch2Accepts(@Path() match2Id: UUID, @Query() updatedSince?: DATE): Promise<TransactionResponse[]> {
+    const query: {
+      localId: UUID
+      transactionType: TransactionType
+      updatedSince?: Date
+    } = { localId: match2Id, transactionType: 'accept' }
+    if (updatedSince) {
+      query.updatedSince = parseDateParam(updatedSince)
+    }
+
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
 
-    return await this.db.getTransactionsByLocalId(match2Id, 'accept')
+    return await this.db.getTransactionsByLocalId(query)
   }
 }
 
-const responseWithAliases = async (match2: Match2Response): Promise<Match2Response> => {
+const responseWithAliases = async (match2: Match2Row): Promise<Match2Response> => {
   const [{ alias: optimiser }, { alias: memberA }, { alias: memberB }] = await Promise.all([
     getMemberByAddress(match2.optimiser),
     getMemberByAddress(match2.memberA),
@@ -291,10 +325,12 @@ const responseWithAliases = async (match2: Match2Response): Promise<Match2Respon
     memberB,
     demandA: match2.demandA,
     demandB: match2.demandB,
+    createdAt: match2.createdAt.toISOString(),
+    updatedAt: match2.updatedAt.toISOString(),
   }
 }
 
-const validatePreLocal = (demand: DemandPayload, subtype: DemandSubtype, key: string) => {
+const validatePreLocal = (demand: DemandRow | undefined, subtype: DemandSubtype, key: string) => {
   if (!demand) {
     throw new BadRequest(`${key} not found`)
   }
@@ -308,8 +344,9 @@ const validatePreLocal = (demand: DemandPayload, subtype: DemandSubtype, key: st
   }
 }
 
-const validatePreOnChain = (demand: DemandPayload, subtype: DemandSubtype, key: string) => {
-  validatePreLocal(demand, subtype, key)
+const validatePreOnChain = (maybeDemand: DemandRow | undefined, subtype: DemandSubtype, key: string) => {
+  validatePreLocal(maybeDemand, subtype, key)
+  const demand = maybeDemand as DemandRow
 
   if (!demand.latestTokenId) {
     throw new BadRequest(`${key} must be on chain`)

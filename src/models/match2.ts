@@ -1,4 +1,4 @@
-import { UUID } from './strings'
+import { DATE, UUID } from './strings'
 
 /**
  * The possible states of a Match2
@@ -25,11 +25,8 @@ export interface Match2Response {
   state: Match2State
   demandA: UUID
   demandB: UUID
-}
-
-export interface Match2Payload extends Match2Response {
-  latestTokenId: number
-  originalTokenId: number
+  createdAt: DATE
+  updatedAt: DATE
 }
 
 /**

@@ -17,6 +17,7 @@ import {
 } from '../../seeds'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
+import { assertIsoDate, assertUUID } from '../../helper/assertions'
 
 describe('demandB', () => {
   let app: Express
@@ -40,10 +41,10 @@ describe('demandB', () => {
       const response = await post(app, '/v1/demandB', { parametersAttachmentId })
       expect(response.status).to.equal(201)
 
-      const { id: responseId, ...responseRest } = response.body
-      expect(responseId).to.match(
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-      )
+      const { id: responseId, createdAt, updatedAt, ...responseRest } = response.body
+      assertUUID(responseId)
+      assertIsoDate(createdAt)
+      assertIsoDate(updatedAt)
       expect(responseRest).to.deep.equal({
         parametersAttachmentId,
         state: 'created',
@@ -59,22 +60,32 @@ describe('demandB', () => {
         owner: selfAlias,
         state: 'created',
         parametersAttachmentId,
+        createdAt: exampleDate,
+        updatedAt: exampleDate,
       })
     })
 
-    it('should get all capacities', async () => {
-      const response = await get(app, `/v1/demandB`)
-      expect(response.status).to.equal(200)
-      expect(response.body.length).to.be.greaterThan(0)
-      expect(response.body[0]).to.deep.equal({
+    it('should get all demandBs', async () => {
+      const { status, body } = await get(app, `/v1/demandB`)
+      expect(status).to.equal(200)
+      expect(body).to.be.an('array')
+      expect(body.find(({ id }: { id: string }) => id === seededDemandBId)).to.deep.equal({
+        createdAt: exampleDate,
         id: seededDemandBId,
         owner: selfAlias,
+        parametersAttachmentId: parametersAttachmentId,
         state: 'created',
-        parametersAttachmentId,
+        updatedAt: exampleDate,
       })
     })
 
-    it('it should get a transaction', async () => {
+    it('should filter based on updated date', async () => {
+      const { status, body } = await get(app, `/v1/demandB?updatedSince=2023-01-01T00:00:00.000Z`)
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([])
+    })
+
+    it('should get a transaction', async () => {
       const response = await get(app, `/v1/demandB/${seededDemandBId}/creation/${seededTransactionId}`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
@@ -88,8 +99,8 @@ describe('demandB', () => {
       })
     })
 
-    it('it should get all transactions from a demandB ID - 200', async () => {
-      const response = await get(app, `/v1/demandB/${seededDemandBId}/creation/`)
+    it('should get all transactions from a demandB ID - 200', async () => {
+      const response = await get(app, `/v1/demandB/${seededDemandBId}/creation`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal([
         {
@@ -112,9 +123,27 @@ describe('demandB', () => {
         },
       ])
     })
+
+    it('should filter demandB creations based on updated date', async () => {
+      const { status, body } = await get(
+        app,
+        `/v1/demandB/${seededDemandBId}/creation?updatedSince=2023-01-01T00:00:00.000Z`
+      )
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([])
+    })
   })
 
   describe('sad path', () => {
+    it('if updatedSince is not a date returns 422', async () => {
+      const { status, body } = await get(app, `/v1/demandB?updatedSince=foo`)
+      expect(status).to.equal(422)
+      expect(body).to.contain({
+        name: 'ValidateError',
+        message: 'Validation failed',
+      })
+    })
+
     it('invalid attachment uuid - 422', async () => {
       const response = await post(app, '/v1/demandB', { parametersAttachmentId: 'invalid' })
       expect(response.status).to.equal(422)
@@ -135,6 +164,15 @@ describe('demandB', () => {
     it('non-existent demandB id when creating on-chain - 404', async () => {
       const response = await post(app, `/v1/demandB/${nonExistentId}/creation`, {})
       expect(response.status).to.equal(404)
+    })
+
+    it('demandB creations with invalid updatedSince - 422', async () => {
+      const { status, body } = await get(app, `/v1/demandB/${seededDemandBId}/creation?updatedSince=foo`)
+      expect(status).to.equal(422)
+      expect(body).to.contain({
+        name: 'ValidateError',
+        message: 'Validation failed',
+      })
     })
 
     it('incorrect state when creating on-chain - 400', async () => {

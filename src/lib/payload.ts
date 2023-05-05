@@ -1,8 +1,7 @@
 import basex from 'base-x'
 
-import { Match2Payload, Match2Response } from '../models/match2'
-import { DemandPayload } from '../models/demand'
 import * as TokenType from '../models/tokenType'
+import { DemandRow, DemandWithAttachmentRow, Match2Row } from './db'
 
 const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 const bs58 = basex(BASE58)
@@ -30,7 +29,7 @@ const formatHash = (hash: string) => {
   return `0x${decoded.toString('hex').slice(4)}`
 }
 
-export const demandCreate = (demand: DemandPayload): Payload => ({
+export const demandCreate = (demand: DemandWithAttachmentRow): Payload => ({
   process: { id: 'demand-create', version: 1 },
   inputs: [],
   outputs: [
@@ -47,9 +46,9 @@ export const demandCreate = (demand: DemandPayload): Payload => ({
   ],
 })
 
-export const match2Propose = (match2: Match2Response, demandA: DemandPayload, demandB: DemandPayload): Payload => ({
+export const match2Propose = (match2: Match2Row, demandA: DemandRow, demandB: DemandRow): Payload => ({
   process: { id: 'match2-propose', version: 1 },
-  inputs: [demandA.latestTokenId, demandB.latestTokenId],
+  inputs: [demandA.latestTokenId as number, demandB.latestTokenId as number],
   outputs: [
     {
       roles: { Owner: demandA.owner },
@@ -58,7 +57,7 @@ export const match2Propose = (match2: Match2Response, demandA: DemandPayload, de
         type: { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: 'created' },
         subtype: { type: 'LITERAL', value: demandA.subtype },
-        originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId },
+        originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
       },
     },
     {
@@ -68,7 +67,7 @@ export const match2Propose = (match2: Match2Response, demandA: DemandPayload, de
         type: { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: 'created' },
         subtype: { type: 'LITERAL', value: demandB.subtype },
-        originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId },
+        originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
       },
     },
     {
@@ -77,21 +76,21 @@ export const match2Propose = (match2: Match2Response, demandA: DemandPayload, de
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.MATCH2 },
         state: { type: 'LITERAL', value: 'proposed' },
-        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId },
-        demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId },
+        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+        demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
       },
     },
   ],
 })
 
 export const match2AcceptFirst = (
-  match2: Match2Payload,
+  match2: Match2Row,
   newState: 'acceptedA' | 'acceptedB',
-  demandA: DemandPayload,
-  demandB: DemandPayload
+  demandA: DemandRow,
+  demandB: DemandRow
 ): Payload => ({
   process: { id: 'match2-accept', version: 1 },
-  inputs: [match2.latestTokenId],
+  inputs: [match2.latestTokenId as number],
   outputs: [
     {
       roles: { Optimiser: match2.optimiser, MemberA: match2.memberA, MemberB: match2.memberB },
@@ -99,17 +98,17 @@ export const match2AcceptFirst = (
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.MATCH2 },
         state: { type: 'LITERAL', value: newState },
-        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId },
-        demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId },
-        originalId: { type: 'TOKEN_ID', value: match2.originalTokenId },
+        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+        demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
+        originalId: { type: 'TOKEN_ID', value: match2.originalTokenId as number },
       },
     },
   ],
 })
 
-export const match2AcceptFinal = (match2: Match2Payload, demandA: DemandPayload, demandB: DemandPayload): Payload => ({
+export const match2AcceptFinal = (match2: Match2Row, demandA: DemandRow, demandB: DemandRow): Payload => ({
   process: { id: 'match2-acceptFinal', version: 1 },
-  inputs: [demandA.latestTokenId, demandB.latestTokenId, match2.latestTokenId],
+  inputs: [demandA.latestTokenId as number, demandB.latestTokenId as number, match2.latestTokenId as number],
   outputs: [
     {
       roles: { Owner: demandA.owner },
@@ -118,7 +117,7 @@ export const match2AcceptFinal = (match2: Match2Payload, demandA: DemandPayload,
         type: { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: 'allocated' },
         subtype: { type: 'LITERAL', value: demandA.subtype },
-        originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId },
+        originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
       },
     },
     {
@@ -128,7 +127,7 @@ export const match2AcceptFinal = (match2: Match2Payload, demandA: DemandPayload,
         type: { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: 'allocated' },
         subtype: { type: 'LITERAL', value: demandB.subtype },
-        originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId },
+        originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
       },
     },
     {
@@ -137,9 +136,9 @@ export const match2AcceptFinal = (match2: Match2Payload, demandA: DemandPayload,
         version: { type: 'LITERAL', value: '1' },
         type: { type: 'LITERAL', value: TokenType.MATCH2 },
         state: { type: 'LITERAL', value: 'acceptedFinal' },
-        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId },
-        demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId },
-        originalId: { type: 'TOKEN_ID', value: match2.originalTokenId },
+        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+        demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
+        originalId: { type: 'TOKEN_ID', value: match2.originalTokenId as number },
       },
     },
   ],
