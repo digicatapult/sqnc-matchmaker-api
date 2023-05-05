@@ -1,10 +1,6 @@
-import basex from 'base-x'
-
 import * as TokenType from '../models/tokenType'
 import { DemandRow, DemandWithAttachmentRow, Match2Row } from './db'
-
-const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-const bs58 = basex(BASE58)
+import { bs58ToHex } from '../utils/hex'
 
 export interface Payload {
   process: { id: string; version: number }
@@ -24,11 +20,6 @@ export interface MetadataFile {
 
 export type Metadata = Record<string, { type: string; value: string | number }>
 
-const formatHash = (hash: string) => {
-  const decoded = Buffer.from(bs58.decode(hash))
-  return `0x${decoded.toString('hex').slice(4)}`
-}
-
 export const demandCreate = (demand: DemandWithAttachmentRow): Payload => ({
   process: { id: 'demand-create', version: 1 },
   inputs: [],
@@ -40,7 +31,7 @@ export const demandCreate = (demand: DemandWithAttachmentRow): Payload => ({
         type: { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: 'created' },
         subtype: { type: 'LITERAL', value: demand.subtype },
-        parameters: { type: 'FILE', value: formatHash(demand.ipfs_hash) },
+        parameters: { type: 'FILE', value: bs58ToHex(demand.ipfs_hash) },
       },
     },
   ],

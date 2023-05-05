@@ -8,6 +8,7 @@ import { TransactionState } from '../models/transaction'
 
 import type { Payload, Output, Metadata } from './payload'
 import { HEX } from '../models/strings'
+import { hexToBs58 } from '../utils/hex'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
@@ -289,6 +290,11 @@ export default class ChainNode {
         if (valueKey === 'None' || valueKey === 'tokenId') {
           return [key, valueRaw]
         }
+
+        if (valueKey === 'file') {
+          return [key, hexToBs58(valueRaw)]
+        }
+
         const valueHex = valueRaw || '0x'
         const value = Buffer.from(valueHex.substring(2), 'hex').toString('utf8')
         return [key, value]
