@@ -1,4 +1,4 @@
 {
-  "timeout": 5000000,
+  "timeout": 5000,
   "exit": true
 }
