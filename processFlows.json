@@ -1338,6 +1338,16 @@
       { "op": "And" },
       {
         "restriction": {
+          "FixedOutputMetadataValueType": {
+            "index": 0,
+            "metadataKey": "comment",
+            "metadataValueType": "File"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
           "MatchInputOutputMetadataValue": {
             "inputIndex": 0,
             "inputMetadataKey": "type",
