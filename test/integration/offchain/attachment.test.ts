@@ -7,6 +7,7 @@ import { get, post, postFile } from '../../helper/routeHelper'
 
 import Database from '../../../src/lib/db'
 import { withIpfsMockError, withIpfsMock } from '../../helper/mock'
+import { seed } from '../../seeds'
 
 const db = new Database().db()
 
@@ -44,6 +45,38 @@ describe('attachment', () => {
 
       expect(status).to.equal(404)
       expect(body).to.equal('attachment not found')
+    })
+
+    it('returns 422 with invalid updatedSince date', async () => {
+      const { status, body } = await get(app, `/v1/attachment?updated_since=foo`)
+      expect(status).to.equal(422)
+      expect(body).to.contain({
+        name: 'ValidateError',
+        message: 'Validation failed',
+      })
+    })
+  })
+
+  describe('list attachments', () => {
+    beforeEach(async () => await seed())
+
+    it('returns attachments', async () => {
+      const { status, body } = await get(app, `/v1/attachment`)
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([
+        {
+          createdAt: '2023-01-01T00:00:00.000Z',
+          filename: 'test.txt',
+          id: 'a789ad47-91c3-446e-90f9-a7c9b233eaf8',
+          size: '42',
+        },
+      ])
+    })
+
+    it('filters attachments based on created date', async () => {
+      const { status, body } = await get(app, `/v1/attachment?updated_since=2023-01-01T00:00:00.000Z`)
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([])
     })
   })
 

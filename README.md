@@ -142,7 +142,7 @@ Allows different kind of updates to be prepared and applied to an entity. For ex
 The last top level entity `attachment`, which accepts a `multipart/form-data` payload for uploading a file or `application/json` for uploading JSON as a file. This will return an `id` that can then be used when preparing entity updates to attach files.
 
 - `POST /v1/attachment` - upload a file.
-- `GET /v1/attachment` - list all attachments.
+- `GET /v1/attachment` - list attachments.
 - `GET /v1/attachment/{attachmentId}` - download an attachment.
 
 ## Demo scenario

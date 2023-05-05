@@ -12,18 +12,20 @@ import {
   SuccessResponse,
   Produces,
   ValidateError,
+  Query,
 } from 'tsoa'
 import { Logger } from 'pino'
 import express from 'express'
 import { Readable } from 'node:stream'
 
 import { logger } from '../../../lib/logger'
-import Database, { Models, Query } from '../../../lib/db'
+import Database from '../../../lib/db'
 import type { Attachment } from '../../../models'
 import { BadRequest, NotFound } from '../../../lib/error-handler'
-import type { UUID } from '../../../models/strings'
+import type { UUID, DATE } from '../../../models/strings'
 import Ipfs from '../../../lib/ipfs'
 import env from '../../../env'
+import { parseDateParam } from '../../../lib/utils/queryParams'
 
 const parseAccept = (acceptHeader: string) =>
   acceptHeader
@@ -65,19 +67,16 @@ interface DbAttachment extends Omit<Attachment, 'createdAt'> {
 @Security('BearerAuth')
 export class attachment extends Controller {
   log: Logger
-  dbClient: Database = new Database()
+  db: Database = new Database()
   ipfs: Ipfs = new Ipfs({
     host: env.IPFS_HOST,
     port: env.IPFS_PORT,
     logger,
   })
-  db: Models<() => Query> // TMP this is the only one could not address now
 
   constructor() {
     super()
     this.log = logger.child({ controller: '/attachment' })
-    // TMP will be updated with a wrapper so ORM client independent
-    this.db = this.dbClient.db()
   }
 
   octetResponse(buffer: Buffer, name: string): Readable {
@@ -93,10 +92,15 @@ export class attachment extends Controller {
 
   @Get('/')
   @SuccessResponse(200, 'returns all attachment')
-  public async get(): Promise<Attachment[]> {
+  public async get(@Query() updated_since?: DATE): Promise<Attachment[]> {
+    const query: { updatedSince?: Date } = {}
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
+    }
+
     this.log.debug('retrieving all attachment')
 
-    const attachments: DbAttachment[] = await this.db.attachment()
+    const attachments: DbAttachment[] = await this.db.getAttachments(query)
     return attachments.map(
       ({ created_at, ipfs_hash, ...rest }): Attachment => ({
         ...rest,
@@ -120,14 +124,11 @@ export class attachment extends Controller {
     const fileBlob = new Blob([Buffer.from(file?.buffer || JSON.stringify(req.body))])
     const ipfsHash = await this.ipfs.addFile({ blob: fileBlob, filename })
 
-    const [{ id, created_at }] = await this.db
-      .attachment()
-      .insert({
-        filename,
-        ipfs_hash: ipfsHash,
-        size: fileBlob.size,
-      })
-      .returning(['id', 'filename', 'created_at'])
+    const [{ id, created_at }] = await this.db.insertAttachment({
+      filename,
+      ipfs_hash: ipfsHash,
+      size: fileBlob.size,
+    })
 
     const result: Attachment = {
       id,
@@ -146,7 +147,7 @@ export class attachment extends Controller {
   @SuccessResponse(200)
   public async getById(@Request() req: express.Request, @Path() id: UUID): Promise<unknown | Readable> {
     this.log.debug(`attempting to retrieve ${id} attachment`)
-    const [attachment] = await this.db.attachment().where({ id })
+    const [attachment] = await this.db.getAttachment(id)
     if (!attachment) throw new NotFound('attachment')
     const { filename, ipfs_hash, size }: { filename: string | null; ipfs_hash: string; size: number } = attachment
 
@@ -155,7 +156,7 @@ export class attachment extends Controller {
 
     if (size === null || filename === null) {
       try {
-        await this.dbClient.updateAttachment(id, ipfsFilename, blob.size)
+        await this.db.updateAttachment(id, ipfsFilename, blob.size)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'unknown'
         this.log.warn('Error updating attachment size: %s', message)

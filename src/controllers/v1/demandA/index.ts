@@ -10,19 +10,21 @@ import {
   Controller,
   Post,
   Route,
+  Query,
 } from 'tsoa'
 import { Logger } from 'pino'
 
-import { UUID } from '../../../models/strings'
-import { DemandRequest, DemandResponse } from '../../../models/demand'
-import { TransactionResponse } from '../../../models/transaction'
+import { DATE, UUID } from '../../../models/strings'
+import { DemandRequest, DemandResponse, DemandSubtype } from '../../../models/demand'
+import { TransactionResponse, TransactionType } from '../../../models/transaction'
 import { logger } from '../../../lib/logger'
 import { BadRequest, NotFound } from '../../../lib/error-handler'
-import Database from '../../../lib/db'
+import Database, { DemandRow } from '../../../lib/db'
 import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
 import { demandCreate } from '../../../lib/payload'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
+import { parseDateParam } from '../../../lib/utils/queryParams'
 
 @Route('v1/demandA')
 @Tags('demandA')
@@ -46,31 +48,40 @@ export class demandA extends Controller {
 
   /**
    * Returns the details of all demandA demands.
-   * @summary List all demandA demands
+   * @summary List demandAs
    */
   @Get('/')
-  public async getAll(): Promise<DemandResponse[]> {
-    const demandA = await this.db.getDemands('demand_a')
-    const result = await Promise.all(
-      demandA.map(async (demandA: DemandResponse) => ({
-        ...demandA,
-        owner: await getMemberByAddress(demandA.owner).then(({ alias }) => alias),
-      }))
-    )
+  public async getAll(@Query() updated_since?: DATE): Promise<DemandResponse[]> {
+    const query: { subtype: DemandSubtype; updatedSince?: Date } = { subtype: 'demand_a' }
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
+    }
+
+    const demandAs = await this.db.getDemands(query)
+    const result = await Promise.all(demandAs.map(async (demandA) => responseWithAlias(demandA)))
     return result
   }
 
   /**
    * Returns the details of all demandA demand transactions.
-   * @summary List all demandA demand transactions
+   * @summary List demandA transactions
    * @param demandAId The demandA's identifier
    */
   @Get('{demandAId}/creation')
-  public async getAllTransactions(@Path() demandAId: UUID): Promise<DemandResponse[]> {
+  public async getAllTransactions(@Path() demandAId: UUID, @Query() updated_since?: DATE): Promise<DemandResponse[]> {
+    const query: {
+      localId: UUID
+      transactionType: TransactionType
+      updatedSince?: Date
+    } = { localId: demandAId, transactionType: 'creation' }
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
+    }
+
     const [demandA] = await this.db.getDemand(demandAId)
     if (!demandA) throw new NotFound('demandA')
 
-    return await this.db.getTransactionsByLocalId(demandAId, 'creation')
+    return await this.db.getTransactionsByLocalId(query)
   }
 
   /**
@@ -83,10 +94,7 @@ export class demandA extends Controller {
     const [demandA] = await this.db.getDemand(demandAId)
     if (!demandA) throw new NotFound('demandA')
 
-    return {
-      ...demandA,
-      owner: await getMemberByAddress(demandA.owner),
-    }
+    return responseWithAlias(demandA)
   }
 
   /**
@@ -149,7 +157,7 @@ export class demandA extends Controller {
     if (!attachment) throw new NotFound('attachment')
 
     const { address, alias } = await getMemberBySelf()
-    const [{ id, state }] = await this.db.insertDemand({
+    const [demandB] = await this.db.insertDemand({
       owner: address,
       subtype: 'demand_a',
       state: 'created',
@@ -157,10 +165,25 @@ export class demandA extends Controller {
     })
 
     return {
-      id,
+      id: demandB.id,
       owner: alias,
-      state,
+      state: demandB.state,
       parametersAttachmentId,
+      createdAt: demandB.created_at.toISOString(),
+      updatedAt: demandB.updated_at.toISOString(),
     }
+  }
+}
+
+const responseWithAlias = async (demandA: DemandRow): Promise<DemandResponse> => {
+  const { alias: ownerAlias } = await getMemberByAddress(demandA.owner)
+
+  return {
+    id: demandA.id,
+    owner: ownerAlias,
+    state: demandA.state,
+    parametersAttachmentId: demandA.parametersAttachmentId,
+    createdAt: demandA.createdAt.toISOString(),
+    updatedAt: demandA.updatedAt.toISOString(),
   }
 }
