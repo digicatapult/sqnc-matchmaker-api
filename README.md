@@ -145,7 +145,7 @@ The last top level entity `attachment`, which accepts a `multipart/form-data` pa
 - `GET /v1/attachment` - list attachments.
 - `GET /v1/attachment/{attachmentId}` - download an attachment.
 
-## Demo scenario
+## Demo scenario
 
 ### Services
 
