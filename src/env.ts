@@ -19,7 +19,7 @@ export default envalid.cleanEnv(process.env, {
   IDENTITY_SERVICE_PORT: envalid.port({ devDefault: 3002, default: 3000 }),
   NODE_HOST: envalid.host({ default: 'localhost' }),
   NODE_PORT: envalid.port({ default: 9944 }),
-  ENABLE_INDEXER: envalid.bool({ default: false }),
+  ENABLE_INDEXER: envalid.bool({ default: true }),
   USER_URI: envalid.str({ devDefault: '//Alice' }),
   IPFS_HOST: envalid.host({ devDefault: 'localhost' }),
   IPFS_PORT: envalid.port({ default: 5001 }),

@@ -1,14 +1,15 @@
 import { Controller, Get, Route, Path, Response, Tags, Security, Query } from 'tsoa'
 import type { Logger } from 'pino'
-import { logger } from '../../lib/logger'
-import Database from '../../lib/db'
-import { UUID } from '../../models/uuid'
-import { BadRequest, NotFound } from '../../lib/error-handler/index'
-import { TransactionApiType, TransactionResponse, TransactionState } from '../../models/transaction'
+import { logger } from '../../../lib/logger'
+import Database from '../../../lib/db'
+import { DATE, UUID } from '../../../models/strings'
+import { BadRequest, NotFound } from '../../../lib/error-handler/index'
+import { TransactionApiType, TransactionResponse, TransactionState } from '../../../models/transaction'
+import { parseDateParam } from '../../../lib/utils/queryParams'
 
-@Route('transaction')
+@Route('v1/transaction')
 @Tags('transaction')
-@Security('bearerAuth')
+@Security('BearerAuth')
 export class TransactionController extends Controller {
   log: Logger
   db: Database
@@ -21,7 +22,7 @@ export class TransactionController extends Controller {
 
   /**
    * Returns the details of all transactions.
-   * @summary List all transactions
+   * @summary List transactions
    * @Query apiType lists all transactions by that type
    */
   @Response<BadRequest>(400, 'Request was invalid')
@@ -29,9 +30,18 @@ export class TransactionController extends Controller {
   @Get('/')
   public async getAllTransactions(
     @Query() apiType?: TransactionApiType,
-    @Query() status?: TransactionState
+    @Query() status?: TransactionState,
+    @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
-    return await this.db.getTransactions(status, apiType)
+    const query: { state?: TransactionState; apiType?: TransactionApiType; updatedSince?: Date } = {
+      state: status,
+      apiType,
+    }
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
+    }
+
+    return await this.db.getTransactions(query)
   }
 
   /**

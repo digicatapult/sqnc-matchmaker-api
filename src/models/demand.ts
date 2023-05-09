@@ -1,10 +1,9 @@
-import { Attachment } from './attachment'
-import { UUID } from './uuid'
+import { DATE, UUID } from './strings'
 
 /**
  * The possible types of a Demand
  */
-export type DemandSubtype = 'order' | 'capacity'
+export type DemandSubtype = 'demand_a' | 'demand_b'
 
 /**
  * The possible states of a Demand
@@ -22,13 +21,8 @@ export interface DemandResponse {
   owner: string
   parametersAttachmentId: UUID
   state: DemandState
-}
-
-export interface DemandPayload extends DemandResponse, Attachment {
-  subtype: DemandSubtype
-  ipfs_hash: string
-  latestTokenId: number
-  originalTokenId: number
+  createdAt: DATE
+  updatedAt: DATE
 }
 
 /**

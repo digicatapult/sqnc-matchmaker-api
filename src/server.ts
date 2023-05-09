@@ -1,8 +1,8 @@
 import express, { Express } from 'express'
 import { setup, serve } from 'swagger-ui-express'
-
 import cors from 'cors'
 import { json, urlencoded } from 'body-parser'
+
 import { errorHandler } from './lib/error-handler'
 import { RegisterRoutes } from './routes'
 import * as swaggerJson from './swagger.json'

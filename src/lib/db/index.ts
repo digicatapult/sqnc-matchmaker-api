@@ -4,7 +4,7 @@ import type { Logger } from 'pino'
 import { logger } from '../logger'
 import { pgConfig } from './knexfile'
 import { DemandState, DemandSubtype } from '../../models/demand'
-import { UUID } from '../../models/uuid'
+import { HEX, UUID } from '../../models/strings'
 import { Match2State } from '../../models/match2'
 import { TransactionApiType, TransactionState, TransactionType } from '../../models/transaction'
 
@@ -16,9 +16,10 @@ export type Models<V> = {
   [key in TABLE]: V
 }
 
-export type Query = Knex.QueryBuilder
+export type QueryBuilder = Knex.QueryBuilder
 
-export type ProcessedBlock = { hash: string; parent: string; height: number }
+export type ProcessedBlock = { hash: HEX; parent: HEX; height: number }
+export type ProcessedBlockTrimmed = { hash: string; parent: string; height: number }
 
 const demandColumns = [
   'id',
@@ -28,7 +29,33 @@ const demandColumns = [
   'parameters_attachment_id AS parametersAttachmentId',
   'latest_token_id AS latestTokenId',
   'original_token_id AS originalTokenId',
+  'created_at AS createdAt',
+  'updated_at AS updatedAt',
 ]
+
+export interface DemandRow {
+  id: string
+  owner: string
+  state: DemandState
+  subtype: DemandSubtype
+  parametersAttachmentId: UUID
+  latestTokenId: number | null
+  originalTokenId: number | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface DemandWithAttachmentRow {
+  owner: string
+  parametersAttachmentId: UUID
+  state: DemandState
+  filename: string | 'json' | null
+  size: number | null
+  subtype: DemandSubtype
+  ipfs_hash: string
+  latestTokenId: number
+  originalTokenId: number
+}
 
 const match2Columns = [
   'id',
@@ -40,7 +67,23 @@ const match2Columns = [
   'demand_b_id AS demandB',
   'latest_token_id AS latestTokenId',
   'original_token_id AS originalTokenId',
+  'created_at AS createdAt',
+  'updated_at AS updatedAt',
 ]
+
+export interface Match2Row {
+  id: UUID
+  state: Match2State
+  optimiser: string
+  memberA: string
+  memberB: string
+  demandA: UUID
+  demandB: UUID
+  latestTokenId: number | null
+  originalTokenId: number | null
+  createdAt: Date
+  updatedAt: Date
+}
 
 const transactionColumns = [
   'id',
@@ -52,9 +95,19 @@ const transactionColumns = [
   'updated_at AS updatedAt',
 ]
 
+export interface Transaction {
+  id: UUID
+  state: TransactionState
+  localId: UUID
+  apiType: TransactionApiType
+  transactionType: TransactionType
+  submittedAt: Date
+  updatedAt: Date
+}
+
 const processBlocksColumns = ['hash', 'height', 'parent']
 
-function trim0x(input: ProcessedBlock): ProcessedBlock {
+function trim0x(input: ProcessedBlock): ProcessedBlockTrimmed {
   return {
     hash: input.hash.startsWith('0x') ? input.hash.slice(2) : input.hash,
     height: input.height,
@@ -62,18 +115,18 @@ function trim0x(input: ProcessedBlock): ProcessedBlock {
   }
 }
 
-function restore0x(input: ProcessedBlock): ProcessedBlock {
+function restore0x(input: ProcessedBlockTrimmed): ProcessedBlock {
   return {
-    hash: input.hash.startsWith('0x') ? input.hash : `0x${input.hash}`,
+    hash: input.hash.startsWith('0x') ? (input.hash as HEX) : `0x${input.hash}`,
     height: input.height,
-    parent: input.parent.startsWith('0x') ? input.parent : `0x${input.parent}`,
+    parent: input.parent.startsWith('0x') ? (input.parent as HEX) : `0x${input.parent}`,
   }
 }
 
 export default class Database {
   private client: Knex
   private log: Logger
-  public db: () => Models<() => Query>
+  public db: () => Models<() => QueryBuilder>
 
   constructor() {
     this.log = logger
@@ -84,35 +137,62 @@ export default class Database {
         [name]: () => this.client(name),
         ...acc,
       }
-    }, {}) as Models<() => Query>
+    }, {}) as Models<() => QueryBuilder>
     this.db = () => models
+  }
+
+  getAttachments = async ({ updatedSince }: { updatedSince?: Date } = {}) => {
+    const query = this.db().attachment()
+    // note the use of created_at here since attachments are immutable
+    return updatedSince ? query.where('created_at', '>', updatedSince) : query
   }
 
   getAttachment = async (parametersAttachmentId: string) => {
     return this.db().attachment().where({ id: parametersAttachmentId })
   }
 
-  updateAttachmentSize = async (id: string, size: number) => {
-    return this.db().attachment().update({ size }).where({ id })
+  updateAttachment = async (id: string, filename: string, size: number) => {
+    return this.db().attachment().update({ filename, size }).where({ id })
   }
 
-  insertDemand = async (capacity: object) => {
-    return this.db().demand().insert(capacity).returning('*')
+  insertAttachment = async (attachment: object) => {
+    return this.db().attachment().insert(attachment).returning('*')
   }
 
-  upsertDemand = async (demand: object) => {
-    return this.db().demand().insert(demand).onConflict('id').merge().returning('*')
+  insertDemand = async (demand: object) => {
+    return this.db().demand().insert(demand).returning('*')
   }
 
-  getDemands = async (subtype: DemandSubtype) => {
-    return this.db().demand().select(demandColumns).where({ subtype })
+  updateDemand = async (id: UUID, demand: object) => {
+    return this.db()
+      .demand()
+      .update({
+        ...demand,
+        updated_at: new Date(),
+      })
+      .where({ id })
+      .returning('*')
   }
 
-  getDemand = async (id: UUID) => {
+  getDemands = async ({
+    subtype,
+    updatedSince,
+  }: {
+    subtype: DemandSubtype
+    updatedSince?: Date
+  }): Promise<DemandRow[]> => {
+    const query = this.db().demand().select(demandColumns).where({ subtype })
+    if (updatedSince) {
+      return query.where('updated_at', '>', updatedSince)
+    }
+    return query
+  }
+
+  getDemand = async (id: UUID): Promise<[DemandRow] | []> => {
     return this.db().demand().select(demandColumns).where({ id })
   }
 
-  getDemandWithAttachment = async (id: UUID, subtype: DemandSubtype) => {
+  getDemandWithAttachment = async (id: UUID, subtype: DemandSubtype): Promise<DemandWithAttachmentRow[]> => {
     return this.db()
       .demand()
       .join('attachment', 'demand.parameters_attachment_id', 'attachment.id')
@@ -120,7 +200,7 @@ export default class Database {
       .where({ 'demand.id': id, subtype })
   }
 
-  insertTransaction = async ({ hash, ...rest }: { hash: `0x${string}` } & Record<string, string>) => {
+  insertTransaction = async ({ hash, ...rest }: { hash: HEX } & Record<string, string>) => {
     return this.db()
       .transaction()
       .insert({ hash: hash.slice(2), ...rest })
@@ -131,15 +211,54 @@ export default class Database {
     return this.db().transaction().select(transactionColumns).where({ id })
   }
 
-  getTransactions = async (state?: TransactionState, api_type?: TransactionApiType) => {
-    return this.db()
+  findTransaction = async (callHash: HEX) => {
+    const transactions = (await this.db()
       .transaction()
-      .where({ ...(state && { state }), ...(api_type && { api_type }) })
       .select(transactionColumns)
+      .where({ hash: callHash.substring(2) })) as Transaction[]
+
+    return transactions.length !== 0 ? transactions[0] : null
   }
 
-  getTransactionsByLocalId = async (local_id: UUID, transaction_type: TransactionType) => {
-    return this.db().transaction().select(transactionColumns).where({ local_id, transaction_type })
+  getTransactions = async ({
+    state,
+    apiType,
+    updatedSince,
+  }: {
+    state?: TransactionState
+    apiType?: TransactionApiType
+    updatedSince?: Date
+  }) => {
+    let query = this.db().transaction().select(transactionColumns)
+    if (state) {
+      query = query.where({ state })
+    }
+    if (apiType) {
+      query = query.where({ api_type: apiType })
+    }
+    if (updatedSince) {
+      query = query.where('updated_at', '>', updatedSince)
+    }
+    return query
+  }
+
+  getTransactionsByLocalId = async ({
+    localId,
+    transactionType,
+    updatedSince,
+  }: {
+    localId: UUID
+    transactionType: TransactionType
+    updatedSince?: Date
+  }) => {
+    const query = this.db()
+      .transaction()
+      .select(transactionColumns)
+      .where({ local_id: localId, transaction_type: transactionType })
+    if (updatedSince) {
+      return query.where('updated_at', '>', updatedSince)
+    }
+    return query
   }
 
   updateTransaction = async (transactionId: UUID, transaction: object) => {
@@ -174,20 +293,32 @@ export default class Database {
       .where({ id: localId })
   }
 
-  insertMatch2 = async (match2: object) => {
-    return this.db().match2().insert(match2).returning(match2Columns)
+  insertMatch2 = async (match2: object): Promise<[Match2Row]> => {
+    const [result] = await this.db().match2().insert(match2).returning(match2Columns)
+    return [result]
   }
 
-  upsertMatch2 = async (match2: object) => {
-    return this.db().match2().insert(match2).onConflict('id').merge().returning('*')
+  updateMatch2 = async (id: UUID, match2: object) => {
+    return this.db()
+      .match2()
+      .update({
+        ...match2,
+        updated_at: new Date(),
+      })
+      .where({ id })
+      .returning('*')
   }
 
-  getMatch2s = async () => {
-    return this.db().match2().select(match2Columns)
+  getMatch2s = async ({ updatedSince }: { updatedSince?: Date } = {}): Promise<Match2Row[]> => {
+    const query = this.db().match2().select(match2Columns)
+    if (updatedSince) {
+      return query.where('updated_at', '>', updatedSince)
+    }
+    return query
   }
 
-  getMatch2 = async (match2Id: UUID) => {
-    return this.db().match2().where({ id: match2Id }).select(match2Columns)
+  getMatch2 = async (match2Id: UUID): Promise<[Match2Row] | []> => {
+    return this.db().match2().select(match2Columns).where({ id: match2Id })
   }
 
   getLastProcessedBlock = async (): Promise<ProcessedBlock | null> => {
@@ -197,6 +328,15 @@ export default class Database {
       .orderBy('height', 'desc')
       .limit(1)
     return blockRecords.length !== 0 ? restore0x(blockRecords[0]) : null
+  }
+
+  findLocalIdForToken = async (tokenId: number): Promise<UUID | null> => {
+    const result = (await Promise.all([
+      this.db().demand().select(['id']).where({ latest_token_id: tokenId }),
+      this.db().match2().select(['id']).where({ latest_token_id: tokenId }),
+    ])) as { id: UUID }[][]
+    const flatten = result.reduce((acc, set) => [...acc, ...set], [])
+    return flatten[0]?.id || null
   }
 
   insertProcessedBlock = async (block: ProcessedBlock): Promise<void> => {
