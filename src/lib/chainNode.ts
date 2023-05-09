@@ -84,7 +84,6 @@ export default class ChainNode {
     })
   }
 
-
   getApi(): ApiPromise {
     return this.api
   }
@@ -93,8 +92,37 @@ export default class ChainNode {
     return this.keyring
   }
 
-  async getLastFinalisedBlockHash(): Promise<HEX> {
+  getStatus = async () => {
+    await this.api.isReadyOrError.catch((error: any) => {
+      return error
+    })
+    if (!this.api.isConnected) {
+      return {
+        status: serviceState.DOWN,
+        detail: {
+          message: 'Cannot connect to substrate node',
+        },
+      }
+    }
+    const [chain, runtime] = await Promise.all([this.api.runtimeChain, this.api.runtimeVersion])
+    return {
+      status: serviceState.UP,
+      detail: {
+        chain,
+        runtime: {
+          name: runtime.specName,
+          versions: {
+            spec: runtime.specVersion.toNumber(),
+            impl: runtime.implVersion.toNumber(),
+            authoring: runtime.authoringVersion.toNumber(),
+            transaction: runtime.transactionVersion.toNumber(),
+          },
+        },
+      },
+    }
+  }
 
+  async getLastFinalisedBlockHash(): Promise<HEX> {
     await this.api.isReady
     const result = await this.api.rpc.chain.getFinalizedHead()
     return result.toHex()
