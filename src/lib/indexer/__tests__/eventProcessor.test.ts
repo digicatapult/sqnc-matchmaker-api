@@ -42,7 +42,7 @@ describe('eventProcessor', function () {
             roles: new Map([['owner', '123']]),
             metadata: new Map([
               ['parameters', 'a'],
-              ['subtype', 'capacity'],
+              ['subtype', 'demand_b'],
             ]),
           },
         ]
@@ -62,7 +62,7 @@ describe('eventProcessor', function () {
         type: 'insert',
         id: demandId,
         owner: '123',
-        subtype: 'capacity',
+        subtype: 'demand_b',
         state: 'created',
         parameters_attachment_id: attachmentId,
         latest_token_id: 1,
@@ -122,9 +122,9 @@ describe('eventProcessor', function () {
           {
             id: 5,
             roles: new Map([
-              ['Optimiser', 'o'],
-              ['MemberA', 'a'],
-              ['MemberB', 'b'],
+              ['optimiser', 'o'],
+              ['membera', 'a'],
+              ['memberb', 'b'],
             ]),
             metadata: new Map([
               ['demandA', 'da'],
@@ -150,8 +150,8 @@ describe('eventProcessor', function () {
         member_a: 'a',
         member_b: 'b',
         state: 'proposed',
-        demand_a_id: 'da',
-        demand_b_id: 'db',
+        demand_a_id: 'id_1',
+        demand_b_id: 'id_2',
         latest_token_id: 5,
         original_token_id: 5,
       })

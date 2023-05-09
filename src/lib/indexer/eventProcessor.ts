@@ -96,12 +96,12 @@ const DefaultEventProcessors: EventProcessors = {
     const match: MatchRecord = {
       type: 'insert',
       id: UUIDv4(),
-      optimiser: getOrError(newMatch.roles, 'Optimiser'),
-      member_a: getOrError(newMatch.roles, 'MemberA'),
-      member_b: getOrError(newMatch.roles, 'MemberB'),
+      optimiser: getOrError(newMatch.roles, 'optimiser'),
+      member_a: getOrError(newMatch.roles, 'membera'),
+      member_b: getOrError(newMatch.roles, 'memberb'),
       state: 'proposed',
-      demand_a_id: getOrError(newMatch.metadata, 'demandA'),
-      demand_b_id: getOrError(newMatch.metadata, 'demandB'),
+      demand_a_id: inputs[0].localId,
+      demand_b_id: inputs[1].localId,
       latest_token_id: newMatchId,
       original_token_id: newMatchId,
     }

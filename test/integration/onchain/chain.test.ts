@@ -5,10 +5,10 @@ import { expect } from 'chai'
 import createHttpServer from '../../../src/server'
 import Indexer from '../../../src/lib/indexer'
 import { post } from '../../helper/routeHelper'
-import { seed, cleanup, seededCapacityId, parametersAttachmentId } from '../../seeds'
+import { seed, cleanup, seededDemandBId, parametersAttachmentId } from '../../seeds'
 
 import { withIdentitySelfMock } from '../../helper/mock'
-import Database from '../../../src/lib/db'
+import Database, { DemandRow, Match2Row } from '../../../src/lib/db'
 import ChainNode from '../../../src/lib/chainNode'
 import { logger } from '../../../src/lib/logger'
 import env from '../../../src/env'
@@ -78,9 +78,9 @@ describe('on-chain', function () {
       const invalidProcess = { id: 'invalid', version: 1 }
       const extrinsic = await node.prepareRunProcess({ process: invalidProcess, inputs: [], outputs: [] })
       const [transaction] = await db.insertTransaction({
-        api_type: 'capacity',
+        api_type: 'demand_b',
         transaction_type: 'creation',
-        local_id: seededCapacityId,
+        local_id: seededDemandBId,
         state: 'submitted',
         hash: extrinsic.hash.toHex(),
       })
@@ -93,12 +93,12 @@ describe('on-chain', function () {
     })
   })
 
-  describe('capacity', () => {
-    it('should create a capacity on-chain', async () => {
+  describe('demandB', () => {
+    it('should create a demandB on-chain', async () => {
       const lastTokenId = await node.getLastTokenId()
 
       // submit to chain
-      const response = await post(app, `/capacity/${seededCapacityId}/creation`, {})
+      const response = await post(app, `/v1/demandB/${seededDemandBId}/creation`, {})
       expect(response.status).to.equal(201)
 
       const { id: transactionId, state } = response.body
@@ -110,23 +110,24 @@ describe('on-chain', function () {
       // wait for block to finalise
       await pollTransactionState(db, transactionId, 'finalised')
 
-      // check local capacity updates with token id
-      const [capacity] = await db.getDemand(seededCapacityId)
-      expect(capacity.latestTokenId).to.equal(lastTokenId + 1)
-      expect(capacity.originalTokenId).to.equal(lastTokenId + 1)
+      // check local demandB updates with token id
+      const [maybeDemandB] = await db.getDemand(seededDemandBId)
+      const demandB = maybeDemandB as DemandRow
+      expect(demandB.latestTokenId).to.equal(lastTokenId + 1)
+      expect(demandB.originalTokenId).to.equal(lastTokenId + 1)
     })
   })
 
-  describe('order', () => {
-    it('creates an order on chain', async () => {
+  describe('demandA', () => {
+    it('creates an demandA on chain', async () => {
       const lastTokenId = await node.getLastTokenId()
 
       const {
-        body: { id: orderId },
-      } = await post(app, '/order', { parametersAttachmentId })
+        body: { id: demandAId },
+      } = await post(app, '/v1/demandA', { parametersAttachmentId })
 
       // submit to chain
-      const response = await post(app, `/order/${orderId}/creation`, {})
+      const response = await post(app, `/v1/demandA/${demandAId}/creation`, {})
       expect(response.status).to.equal(201)
 
       const { id: transactionId, state } = response.body
@@ -137,11 +138,11 @@ describe('on-chain', function () {
 
       await pollTransactionState(db, transactionId, 'finalised')
 
-      const [order] = await db.getDemand(orderId)
-      expect(order).to.contain({
-        id: orderId,
+      const [demandA] = await db.getDemand(demandAId)
+      expect(demandA).to.contain({
+        id: demandAId,
         state: 'created',
-        subtype: 'order',
+        subtype: 'demand_a',
         parametersAttachmentId,
         latestTokenId: lastTokenId + 1,
         originalTokenId: lastTokenId + 1,
@@ -150,42 +151,44 @@ describe('on-chain', function () {
   })
 
   describe('match2', async () => {
-    let orderOriginalId: number
-    let capacityOriginalId: number
-    let orderLocalId: UUID
-    let capacityLocalId: UUID
+    let demandAOriginalId: number
+    let demandBOriginalId: number
+    let demandALocalId: UUID
+    let demandBLocalId: UUID
     let match2LocalId: UUID
 
     beforeEach(async () => {
-      // prepare an unallocated order + capacity + local match2
+      // prepare an unallocated demandA + demandB + local match2
 
       const {
-        body: { id: orderId },
-      } = await post(app, '/order', { parametersAttachmentId })
+        body: { id: demandAId },
+      } = await post(app, '/v1/demandA', { parametersAttachmentId })
       const {
-        body: { id: orderTransactionId },
-      } = await post(app, `/order/${orderId}/creation`, {})
+        body: { id: demandATransactionId },
+      } = await post(app, `/v1/demandA/${demandAId}/creation`, {})
 
       const {
-        body: { id: capacityId },
-      } = await post(app, '/capacity', { parametersAttachmentId })
+        body: { id: demandBId },
+      } = await post(app, '/v1/demandB', { parametersAttachmentId })
       const {
-        body: { id: capacityTransactionId },
-      } = await post(app, `/capacity/${capacityId}/creation`, {})
+        body: { id: demandBTransactionId },
+      } = await post(app, `/v1/demandB/${demandBId}/creation`, {})
 
-      await pollTransactionState(db, orderTransactionId, 'finalised')
-      const [order] = await db.getDemand(orderId)
-      orderLocalId = orderId
-      orderOriginalId = order.originalTokenId
+      await pollTransactionState(db, demandATransactionId, 'finalised')
+      const [maybeDemandA] = await db.getDemand(demandAId)
+      const demandA = maybeDemandA as DemandRow
+      demandALocalId = demandAId
+      demandAOriginalId = demandA.originalTokenId as number
 
-      await pollTransactionState(db, capacityTransactionId, 'finalised')
-      const [capacity] = await db.getDemand(capacityId)
-      capacityLocalId = capacityId
-      capacityOriginalId = capacity.originalTokenId
+      await pollTransactionState(db, demandBTransactionId, 'finalised')
+      const [maybeDemandB] = await db.getDemand(demandBId)
+      const demandB = maybeDemandB as DemandRow
+      demandBLocalId = demandBId
+      demandBOriginalId = demandB.originalTokenId as number
 
       const {
         body: { id: match2Id },
-      } = await post(app, '/match2', { demandA: orderId, demandB: capacityId })
+      } = await post(app, '/v1/match2', { demandA: demandAId, demandB: demandBId })
       match2LocalId = match2Id
     })
 
@@ -193,7 +196,7 @@ describe('on-chain', function () {
       const lastTokenId = await node.getLastTokenId()
 
       // submit to chain
-      const response = await post(app, `/match2/${match2LocalId}/proposal`, {})
+      const response = await post(app, `/v1/match2/${match2LocalId}/proposal`, {})
       expect(response.status).to.equal(201)
 
       const { id: transactionId, state } = response.body
@@ -206,65 +209,73 @@ describe('on-chain', function () {
       await pollTransactionState(db, transactionId, 'finalised')
 
       // check local entities update with token id
-      const [demandA] = await db.getDemand(orderLocalId)
+      const [maybeDemandA] = await db.getDemand(demandALocalId)
+      const demandA = maybeDemandA as DemandRow
       expect(demandA.latestTokenId).to.equal(lastTokenId + 1)
-      expect(demandA.originalTokenId).to.equal(orderOriginalId)
+      expect(demandA.originalTokenId).to.equal(demandAOriginalId)
 
-      const [demandB] = await db.getDemand(capacityLocalId)
+      const [maybeDemandB] = await db.getDemand(demandBLocalId)
+      const demandB = maybeDemandB as DemandRow
       expect(demandB.latestTokenId).to.equal(lastTokenId + 2)
-      expect(demandB.originalTokenId).to.equal(capacityOriginalId)
+      expect(demandB.originalTokenId).to.equal(demandBOriginalId)
 
-      const [match2] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2] = await db.getMatch2(match2LocalId)
+      const match2 = maybeMatch2 as Match2Row
       expect(match2.latestTokenId).to.equal(lastTokenId + 3)
       expect(match2.originalTokenId).to.equal(lastTokenId + 3)
     })
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
       // propose
-      const proposal = await post(app, `/match2/${match2LocalId}/proposal`, {})
+      const proposal = await post(app, `/v1/match2/${match2LocalId}/proposal`, {})
 
       // wait for block to finalise
       await pollTransactionState(db, proposal.body.id, 'finalised')
 
-      const [match2] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2] = await db.getMatch2(match2LocalId)
+      const match2 = maybeMatch2 as Match2Row
       const match2OriginalId = match2.originalTokenId
       const lastTokenId = await node.getLastTokenId()
 
       // submit accept to chain
-      const responseAcceptA = await post(app, `/match2/${match2LocalId}/accept`, {})
+      const responseAcceptA = await post(app, `/v1/match2/${match2LocalId}/accept`, {})
       expect(responseAcceptA.status).to.equal(201)
 
       // wait for block to finalise
       await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
 
       // check local entities update with token id
-      const [match2AcceptA] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2AcceptA] = await db.getMatch2(match2LocalId)
+      const match2AcceptA = maybeMatch2AcceptA as Match2Row
       expect(match2AcceptA.latestTokenId).to.equal(lastTokenId + 1)
       expect(match2AcceptA.state).to.equal('acceptedA')
       expect(match2AcceptA.originalTokenId).to.equal(match2OriginalId)
 
       // submit 2nd accept to chain
-      const responseAcceptFinal = await post(app, `/match2/${match2LocalId}/accept`, {})
+      const responseAcceptFinal = await post(app, `/v1/match2/${match2LocalId}/accept`, {})
       expect(responseAcceptFinal.status).to.equal(201)
 
       // wait for block to finalise
       await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
 
       // check local entities update with token id
-      const [demandA] = await db.getDemand(orderLocalId)
+      const [maybeDemandA] = await db.getDemand(demandALocalId)
+      const demandA = maybeDemandA as DemandRow
       expect(demandA.latestTokenId).to.equal(lastTokenId + 2)
       expect(demandA.state).to.equal('allocated')
-      expect(demandA.originalTokenId).to.equal(orderOriginalId)
+      expect(demandA.originalTokenId).to.equal(demandAOriginalId)
 
-      const [demandB] = await db.getDemand(capacityLocalId)
+      const [maybeDemandB] = await db.getDemand(demandBLocalId)
+      const demandB = maybeDemandB as DemandRow
       expect(demandB.latestTokenId).to.equal(lastTokenId + 3)
       expect(demandB.state).to.equal('allocated')
-      expect(demandB.originalTokenId).to.equal(capacityOriginalId)
+      expect(demandB.originalTokenId).to.equal(demandBOriginalId)
 
-      const [matchAcceptFinal] = await db.getMatch2(match2LocalId)
-      expect(matchAcceptFinal.latestTokenId).to.equal(lastTokenId + 4)
-      expect(matchAcceptFinal.state).to.equal('acceptedFinal')
-      expect(matchAcceptFinal.originalTokenId).to.equal(match2OriginalId)
+      const [maybeMatch2AcceptFinal] = await db.getMatch2(match2LocalId)
+      const match2AcceptFinal = maybeMatch2AcceptFinal as Match2Row
+      expect(match2AcceptFinal.latestTokenId).to.equal(lastTokenId + 4)
+      expect(match2AcceptFinal.state).to.equal('acceptedFinal')
+      expect(match2AcceptFinal.originalTokenId).to.equal(match2OriginalId)
     })
   })
 })

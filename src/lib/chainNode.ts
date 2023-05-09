@@ -1,31 +1,16 @@
 import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/api'
 import { blake2AsHex } from '@polkadot/util-crypto'
-import { ApiDecoration, SubmittableExtrinsic } from '@polkadot/api/types'
-import type { u128, Vec } from '@polkadot/types'
-import type { CallHash } from '@polkadot/types/interfaces/runtime'
-// import type { EventIndex } from '@polkadot/types/interfaces/system'
+import { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { u128 } from '@polkadot/types'
 
 import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
-import { HttpResponse } from './error-handler'
-import type { SignedBlock } from '@polkadot/types/interfaces/runtime'
-import type { Codec } from '@polkadot/types-codec/types'
 
 import type { Payload, Output, Metadata } from './payload'
-import type {
-  DscpNodeRuntimeRole,
-  FrameSystemEventRecord,
-  DscpPalletTraitsProcessFullyQualifiedId,
-} from '@polkadot/types/lookup'
-import { u32 } from '@polkadot/types-codec'
-import { Registry } from '@polkadot/types/types'
-import { ILookup } from '@polkadot/types-create/types'
 import { HEX } from '../models/strings'
-//import type { AugmentedEvents } from '@polkadot/api-base/types/events'
-//type UtxoNftProcessRanEvent = AugmentedEvents<'promise'>['utxoNFT']['ProcessRan']
+import { hexToBs58 } from '../utils/hex'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
-// const a: __AugmentedQuery<'promise'> = {}
 
 export interface NodeCtorConfig {
   host: string
@@ -35,17 +20,20 @@ export interface NodeCtorConfig {
 }
 
 export interface ProcessRanEvent {
-  callHash: CallHash
-  sender: DscpNodeRuntimeRole
-  process: DscpPalletTraitsProcessFullyQualifiedId
-  inputs: u128
-  outputs: Vec<u128>
+  callHash: HEX
   blockHash: HEX
+  sender: string
+  process: {
+    id: string
+    version: number
+  }
+  inputs: number[]
+  outputs: number[]
 }
 
 interface RoleEnum {
-  name: string | undefined /* TYPE */
-  index: number | undefined /* TYPE */
+  name: string | undefined
+  index: number | undefined
 }
 
 interface SubstrateToken {
@@ -115,8 +103,8 @@ export default class ChainNode {
   async getRoles(): Promise<RoleEnum[]> {
     await this.api.isReady
 
-    const registry: Registry = this.api.registry
-    const lookup /*: ILookup */ = registry.lookup as unknown as ILookup // TODO not sure if this is error or not, might be just linting
+    const registry = this.api.registry
+    const lookup = registry.lookup
     const lookupId = registry.getDefinition('DscpNodeRuntimeRole') as `Lookup${number}`
 
     const rolesEnum = lookup.getTypeDef(lookupId).sub
@@ -156,7 +144,7 @@ export default class ChainNode {
 
   async submitRunProcess(
     extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>,
-    transactionDbUpdate: (state: TransactionState) => Promise<void> /* TYPE */
+    transactionDbUpdate: (state: TransactionState) => Promise<void>
   ): Promise<number[]> {
     this.logger.debug('Submitting Transaction %j', extrinsic.hash.toHex())
     return new Promise((resolve, reject) => {
@@ -260,32 +248,34 @@ export default class ChainNode {
 
   async getProcessRanEvents(blockhash: HEX): Promise<ProcessRanEvent[]> {
     await this.api.isReady
-    const apiAtBlock: ApiDecoration<'promise'> = await this.api.at(blockhash)
-    const processRanEventIndexes = (await apiAtBlock.query.system.eventTopics(processRanTopic)) as unknown as Codec
-    if (Array.isArray(processRanEventIndexes) && processRanEventIndexes.length === 0) {
+    const apiAtBlock = await this.api.at(blockhash)
+    const processRanEventIndexes = (await apiAtBlock.query.system.eventTopics(processRanTopic)) as unknown as [
+      never,
+      number
+    ][]
+    if (processRanEventIndexes.length === 0) {
       return []
     }
 
-    const block: SignedBlock = await this.api.rpc.chain.getBlock(blockhash)
-    const events: Vec<FrameSystemEventRecord> = await apiAtBlock.query.system.events()
-
-    return processRanEventIndexes.map(([, index]: [unknown, number]) => {
-      const event: FrameSystemEventRecord = events[index] // TODO ???
-      const extrinsicIndex: u32 = event.phase.asApplyExtrinsic
-      const process = event.event.data[1] as unknown as DscpPalletTraitsProcessFullyQualifiedId
-
+    const block = await this.api.rpc.chain.getBlock(blockhash)
+    const events = (await apiAtBlock.query.system.events()) as unknown as {
+      event: { data: unknown[] }
+      phase: { get asApplyExtrinsic(): number }
+    }[]
+    return processRanEventIndexes.map(([, index]) => {
+      const event = events[index]
+      const extrinsicIndex = event.phase.asApplyExtrinsic
+      const process = event.event.data[1] as { id: string; version: { toNumber: () => number } }
       return {
-        // callHash: block.block.extrinsics[extrinsicIndex as unknown as number].hash.toString(),
-        // sender: event.event.data[0].toString(),
-        callHash: block.block.extrinsics[extrinsicIndex.toNumber()].hash.toString() as HEX,
+        callHash: block.block.extrinsics[extrinsicIndex].hash.toString() as HEX,
         blockHash: blockhash,
         sender: (event.event.data[0] as { toString: () => string }).toString(),
         process: {
           id: Buffer.from(process.id).toString('ascii'),
           version: process.version.toNumber(),
         },
-        inputs: event.event.data[2],
-        outputs: event.event.data[3],
+        inputs: (event.event.data[2] as { toNumber: () => number }[]).map((i) => i.toNumber()),
+        outputs: (event.event.data[3] as { toNumber: () => number }[]).map((o) => o.toNumber()),
       }
     })
   }
@@ -300,6 +290,11 @@ export default class ChainNode {
         if (valueKey === 'None' || valueKey === 'tokenId') {
           return [key, valueRaw]
         }
+
+        if (valueKey === 'file') {
+          return [key, hexToBs58(valueRaw)]
+        }
+
         const valueHex = valueRaw || '0x'
         const value = Buffer.from(valueHex.substring(2), 'hex').toString('utf8')
         return [key, value]

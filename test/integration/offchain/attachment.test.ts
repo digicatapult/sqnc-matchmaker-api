@@ -7,6 +7,7 @@ import { get, post, postFile } from '../../helper/routeHelper'
 
 import Database from '../../../src/lib/db'
 import { withIpfsMockError, withIpfsMock } from '../../helper/mock'
+import { seed } from '../../seeds'
 
 const db = new Database().db()
 
@@ -29,7 +30,7 @@ describe('attachment', () => {
 
   describe('invalid requests', () => {
     it('returns 422 when attempting to retrieve by not UUID', async () => {
-      const { status, body } = await get(app, '/attachment/not-uuid')
+      const { status, body } = await get(app, '/v1/attachment/not-uuid')
 
       expect(status).to.equal(422)
       expect(body).to.have.keys(['fields', 'message', 'name'])
@@ -40,10 +41,42 @@ describe('attachment', () => {
     })
 
     it('returns 404 if no records found', async () => {
-      const { status, body } = await get(app, '/attachment/afe7e60a-2fd8-43f9-9867-041f14e3e8f4')
+      const { status, body } = await get(app, '/v1/attachment/afe7e60a-2fd8-43f9-9867-041f14e3e8f4')
 
       expect(status).to.equal(404)
       expect(body).to.equal('attachment not found')
+    })
+
+    it('returns 422 with invalid updatedSince date', async () => {
+      const { status, body } = await get(app, `/v1/attachment?updated_since=foo`)
+      expect(status).to.equal(422)
+      expect(body).to.contain({
+        name: 'ValidateError',
+        message: 'Validation failed',
+      })
+    })
+  })
+
+  describe('list attachments', () => {
+    beforeEach(async () => await seed())
+
+    it('returns attachments', async () => {
+      const { status, body } = await get(app, `/v1/attachment`)
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([
+        {
+          createdAt: '2023-01-01T00:00:00.000Z',
+          filename: 'test.txt',
+          id: 'a789ad47-91c3-446e-90f9-a7c9b233eaf8',
+          size: '42',
+        },
+      ])
+    })
+
+    it('filters attachments based on created date', async () => {
+      const { status, body } = await get(app, `/v1/attachment?updated_since=2023-01-01T00:00:00.000Z`)
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([])
     })
   })
 
@@ -53,7 +86,7 @@ describe('attachment', () => {
     withIpfsMock(blobData)
 
     beforeEach(async () => {
-      octetRes = await postFile(app, '/attachment', Buffer.from(blobData), filename)
+      octetRes = await postFile(app, '/v1/attachment', Buffer.from(blobData), filename)
     })
 
     it('confirms JSON attachment uploads', () => {
@@ -66,7 +99,7 @@ describe('attachment', () => {
 
     it('returns octet attachment', async () => {
       const { id } = octetRes.body
-      const { status, body, header } = await get(app, `/attachment/${id}`, { accept: 'application/octet-stream' })
+      const { status, body, header } = await get(app, `/v1/attachment/${id}`, { accept: 'application/octet-stream' })
 
       expect(status).to.equal(200)
       expect(Buffer.from(body).toString()).to.equal(blobData)
@@ -81,7 +114,7 @@ describe('attachment', () => {
 
     it('returns octet when JSON.parse fails', async () => {
       const { id } = octetRes.body
-      const { status, body, header } = await get(app, `/attachment/${id}`, { accept: 'application/json' })
+      const { status, body, header } = await get(app, `/v1/attachment/${id}`, { accept: 'application/json' })
 
       expect(status).to.equal(200)
       expect(Buffer.from(body).toString()).to.equal(blobData)
@@ -101,7 +134,7 @@ describe('attachment', () => {
     withIpfsMock(jsonData)
 
     beforeEach(async () => {
-      jsonRes = await post(app, '/attachment', jsonData)
+      jsonRes = await post(app, '/v1/attachment', jsonData)
     })
 
     it('confirms JSON and octet attachment uploads', () => {
@@ -113,14 +146,14 @@ describe('attachment', () => {
 
     it('returns JSON attachment', async () => {
       const { id } = jsonRes.body
-      const { status, body } = await get(app, `/attachment/${id}`, { accept: 'application/json' })
+      const { status, body } = await get(app, `/v1/attachment/${id}`, { accept: 'application/json' })
 
       expect(status).to.equal(200)
       expect(body).to.contain(jsonData)
     })
 
     it('attachment as octet with the filename [json]', async () => {
-      const { status, body, header } = await get(app, `/attachment/${jsonRes.body.id}`, {
+      const { status, body, header } = await get(app, `/v1/attachment/${jsonRes.body.id}`, {
         accept: 'application/octet-stream',
       })
 
@@ -137,8 +170,8 @@ describe('attachment', () => {
   })
 
   it('Doesn`t upload files if more than 100mb', async () => {
-    const uploadRes = await postFile(app, '/attachment', Buffer.from(overSizeBlobData), 'json')
-    const { status, body } = await get(app, `/attachment/${uploadRes.body.id}`)
+    const uploadRes = await postFile(app, '/v1/attachment', Buffer.from(overSizeBlobData), 'json')
+    const { status, body } = await get(app, `/v1/attachment/${uploadRes.body.id}`)
 
     expect(status).to.equal(422)
     expect(body.toString()).to.deep.contain({ message: 'Validation failed' })
@@ -148,7 +181,7 @@ describe('attachment', () => {
     withIpfsMockError()
 
     it('ipfs error - 500', async () => {
-      const { status, body } = await post(app, '/attachment', jsonData)
+      const { status, body } = await post(app, '/v1/attachment', jsonData)
       expect(status).to.equal(500)
       expect(body).to.equal('error')
     })

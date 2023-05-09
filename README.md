@@ -2,7 +2,7 @@
 
 ## Description
 
-A `Node.js` typescript template with open api implementation
+An API facilitating a distributed heterogeneous pairwise matchmaking service utilising the [Distributed Supply Chain Platform](https://github.com/digicatapult/dscp-documentation)
 
 ## Configuration
 
@@ -108,52 +108,74 @@ npm run flows
 
 These are the top level physical concepts in the system. They are the top level RESTful path segments. Note that different states of an entity will **NOT** be represented as different top level entities.
 
-- `capacity`
-- `order`
-- `match2`
+- `v1/demandA`
+- `v1/demandB`
+- `v1/match2`
+
+Note the meaning in the API of `demandA` and `demandB` are abstract and use-case dependent. For example in the case of a logistics matching service where one provider has an `order` to be moved and another has some `capacity` to move orders one might represent an `order` as a `demandA` and a `capacity` as a `demandB`. Interpretation of these labels is entirely by convention.
 
 Additionally, there is the `attachment` entity which returns an `id` to be used when preparing entity updates to attach files.
 
 ### Entity queries
 
-Entity queries allow the API user to list those entities (including a query) and to get a specific entity. For `order` for example:
+Entity queries allow the API user to list those entities (including a query) and to get a specific entity. For `demandA` for example:
 
-- `GET /capacity` - get all capacities
-- `GET /capacity/{capacityId}` - get a capacity by ID
+- `GET /v1/demandA` - get all demandAs
+- `GET /v1/demandA/{demandAId}` - get a demandA by ID
 
 ### Entity creation
 
 Allows the creation of an initial local state for an entity. Note this is essentially just to establish an internal identifier for the entity and **the state is not shared across the blockchain network at this point**.
 
-- `POST /capacity`
+- `POST /v1/demandB`
 
 ### Entity updates
 
-Allows different kind of updates to be prepared and applied to an entity. For example, a `capacity` must be submitted via a `creation` action.
+Allows different kind of updates to be prepared and applied to an entity. For example, a `demandB` must be submitted via a `creation` action.
 
-- `POST /capacity/{capacityId}/creation` - create a creation `creation` transaction and send it to the blockchain.
-- `GET /capacity/{capacityId}/creation` - list a capacity's `creation` transactions and their status.
-- `GET /capacity/{capacityId}/creation/{creationId}` - get the details of a capacity `creation` transaction.
+- `POST /v1/demandB/{demandBId}/creation` - create a creation `creation` transaction and send it to the blockchain.
+- `GET /v1/demandB/{demandBId}/creation` - list a demandB's `creation` transactions and their status.
+- `GET /v1/demandB/{demandBId}/creation/{creationId}` - get the details of a demandB `creation` transaction.
 
 ### Attachment API
 
 The last top level entity `attachment`, which accepts a `multipart/form-data` payload for uploading a file or `application/json` for uploading JSON as a file. This will return an `id` that can then be used when preparing entity updates to attach files.
 
-- `POST /attachment` - upload a file.
-- `GET /attachment` - list all attachments.
-- `GET /attachment/{attachmentId}` - download an attachment.
+- `POST /v1/attachment` - upload a file.
+- `GET /v1/attachment` - list attachments.
+- `GET /v1/attachment/{attachmentId}` - download an attachment.
 
 ## Demo scenario
 
-Run `docker compose up -d` to start the required dependencies to demo `dscp-matchmaker-api`.
+### Services
 
-The demo involves three personas: `MemberA`, `MemberB` and an `Optimiser`. For the purposes of the demo, a single set of `dscp` services will be used and all three personas will use the same development node address. In the real world each persona would be running their own set of `dscp` services and each use a unique node address.
+Run `docker compose -f docker-compose-3-persona.yml up -d` to start the required dependencies to fully demo `dscp-matchmaker-api`.
 
-Before transacting, an alias (a human-friendly name) must be set for the pre-configured dev node address `5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY` using the `dscp-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. Either use the [identity service swagger](http://localhost:3002/v1/swagger/#/members/put_members__address_) or run:
+The demo involves three personas: `MemberA`, `MemberB` and an `Optimiser`. Each persona has a set of `dscp` services:
+
+- dscp-matchmaker-api (+ PostgreSQL)
+- dscp-identity-service (+ PostgreSQL)
+- dscp-node
+
+There is also a single `ipfs` node for file storage.
+
+Container names are prefixed with the persona e.g. `member-a-node`. Services are networked so that only the `dscp-node` instances communicate cross-persona. Each persona uses a `substrate` well-known identity for their `dscp-node`:
+
+```
+"MemberA": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", // alice
+"MemberB": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", // bob
+"Optimiser": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", // charlie
+```
+
+The `docker compose` automatically adds process flows using `MemberA`. Process flows validate transactions that affect the chain.
+
+### Identities
+
+Before transacting, aliases (a human-friendly names) can be set for the pre-configured node addresses using each persona's `dscp-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. For example, to set the self address for `MemberA`, you can either use the [identity service swagger](http://localhost:8001/v1/swagger/#/members/put_members__address_) or run:
 
 ```
 curl -X 'PUT' \
-  'http://localhost:3002/v1/members/5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY' \
+  'http://localhost:8001/v1/members/5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -161,14 +183,34 @@ curl -X 'PUT' \
 }'
 ```
 
-Also process flows must be added to the chain with `npm run flows`. Process flows validate transactions that affect the chain.
+Each persona's identity service:
 
-1. `MemberA` wants to create a `capacity`, which includes a parameters file to the parameters of the available capacity they have. The parameters file will be used by `Optimiser` when matching `capacity` with a `order`. First `MemberA` must upload this parameters file to their local database with `POST /attachment`.
-2. They use the returned `id` for `parametersAttachmentId` in the request body to `POST /capacity`. At this point, the `capacity` only exists in the `MemberA` database.
-3. When `MemberA` is ready for the `capacity` to exist on chain they `POST capacity/{capacityId}/creation`. `MemberB` and `Optimiser` can now see the `capacity` if their node is running and connected.
-4. `MemberB` creates an `order` in a similar manner to creating a `capacity`. It includes a parameters file to describe the parameters of their order.
-5. When `MemberB` is ready for the `order` to exist on chain they `POST order/{id}/creation`.
-6. `Optimiser` can now create a `match2` that matches a single `capacity` with a single `order`. They supply these as an `id` for `demandA` and `demandB`. It doesn't matter which is `demandA` and which is `demandB`.
-7. When `Optimiser` is ready for the `match2` to exist on chain they `POST match2/{id}/propose`.
+- [MemberA](http://localhost:8001/v1/swagger/)
+- [MemberB](http://localhost:8011/v1/swagger/)
+- [Optimiser](http://localhost:8021/v1/swagger/)
 
-//TODO the accept steps
+By default, if no alias is set, the alias is the same as the node address.
+
+### Using the matchmaker API
+
+The environment is now ready to run through a demo scenario using each persona's matchmaker APIs:
+
+- [MemberA](http://localhost:8000/swagger/)
+- [MemberB](http://localhost:8010/swagger/)
+- [Optimiser](http://localhost:8020/swagger/)
+
+Note the meaning in the API of `demandA` and `demandB` are abstract and use-case dependent. For example in the case of a logistics matching service where one provider has an `order` to be moved and another has some `capacity` to move orders one might represent an `order` as a `demandA` and a `capacity` as a `demandB`.
+
+1. `MemberA` wants to create a `demandA`, which includes a parameters file that details the parameters of the available demandA they have. The parameters file will be used by `Optimiser` when matching `demandA` with a `demandB`. First `MemberA` must upload this parameters file to their local database with [`POST /v1/attachment`](http://localhost:8000/swagger/#/attachment/Create).
+2. They use the returned `id` for `parametersAttachmentId` in the request body to [`POST /v1/demandA`](http://localhost:8000/swagger/#/demandA/Create). At this point, the `demandA` only exists in the `MemberA` database.
+3. When `MemberA` is ready for the `demandA` to exist on chain they [`POST /v1/demandA/{demandAId}/creation`](http://localhost:8000/swagger/#/demandA/CreateDemandAOnChain).
+4. Putting something on chain creates a local `transaction` database entry which records the status of block finalisation. Every route that puts something on chain returns a transaction `id`. These routes also have an accompanying `GET` route that returns all of the transactions of that transaction type e.g. [`GET /v1/demandA/{demandAId}/creation`](http://localhost:8000/swagger/#/demandA/GetAllTransactions) returns the details of all `demandA` creation transactions. The transaction `id` can be supplied to [`GET /v1/demandA/{demandAId}/creation/{creationId}`](http://localhost:8000/swagger/#/demandA/GetDemandACreation) to get that specific transaction. Alternatively [`GET /v1/transaction`](http://localhost:8000/swagger/#/transaction/GetAllTransactions) can be used to get all transactions of any type.
+5. Once the block has finalised, The indexers running on `MemberB` and `Optimiser`'s `dscp-matchmaker-api` will process the block containing the new `demandA` and update their local databases (assuming their `dscp-node` instance is running and connected). They will be able to see the new `demandA` with [`GET /v1/demandA`](http://localhost:8010/swagger/#/demandA/GetAll).
+6. `MemberB` creates a [`demandB`](http://localhost:8010/swagger/#/demandB/CreateDemandB)) in a similar manner to creating a `demandA`. It includes a parameters file to describe the parameters of their `demandB`.
+7. When `MemberB` is ready for the `demandB` to exist on chain they [`POST /v1/demandB/{id}/creation`](http://localhost:8010/swagger/#/demandB/CreateDemandBOnChain).
+8. `Optimiser` can now create a [`match2`](http://localhost:8020/swagger/#/match2/ProposeMatch2) that matches a single `demandA` with a single `demandB`. They supply their local `id` for `demandA` and `demandB`.
+9. When `Optimiser` is ready for the `match2` to exist on chain they [`POST /v1/match2/{id}/proposal`](http://localhost:8020/swagger/#/match2/ProposeMatch2OnChain).
+10. Either `MemberA` or `MemberB` can accept the `match2` with [`POST /v1/match2/{id}/accept`](http://localhost:8000/swagger/#/match2/AcceptMatch2OnChain). It doesn't matter which member accepts first.
+11. Once the second member accepts, we have a successful match! The `match2` state changes to `acceptedFinal` and `demandA` + `demandB` state moves to `allocated`. These demands can no longer be used in a new `match2`.
+
+To clear chain and database state, delete the volumes e.g. `docker compose -f docker-compose-3-persona.yml down -v`.
