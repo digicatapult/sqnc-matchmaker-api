@@ -2,6 +2,7 @@ import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/ap
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
+import type { PalletUtxoNftOutput } from '@polkadot/types/lookup'
 
 import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
@@ -130,7 +131,7 @@ export default class ChainNode {
       outputs.map(async (output: Output) => [
         await this.processRoles(output.roles),
         this.processMetadata(output.metadata),
-      ])
+      ]) as unknown as PalletUtxoNftOutput[]
     )
 
     this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
@@ -229,7 +230,7 @@ export default class ChainNode {
             break
         }
 
-        return [key, processedValue] as readonly [unknown, unknown]
+        return [key, processedValue]
       })
     )
   }
