@@ -71,7 +71,7 @@ describe('demandA', () => {
         id: seededDemandAId,
         owner: selfAlias,
         parametersAttachmentId: parametersAttachmentId,
-        state: 'created',
+        state: 'pending',
         updatedAt: exampleDate,
       })
     })
@@ -142,7 +142,7 @@ describe('demandA', () => {
     })
   })
 
-  describe('if demandA state is not created while posting new creation', () => {
+  describe('if demandA state is not pending while posting new creation', () => {
     beforeEach(async () => {
       await db.insertDemand({
         id: 'b21f865e-f4e9-4ae2-8944-de691e9eb4d0',
@@ -159,11 +159,11 @@ describe('demandA', () => {
       const { status, body } = await post(app, '/v1/demandA/b21f865e-f4e9-4ae2-8944-de691e9eb4d0/creation', {})
 
       expect(status).to.equal(400)
-      expect(body).to.equal('Demand must have state: created')
+      expect(body).to.equal(`Demand must have state: 'pending'`)
     })
   })
 
-  it('should create an demandA demand', async () => {
+  it('should create a demandA', async () => {
     const response = await post(app, '/v1/demandA', { parametersAttachmentId })
     const { id: responseId, createdAt, updatedAt, ...responseRest } = response.body
 
@@ -173,7 +173,7 @@ describe('demandA', () => {
     assertIsoDate(updatedAt)
     expect(responseRest).to.deep.equal({
       parametersAttachmentId,
-      state: 'created',
+      state: 'pending',
       owner: selfAlias,
     })
   })

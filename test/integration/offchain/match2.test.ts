@@ -57,7 +57,7 @@ describe('match2', () => {
       assertIsoDate(createdAt)
       assertIsoDate(updatedAt)
       expect(responseRest).to.deep.equal({
-        state: 'proposed',
+        state: 'pending',
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
@@ -71,7 +71,7 @@ describe('match2', () => {
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal({
         id: seededMatch2Id,
-        state: 'proposed',
+        state: 'pending',
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
@@ -83,12 +83,12 @@ describe('match2', () => {
     })
 
     it('should get all match2s', async () => {
-      const response = await get(app, `/v1/match2`)
-      expect(response.status).to.equal(200)
-      expect(response.body.length).to.be.greaterThan(0)
-      expect(response.body[0]).to.deep.equal({
+      const { status, body } = await get(app, `/v1/match2`)
+      expect(status).to.equal(200)
+      expect(body).to.be.an('array')
+      expect(body.find(({ id }: { id: string }) => id === seededMatch2Id)).to.deep.equal({
         id: seededMatch2Id,
-        state: 'proposed',
+        state: 'pending',
         optimiser: selfAlias,
         memberA: selfAlias,
         memberB: selfAlias,
@@ -234,7 +234,7 @@ describe('match2', () => {
     it('incorrect state when creating on-chain - 400', async () => {
       const response = await post(app, `/v1/match2/${seededMatch2AcceptedA}/proposal`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal(`Match2 must have state: ${'proposed'}`)
+      expect(response.body).to.equal(`Match2 must have state: 'pending'`)
     })
 
     it('demandA missing token ID - 400', async () => {

@@ -3,7 +3,7 @@ import { DATE, UUID } from './strings'
 /**
  * The possible states of a Match2
  */
-export type Match2State = 'proposed' | 'acceptedA' | 'acceptedB' | 'acceptedFinal'
+export type Match2State = 'pending' | 'proposed' | 'acceptedA' | 'acceptedB' | 'acceptedFinal'
 
 /**
  * A Match2 returned by the API

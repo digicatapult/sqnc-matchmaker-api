@@ -66,7 +66,7 @@ export class DemandBController extends Controller {
     const [demandB] = await this.db.insertDemand({
       owner: selfAddress,
       subtype: 'demand_b',
-      state: 'created',
+      state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
     })
 
@@ -120,7 +120,7 @@ export class DemandBController extends Controller {
   public async createDemandBOnChain(@Path() demandBId: UUID): Promise<TransactionResponse> {
     const [demandB] = await this.db.getDemandWithAttachment(demandBId, 'demand_b')
     if (!demandB) throw new NotFound('demandB')
-    if (demandB.state !== 'created') throw new BadRequest(`Demand must have state: ${'created'}`)
+    if (demandB.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
 
     const extrinsic = await this.node.prepareRunProcess(demandCreate(demandB))
 
