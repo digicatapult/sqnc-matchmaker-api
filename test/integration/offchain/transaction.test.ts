@@ -62,7 +62,7 @@ describe('transaction', () => {
   })
 
   it('returns empty array if database contains 0 transactions', async () => {
-    cleanup()
+    await cleanup()
     const { status, body } = await get(app, '/v1/transaction')
 
     expect(status).to.equal(200)
@@ -70,7 +70,7 @@ describe('transaction', () => {
   })
 
   it('also returns an empty array if 0 transactions found by type', async () => {
-    cleanup()
+    await cleanup()
     const { status, body } = await get(app, '/v1/transaction?apiType=demand_a')
 
     expect(status).to.equal(200)

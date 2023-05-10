@@ -15,16 +15,15 @@ import { pollTransactionState } from '../../helper/poll'
 import { withAppAndIndexer } from '../../helper/chainTest'
 import { UUID } from '../../../src/models/strings'
 
-const db = new Database()
-const node = new ChainNode({
-  host: env.NODE_HOST,
-  port: env.NODE_PORT,
-  logger,
-  userUri: env.USER_URI,
-})
-
 describe('on-chain', function () {
   this.timeout(60000)
+  const db = new Database()
+  const node = new ChainNode({
+    host: env.NODE_HOST,
+    port: env.NODE_PORT,
+    logger,
+    userUri: env.USER_URI,
+  })
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)

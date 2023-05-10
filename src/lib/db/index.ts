@@ -143,6 +143,8 @@ function restore0x(input: ProcessedBlockTrimmed): ProcessedBlock {
   }
 }
 
+const clientSingleton: Knex = knex(pgConfig)
+
 export default class Database {
   private client: Knex
   private log: Logger
@@ -150,7 +152,7 @@ export default class Database {
 
   constructor() {
     this.log = logger
-    this.client = knex(pgConfig)
+    this.client = clientSingleton
     const models = tablesList.reduce((acc, name) => {
       this.log.debug(`initializing ${name} db model`)
       return {
