@@ -10,6 +10,7 @@ import env from '../../../src/env'
 import { logger } from '../../../src/lib/logger'
 import ChainNode from '../../../src/lib/chainNode'
 import { withOkMock, withIpfsMockError, withSubstrateMockError } from '../../helper/mockHealth'
+const { IPFS_HOST, IPFS_PORT } = env
 
 const node = new ChainNode({
   host: env.IPFS_HOST,
@@ -32,6 +33,16 @@ describe('health check', () => {
     let app: Express
 
     withOkMock()
+
+    before(function () {
+      nock(`http://${IPFS_HOST}:${IPFS_PORT}`)
+        .get('/api/health')
+        .reply(200, { Body: { status: 'ok' } })
+    })
+
+    after(function () {
+      nock.cleanAll()
+    })
 
     before(async function () {
       app = await createHttpServer()

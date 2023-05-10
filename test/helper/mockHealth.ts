@@ -6,17 +6,17 @@ const okResponse = healthResponses.ok
 const ipfsDown = healthResponses.ipfsDown
 const substrateDown = healthResponses.substrateDown
 
-export function withOkMock() {
+export async function withOkMock() {
   let originalDispatcher: Dispatcher
   let mockAgent: MockAgent
-  beforeEach(function () {
+  beforeEach(async function () {
     originalDispatcher = getGlobalDispatcher()
     mockAgent = new MockAgent()
     setGlobalDispatcher(mockAgent)
     const mockIdentity = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
     mockIdentity
       .intercept({
-        path: '/health',
+        path: '/default/Get',
         method: 'GET',
       })
       .reply(200, {
@@ -42,7 +42,7 @@ export const withIpfsMockError = () => {
 
     mockIpfs
       .intercept({
-        path: '/health',
+        path: '/default/Get',
         method: 'GET',
       })
       .reply(503, ipfsDown)
@@ -65,7 +65,7 @@ export const withSubstrateMockError = () => {
 
     mockIpfs
       .intercept({
-        path: '/health',
+        path: '/default/Get',
         method: 'GET',
       })
       .reply(503, substrateDown)
