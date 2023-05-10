@@ -249,7 +249,14 @@ export default class Database {
   }
 
   updateDemandComment = async (id: UUID, comment: object) => {
-    return this.db().demand_comment().update(comment).where({ id }).returning('*')
+    return this.db()
+      .demand_comment()
+      .update({
+        ...comment,
+        updated_at: this.client.fn.now(),
+      })
+      .where({ id })
+      .returning('*')
   }
 
   insertTransaction = async ({ hash, ...rest }: { hash: HEX } & Record<string, string>) => {
