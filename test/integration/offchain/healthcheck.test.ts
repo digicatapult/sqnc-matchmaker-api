@@ -12,16 +12,20 @@ import ChainNode from '../../../src/lib/chainNode'
 import { withOkMock, withIpfsMockError, withSubstrateMockError } from '../../helper/mockHealth'
 
 const node = new ChainNode({
-  host: env.NODE_HOST,
-  port: env.NODE_PORT,
+  host: env.IPFS_HOST,
+  port: env.IPFS_PORT,
   logger,
   userUri: env.USER_URI,
 })
 
 const api = node.getApi()
 
-const getSpecVersion = (actualResult: any) => actualResult?._body?.details?.api?.detail?.runtime?.versions?.spec
-const getIpfsVersion = (actualResult: any) => actualResult?._body?.details?.ipfs?.detail?.version
+const getSpecVersion = (actualResult: any) => {
+  return actualResult?._body?.details?.api?.detail?.runtime?.versions?.spec
+}
+const getIpfsVersion = (actualResult: any) => {
+  return actualResult?._body?.details?.ipfs?.detail?.version
+}
 
 describe('health check', () => {
   describe('happy path', function () {

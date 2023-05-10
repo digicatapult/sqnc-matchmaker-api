@@ -13,7 +13,7 @@ export function withOkMock() {
     originalDispatcher = getGlobalDispatcher()
     mockAgent = new MockAgent()
     setGlobalDispatcher(mockAgent)
-    const mockIdentity = mockAgent.get(`http://${env.NODE_HOST}:${env.NODE_PORT}`)
+    const mockIdentity = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
     mockIdentity
       .intercept({
         path: '/health',
@@ -38,7 +38,7 @@ export const withIpfsMockError = () => {
     originalDispatcher = getGlobalDispatcher()
     mockAgent = new MockAgent()
     setGlobalDispatcher(mockAgent)
-    const mockIpfs = mockAgent.get(`http://${env.NODE_HOST}:${env.NODE_PORT}`)
+    const mockIpfs = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
 
     mockIpfs
       .intercept({
@@ -61,7 +61,7 @@ export const withSubstrateMockError = () => {
     originalDispatcher = getGlobalDispatcher()
     mockAgent = new MockAgent()
     setGlobalDispatcher(mockAgent)
-    const mockIpfs = mockAgent.get(`http://${env.NODE_HOST}:${env.NODE_PORT}`)
+    const mockIpfs = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
 
     mockIpfs
       .intercept({
