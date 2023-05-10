@@ -25,4 +25,4 @@ export type TransactionApiType = 'match2' | 'demand_a' | 'demand_b'
 /**
  * Transaction type - matches the endpoint that initiates the transaction
  */
-export type TransactionType = 'creation' | 'proposal' | 'accept'
+export type TransactionType = 'creation' | 'proposal' | 'accept' | 'comment'

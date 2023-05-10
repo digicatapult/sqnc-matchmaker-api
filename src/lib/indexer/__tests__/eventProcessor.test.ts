@@ -9,7 +9,7 @@ describe('eventProcessor', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['demand-create'](0, null, [], [])
+        eventProcessors['demand-create'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -20,6 +20,7 @@ describe('eventProcessor', function () {
       const result = eventProcessors['demand-create'](
         1,
         { localId: '42' } as Transaction,
+        'alice',
         [],
         [{ id: 1, roles: new Map(), metadata: new Map() }]
       )
@@ -35,6 +36,7 @@ describe('eventProcessor', function () {
       const result = eventProcessors['demand-create'](
         1,
         null,
+        'alice',
         [],
         [
           {
@@ -75,7 +77,7 @@ describe('eventProcessor', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['match2-propose'](0, null, [], [])
+        eventProcessors['match2-propose'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -86,6 +88,7 @@ describe('eventProcessor', function () {
       const result = eventProcessors['match2-propose'](
         1,
         { localId: 'id_42' } as Transaction,
+        'alice',
         [
           { id: 1, localId: 'id_1' },
           { id: 2, localId: 'id_2' },
@@ -112,6 +115,7 @@ describe('eventProcessor', function () {
       const result = eventProcessors['match2-propose'](
         1,
         null,
+        'alice',
         [
           { id: 1, localId: 'id_1' },
           { id: 2, localId: 'id_2' },
@@ -162,7 +166,7 @@ describe('eventProcessor', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['match2-accept'](0, null, [], [])
+        eventProcessors['match2-accept'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -173,6 +177,7 @@ describe('eventProcessor', function () {
       const result = eventProcessors['match2-accept'](
         1,
         null,
+        'alice',
         [{ id: 1, localId: 'id_1' }],
         [{ id: 2, roles: new Map(), metadata: new Map([['state', 'acceptedA']]) }]
       )
@@ -187,7 +192,7 @@ describe('eventProcessor', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['match2-acceptFinal'](0, null, [], [])
+        eventProcessors['match2-acceptFinal'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -198,6 +203,7 @@ describe('eventProcessor', function () {
       const result = eventProcessors['match2-acceptFinal'](
         1,
         null,
+        'alice',
         [
           { id: 1, localId: 'id_1' },
           { id: 2, localId: 'id_2' },

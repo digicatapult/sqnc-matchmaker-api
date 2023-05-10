@@ -8,7 +8,7 @@ import { HEX, UUID } from '../../models/strings'
 import { Match2State } from '../../models/match2'
 import { TransactionApiType, TransactionState, TransactionType } from '../../models/transaction'
 
-const tablesList = ['attachment', 'demand', 'transaction', 'match2', 'processed_blocks'] as const
+const tablesList = ['attachment', 'demand', 'transaction', 'match2', 'processed_blocks', 'demand_comment'] as const
 type TABLES_TUPLE = typeof tablesList
 type TABLE = TABLES_TUPLE[number]
 
@@ -20,6 +20,16 @@ export type QueryBuilder = Knex.QueryBuilder
 
 export type ProcessedBlock = { hash: HEX; parent: HEX; height: number }
 export type ProcessedBlockTrimmed = { hash: string; parent: string; height: number }
+
+const attachmentColumns = ['id', 'filename', 'size', 'ipfs_hash as ipfsHash', 'created_at AS createdAt']
+
+export interface AttachmentRow {
+  id: UUID
+  filename: string | null
+  size: number | null
+  ipfsHash: string
+  createdAt: Date
+}
 
 const demandColumns = [
   'id',
@@ -55,6 +65,16 @@ export interface DemandWithAttachmentRow {
   ipfs_hash: string
   latestTokenId: number
   originalTokenId: number
+}
+
+const demandCommentsColumns = ['id', 'owner', 'state', 'attachment AS attachmentId', 'created_at AS createdAt']
+
+export interface DemandCommentRow {
+  id: UUID
+  owner: string
+  state: 'pending' | 'created'
+  attachmentId: UUID
+  createdAt: Date
 }
 
 const match2Columns = [
@@ -141,22 +161,23 @@ export default class Database {
     this.db = () => models
   }
 
-  getAttachments = async ({ updatedSince }: { updatedSince?: Date } = {}) => {
-    const query = this.db().attachment()
+  getAttachments = async ({ updatedSince }: { updatedSince?: Date } = {}): Promise<AttachmentRow[]> => {
+    const query = this.db().attachment().select(attachmentColumns)
     // note the use of created_at here since attachments are immutable
     return updatedSince ? query.where('created_at', '>', updatedSince) : query
   }
 
-  getAttachment = async (parametersAttachmentId: string) => {
-    return this.db().attachment().where({ id: parametersAttachmentId })
+  getAttachment = async (parametersAttachmentId: string): Promise<[AttachmentRow] | []> => {
+    return this.db().attachment().select(attachmentColumns).where({ id: parametersAttachmentId })
   }
 
   updateAttachment = async (id: string, filename: string, size: number) => {
     return this.db().attachment().update({ filename, size }).where({ id })
   }
 
-  insertAttachment = async (attachment: object) => {
-    return this.db().attachment().insert(attachment).returning('*')
+  insertAttachment = async (attachment: object): Promise<[AttachmentRow]> => {
+    const [result] = await this.db().attachment().insert(attachment).returning(attachmentColumns)
+    return [result]
   }
 
   insertDemand = async (demand: object) => {
@@ -192,12 +213,43 @@ export default class Database {
     return this.db().demand().select(demandColumns).where({ id })
   }
 
+  getDemandComments = async (demandId: UUID, state?: 'pending' | 'created'): Promise<DemandCommentRow[]> => {
+    const query = this.db()
+      .demand_comment()
+      .select(demandCommentsColumns)
+      .where({ demand: demandId })
+      .orderBy('created_at', 'asc')
+
+    if (state) {
+      return query.where({ state })
+    }
+    return query
+  }
+
+  getDemandComment = async (commentId: UUID): Promise<[DemandCommentRow] | []> => {
+    const [result] = await this.db()
+      .demand_comment()
+      .select(demandCommentsColumns)
+      .where({ id: commentId })
+      .orderBy('created_at', 'asc')
+
+    return [result]
+  }
+
   getDemandWithAttachment = async (id: UUID, subtype: DemandSubtype): Promise<DemandWithAttachmentRow[]> => {
     return this.db()
       .demand()
       .join('attachment', 'demand.parameters_attachment_id', 'attachment.id')
       .select()
       .where({ 'demand.id': id, subtype })
+  }
+
+  insertDemandComment = async (comment: object) => {
+    return this.db().demand_comment().insert(comment).returning('*')
+  }
+
+  updateDemandComment = async (id: UUID, comment: object) => {
+    return this.db().demand_comment().update(comment).where({ id }).returning('*')
   }
 
   insertTransaction = async ({ hash, ...rest }: { hash: HEX } & Record<string, string>) => {

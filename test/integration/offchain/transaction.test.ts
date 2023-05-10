@@ -4,7 +4,18 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server'
 import { get } from '../../helper/routeHelper'
-import { seed, cleanup, nonExistentId } from '../../seeds'
+import {
+  seed,
+  cleanup,
+  nonExistentId,
+  seededDemandBCommentTransactionId,
+  seededDemandBId,
+  exampleDate,
+  seededDemandBCommentTransactionId2,
+  seededDemandACommentTransactionId,
+  seededDemandAId,
+  seededDemandACommentTransactionId2,
+} from '../../seeds'
 
 describe('transaction', () => {
   let app: Express
@@ -87,7 +98,7 @@ describe('transaction', () => {
 
     // TODO create a fixtures
     expect(status).to.equal(200)
-    expect(body.length).to.equal(5)
+    expect(body.length).to.equal(9)
     expect(body).to.deep.include.members([
       {
         id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',
@@ -106,6 +117,42 @@ describe('transaction', () => {
         transactionType: 'creation',
         submittedAt: '2023-01-01T00:00:00.000Z',
         updatedAt: '2023-01-01T00:00:00.000Z',
+      },
+      {
+        id: seededDemandBCommentTransactionId,
+        apiType: 'demand_b',
+        transactionType: 'comment',
+        localId: seededDemandBId,
+        state: 'submitted',
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      },
+      {
+        id: seededDemandBCommentTransactionId2,
+        apiType: 'demand_b',
+        transactionType: 'comment',
+        localId: seededDemandBId,
+        state: 'submitted',
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      },
+      {
+        id: seededDemandACommentTransactionId,
+        apiType: 'demand_a',
+        transactionType: 'comment',
+        localId: seededDemandAId,
+        state: 'submitted',
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      },
+      {
+        id: seededDemandACommentTransactionId2,
+        apiType: 'demand_a',
+        transactionType: 'comment',
+        localId: seededDemandAId,
+        state: 'submitted',
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
       },
       {
         id: '8a5343dc-88a3-4b61-b156-330d52f506f8',
