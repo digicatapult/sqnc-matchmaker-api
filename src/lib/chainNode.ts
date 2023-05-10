@@ -92,7 +92,7 @@ export default class ChainNode {
     return this.keyring
   }
 
-  getStatus = async () => {
+  async getStatus() {
     await this.api.isReadyOrError.catch((error: any) => {
       return error
     })

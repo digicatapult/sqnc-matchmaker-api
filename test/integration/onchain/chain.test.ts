@@ -129,7 +129,6 @@ describe('on-chain', function () {
       // submit to chain
       const response = await post(app, `/v1/demandA/${demandAId}/creation`, {})
       expect(response.status).to.equal(201)
-
       const { id: transactionId, state } = response.body
       expect(transactionId).to.match(
         /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
