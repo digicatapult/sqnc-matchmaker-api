@@ -39,7 +39,7 @@ describe('EventHandler', function () {
 
     const stub = eventProcessors['demand-create'] as SinonStub
     expect(stub.calledOnce).to.equal(true)
-    expect(stub.firstCall.args).to.deep.equal([1, tx, [], []])
+    expect(stub.firstCall.args).to.deep.equal([1, tx, 'alice', [], []])
   })
 
   it('should map inputs to localId using the db', async function () {
@@ -64,6 +64,7 @@ describe('EventHandler', function () {
     expect(stub.firstCall.args).to.deep.equal([
       1,
       null,
+      'alice',
       [
         { id: 1, localId: '1' },
         { id: 2, localId: '2' },
@@ -107,6 +108,7 @@ describe('EventHandler', function () {
     expect(stub.firstCall.args).to.deep.equal([
       1,
       null,
+      'alice',
       [
         { id: 1, localId: '7' },
         { id: 2, localId: '8' },

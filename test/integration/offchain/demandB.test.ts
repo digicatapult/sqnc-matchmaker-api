@@ -12,6 +12,8 @@ import {
   nonExistentId,
   seededTransactionId,
   seededTransactionId2,
+  seededDemandBCommentTransactionId,
+  seededDemandBCommentTransactionId2,
   exampleDate,
   seededDemandBAlreadyAllocated,
 } from '../../seeds'
@@ -60,6 +62,13 @@ describe('demandB', () => {
         owner: selfAlias,
         state: 'pending',
         parametersAttachmentId,
+        comments: [
+          {
+            attachmentId: parametersAttachmentId,
+            createdAt: exampleDate,
+            owner: selfAlias,
+          },
+        ],
         createdAt: exampleDate,
         updatedAt: exampleDate,
       })
@@ -99,7 +108,7 @@ describe('demandB', () => {
       })
     })
 
-    it('should get all transactions from a demandB ID - 200', async () => {
+    it('should get all creation transactions from a demandB ID - 200', async () => {
       const response = await get(app, `/v1/demandB/${seededDemandBId}/creation`)
       expect(response.status).to.equal(200)
       expect(response.body).to.deep.equal([
@@ -124,6 +133,31 @@ describe('demandB', () => {
       ])
     })
 
+    it('should get all comment transactions from a demandB ID - 200', async () => {
+      const response = await get(app, `/v1/demandB/${seededDemandBId}/comment`)
+      expect(response.status).to.equal(200)
+      expect(response.body).to.deep.equal([
+        {
+          id: seededDemandBCommentTransactionId,
+          apiType: 'demand_b',
+          transactionType: 'comment',
+          localId: seededDemandBId,
+          state: 'submitted',
+          submittedAt: exampleDate,
+          updatedAt: exampleDate,
+        },
+        {
+          id: seededDemandBCommentTransactionId2,
+          apiType: 'demand_b',
+          transactionType: 'comment',
+          localId: seededDemandBId,
+          state: 'submitted',
+          submittedAt: exampleDate,
+          updatedAt: exampleDate,
+        },
+      ])
+    })
+
     it('should filter demandB creations based on updated date', async () => {
       const { status, body } = await get(
         app,
@@ -131,6 +165,29 @@ describe('demandB', () => {
       )
       expect(status).to.equal(200)
       expect(body).to.deep.equal([])
+    })
+
+    it('should filter demandB comments based on updated date', async () => {
+      const { status, body } = await get(
+        app,
+        `/v1/demandB/${seededDemandBId}/comment?updated_since=2023-01-01T00:00:00.000Z`
+      )
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([])
+    })
+
+    it('should get comment transaction from a tx ID - 200', async () => {
+      const response = await get(app, `/v1/demandB/${seededDemandBId}/comment/${seededDemandBCommentTransactionId}`)
+      expect(response.status).to.equal(200)
+      expect(response.body).to.deep.equal({
+        id: seededDemandBCommentTransactionId,
+        apiType: 'demand_b',
+        transactionType: 'comment',
+        localId: seededDemandBId,
+        state: 'submitted',
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      })
     })
   })
 
@@ -163,6 +220,26 @@ describe('demandB', () => {
 
     it('non-existent demandB id when creating on-chain - 404', async () => {
       const response = await post(app, `/v1/demandB/${nonExistentId}/creation`, {})
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-existent demandB id when getting creation tx - 404', async () => {
+      const response = await get(app, `/v1/demandB/${nonExistentId}/creation`, {})
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-existent demandB id when commenting on-chain - 404', async () => {
+      const response = await post(app, `/v1/demandB/${nonExistentId}/comment`, { attachmentId: parametersAttachmentId })
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-existent demandB id when getting comment tx - 404', async () => {
+      const response = await get(app, `/v1/demandB/${nonExistentId}/comment`, {})
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-existent comment id when getting comment tx - 404', async () => {
+      const response = await get(app, `/v1/demandB/${seededDemandBId}/comment/${nonExistentId}`, {})
       expect(response.status).to.equal(404)
     })
 

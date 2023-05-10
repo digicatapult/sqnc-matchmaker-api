@@ -225,6 +225,20 @@ export default class Indexer {
           }
         }
       }
+
+      if (changeSet.demandComments) {
+        for (const [, comment] of changeSet.demandComments) {
+          const { type, ...record } = comment
+          switch (type) {
+            case 'insert':
+              await db.insertDemandComment(record)
+              break
+            case 'update':
+              await db.updateDemandComment(record.id, record)
+              break
+          }
+        }
+      }
     })
   }
 }

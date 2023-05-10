@@ -26,8 +26,26 @@ export interface DemandResponse {
 }
 
 /**
+ * A Demand with comments submitted by other members
+ */
+export interface DemandWithCommentsResponse extends DemandResponse {
+  comments: {
+    owner: string
+    createdAt: DATE
+    attachmentId: string
+  }[]
+}
+
+/**
  * The required properties of a request to create a Demand
  */
 export interface DemandRequest {
   parametersAttachmentId: UUID
+}
+
+/**
+ * The required properties of the request to make a demand comment
+ */
+export interface DemandCommentRequest {
+  attachmentId: UUID
 }
