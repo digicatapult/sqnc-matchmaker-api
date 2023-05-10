@@ -55,7 +55,13 @@ export default class EventHandler {
     // get output tokens from node
     const outputs = await Promise.all(event.outputs.map(async (id: number) => this.node.getToken(id, event.blockHash)))
 
-    const eventChangeSet = this.eventProcessors[event.process.id](event.process.version, transaction, inputs, outputs)
+    const eventChangeSet = this.eventProcessors[event.process.id](
+      event.process.version,
+      transaction,
+      event.sender,
+      inputs,
+      outputs
+    )
 
     // merge currentChangeSet with eventChangeSet
     const changeSet = mergeChangeSets(currentChangeSet, eventChangeSet)

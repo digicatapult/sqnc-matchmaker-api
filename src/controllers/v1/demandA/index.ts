@@ -15,13 +15,19 @@ import {
 import { Logger } from 'pino'
 
 import { DATE, UUID } from '../../../models/strings'
-import { DemandRequest, DemandResponse, DemandSubtype } from '../../../models/demand'
+import {
+  DemandCommentRequest,
+  DemandRequest,
+  DemandResponse,
+  DemandSubtype,
+  DemandWithCommentsResponse,
+} from '../../../models/demand'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
 import { logger } from '../../../lib/logger'
 import { BadRequest, NotFound } from '../../../lib/error-handler'
-import Database, { DemandRow } from '../../../lib/db'
+import Database, { DemandCommentRow, DemandRow } from '../../../lib/db'
 import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
-import { demandCreate } from '../../../lib/payload'
+import { demandCommentCreate, demandCreate } from '../../../lib/payload'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
@@ -94,7 +100,9 @@ export class demandA extends Controller {
     const [demandA] = await this.db.getDemand(demandAId)
     if (!demandA) throw new NotFound('demandA')
 
-    return responseWithAlias(demandA)
+    const comments = await this.db.getDemandComments(demandAId, 'created')
+
+    return responseWithComments(await responseWithAlias(demandA), comments)
   }
 
   /**
@@ -157,7 +165,7 @@ export class demandA extends Controller {
     if (!attachment) throw new NotFound('attachment')
 
     const { address, alias } = await getMemberBySelf()
-    const [demandB] = await this.db.insertDemand({
+    const [demandA] = await this.db.insertDemand({
       owner: address,
       subtype: 'demand_a',
       state: 'created',
@@ -165,13 +173,100 @@ export class demandA extends Controller {
     })
 
     return {
-      id: demandB.id,
+      id: demandA.id,
       owner: alias,
-      state: demandB.state,
+      state: demandA.state,
       parametersAttachmentId,
-      createdAt: demandB.created_at.toISOString(),
-      updatedAt: demandB.updated_at.toISOString(),
+      createdAt: demandA.created_at.toISOString(),
+      updatedAt: demandA.updated_at.toISOString(),
     }
+  }
+
+  /**
+   * A member creates the demandA {demandAId} on-chain. The demandA is now viewable to other members.
+   * @summary Create a new demandA demand on-chain
+   * @param demandAId The demandA's identifier
+   */
+  @Post('{demandAId}/comment')
+  @Response<NotFound>(404, 'Item not found')
+  @Response<NotFound>(400, 'Attachment not found')
+  @SuccessResponse('201')
+  public async createDemandACommentOnChain(
+    @Path() demandAId: UUID,
+    @Body() { attachmentId }: DemandCommentRequest
+  ): Promise<TransactionResponse> {
+    const [demandA] = await this.db.getDemand(demandAId)
+    if (!demandA || demandA.subtype !== 'demand_a') throw new NotFound('demandA')
+
+    const [comment] = await this.db.getAttachment(attachmentId)
+    if (!comment) throw new BadRequest(`${attachmentId} not found`)
+
+    const { address: selfAddress } = await getMemberBySelf()
+
+    const extrinsic = await this.node.prepareRunProcess(demandCommentCreate(demandA, comment))
+
+    const [transaction] = await this.db.insertTransaction({
+      api_type: 'demand_a',
+      transaction_type: 'comment',
+      local_id: demandAId,
+      state: 'submitted',
+      hash: extrinsic.hash.toHex(),
+    })
+
+    await this.db.insertDemandComment({
+      id: transaction.id,
+      state: 'pending',
+      owner: selfAddress,
+      demand: demandAId,
+      attachment: attachmentId,
+    })
+
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+
+    return transaction
+  }
+
+  /**
+   * @summary Get a demandA creation transaction by ID
+   * @param demandAId The demandA's identifier
+   * @param creationId The demandA's creation ID
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{demandAId}/comment/{commentId}')
+  public async getDemandAComment(@Path() demandAId: UUID, commentId: UUID): Promise<TransactionResponse> {
+    const [demandA] = await this.db.getDemand(demandAId)
+    if (!demandA) throw new NotFound('demandA')
+
+    const [comment] = await this.db.getTransaction(commentId)
+    if (!comment) throw new NotFound('comment')
+    return comment
+  }
+
+  /**
+   * @summary Get all of a demandAB's creation transactions
+   * @param demandAId The demandAB's identifier
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{demandAId}/comment')
+  public async getDemandAComments(
+    @Path() demandAId: UUID,
+    @Query() updated_since?: DATE
+  ): Promise<TransactionResponse[]> {
+    const query: {
+      localId: UUID
+      transactionType: TransactionType
+      updatedSince?: Date
+    } = { localId: demandAId, transactionType: 'comment' }
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
+    }
+
+    const [demandA] = await this.db.getDemand(demandAId)
+    if (!demandA || demandA.subtype !== 'demand_a') throw new NotFound('demandA')
+
+    return await this.db.getTransactionsByLocalId(query)
   }
 }
 
@@ -185,5 +280,28 @@ const responseWithAlias = async (demandA: DemandRow): Promise<DemandResponse> =>
     parametersAttachmentId: demandA.parametersAttachmentId,
     createdAt: demandA.createdAt.toISOString(),
     updatedAt: demandA.updatedAt.toISOString(),
+  }
+}
+
+const responseWithComments = async (
+  demandA: DemandResponse,
+  comments: DemandCommentRow[]
+): Promise<DemandWithCommentsResponse> => {
+  const commentors = [...new Set(comments.map((comment) => comment.owner))]
+  const aliasMap = new Map(
+    await Promise.all(
+      commentors.map(async (commentor) => {
+        const { alias } = await getMemberByAddress(commentor)
+        return [commentor, alias] as const
+      })
+    )
+  )
+  return {
+    ...demandA,
+    comments: comments.map(({ attachmentId, createdAt, owner }) => ({
+      attachmentId,
+      createdAt: createdAt.toISOString(),
+      owner: aliasMap.get(owner) as string,
+    })),
   }
 }

@@ -57,11 +57,6 @@ const parseAccept = (acceptHeader: string) =>
     })
     .map(({ mimeType }) => mimeType)
 
-interface DbAttachment extends Omit<Attachment, 'createdAt'> {
-  ipfs_hash: string
-  created_at: Date
-}
-
 @Route('v1/attachment')
 @Tags('attachment')
 @Security('BearerAuth')
@@ -100,13 +95,8 @@ export class attachment extends Controller {
 
     this.log.debug('retrieving all attachment')
 
-    const attachments: DbAttachment[] = await this.db.getAttachments(query)
-    return attachments.map(
-      ({ created_at, ipfs_hash, ...rest }): Attachment => ({
-        ...rest,
-        createdAt: created_at,
-      })
-    )
+    const attachments = await this.db.getAttachments(query)
+    return attachments.map(({ ipfsHash, ...rest }): Attachment => rest)
   }
 
   @Post('/')
@@ -124,7 +114,7 @@ export class attachment extends Controller {
     const fileBlob = new Blob([Buffer.from(file?.buffer || JSON.stringify(req.body))])
     const ipfsHash = await this.ipfs.addFile({ blob: fileBlob, filename })
 
-    const [{ id, created_at }] = await this.db.insertAttachment({
+    const [{ id, createdAt }] = await this.db.insertAttachment({
       filename,
       ipfs_hash: ipfsHash,
       size: fileBlob.size,
@@ -134,7 +124,7 @@ export class attachment extends Controller {
       id,
       filename,
       size: fileBlob.size,
-      createdAt: created_at,
+      createdAt,
     }
     return result
   }
@@ -149,9 +139,9 @@ export class attachment extends Controller {
     this.log.debug(`attempting to retrieve ${id} attachment`)
     const [attachment] = await this.db.getAttachment(id)
     if (!attachment) throw new NotFound('attachment')
-    const { filename, ipfs_hash, size }: { filename: string | null; ipfs_hash: string; size: number } = attachment
+    const { filename, ipfsHash, size } = attachment
 
-    const { blob, filename: ipfsFilename } = await this.ipfs.getFile(ipfs_hash)
+    const { blob, filename: ipfsFilename } = await this.ipfs.getFile(ipfsHash)
     const blobBuffer = Buffer.from(await blob.arrayBuffer())
 
     if (size === null || filename === null) {

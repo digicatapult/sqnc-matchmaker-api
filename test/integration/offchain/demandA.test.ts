@@ -11,6 +11,8 @@ import {
   seededDemandACreationId,
   cleanup,
   exampleDate,
+  nonExistentId,
+  seededDemandACommentTransactionId,
 } from '../../seeds'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
@@ -214,6 +216,29 @@ describe('demandA', () => {
     expect(body).to.deep.equal([])
   })
 
+  it('should filter demandA comments based on updated date', async () => {
+    const { status, body } = await get(
+      app,
+      `/v1/demandA/${seededDemandAId}/comment?updated_since=2023-01-01T00:00:00.000Z`
+    )
+    expect(status).to.equal(200)
+    expect(body).to.deep.equal([])
+  })
+
+  it('should get comment transaction from a tx ID - 200', async () => {
+    const response = await get(app, `/v1/demandA/${seededDemandAId}/comment/${seededDemandACommentTransactionId}`)
+    expect(response.status).to.equal(200)
+    expect(response.body).to.deep.equal({
+      id: seededDemandACommentTransactionId,
+      apiType: 'demand_a',
+      transactionType: 'comment',
+      localId: seededDemandAId,
+      state: 'submitted',
+      submittedAt: exampleDate,
+      updatedAt: exampleDate,
+    })
+  })
+
   it('demandA creations with invalid updatedSince returns 422', async () => {
     const { status, body } = await get(app, `/v1/demandA/${seededDemandAId}/creation?updated_since=foo`)
     expect(status).to.equal(422)
@@ -221,5 +246,25 @@ describe('demandA', () => {
       name: 'ValidateError',
       message: 'Validation failed',
     })
+  })
+
+  it('non-existent demandA id when getting creation tx - 404', async () => {
+    const response = await get(app, `/v1/demandA/${nonExistentId}/creation`, {})
+    expect(response.status).to.equal(404)
+  })
+
+  it('non-existent demandA id when commenting on-chain - 404', async () => {
+    const response = await post(app, `/v1/demandA/${nonExistentId}/comment`, { attachmentId: parametersAttachmentId })
+    expect(response.status).to.equal(404)
+  })
+
+  it('non-existent demandA id when getting comment tx - 404', async () => {
+    const response = await get(app, `/v1/demandA/${nonExistentId}/comment`, {})
+    expect(response.status).to.equal(404)
+  })
+
+  it('non-existent comment id when getting comment tx - 404', async () => {
+    const response = await get(app, `/v1/demandA/${seededDemandAId}/comment/${nonExistentId}`, {})
+    expect(response.status).to.equal(404)
   })
 })
