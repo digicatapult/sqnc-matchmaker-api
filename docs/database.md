@@ -68,9 +68,10 @@ The following tables exist in the `matchmaker-api` database.
 
 #### Indexes
 
-| columns | Index Type | description |
-| :------ | :--------- | :---------- |
-| `id`    | PRIMARY    | Primary key |
+| columns          | Index Type | description                                            |
+| :--------------- | :--------- | :----------------------------------------------------- |
+| `id`             | PRIMARY    | Primary key                                            |
+| `id`, `local_id` | UNIQUE     | Unique to to support foreign key from `demand_comment` |
 
 ### `Match2`
 
@@ -123,3 +124,29 @@ The following tables exist in the `matchmaker-api` database.
 | columns  | References          | description                         |
 | :------- | :------------------ | :---------------------------------- |
 | `parent` | processed_block(id) | The hash of the processed block row |
+
+### `demand_comment`
+
+| column       | PostgreSQL type           | nullable | default | description                                   |
+| :----------- | :------------------------ | :------- | :-----: | :-------------------------------------------- |
+| `id`         | `UUID`                    | FALSE    |         | Transaction id when the comment was created   |
+| `owner`      | `CHAR (64)`               | FALSE    |         | Address of the commenter                      |
+| `state`      | `ENUM`                    | FALSE    |         | `pending` or `created`                        |
+| `demand`     | `UUID`                    | FALSE    |         | Id of the demand this comment is on           |
+| `attachment` | `UUID`                    | FALSE    |         | Id of the attachment with the comment content |
+| `created_at` | `Timestamp with timezone` | FALSE    | `now()` | Creation datetime                             |
+| `updated_at` | `Timestamp with timezone` | FALSE    | `now()` | Last updated datetime                         |
+
+#### Indexes
+
+| columns | Index Type | description |
+| :------ | :--------- | :---------- |
+| `id`    | PRIMARY    | Primary key |
+
+#### Foreign Keys
+
+| columns  | References          | description                         |
+| :------- | :------------------ | :---------------------------------- |
+| `id`, `demand` | transaction(id, local_id) | Ensures the comment is associated with a transaction for the correct demand |
+| `demand` | demand(id) | Ensures the demand is a valid demand |
+| `attachment` | attachment(id) | Ensures the comment content is associated with a valid attachment |
