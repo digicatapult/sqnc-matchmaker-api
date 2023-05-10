@@ -1438,5 +1438,113 @@
       { "op": "Or" },
       { "op": "And" }
     ]
+  },
+  {
+    "name": "match2-reject",
+    "version": 1,
+    "program": [
+      {
+        "restriction": {
+          "FixedNumberOfInputs": {
+            "numInputs": 1
+          }
+        }
+      },
+      {
+        "restriction": {
+          "FixedNumberOfOutputs": {
+            "numOutputs": 0
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 0,
+            "metadataKey": "type",
+            "metadataValue": {
+              "Literal": "MATCH2"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 0,
+            "metadataKey": "version",
+            "metadataValue": {
+              "Literal": "1"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 0,
+            "metadataKey": "state",
+            "metadataValue": {
+              "Literal": "proposed"
+            }
+          }
+        }
+      },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 0,
+            "metadataKey": "state",
+            "metadataValue": {
+              "Literal": "acceptedA"
+            }
+          }
+        }
+      },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 0,
+            "metadataKey": "state",
+            "metadataValue": {
+              "Literal": "acceptedB"
+            }
+          }
+        }
+      },
+      { "op": "Or" },
+      { "op": "Or" },
+      { "op": "And" },
+      {
+        "restriction": {
+          "SenderHasInputRole": {
+            "index": 0,
+            "roleKey": "MemberA"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "SenderHasInputRole": {
+            "index": 0,
+            "roleKey": "MemberB"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "SenderHasInputRole": {
+            "index": 0,
+            "roleKey": "Optimiser"
+          }
+        }
+      },
+      { "op": "Or" },
+      { "op": "Or" },
+      { "op": "And" }
+    ]
   }
 ]
