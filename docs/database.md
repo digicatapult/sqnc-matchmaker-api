@@ -145,8 +145,8 @@ The following tables exist in the `matchmaker-api` database.
 
 #### Foreign Keys
 
-| columns  | References          | description                         |
-| :------- | :------------------ | :---------------------------------- |
+| columns        | References                | description                                                                 |
+| :------------- | :------------------------ | :-------------------------------------------------------------------------- |
 | `id`, `demand` | transaction(id, local_id) | Ensures the comment is associated with a transaction for the correct demand |
-| `demand` | demand(id) | Ensures the demand is a valid demand |
-| `attachment` | attachment(id) | Ensures the comment content is associated with a valid attachment |
+| `demand`       | demand(id)                | Ensures the demand is a valid demand                                        |
+| `attachment`   | attachment(id)            | Ensures the comment content is associated with a valid attachment           |

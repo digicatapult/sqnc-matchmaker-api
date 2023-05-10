@@ -191,7 +191,7 @@ export class demandA extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Response<NotFound>(400, 'Attachment not found')
   @SuccessResponse('201')
-  public async createDemandBCommentOnChain(
+  public async createDemandACommentOnChain(
     @Path() demandAId: UUID,
     @Body() { attachmentId }: DemandCommentRequest
   ): Promise<TransactionResponse> {
@@ -234,7 +234,7 @@ export class demandA extends Controller {
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
   @Get('{demandAId}/comment/{commentId}')
-  public async getDemandBComment(@Path() demandAId: UUID, commentId: UUID): Promise<TransactionResponse> {
+  public async getDemandAComment(@Path() demandAId: UUID, commentId: UUID): Promise<TransactionResponse> {
     const [demandA] = await this.db.getDemand(demandAId)
     if (!demandA) throw new NotFound('demandA')
 
@@ -250,7 +250,7 @@ export class demandA extends Controller {
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
   @Get('{demandAId}/comment')
-  public async getDemandBComments(
+  public async getDemandAComments(
     @Path() demandAId: UUID,
     @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
@@ -284,7 +284,7 @@ const responseWithAlias = async (demandA: DemandRow): Promise<DemandResponse> =>
 }
 
 const responseWithComments = async (
-  demandB: DemandResponse,
+  demandA: DemandResponse,
   comments: DemandCommentRow[]
 ): Promise<DemandWithCommentsResponse> => {
   const commentors = [...new Set(comments.map((comment) => comment.owner))]
@@ -297,7 +297,7 @@ const responseWithComments = async (
     )
   )
   return {
-    ...demandB,
+    ...demandA,
     comments: comments.map(({ attachmentId, createdAt, owner }) => ({
       attachmentId,
       createdAt: createdAt.toISOString(),
