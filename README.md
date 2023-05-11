@@ -217,7 +217,7 @@ To clear chain and database state, delete the volumes e.g. `docker compose -f do
 
 ### Rejection paths
 
-The previous scenario covers a 'happy path' where every member accepts each step without comment. There are also routes for communicating when things have gone wrong.
+The previous scenario covers a 'happy path' where every member accepts each step without issue. There are also routes for communicating when something has gone wrong.
 
 #### Commenting on demands
 

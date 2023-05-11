@@ -217,6 +217,7 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
     }
   },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   'match2-reject': (version, _transaction, _sender, inputs, _outputs) => {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for match2-reject process`)
