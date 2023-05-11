@@ -58,13 +58,13 @@ The following tables exist in the `matchmaker-api` database.
 
 ### `transaction`
 
-| column             | PostgreSQL type | nullable |       default        | description                                                  |
-| :----------------- | :-------------- | :------- | :------------------: | :----------------------------------------------------------- |
-| `id`               | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `transaction`                      |
-| `local_id`         | `UUID`          | FALSE    |                      | The Match2 or Demand id of the transaction                   |
-| `api_type`         | `ENUM`          | FALSE    |                      | The entity of transaction (`match2`, `demand_a`, `demand_b`) |
-| `transaction_type` | `ENUM`          | FALSE    |                      | The transaction type (creation, proposal, accept)            |
-| `hash`             | `CHAR (64)`     | FALSE    |                      | The `hash` of the transaction extrinsic                      |
+| column             | PostgreSQL type | nullable |       default        | description                                                                     |
+| :----------------- | :-------------- | :------- | :------------------: | :------------------------------------------------------------------------------ |
+| `id`               | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `transaction`                                         |
+| `local_id`         | `UUID`          | FALSE    |                      | The Match2 or Demand id of the transaction                                      |
+| `api_type`         | `ENUM`          | FALSE    |                      | The entity of transaction (`match2`, `demand_a`, `demand_b`)                    |
+| `transaction_type` | `ENUM`          | FALSE    |                      | The transaction type (`creation`, `proposal`, `accept`, `comment`, `rejection`) |
+| `hash`             | `CHAR (64)`     | FALSE    |                      | The `hash` of the transaction extrinsic                                         |
 
 #### Indexes
 
@@ -77,19 +77,19 @@ The following tables exist in the `matchmaker-api` database.
 
 #### Columns
 
-| column              | PostgreSQL type           | nullable |       default        | description                                                                            |
-| :------------------ | :------------------------ | :------- | :------------------: | :------------------------------------------------------------------------------------- |
-| `id`                | `UUID`                    | FALSE    | `uuid_generate_v4()` | Unique identifier for the `match2`                                                     |
-| `optimiser`         | `STRING (48)`             | FALSE    |          -           | Name of the optimiser                                                                  |
-| `member_a`          | `STRING (48)`             | FALSE    |          -           | Name of the first member                                                               |
-| `member_b`          | `STRING (48)`             | FALSE    |          -           | Name of the second member                                                              |
-| `state`             | `ENUM`                    | FALSE    |          -           | Current match state (`pending`, `proposed`, `acceptedA`, `acceptedB`, `acceptedFinal`) |
-| `latest_token_id`   | `INT`                     | TRUE     |          -           | Possible current token ID                                                              |
-| `original_token_id` | `INT`                     | TRUE     |          -           | Possible original token ID                                                             |
-| `demand_a_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the first demand                                                 |
-| `demand_b_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the second demand                                                |
-| `created_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was first created                                                         |
-| `updated_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was updated                                                               |
+| column              | PostgreSQL type           | nullable |       default        | description                                                                                        |
+| :------------------ | :------------------------ | :------- | :------------------: | :------------------------------------------------------------------------------------------------- |
+| `id`                | `UUID`                    | FALSE    | `uuid_generate_v4()` | Unique identifier for the `match2`                                                                 |
+| `optimiser`         | `STRING (48)`             | FALSE    |          -           | Name of the optimiser                                                                              |
+| `member_a`          | `STRING (48)`             | FALSE    |          -           | Name of the first member                                                                           |
+| `member_b`          | `STRING (48)`             | FALSE    |          -           | Name of the second member                                                                          |
+| `state`             | `ENUM`                    | FALSE    |          -           | Current match state (`pending`, `proposed`, `acceptedA`, `acceptedB`, `acceptedFinal`, `rejected`) |
+| `latest_token_id`   | `INT`                     | TRUE     |          -           | Possible current token ID                                                                          |
+| `original_token_id` | `INT`                     | TRUE     |          -           | Possible original token ID                                                                         |
+| `demand_a_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the first demand                                                             |
+| `demand_b_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the second demand                                                            |
+| `created_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was first created                                                                     |
+| `updated_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was updated                                                                           |
 
 #### Indexes
 

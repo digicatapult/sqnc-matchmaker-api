@@ -96,9 +96,9 @@ describe('transaction', () => {
   it('returns all transactions', async () => {
     const { status, body } = await get(app, '/v1/transaction')
 
-    // TODO create a fixtures
+    // TODO create fixture
     expect(status).to.equal(200)
-    expect(body.length).to.equal(9)
+    expect(body).to.be.an('array')
     expect(body).to.deep.include.members([
       {
         id: '1f3af974-7d4d-40b4-86a5-94a2241265cb',

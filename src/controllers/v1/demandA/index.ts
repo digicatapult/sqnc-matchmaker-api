@@ -152,7 +152,7 @@ export class demandA extends Controller {
 
   /**
    * A Member creates a new demand for a demandA by referencing an uploaded parameters file.
-   * @summary Create a new demandA demand
+   * @summary Create a new demandA
    * @param parametersAttachmentId The attachment's identifier
    */
   @Post()
@@ -183,8 +183,8 @@ export class demandA extends Controller {
   }
 
   /**
-   * A member creates the demandA {demandAId} on-chain. The demandA is now viewable to other members.
-   * @summary Create a new demandA demand on-chain
+   * A member comments on a demandA {demandAId} on-chain.
+   * @summary Comment on a demandA on-chain
    * @param demandAId The demandA's identifier
    */
   @Post('{demandAId}/comment')
@@ -227,9 +227,9 @@ export class demandA extends Controller {
   }
 
   /**
-   * @summary Get a demandA creation transaction by ID
+   * @summary Get a demandA comment transaction by ID
    * @param demandAId The demandA's identifier
-   * @param creationId The demandA's creation ID
+   * @param creationId The demandA's comment ID
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
@@ -244,8 +244,8 @@ export class demandA extends Controller {
   }
 
   /**
-   * @summary Get all of a demandAB's creation transactions
-   * @param demandAId The demandAB's identifier
+   * @summary Get all of a demandA's comment transactions
+   * @param demandAId The demandA's identifier
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')

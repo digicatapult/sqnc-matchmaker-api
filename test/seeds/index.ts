@@ -24,6 +24,7 @@ export const seededDemandBCommentTransactionId = '07e0511a-6041-40df-9d5b-2e5966
 export const seededDemandBCommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28336012b'
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
 export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
+export const seededRejectionTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07078'
 export const seededDemandAId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
 
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
@@ -41,6 +42,7 @@ export const seededMatch2AcceptedFinal = '85a50fd9-f20f-4a61-a7e4-3ad49b7c3f21'
 export const seededMatch2NotAcceptableA = '46d7dbe8-aaef-472e-af9f-ecdd2681d3a5'
 export const seededMatch2NotAcceptableB = '097d3905-72aa-4517-85d2-0091d26fceac'
 export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c9474784d'
+export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
 
 const seededDemandANotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
 const seededDemandBNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
@@ -228,6 +230,19 @@ export const seed = async () => {
       id: seededAcceptTransactionId,
       api_type: 'match2',
       transaction_type: 'accept',
+      local_id: seededMatch2Id,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+  ])
+
+  await db.transaction().insert([
+    {
+      id: seededRejectionTransactionId,
+      api_type: 'match2',
+      transaction_type: 'rejection',
       local_id: seededMatch2Id,
       state: 'submitted',
       created_at: exampleDate,
@@ -435,6 +450,22 @@ export const seed = async () => {
       id: seededMatch2NotAcceptableBoth,
       state: 'acceptedB',
       optimiser: selfAddress,
+      member_a: notSelfAddress,
+      member_b: notSelfAddress,
+      demand_a_id: seededDemandANotOwnedId,
+      demand_b_id: seededDemandBNotOwnedId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2NotInRoles,
+      state: 'acceptedB',
+      optimiser: notSelfAddress,
       member_a: notSelfAddress,
       member_b: notSelfAddress,
       demand_a_id: seededDemandANotOwnedId,

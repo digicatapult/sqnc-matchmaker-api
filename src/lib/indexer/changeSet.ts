@@ -58,7 +58,7 @@ export type MatchRecord =
       id: string
       state: string
       original_token_id?: number
-      latest_token_id: number
+      latest_token_id?: number
     }
 
 export type AttachmentRecord = {

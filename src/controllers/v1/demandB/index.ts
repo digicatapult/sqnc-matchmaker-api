@@ -54,7 +54,7 @@ export class DemandBController extends Controller {
 
   /**
    * A Member creates a new demand for a demandB by referencing an uploaded parameters file.
-   * @summary Create a new demandB demand
+   * @summary Create a new demandB
    */
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
@@ -87,7 +87,7 @@ export class DemandBController extends Controller {
   }
 
   /**
-   * Returns the details of all demandB demands.
+   * Returns the details of all demandBs.
    * @summary List demandBs
    */
   @Get('/')
@@ -119,7 +119,7 @@ export class DemandBController extends Controller {
 
   /**
    * A member creates the demandB {demandBId} on-chain. The demandB is now viewable to other members.
-   * @summary Create a new demandB demand on-chain
+   * @summary Create a new demandB on-chain
    * @param demandBId The demandB's identifier
    */
   @Post('{demandBId}/creation')
@@ -189,8 +189,8 @@ export class DemandBController extends Controller {
   }
 
   /**
-   * A member creates the demandB {demandBId} on-chain. The demandB is now viewable to other members.
-   * @summary Create a new demandB demand on-chain
+   * A member comments on a demandB {demandBId} on-chain.
+   * @summary Comment on a demandB on-chain
    * @param demandBId The demandB's identifier
    */
   @Post('{demandBId}/comment')
@@ -233,9 +233,9 @@ export class DemandBController extends Controller {
   }
 
   /**
-   * @summary Get a demandB creation transaction by ID
+   * @summary Get a demandB comment transaction by ID
    * @param demandBId The demandB's identifier
-   * @param creationId The demandB's creation ID
+   * @param creationId The demandB's comment ID
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
@@ -250,8 +250,8 @@ export class DemandBController extends Controller {
   }
 
   /**
-   * @summary Get all of a demandAB's creation transactions
-   * @param demandBId The demandAB's identifier
+   * @summary Get all of a demandB's comment transactions
+   * @param demandBId The demandB's identifier
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
