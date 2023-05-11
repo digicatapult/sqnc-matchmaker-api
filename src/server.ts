@@ -17,7 +17,16 @@ export default async (): Promise<Express> => {
 
   RegisterRoutes(app)
   app.use(errorHandler)
-  app.use(['/swagger'], serve, setup(swaggerJson))
+  app.get('/api-docs', (_req, res) => res.json(swaggerJson))
+  app.use(
+    '/swagger',
+    serve,
+    setup(undefined, {
+      swaggerOptions: {
+        url: '/api-docs',
+      },
+    })
+  )
 
   return app
 }
