@@ -73,6 +73,76 @@ describe('eventProcessor', function () {
     })
   })
 
+  describe('demand-comment', function () {
+    it('should error with version != 1', function () {
+      let error: Error | null = null
+      try {
+        eventProcessors['demand-comment'](0, null, 'alice', [], [])
+      } catch (err) {
+        error = err instanceof Error ? err : null
+      }
+      expect(error).instanceOf(Error)
+    })
+
+    it('should return update to demand and demandComment if transaction exists', function () {
+      const result = eventProcessors['demand-comment'](
+        1,
+        { localId: '42', id: '10' } as Transaction,
+        'alice',
+        [{ id: 1, localId: '42' }],
+        [{ id: 2, roles: new Map(), metadata: new Map([['state', 'allocated']]) }]
+      )
+
+      expect(result).to.deep.equal({
+        demands: new Map([['42', { type: 'update', id: '42', state: 'allocated', latest_token_id: 2 }]]),
+        demandComments: new Map([['10', { type: 'update', id: '10', state: 'created' }]]),
+      })
+    })
+
+    it("should return new attachment, new comment and update demand if transaction doesn't exist", function () {
+      const result = eventProcessors['demand-comment'](
+        1,
+        null,
+        'alice',
+        [{ id: 1, localId: '42' }],
+        [
+          {
+            id: 2,
+            roles: new Map(),
+            metadata: new Map([
+              ['state', 'allocated'],
+              ['comment', 'a'],
+            ]),
+          },
+        ]
+      )
+
+      expect(result.attachments?.size).to.equal(1)
+      const [[attachmentId, attachment]] = [...(result.attachments || [])]
+      expect(attachment).to.deep.equal({
+        type: 'insert',
+        id: attachmentId,
+        ipfs_hash: 'a',
+      })
+
+      expect(result.demands?.size).to.equal(1)
+      const [[demandId, demand]] = [...(result.demands || [])]
+      expect(demandId).to.equal('42')
+      expect(demand).to.deep.equal({ type: 'update', id: '42', state: 'allocated', latest_token_id: 2 })
+
+      expect(result.demandComments?.size).to.equal(1)
+      const [[commentId, comment]] = [...(result.demandComments || [])]
+      expect(comment).to.deep.equal({
+        type: 'insert',
+        id: commentId,
+        state: 'created',
+        demand: demandId,
+        owner: 'alice',
+        attachment: attachmentId,
+      })
+    })
+  })
+
   describe('match2-propose', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
