@@ -25,6 +25,8 @@ import {
   seededMatch2NotAcceptableBoth,
   seededAcceptTransactionId,
   seededDemandAWithTokenId,
+  seededRejectionTransactionId,
+  seededMatch2NotInRoles,
 } from '../../seeds'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
@@ -162,6 +164,44 @@ describe('match2', () => {
       const { status, body } = await get(
         app,
         `/v1/match2/${seededMatch2Id}/accept?updated_since=2023-01-01T00:00:00.000Z`
+      )
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal([])
+    })
+
+    it('it should get a rejection transaction', async () => {
+      const { status, body } = await get(app, `/v1/match2/${seededMatch2Id}/rejection/${seededRejectionTransactionId}`)
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal({
+        id: seededRejectionTransactionId,
+        apiType: 'match2',
+        transactionType: 'rejection',
+        localId: seededMatch2Id,
+        state: 'submitted',
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      })
+    })
+
+    it('it should get all rejection transactions', async () => {
+      const { status, body } = await get(app, `/v1/match2/${seededMatch2Id}/rejection`)
+      expect(status).to.equal(200)
+      expect(body).to.be.an('array')
+      expect(body.find(({ id }: { id: string }) => id === seededRejectionTransactionId)).to.deep.equal({
+        id: seededRejectionTransactionId,
+        apiType: 'match2',
+        transactionType: 'rejection',
+        localId: seededMatch2Id,
+        state: 'submitted',
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
+      })
+    })
+
+    it('should filter rejection transactions based on updated date', async () => {
+      const { status, body } = await get(
+        app,
+        `/v1/match2/${seededMatch2Id}/rejection?updated_since=2023-01-01T00:00:00.000Z`
       )
       expect(status).to.equal(200)
       expect(body).to.deep.equal([])
@@ -346,6 +386,51 @@ describe('match2', () => {
       const response = await get(app, `/v1/match2/${seededMatch2Id}/accept/${nonExistentId}`)
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('accept not found')
+    })
+
+    it('rejection of match2 at incorrect state - 400', async () => {
+      const response = await post(app, `/v1/match2/${seededMatch2AcceptedFinal}/rejection`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`Match2 state must be one of: proposed, acceptedA, acceptedB`)
+    })
+
+    it('rejection of match2 submitter not in roles - 400', async () => {
+      const response = await post(app, `/v1/match2/${seededMatch2NotInRoles}/rejection`, {})
+      expect(response.status).to.equal(400)
+      expect(response.body).to.equal(`You do not have a role on the match2`)
+    })
+
+    it('non-existent match2 id when rejection - 404', async () => {
+      const response = await get(app, `/v1/match2/${nonExistentId}/rejection`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-existent match2 when listing rejections - 404', async () => {
+      const response = await get(app, `/v1/match2/${nonExistentId}/rejection`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('list rejections with invalid updatedSince - 422', async () => {
+      const { status, body } = await get(app, `/v1/match2/${seededMatch2AcceptedA}/rejection?updated_since=foo`)
+      expect(status).to.equal(422)
+      expect(body).to.contain({
+        name: 'ValidateError',
+        message: 'Validation failed',
+      })
+    })
+
+    it('non-existent match2 when getting a rejection - 404', async () => {
+      const response = await get(app, `/v1/match2/${nonExistentId}/rejection/${seededRejectionTransactionId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-existent transaction when getting a rejection - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2Id}/rejection/${nonExistentId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('rejection not found')
     })
   })
 })

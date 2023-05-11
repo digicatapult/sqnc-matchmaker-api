@@ -10,6 +10,7 @@ const processNames = [
   'match2-accept',
   'match2-acceptFinal',
   'demand-comment',
+  'match2-reject',
 ] as const
 type PROCESSES_TUPLE = typeof processNames
 type PROCESSES = PROCESSES_TUPLE[number]
@@ -213,6 +214,26 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
       matches: new Map([
         [matchLocalId, { type: 'update', id: matchLocalId, latest_token_id: matchId, state: 'acceptedFinal' }],
+      ]),
+    }
+  },
+  'match2-reject': (version, _transaction, _sender, inputs, _outputs) => {
+    if (version !== 1) {
+      throw new Error(`Incompatible version ${version} for match2-reject process`)
+    }
+
+    const localId = inputs[0].localId
+
+    return {
+      matches: new Map([
+        [
+          localId,
+          {
+            id: localId,
+            type: 'update',
+            state: 'rejected',
+          },
+        ],
       ]),
     }
   },

@@ -165,5 +165,33 @@ describe('on-chain', function () {
       expect(match2AcceptFinal.state).to.equal('acceptedFinal')
       expect(match2AcceptFinal.originalTokenId).to.equal(match2OriginalId)
     })
+
+    it('should reject a match2 on-chain', async () => {
+      // propose
+      const proposal = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
+      expect(proposal.status).to.equal(201)
+
+      // wait for block to finalise
+      await pollTransactionState(db, proposal.body.id, 'finalised')
+
+      const [maybeMatch2] = await db.getMatch2(match2LocalId)
+      const match2 = maybeMatch2 as Match2Row
+      const match2LatestTokenId = match2.latestTokenId
+
+      // reject match2
+      const rejection = await post(context.app, `/v1/match2/${match2LocalId}/rejection`, {})
+      expect(rejection.status).to.equal(200)
+
+      // wait for block to finalise
+      await pollTransactionState(db, rejection.body.id, 'finalised')
+
+      // check local entities update with token id
+      const [maybeMatch2Rejected] = await db.getMatch2(match2LocalId)
+      const match2Rejected = maybeMatch2Rejected as Match2Row
+      expect(match2Rejected.state).to.equal('rejected')
+
+      // no output token means latest token ID remains the same
+      expect(match2Rejected.latestTokenId).to.equal(match2LatestTokenId)
+    })
   })
 })

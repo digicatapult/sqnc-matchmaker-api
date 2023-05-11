@@ -225,4 +225,24 @@ describe('eventProcessor', function () {
       })
     })
   })
+
+  describe('match2-reject', function () {
+    it('should error with version != 1', function () {
+      let error: Error | null = null
+      try {
+        eventProcessors['match2-reject'](0, null, 'alice', [], [])
+      } catch (err) {
+        error = err instanceof Error ? err : null
+      }
+      expect(error).instanceOf(Error)
+    })
+
+    it('should update the state of the match2 to match output', function () {
+      const result = eventProcessors['match2-reject'](1, null, 'alice', [{ id: 1, localId: 'id_1' }], [])
+
+      expect(result).to.deep.equal({
+        matches: new Map([['id_1', { type: 'update', id: 'id_1', state: 'rejected' }]]),
+      })
+    })
+  })
 })
