@@ -26,7 +26,6 @@ export class health extends Controller {
     const statusHandler = await startStatusHandlers()
     const status = statusHandler.status
     const details = statusHandler.detail
-    console.log(status)
     const code = status === serviceState.UP ? 200 : 503
 
     const response: Health = {

@@ -16,7 +16,7 @@ export async function withOkMock() {
     const mockIdentity = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
     mockIdentity
       .intercept({
-        path: `http://${env.IPFS_HOST}:${env.IPFS_PORT}/api/v0/version`,
+        path: `/api/v0/version`,
         method: 'POST',
       })
       .reply(200, {
@@ -26,7 +26,7 @@ export async function withOkMock() {
 
     mockIdentity
       .intercept({
-        path: `http://${env.IPFS_HOST}:${env.IPFS_PORT}/api/v0/swarm/peers`,
+        path: `/api/v0/swarm/peers`,
         method: 'POST',
       })
       .reply(200, {
