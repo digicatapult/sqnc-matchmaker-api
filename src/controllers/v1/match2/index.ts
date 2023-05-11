@@ -72,7 +72,7 @@ export class Match2Controller extends Controller {
       optimiser: selfAddress,
       member_a: demandA.owner,
       member_b: demandB.owner,
-      state: 'proposed',
+      state: 'pending',
       demand_a_id: demandAId,
       demand_b_id: demandBId,
     })
@@ -122,7 +122,7 @@ export class Match2Controller extends Controller {
   public async proposeMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
-    if (match2.state !== 'proposed') throw new BadRequest(`Match2 must have state: ${'proposed'}`)
+    if (match2.state !== 'pending') throw new BadRequest(`Match2 must have state: 'pending'`)
 
     const [maybeDemandA] = await this.db.getDemand(match2.demandA)
     validatePreOnChain(maybeDemandA, 'demand_a', 'DemandA')

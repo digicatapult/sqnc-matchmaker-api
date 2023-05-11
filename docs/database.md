@@ -32,17 +32,17 @@ The following tables exist in the `matchmaker-api` database.
 
 ### `demand`
 
-| column                     | PostgreSQL type | nullable |       default        | description                                 |
-| :------------------------- | :-------------- | :------- | :------------------: | :------------------------------------------ |
-| `id`                       | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment`      |
-| `owner`                    | `STRING (48)`   | FALSE    |          -           | Demand owner name                           |
-| `subtype`                  | `ENUM`          | FALSE    |          -           | The demand subtype (`demand_a`, `demand_b`) |
-| `state`                    | `ENUM`          | FALSE    |          -           | The demand state (`created`, `allocated`)   |
-| `parameters_attachment_id` | `UUID`          | FALSE    |          -           | The ID of the associated attachment         |
-| `latest_token_id`          | `INT`           | TRUE     |          -           | Possible current token ID                   |
-| `original_token_id`        | `INT`           | TRUE     |          -           | Possible original token ID                  |
-| `created_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was first created              |
-| `updated_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was last updated               |
+| column                     | PostgreSQL type | nullable |       default        | description                                          |
+| :------------------------- | :-------------- | :------- | :------------------: | :--------------------------------------------------- |
+| `id`                       | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment`               |
+| `owner`                    | `STRING (48)`   | FALSE    |          -           | Demand owner name                                    |
+| `subtype`                  | `ENUM`          | FALSE    |          -           | The demand subtype (`demand_a`, `demand_b`)          |
+| `state`                    | `ENUM`          | FALSE    |          -           | The demand state (`pending`, `created`, `allocated`) |
+| `parameters_attachment_id` | `UUID`          | FALSE    |          -           | The ID of the associated attachment                  |
+| `latest_token_id`          | `INT`           | TRUE     |          -           | Possible current token ID                            |
+| `original_token_id`        | `INT`           | TRUE     |          -           | Possible original token ID                           |
+| `created_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was first created                       |
+| `updated_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was last updated                        |
 
 #### Indexes
 
@@ -77,19 +77,19 @@ The following tables exist in the `matchmaker-api` database.
 
 #### Columns
 
-| column              | PostgreSQL type           | nullable |       default        | description                                                                 |
-| :------------------ | :------------------------ | :------- | :------------------: | :-------------------------------------------------------------------------- |
-| `id`                | `UUID`                    | FALSE    | `uuid_generate_v4()` | Unique identifier for the `match2`                                          |
-| `optimiser`         | `STRING (48)`             | FALSE    |          -           | Name of the optimiser                                                       |
-| `member_a`          | `STRING (48)`             | FALSE    |          -           | Name of the first member                                                    |
-| `member_b`          | `STRING (48)`             | FALSE    |          -           | Name of the second member                                                   |
-| `state`             | `ENUM`                    | FALSE    |          -           | Current match state (`proposed`, `acceptedA`, `acceptedB`, `acceptedFinal`) |
-| `latest_token_id`   | `INT`                     | TRUE     |          -           | Possible current token ID                                                   |
-| `original_token_id` | `INT`                     | TRUE     |          -           | Possible original token ID                                                  |
-| `demand_a_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the first demand                                      |
-| `demand_b_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the second demand                                     |
-| `created_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was first created                                              |
-| `updated_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was updated                                                    |
+| column              | PostgreSQL type           | nullable |       default        | description                                                                            |
+| :------------------ | :------------------------ | :------- | :------------------: | :------------------------------------------------------------------------------------- |
+| `id`                | `UUID`                    | FALSE    | `uuid_generate_v4()` | Unique identifier for the `match2`                                                     |
+| `optimiser`         | `STRING (48)`             | FALSE    |          -           | Name of the optimiser                                                                  |
+| `member_a`          | `STRING (48)`             | FALSE    |          -           | Name of the first member                                                               |
+| `member_b`          | `STRING (48)`             | FALSE    |          -           | Name of the second member                                                              |
+| `state`             | `ENUM`                    | FALSE    |          -           | Current match state (`pending`, `proposed`, `acceptedA`, `acceptedB`, `acceptedFinal`) |
+| `latest_token_id`   | `INT`                     | TRUE     |          -           | Possible current token ID                                                              |
+| `original_token_id` | `INT`                     | TRUE     |          -           | Possible original token ID                                                             |
+| `demand_a_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the first demand                                                 |
+| `demand_b_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the second demand                                                |
+| `created_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was first created                                                         |
+| `updated_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was updated                                                               |
 
 #### Indexes
 

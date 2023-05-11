@@ -49,7 +49,7 @@ describe('demandB', () => {
       assertIsoDate(updatedAt)
       expect(responseRest).to.deep.equal({
         parametersAttachmentId,
-        state: 'created',
+        state: 'pending',
         owner: selfAlias,
       })
     })
@@ -60,7 +60,7 @@ describe('demandB', () => {
       expect(response.body).to.deep.equal({
         id: seededDemandBId,
         owner: selfAlias,
-        state: 'created',
+        state: 'pending',
         parametersAttachmentId,
         comments: [
           {
@@ -83,7 +83,7 @@ describe('demandB', () => {
         id: seededDemandBId,
         owner: selfAlias,
         parametersAttachmentId: parametersAttachmentId,
-        state: 'created',
+        state: 'pending',
         updatedAt: exampleDate,
       })
     })
@@ -255,7 +255,7 @@ describe('demandB', () => {
     it('incorrect state when creating on-chain - 400', async () => {
       const response = await post(app, `/v1/demandB/${seededDemandBAlreadyAllocated}/creation`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal(`Demand must have state: ${'created'}`)
+      expect(response.body).to.equal(`Demand must have state: 'pending'`)
     })
 
     it('non-existent Creation ID - 404', async () => {
