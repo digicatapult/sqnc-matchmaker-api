@@ -228,11 +228,11 @@ export default class Database {
     return query
   }
 
-  getDemandComment = async (commentId: UUID): Promise<[DemandCommentRow] | []> => {
+  getDemandCommentForTransaction = async (transactionId: UUID): Promise<[DemandCommentRow] | []> => {
     const [result] = await this.db()
       .demand_comment()
       .select(demandCommentsColumns)
-      .where({ id: commentId })
+      .where({ transaction_id: transactionId })
       .orderBy('created_at', 'asc')
 
     return [result]
