@@ -1,5 +1,5 @@
 import * as TokenType from '../models/tokenType'
-import { DemandRow, DemandWithAttachmentRow, Match2Row } from './db'
+import { AttachmentRow, DemandRow, DemandWithAttachmentRow, Match2Row } from './db'
 import { bs58ToHex } from '../utils/hex'
 
 export interface Payload {
@@ -32,6 +32,24 @@ export const demandCreate = (demand: DemandWithAttachmentRow): Payload => ({
         state: { type: 'LITERAL', value: 'created' },
         subtype: { type: 'LITERAL', value: demand.subtype },
         parameters: { type: 'FILE', value: bs58ToHex(demand.ipfs_hash) },
+      },
+    },
+  ],
+})
+
+export const demandCommentCreate = (demand: DemandRow, comment: AttachmentRow): Payload => ({
+  process: { id: 'demand-comment', version: 1 },
+  inputs: [demand.latestTokenId as number],
+  outputs: [
+    {
+      roles: { Owner: demand.owner },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.DEMAND },
+        state: { type: 'LITERAL', value: demand.state },
+        subtype: { type: 'LITERAL', value: demand.subtype },
+        comment: { type: 'FILE', value: bs58ToHex(comment.ipfsHash) },
+        originalId: { type: 'TOKEN_ID', value: demand.originalTokenId as number },
       },
     },
   ],
@@ -133,4 +151,10 @@ export const match2AcceptFinal = (match2: Match2Row, demandA: DemandRow, demandB
       },
     },
   ],
+})
+
+export const match2Reject = (match2: Match2Row): Payload => ({
+  process: { id: 'match2-reject', version: 1 },
+  inputs: [match2.latestTokenId as number],
+  outputs: [],
 })

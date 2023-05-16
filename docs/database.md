@@ -32,17 +32,17 @@ The following tables exist in the `matchmaker-api` database.
 
 ### `demand`
 
-| column                     | PostgreSQL type | nullable |       default        | description                                 |
-| :------------------------- | :-------------- | :------- | :------------------: | :------------------------------------------ |
-| `id`                       | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment`      |
-| `owner`                    | `STRING (48)`   | FALSE    |          -           | Demand owner name                           |
-| `subtype`                  | `ENUM`          | FALSE    |          -           | The demand subtype (`demand_a`, `demand_b`) |
-| `state`                    | `ENUM`          | FALSE    |          -           | The demand state (`created`, `allocated`)   |
-| `parameters_attachment_id` | `UUID`          | FALSE    |          -           | The ID of the associated attachment         |
-| `latest_token_id`          | `INT`           | TRUE     |          -           | Possible current token ID                   |
-| `original_token_id`        | `INT`           | TRUE     |          -           | Possible original token ID                  |
-| `created_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was first created              |
-| `updated_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was last updated               |
+| column                     | PostgreSQL type | nullable |       default        | description                                          |
+| :------------------------- | :-------------- | :------- | :------------------: | :--------------------------------------------------- |
+| `id`                       | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment`               |
+| `owner`                    | `STRING (48)`   | FALSE    |          -           | Demand owner name                                    |
+| `subtype`                  | `ENUM`          | FALSE    |          -           | The demand subtype (`demand_a`, `demand_b`)          |
+| `state`                    | `ENUM`          | FALSE    |          -           | The demand state (`pending`, `created`, `allocated`) |
+| `parameters_attachment_id` | `UUID`          | FALSE    |          -           | The ID of the associated attachment                  |
+| `latest_token_id`          | `INT`           | TRUE     |          -           | Possible current token ID                            |
+| `original_token_id`        | `INT`           | TRUE     |          -           | Possible original token ID                           |
+| `created_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was first created                       |
+| `updated_at`               | `dateTime`      | FALSE    |       `now()`        | When the row was last updated                        |
 
 #### Indexes
 
@@ -58,37 +58,38 @@ The following tables exist in the `matchmaker-api` database.
 
 ### `transaction`
 
-| column             | PostgreSQL type | nullable |       default        | description                                                  |
-| :----------------- | :-------------- | :------- | :------------------: | :----------------------------------------------------------- |
-| `id`               | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `transaction`                      |
-| `local_id`         | `UUID`          | FALSE    |                      | The Match2 or Demand id of the transaction                   |
-| `api_type`         | `ENUM`          | FALSE    |                      | The entity of transaction (`match2`, `demand_a`, `demand_b`) |
-| `transaction_type` | `ENUM`          | FALSE    |                      | The transaction type (creation, proposal, accept)            |
-| `hash`             | `CHAR (64)`     | FALSE    |                      | The `hash` of the transaction extrinsic                      |
+| column             | PostgreSQL type | nullable |       default        | description                                                                     |
+| :----------------- | :-------------- | :------- | :------------------: | :------------------------------------------------------------------------------ |
+| `id`               | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `transaction`                                         |
+| `local_id`         | `UUID`          | FALSE    |                      | The Match2 or Demand id of the transaction                                      |
+| `api_type`         | `ENUM`          | FALSE    |                      | The entity of transaction (`match2`, `demand_a`, `demand_b`)                    |
+| `transaction_type` | `ENUM`          | FALSE    |                      | The transaction type (`creation`, `proposal`, `accept`, `comment`, `rejection`) |
+| `hash`             | `CHAR (64)`     | FALSE    |                      | The `hash` of the transaction extrinsic                                         |
 
 #### Indexes
 
-| columns | Index Type | description |
-| :------ | :--------- | :---------- |
-| `id`    | PRIMARY    | Primary key |
+| columns          | Index Type | description                                            |
+| :--------------- | :--------- | :----------------------------------------------------- |
+| `id`             | PRIMARY    | Primary key                                            |
+| `id`, `local_id` | UNIQUE     | Unique to to support foreign key from `demand_comment` |
 
 ### `Match2`
 
 #### Columns
 
-| column              | PostgreSQL type           | nullable |       default        | description                                                                 |
-| :------------------ | :------------------------ | :------- | :------------------: | :-------------------------------------------------------------------------- |
-| `id`                | `UUID`                    | FALSE    | `uuid_generate_v4()` | Unique identifier for the `match2`                                          |
-| `optimiser`         | `STRING (48)`             | FALSE    |          -           | Name of the optimiser                                                       |
-| `member_a`          | `STRING (48)`             | FALSE    |          -           | Name of the first member                                                    |
-| `member_b`          | `STRING (48)`             | FALSE    |          -           | Name of the second member                                                   |
-| `state`             | `ENUM`                    | FALSE    |          -           | Current match state (`proposed`, `acceptedA`, `acceptedB`, `acceptedFinal`) |
-| `latest_token_id`   | `INT`                     | TRUE     |          -           | Possible current token ID                                                   |
-| `original_token_id` | `INT`                     | TRUE     |          -           | Possible original token ID                                                  |
-| `demand_a_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the first demand                                      |
-| `demand_b_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the second demand                                     |
-| `created_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was first created                                              |
-| `updated_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was updated                                                    |
+| column              | PostgreSQL type           | nullable |       default        | description                                                                                        |
+| :------------------ | :------------------------ | :------- | :------------------: | :------------------------------------------------------------------------------------------------- |
+| `id`                | `UUID`                    | FALSE    | `uuid_generate_v4()` | Unique identifier for the `match2`                                                                 |
+| `optimiser`         | `STRING (48)`             | FALSE    |          -           | Name of the optimiser                                                                              |
+| `member_a`          | `STRING (48)`             | FALSE    |          -           | Name of the first member                                                                           |
+| `member_b`          | `STRING (48)`             | FALSE    |          -           | Name of the second member                                                                          |
+| `state`             | `ENUM`                    | FALSE    |          -           | Current match state (`pending`, `proposed`, `acceptedA`, `acceptedB`, `acceptedFinal`, `rejected`) |
+| `latest_token_id`   | `INT`                     | TRUE     |          -           | Possible current token ID                                                                          |
+| `original_token_id` | `INT`                     | TRUE     |          -           | Possible original token ID                                                                         |
+| `demand_a_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the first demand                                                             |
+| `demand_b_id`       | `UUID`                    | FALSE    |          -           | Unique identifier for the second demand                                                            |
+| `created_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was first created                                                                     |
+| `updated_at`        | `Timestamp with timezone` | FALSE    |       `now()`        | When the row was updated                                                                           |
 
 #### Indexes
 
@@ -123,3 +124,29 @@ The following tables exist in the `matchmaker-api` database.
 | columns  | References          | description                         |
 | :------- | :------------------ | :---------------------------------- |
 | `parent` | processed_block(id) | The hash of the processed block row |
+
+### `demand_comment`
+
+| column       | PostgreSQL type           | nullable | default | description                                   |
+| :----------- | :------------------------ | :------- | :-----: | :-------------------------------------------- |
+| `id`         | `UUID`                    | FALSE    |         | Transaction id when the comment was created   |
+| `owner`      | `CHAR (64)`               | FALSE    |         | Address of the commenter                      |
+| `state`      | `ENUM`                    | FALSE    |         | `pending` or `created`                        |
+| `demand`     | `UUID`                    | FALSE    |         | Id of the demand this comment is on           |
+| `attachment` | `UUID`                    | FALSE    |         | Id of the attachment with the comment content |
+| `created_at` | `Timestamp with timezone` | FALSE    | `now()` | Creation datetime                             |
+| `updated_at` | `Timestamp with timezone` | FALSE    | `now()` | Last updated datetime                         |
+
+#### Indexes
+
+| columns | Index Type | description |
+| :------ | :--------- | :---------- |
+| `id`    | PRIMARY    | Primary key |
+
+#### Foreign Keys
+
+| columns        | References                | description                                                                 |
+| :------------- | :------------------------ | :-------------------------------------------------------------------------- |
+| `id`, `demand` | transaction(id, local_id) | Ensures the comment is associated with a transaction for the correct demand |
+| `demand`       | demand(id)                | Ensures the demand is a valid demand                                        |
+| `attachment`   | attachment(id)            | Ensures the comment content is associated with a valid attachment           |

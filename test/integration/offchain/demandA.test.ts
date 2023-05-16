@@ -11,6 +11,8 @@ import {
   seededDemandACreationId,
   cleanup,
   exampleDate,
+  nonExistentId,
+  seededDemandACommentTransactionId,
 } from '../../seeds'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
@@ -71,7 +73,7 @@ describe('demandA', () => {
         id: seededDemandAId,
         owner: selfAlias,
         parametersAttachmentId: parametersAttachmentId,
-        state: 'created',
+        state: 'pending',
         updatedAt: exampleDate,
       })
     })
@@ -142,7 +144,7 @@ describe('demandA', () => {
     })
   })
 
-  describe('if demandA state is not created while posting new creation', () => {
+  describe('if demandA state is not pending while posting new creation', () => {
     beforeEach(async () => {
       await db.insertDemand({
         id: 'b21f865e-f4e9-4ae2-8944-de691e9eb4d0',
@@ -159,11 +161,11 @@ describe('demandA', () => {
       const { status, body } = await post(app, '/v1/demandA/b21f865e-f4e9-4ae2-8944-de691e9eb4d0/creation', {})
 
       expect(status).to.equal(400)
-      expect(body).to.equal('Demand must have state: created')
+      expect(body).to.equal(`Demand must have state: 'pending'`)
     })
   })
 
-  it('should create an demandA demand', async () => {
+  it('should create a demandA', async () => {
     const response = await post(app, '/v1/demandA', { parametersAttachmentId })
     const { id: responseId, createdAt, updatedAt, ...responseRest } = response.body
 
@@ -173,7 +175,7 @@ describe('demandA', () => {
     assertIsoDate(updatedAt)
     expect(responseRest).to.deep.equal({
       parametersAttachmentId,
-      state: 'created',
+      state: 'pending',
       owner: selfAlias,
     })
   })
@@ -214,6 +216,29 @@ describe('demandA', () => {
     expect(body).to.deep.equal([])
   })
 
+  it('should filter demandA comments based on updated date', async () => {
+    const { status, body } = await get(
+      app,
+      `/v1/demandA/${seededDemandAId}/comment?updated_since=2023-01-01T00:00:00.000Z`
+    )
+    expect(status).to.equal(200)
+    expect(body).to.deep.equal([])
+  })
+
+  it('should get comment transaction from a tx ID - 200', async () => {
+    const response = await get(app, `/v1/demandA/${seededDemandAId}/comment/${seededDemandACommentTransactionId}`)
+    expect(response.status).to.equal(200)
+    expect(response.body).to.deep.equal({
+      id: seededDemandACommentTransactionId,
+      apiType: 'demand_a',
+      transactionType: 'comment',
+      localId: seededDemandAId,
+      state: 'submitted',
+      submittedAt: exampleDate,
+      updatedAt: exampleDate,
+    })
+  })
+
   it('demandA creations with invalid updatedSince returns 422', async () => {
     const { status, body } = await get(app, `/v1/demandA/${seededDemandAId}/creation?updated_since=foo`)
     expect(status).to.equal(422)
@@ -221,5 +246,25 @@ describe('demandA', () => {
       name: 'ValidateError',
       message: 'Validation failed',
     })
+  })
+
+  it('non-existent demandA id when getting creation tx - 404', async () => {
+    const response = await get(app, `/v1/demandA/${nonExistentId}/creation`, {})
+    expect(response.status).to.equal(404)
+  })
+
+  it('non-existent demandA id when commenting on-chain - 404', async () => {
+    const response = await post(app, `/v1/demandA/${nonExistentId}/comment`, { attachmentId: parametersAttachmentId })
+    expect(response.status).to.equal(404)
+  })
+
+  it('non-existent demandA id when getting comment tx - 404', async () => {
+    const response = await get(app, `/v1/demandA/${nonExistentId}/comment`, {})
+    expect(response.status).to.equal(404)
+  })
+
+  it('non-existent comment id when getting comment tx - 404', async () => {
+    const response = await get(app, `/v1/demandA/${seededDemandAId}/comment/${nonExistentId}`, {})
+    expect(response.status).to.equal(404)
   })
 })

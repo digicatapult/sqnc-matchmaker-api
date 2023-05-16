@@ -145,7 +145,7 @@ The last top level entity `attachment`, which accepts a `multipart/form-data` pa
 - `GET /v1/attachment` - list attachments.
 - `GET /v1/attachment/{attachmentId}` - download an attachment.
 
-## Demo scenario
+## Demo scenario
 
 ### Services
 
@@ -214,3 +214,15 @@ Note the meaning in the API of `demandA` and `demandB` are abstract and use-case
 11. Once the second member accepts, we have a successful match! The `match2` state changes to `acceptedFinal` and `demandA` + `demandB` state moves to `allocated`. These demands can no longer be used in a new `match2`.
 
 To clear chain and database state, delete the volumes e.g. `docker compose -f docker-compose-3-persona.yml down -v`.
+
+### Rejection paths
+
+The previous scenario covers a 'happy path' where every member accepts each step without issue. There are also routes for communicating when something has gone wrong.
+
+#### Commenting on demands
+
+At any time a `demandA` or `demandB` can be commented on by any member by `POST`ing a single attachment to [`POST /v1/demandA/{id}/comment`](http://localhost:8000/swagger/#/demandA/CreateDemandBCommentOnChain) or [`POST /v1/demandB/{id}/comment`](http://localhost:8000/swagger/#/demandB/CreateDemandBCommentOnChain). The attachment is a file that informs the owner of the demand about anything (e.g. an issue, correction) related to the demand. A demand can be commented on multiple times and it does not change the demand's state.
+
+#### Rejecting match2
+
+At any time after a `match2` is `proposed`, and before it reaches `acceptedFinal` state, any of its members can reject the `match2` using [`POST /v1/match2/{id}/rejection`](http://localhost:8000/swagger/#/match2/RejectMatch2OnChain). Once a `match2` is rejected, it is permanently closed.

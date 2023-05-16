@@ -1,21 +1,22 @@
-import { describe } from 'mocha'
+import { describe, beforeEach, afterEach, it } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer'
-import { seed, cleanup, seededDemandBId } from '../../seeds'
+import { post } from '../../helper/routeHelper'
+import { seed, cleanup, parametersAttachmentId } from '../../seeds'
 
 import { withIdentitySelfMock } from '../../helper/mock'
-import Database from '../../../src/lib/db'
+import Database, { DemandRow, Match2Row } from '../../../src/lib/db'
 import ChainNode from '../../../src/lib/chainNode'
 import { logger } from '../../../src/lib/logger'
 import env from '../../../src/env'
 import { pollTransactionState } from '../../helper/poll'
 import { withAppAndIndexer } from '../../helper/chainTest'
+import { UUID } from '../../../src/models/strings'
 
 describe('on-chain', function () {
   this.timeout(60000)
-
   const db = new Database()
   const node = new ChainNode({
     host: env.NODE_HOST,
@@ -37,83 +38,6 @@ describe('on-chain', function () {
     await cleanup()
   })
 
-  describe('chainNode', () => {
-    it('should set transaction as failed if dispatch error', async () => {
-      // use invalid process to cause a dispatch error
-      const invalidProcess = { id: 'invalid', version: 1 }
-      const extrinsic = await node.prepareRunProcess({ process: invalidProcess, inputs: [], outputs: [] })
-      const [transaction] = await db.insertTransaction({
-        api_type: 'demand_b',
-        transaction_type: 'creation',
-        local_id: seededDemandBId,
-        state: 'submitted',
-        hash: extrinsic.hash.toHex(),
-      })
-
-      node.submitRunProcess(extrinsic, db.updateTransactionState(transaction.id))
-
-      // wait for dispatch error
-      const failedTransaction = await pollTransactionState(db, transaction.id, 'failed')
-      expect(failedTransaction.state).to.equal('failed')
-    })
-  })
-
-  describe('demandB', () => {
-    it('should create a demandB on-chain', async () => {
-      const lastTokenId = await node.getLastTokenId()
-
-      // submit to chain
-      const response = await post(app, `/v1/demandB/${seededDemandBId}/creation`, {})
-      expect(response.status).to.equal(201)
-
-      const { id: transactionId, state } = response.body
-      expect(transactionId).to.match(
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-      )
-      expect(state).to.equal('submitted')
-
-      // wait for block to finalise
-      await pollTransactionState(db, transactionId, 'finalised')
-
-      // check local demandB updates with token id
-      const [maybeDemandB] = await db.getDemand(seededDemandBId)
-      const demandB = maybeDemandB as DemandRow
-      expect(demandB.latestTokenId).to.equal(lastTokenId + 1)
-      expect(demandB.originalTokenId).to.equal(lastTokenId + 1)
-    })
-  })
-
-  describe('demandA', () => {
-    it('creates an demandA on chain', async () => {
-      const lastTokenId = await node.getLastTokenId()
-
-      const {
-        body: { id: demandAId },
-      } = await post(app, '/v1/demandA', { parametersAttachmentId })
-
-      // submit to chain
-      const response = await post(app, `/v1/demandA/${demandAId}/creation`, {})
-      expect(response.status).to.equal(201)
-      const { id: transactionId, state } = response.body
-      expect(transactionId).to.match(
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-      )
-      expect(state).to.equal('submitted')
-
-      await pollTransactionState(db, transactionId, 'finalised')
-
-      const [demandA] = await db.getDemand(demandAId)
-      expect(demandA).to.contain({
-        id: demandAId,
-        state: 'created',
-        subtype: 'demand_a',
-        parametersAttachmentId,
-        latestTokenId: lastTokenId + 1,
-        originalTokenId: lastTokenId + 1,
-      })
-    })
-  })
-
   describe('match2', async () => {
     let demandAOriginalId: number
     let demandBOriginalId: number
@@ -126,17 +50,17 @@ describe('on-chain', function () {
 
       const {
         body: { id: demandAId },
-      } = await post(app, '/v1/demandA', { parametersAttachmentId })
+      } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
       const {
         body: { id: demandATransactionId },
-      } = await post(app, `/v1/demandA/${demandAId}/creation`, {})
+      } = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
 
       const {
         body: { id: demandBId },
-      } = await post(app, '/v1/demandB', { parametersAttachmentId })
+      } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
       const {
         body: { id: demandBTransactionId },
-      } = await post(app, `/v1/demandB/${demandBId}/creation`, {})
+      } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {})
 
       await pollTransactionState(db, demandATransactionId, 'finalised')
       const [maybeDemandA] = await db.getDemand(demandAId)
@@ -152,7 +76,7 @@ describe('on-chain', function () {
 
       const {
         body: { id: match2Id },
-      } = await post(app, '/v1/match2', { demandA: demandAId, demandB: demandBId })
+      } = await post(context.app, '/v1/match2', { demandA: demandAId, demandB: demandBId })
       match2LocalId = match2Id
     })
 
@@ -160,7 +84,7 @@ describe('on-chain', function () {
       const lastTokenId = await node.getLastTokenId()
 
       // submit to chain
-      const response = await post(app, `/v1/match2/${match2LocalId}/proposal`, {})
+      const response = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
       expect(response.status).to.equal(201)
 
       const { id: transactionId, state } = response.body
@@ -191,7 +115,7 @@ describe('on-chain', function () {
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
       // propose
-      const proposal = await post(app, `/v1/match2/${match2LocalId}/proposal`, {})
+      const proposal = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
 
       // wait for block to finalise
       await pollTransactionState(db, proposal.body.id, 'finalised')
@@ -202,7 +126,7 @@ describe('on-chain', function () {
       const lastTokenId = await node.getLastTokenId()
 
       // submit accept to chain
-      const responseAcceptA = await post(app, `/v1/match2/${match2LocalId}/accept`, {})
+      const responseAcceptA = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
       expect(responseAcceptA.status).to.equal(201)
 
       // wait for block to finalise
@@ -216,7 +140,7 @@ describe('on-chain', function () {
       expect(match2AcceptA.originalTokenId).to.equal(match2OriginalId)
 
       // submit 2nd accept to chain
-      const responseAcceptFinal = await post(app, `/v1/match2/${match2LocalId}/accept`, {})
+      const responseAcceptFinal = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
       expect(responseAcceptFinal.status).to.equal(201)
 
       // wait for block to finalise
@@ -240,6 +164,69 @@ describe('on-chain', function () {
       expect(match2AcceptFinal.latestTokenId).to.equal(lastTokenId + 4)
       expect(match2AcceptFinal.state).to.equal('acceptedFinal')
       expect(match2AcceptFinal.originalTokenId).to.equal(match2OriginalId)
+    })
+
+    it('should reject a proposed match2 on-chain', async () => {
+      // propose
+      const proposal = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
+      expect(proposal.status).to.equal(201)
+
+      // wait for block to finalise
+      await pollTransactionState(db, proposal.body.id, 'finalised')
+
+      const [maybeMatch2] = await db.getMatch2(match2LocalId)
+      const match2 = maybeMatch2 as Match2Row
+      const match2LatestTokenId = match2.latestTokenId
+
+      // reject match2
+      const rejection = await post(context.app, `/v1/match2/${match2LocalId}/rejection`, {})
+      expect(rejection.status).to.equal(200)
+
+      // wait for block to finalise
+      await pollTransactionState(db, rejection.body.id, 'finalised')
+
+      // check local entities update with token id
+      const [maybeMatch2Rejected] = await db.getMatch2(match2LocalId)
+      const match2Rejected = maybeMatch2Rejected as Match2Row
+      expect(match2Rejected.state).to.equal('rejected')
+
+      // no output token means latest token ID remains the same
+      expect(match2Rejected.latestTokenId).to.equal(match2LatestTokenId)
+    })
+
+    it('should reject an acceptedA match2 on-chain', async () => {
+      // propose
+      const proposal = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
+      expect(proposal.status).to.equal(201)
+
+      // wait for block to finalise
+      await pollTransactionState(db, proposal.body.id, 'finalised')
+
+      // acceptA
+      const acceptA = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
+      expect(acceptA.status).to.equal(201)
+
+      // wait for block to finalise
+      await pollTransactionState(db, acceptA.body.id, 'finalised')
+
+      const [maybeMatch2] = await db.getMatch2(match2LocalId)
+      const match2 = maybeMatch2 as Match2Row
+      const match2LatestTokenId = match2.latestTokenId
+
+      // reject match2
+      const rejection = await post(context.app, `/v1/match2/${match2LocalId}/rejection`, {})
+      expect(rejection.status).to.equal(200)
+
+      // wait for block to finalise
+      await pollTransactionState(db, rejection.body.id, 'finalised')
+
+      // check local entities update with token id
+      const [maybeMatch2Rejected] = await db.getMatch2(match2LocalId)
+      const match2Rejected = maybeMatch2Rejected as Match2Row
+      expect(match2Rejected.state).to.equal('rejected')
+
+      // no output token means latest token ID remains the same
+      expect(match2Rejected.latestTokenId).to.equal(match2LatestTokenId)
     })
   })
 })

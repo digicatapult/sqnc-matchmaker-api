@@ -18,10 +18,10 @@ import { logger } from '../../../lib/logger'
 import Database, { DemandRow, Match2Row } from '../../../lib/db'
 import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index'
 import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
-import { Match2Request, Match2Response } from '../../../models/match2'
+import { Match2Request, Match2Response, Match2State } from '../../../models/match2'
 import { DATE, UUID } from '../../../models/strings'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
-import { match2AcceptFinal, match2AcceptFirst, match2Propose } from '../../../lib/payload'
+import { match2AcceptFinal, match2AcceptFirst, match2Propose, match2Reject } from '../../../lib/payload'
 import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
@@ -72,7 +72,7 @@ export class Match2Controller extends Controller {
       optimiser: selfAddress,
       member_a: demandA.owner,
       member_b: demandB.owner,
-      state: 'proposed',
+      state: 'pending',
       demand_a_id: demandAId,
       demand_b_id: demandBId,
     })
@@ -122,7 +122,7 @@ export class Match2Controller extends Controller {
   public async proposeMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
-    if (match2.state !== 'proposed') throw new BadRequest(`Match2 must have state: ${'proposed'}`)
+    if (match2.state !== 'pending') throw new BadRequest(`Match2 must have state: 'pending'`)
 
     const [maybeDemandA] = await this.db.getDemand(match2.demandA)
     validatePreOnChain(maybeDemandA, 'demand_a', 'DemandA')
@@ -299,6 +299,85 @@ export class Match2Controller extends Controller {
       transactionType: TransactionType
       updatedSince?: Date
     } = { localId: match2Id, transactionType: 'accept' }
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
+    }
+
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('match2')
+
+    return await this.db.getTransactionsByLocalId(query)
+  }
+
+  /**
+   * A member rejects a match2 {match2Id} on-chain.
+   * @summary Reject a match2 on-chain
+   * @param match2Id The match2's identifier
+   */
+  @Post('{match2Id}/rejection')
+  @Response<NotFound>(404, 'Item not found')
+  @Response<BadRequest>(400, 'Request was invalid')
+  @SuccessResponse('200')
+  public async rejectMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('match2')
+
+    const roles = [match2.memberA, match2.memberB, match2.optimiser]
+    const { address: selfAddress } = await getMemberBySelf()
+    if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
+
+    const rejectableStates: Match2State[] = ['proposed', 'acceptedA', 'acceptedB']
+    if (!rejectableStates.includes(match2.state))
+      throw new BadRequest(`Match2 state must be one of: ${rejectableStates.join(', ')}`)
+
+    const extrinsic = await this.node.prepareRunProcess(match2Reject(match2))
+
+    const [transaction] = await this.db.insertTransaction({
+      transaction_type: 'rejection',
+      api_type: 'match2',
+      local_id: match2Id,
+      state: 'submitted',
+      hash: extrinsic.hash.toHex(),
+    })
+
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+    return transaction
+  }
+
+  /**
+   * @summary Get a match2 rejection transaction by ID
+   * @param match2Id The match2's identifier
+   * @param rejectionId The match2's rejection ID
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{match2Id}/rejection/{rejectionId}')
+  public async getMatch2Rejection(@Path() match2Id: UUID, rejectionId: UUID): Promise<TransactionResponse> {
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('match2')
+
+    const [rejection] = await this.db.getTransaction(rejectionId)
+    if (!rejection) throw new NotFound('rejection')
+
+    return rejection
+  }
+
+  /**
+   * @summary Get all of a match2's rejection transactions
+   * @param match2Id The match2's identifier
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{match2Id}/rejection')
+  public async getMatch2Rejections(
+    @Path() match2Id: UUID,
+    @Query() updated_since?: DATE
+  ): Promise<TransactionResponse[]> {
+    const query: {
+      localId: UUID
+      transactionType: TransactionType
+      updatedSince?: Date
+    } = { localId: match2Id, transactionType: 'rejection' }
     if (updated_since) {
       query.updatedSince = parseDateParam(updated_since)
     }

@@ -8,6 +8,7 @@ export const cleanup = async () => {
   await db.demand().del()
   await db.transaction().del()
   await db.match2().del()
+  await db.demand_comment().del()
 }
 
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -17,8 +18,13 @@ export const seededDemandBId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
 export const seededDemandACreationId = 'ff3af974-7d4d-40b4-86a5-00a2241265cb'
 export const seededTransactionId = '1f3af974-7d4d-40b4-86a5-94a2241265cb'
 export const seededTransactionId2 = 'd65d8e11-150f-4ea4-b778-b920e9dbc378'
+export const seededDemandACommentTransactionId = '07e0511a-6041-40df-9d5b-2e5966fa9a4a'
+export const seededDemandACommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28336012a'
+export const seededDemandBCommentTransactionId = '07e0511a-6041-40df-9d5b-2e5966fa9a48'
+export const seededDemandBCommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28336012b'
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
 export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
+export const seededRejectionTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07078'
 export const seededDemandAId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
 
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
@@ -36,6 +42,7 @@ export const seededMatch2AcceptedFinal = '85a50fd9-f20f-4a61-a7e4-3ad49b7c3f21'
 export const seededMatch2NotAcceptableA = '46d7dbe8-aaef-472e-af9f-ecdd2681d3a5'
 export const seededMatch2NotAcceptableB = '097d3905-72aa-4517-85d2-0091d26fceac'
 export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c9474784d'
+export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
 
 const seededDemandANotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
 const seededDemandBNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
@@ -61,7 +68,7 @@ export const seed = async () => {
       id: seededDemandBId,
       owner: selfAddress,
       subtype: 'demand_b',
-      state: 'created',
+      state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
       created_at: exampleDate,
       updated_at: exampleDate,
@@ -94,12 +101,56 @@ export const seed = async () => {
     },
   ])
 
+  await db.transaction().insert([
+    {
+      id: seededDemandBCommentTransactionId,
+      api_type: 'demand_b',
+      transaction_type: 'comment',
+      local_id: seededDemandBId,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+    {
+      id: seededDemandBCommentTransactionId2,
+      api_type: 'demand_b',
+      transaction_type: 'comment',
+      local_id: seededDemandBId,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+  ])
+
+  await db.demand_comment().insert([
+    {
+      id: seededDemandBCommentTransactionId,
+      owner: selfAddress,
+      state: 'pending',
+      demand: seededDemandBId,
+      attachment: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+    {
+      id: seededDemandBCommentTransactionId2,
+      owner: selfAddress,
+      state: 'created',
+      demand: seededDemandBId,
+      attachment: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+
   await db.demand().insert([
     {
       id: seededDemandAId,
       owner: selfAddress,
       subtype: 'demand_a',
-      state: 'created',
+      state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
       created_at: exampleDate,
       updated_at: exampleDate,
@@ -137,14 +188,12 @@ export const seed = async () => {
   await db.match2().insert([
     {
       id: seededMatch2Id,
-      state: 'proposed',
+      state: 'pending',
       optimiser: selfAddress,
       member_a: selfAddress,
       member_b: selfAddress,
       demand_a_id: seededDemandAId,
       demand_b_id: seededDemandBId,
-      latest_token_id: seededMatch2TokenId,
-      original_token_id: seededMatch2TokenId,
       created_at: exampleDate,
       updated_at: exampleDate,
     },
@@ -189,12 +238,25 @@ export const seed = async () => {
     },
   ])
 
+  await db.transaction().insert([
+    {
+      id: seededRejectionTransactionId,
+      api_type: 'match2',
+      transaction_type: 'rejection',
+      local_id: seededMatch2Id,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+  ])
+
   await db.demand().insert([
     {
       id: seededDemandBMissingTokenId,
       owner: selfAddress,
       subtype: 'demand_b',
-      state: 'created',
+      state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
       created_at: exampleDate,
       updated_at: exampleDate,
@@ -206,7 +268,7 @@ export const seed = async () => {
       id: seededDemandAMissingTokenId,
       owner: selfAddress,
       subtype: 'demand_a',
-      state: 'created',
+      state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
       created_at: exampleDate,
       updated_at: exampleDate,
@@ -265,10 +327,54 @@ export const seed = async () => {
     },
   ])
 
+  await db.transaction().insert([
+    {
+      id: seededDemandACommentTransactionId,
+      api_type: 'demand_a',
+      transaction_type: 'comment',
+      local_id: seededDemandAId,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+    {
+      id: seededDemandACommentTransactionId2,
+      api_type: 'demand_a',
+      transaction_type: 'comment',
+      local_id: seededDemandAId,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+  ])
+
+  await db.demand_comment().insert([
+    {
+      id: seededDemandACommentTransactionId,
+      owner: selfAddress,
+      state: 'pending',
+      demand: seededDemandAId,
+      attachment: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+    {
+      id: seededDemandACommentTransactionId2,
+      owner: selfAddress,
+      state: 'created',
+      demand: seededDemandAId,
+      attachment: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+
   await db.match2().insert([
     {
       id: seededMatch2WithAllocatedDemands,
-      state: 'proposed',
+      state: 'pending',
       optimiser: selfAddress,
       member_a: selfAddress,
       member_b: selfAddress,
@@ -344,6 +450,22 @@ export const seed = async () => {
       id: seededMatch2NotAcceptableBoth,
       state: 'acceptedB',
       optimiser: selfAddress,
+      member_a: notSelfAddress,
+      member_b: notSelfAddress,
+      demand_a_id: seededDemandANotOwnedId,
+      demand_b_id: seededDemandBNotOwnedId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2NotInRoles,
+      state: 'acceptedB',
+      optimiser: notSelfAddress,
       member_a: notSelfAddress,
       member_b: notSelfAddress,
       demand_a_id: seededDemandANotOwnedId,

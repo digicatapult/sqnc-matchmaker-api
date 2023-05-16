@@ -2,9 +2,16 @@ import { v4 as UUIDv4 } from 'uuid'
 
 import { UUID } from '../../models/strings'
 import { Transaction } from '../db'
-import { AttachmentRecord, ChangeSet, DemandRecord, MatchRecord } from './changeSet'
+import { AttachmentRecord, ChangeSet, DemandCommentRecord, DemandRecord, MatchRecord } from './changeSet'
 
-const processNames = ['demand-create', 'match2-propose', 'match2-accept', 'match2-acceptFinal'] as const
+const processNames = [
+  'demand-create',
+  'match2-propose',
+  'match2-accept',
+  'match2-acceptFinal',
+  'demand-comment',
+  'match2-reject',
+] as const
 type PROCESSES_TUPLE = typeof processNames
 type PROCESSES = PROCESSES_TUPLE[number]
 
@@ -16,6 +23,7 @@ export type EventProcessors = {
   [key in PROCESSES]: (
     version: number,
     transaction: Transaction | null,
+    sender: string,
     inputs: { id: number; localId: UUID }[],
     outputs: { id: number; roles: Map<string, string>; metadata: Map<string, string> }[]
   ) => ChangeSet
@@ -30,7 +38,7 @@ const getOrError = <T>(map: Map<string, T>, key: string): T => {
 }
 
 const DefaultEventProcessors: EventProcessors = {
-  'demand-create': (version, transaction, _inputs, outputs) => {
+  'demand-create': (version, transaction, _sender, _inputs, outputs) => {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for demand-create process`)
     }
@@ -69,7 +77,59 @@ const DefaultEventProcessors: EventProcessors = {
       demands: new Map([[demand.id, demand]]),
     }
   },
-  'match2-propose': (version, transaction, inputs, outputs) => {
+  'demand-comment': (version, transaction, sender, inputs, outputs) => {
+    if (version !== 1) {
+      throw new Error(`Incompatible version ${version} for match2-propose process`)
+    }
+
+    const newDemand = outputs[0]
+    const demandId = inputs[0].localId
+
+    const demandUpdate: DemandRecord = {
+      type: 'update',
+      id: demandId,
+      state: getOrError(newDemand.metadata, 'state'),
+      latest_token_id: newDemand.id,
+    }
+
+    if (transaction) {
+      return {
+        demandComments: new Map([
+          [
+            transaction.id,
+            {
+              type: 'update',
+              id: transaction.id,
+              state: 'created',
+            },
+          ],
+        ]),
+        demands: new Map([[demandId, demandUpdate]]),
+      }
+    }
+
+    const attachment: AttachmentRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      ipfs_hash: getOrError(newDemand.metadata, 'comment'),
+    }
+
+    const comment: DemandCommentRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      state: 'created',
+      demand: demandId,
+      owner: sender,
+      attachment: attachment.id,
+    }
+
+    return {
+      attachments: new Map([[attachment.id, attachment]]),
+      demandComments: new Map([[comment.id, comment]]),
+      demands: new Map([[demandId, demandUpdate]]),
+    }
+  },
+  'match2-propose': (version, transaction, _sender, inputs, outputs) => {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for match2-propose process`)
     }
@@ -113,7 +173,7 @@ const DefaultEventProcessors: EventProcessors = {
       matches: new Map([[match.id, match]]),
     }
   },
-  'match2-accept': (version, _transaction, inputs, outputs) => {
+  'match2-accept': (version, _transaction, _sender, inputs, outputs) => {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for match2-accept process`)
     }
@@ -135,7 +195,7 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
     }
   },
-  'match2-acceptFinal': (version, _transaction, inputs, outputs) => {
+  'match2-acceptFinal': (version, _transaction, _sender, inputs, outputs) => {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for match2-acceptFinal process`)
     }
@@ -154,6 +214,27 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
       matches: new Map([
         [matchLocalId, { type: 'update', id: matchLocalId, latest_token_id: matchId, state: 'acceptedFinal' }],
+      ]),
+    }
+  },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  'match2-reject': (version, _transaction, _sender, inputs, _outputs) => {
+    if (version !== 1) {
+      throw new Error(`Incompatible version ${version} for match2-reject process`)
+    }
+
+    const localId = inputs[0].localId
+
+    return {
+      matches: new Map([
+        [
+          localId,
+          {
+            id: localId,
+            type: 'update',
+            state: 'rejected',
+          },
+        ],
       ]),
     }
   },

@@ -25,6 +25,21 @@ export type DemandRecord =
       latest_token_id: number
     }
 
+export type DemandCommentRecord =
+  | {
+      type: 'insert'
+      id: string
+      state: 'created'
+      owner: string
+      demand: string
+      attachment: string
+    }
+  | {
+      type: 'update'
+      id: string
+      state: 'created'
+    }
+
 export type MatchRecord =
   | {
       type: 'insert'
@@ -43,7 +58,7 @@ export type MatchRecord =
       id: string
       state: string
       original_token_id?: number
-      latest_token_id: number
+      latest_token_id?: number
     }
 
 export type AttachmentRecord = {
@@ -58,6 +73,7 @@ export type ChangeSet = {
   attachments?: Map<string, AttachmentRecord>
   demands?: Map<string, DemandRecord>
   matches?: Map<string, MatchRecord>
+  demandComments?: Map<string, DemandCommentRecord>
 }
 
 const mergeMaps = <T extends Change>(base?: Map<string, T>, update?: Map<string, T>) => {
@@ -83,11 +99,13 @@ export const mergeChangeSets = (base: ChangeSet, update: ChangeSet) => {
   const demands = mergeMaps(base.demands, update.demands)
   const matches = mergeMaps(base.matches, update.matches)
   const attachments = mergeMaps(base.attachments, update.attachments)
+  const demandComments = mergeMaps(base.demandComments, update.demandComments)
 
   const result: ChangeSet = {
     ...(attachments ? { attachments } : {}),
     ...(demands ? { demands } : {}),
     ...(matches ? { matches } : {}),
+    ...(demandComments ? { demandComments } : {}),
   }
 
   return result
