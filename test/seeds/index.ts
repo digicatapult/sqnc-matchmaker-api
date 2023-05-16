@@ -14,18 +14,19 @@ export const cleanup = async () => {
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
 
 export const parametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
+export const seededDemandAId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
 export const seededDemandBId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
-export const seededDemandACreationId = 'ff3af974-7d4d-40b4-86a5-00a2241265cb'
-export const seededTransactionId = '1f3af974-7d4d-40b4-86a5-94a2241265cb'
-export const seededTransactionId2 = 'd65d8e11-150f-4ea4-b778-b920e9dbc378'
+export const seededDemandACreationTransactionId = 'bfd86663-9b2f-4f38-86e5-acdafa5f57fc'
+export const seededDemandBCreationTransactionId = '1f3af974-7d4d-40b4-86a5-94a2241265cb'
+export const seededDemandACreationTransactionId2 = 'ffe850b4-4a17-47a6-9d3d-6d0c87b1f9c4'
+export const seededDemandBCreationTransactionId2 = 'd65d8e11-150f-4ea4-b778-b920e9dbc378'
 export const seededDemandACommentTransactionId = '07e0511a-6041-40df-9d5b-2e5966fa9a4a'
-export const seededDemandACommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28336012a'
 export const seededDemandBCommentTransactionId = '07e0511a-6041-40df-9d5b-2e5966fa9a48'
+export const seededDemandACommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28336012a'
 export const seededDemandBCommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28336012b'
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
 export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
 export const seededRejectionTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07078'
-export const seededDemandAId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
 
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
 export const exampleDate = '2023-01-01T00:00:00.000Z'
@@ -77,7 +78,7 @@ export const seed = async () => {
 
   await db.transaction().insert([
     {
-      id: seededTransactionId,
+      id: seededDemandBCreationTransactionId,
       api_type: 'demand_b',
       transaction_type: 'creation',
       local_id: seededDemandBId,
@@ -90,7 +91,7 @@ export const seed = async () => {
 
   await db.transaction().insert([
     {
-      id: seededTransactionId2,
+      id: seededDemandBCreationTransactionId2,
       api_type: 'demand_b',
       transaction_type: 'creation',
       local_id: seededDemandBId,
@@ -157,6 +158,76 @@ export const seed = async () => {
     },
   ])
 
+  await db.transaction().insert([
+    {
+      id: seededDemandACreationTransactionId,
+      api_type: 'demand_a',
+      transaction_type: 'creation',
+      local_id: seededDemandAId,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+  ])
+
+  await db.transaction().insert([
+    {
+      id: seededDemandACreationTransactionId2,
+      api_type: 'demand_a',
+      transaction_type: 'creation',
+      local_id: seededDemandAId,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+  ])
+
+  await db.transaction().insert([
+    {
+      id: seededDemandACommentTransactionId,
+      api_type: 'demand_a',
+      transaction_type: 'comment',
+      local_id: seededDemandAId,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+    {
+      id: seededDemandACommentTransactionId2,
+      api_type: 'demand_a',
+      transaction_type: 'comment',
+      local_id: seededDemandAId,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+  ])
+
+  await db.demand_comment().insert([
+    {
+      id: seededDemandACommentTransactionId,
+      owner: selfAddress,
+      state: 'pending',
+      demand: seededDemandAId,
+      attachment: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+    {
+      id: seededDemandACommentTransactionId2,
+      owner: selfAddress,
+      state: 'created',
+      demand: seededDemandAId,
+      attachment: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+
   await db.demand().insert([
     {
       id: seededDemandANotOwnedId,
@@ -182,72 +253,6 @@ export const seed = async () => {
       original_token_id: seededDemandTokenId,
       created_at: exampleDate,
       updated_at: exampleDate,
-    },
-  ])
-
-  await db.match2().insert([
-    {
-      id: seededMatch2Id,
-      state: 'pending',
-      optimiser: selfAddress,
-      member_a: selfAddress,
-      member_b: selfAddress,
-      demand_a_id: seededDemandAId,
-      demand_b_id: seededDemandBId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
-    },
-  ])
-
-  await db.transaction().insert([
-    {
-      id: seededProposalTransactionId,
-      api_type: 'match2',
-      transaction_type: 'proposal',
-      local_id: seededMatch2Id,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
-    },
-  ])
-
-  await db.transaction().insert([
-    {
-      id: seededDemandACreationId,
-      api_type: 'demand_a',
-      transaction_type: 'creation',
-      local_id: seededDemandAId,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
-    },
-  ])
-
-  await db.transaction().insert([
-    {
-      id: seededAcceptTransactionId,
-      api_type: 'match2',
-      transaction_type: 'accept',
-      local_id: seededMatch2Id,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
-    },
-  ])
-
-  await db.transaction().insert([
-    {
-      id: seededRejectionTransactionId,
-      api_type: 'match2',
-      transaction_type: 'rejection',
-      local_id: seededMatch2Id,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
     },
   ])
 
@@ -327,22 +332,26 @@ export const seed = async () => {
     },
   ])
 
-  await db.transaction().insert([
+  await db.match2().insert([
     {
-      id: seededDemandACommentTransactionId,
-      api_type: 'demand_a',
-      transaction_type: 'comment',
-      local_id: seededDemandAId,
-      state: 'submitted',
+      id: seededMatch2Id,
+      state: 'pending',
+      optimiser: selfAddress,
+      member_a: selfAddress,
+      member_b: selfAddress,
+      demand_a_id: seededDemandAId,
+      demand_b_id: seededDemandBId,
       created_at: exampleDate,
       updated_at: exampleDate,
-      hash: transactionHash,
     },
+  ])
+
+  await db.transaction().insert([
     {
-      id: seededDemandACommentTransactionId2,
-      api_type: 'demand_a',
-      transaction_type: 'comment',
-      local_id: seededDemandAId,
+      id: seededProposalTransactionId,
+      api_type: 'match2',
+      transaction_type: 'proposal',
+      local_id: seededMatch2Id,
       state: 'submitted',
       created_at: exampleDate,
       updated_at: exampleDate,
@@ -350,24 +359,29 @@ export const seed = async () => {
     },
   ])
 
-  await db.demand_comment().insert([
+  await db.transaction().insert([
     {
-      id: seededDemandACommentTransactionId,
-      owner: selfAddress,
-      state: 'pending',
-      demand: seededDemandAId,
-      attachment: parametersAttachmentId,
+      id: seededAcceptTransactionId,
+      api_type: 'match2',
+      transaction_type: 'accept',
+      local_id: seededMatch2Id,
+      state: 'submitted',
       created_at: exampleDate,
       updated_at: exampleDate,
+      hash: transactionHash,
     },
+  ])
+
+  await db.transaction().insert([
     {
-      id: seededDemandACommentTransactionId2,
-      owner: selfAddress,
-      state: 'created',
-      demand: seededDemandAId,
-      attachment: parametersAttachmentId,
+      id: seededRejectionTransactionId,
+      api_type: 'match2',
+      transaction_type: 'rejection',
+      local_id: seededMatch2Id,
+      state: 'submitted',
       created_at: exampleDate,
       updated_at: exampleDate,
+      hash: transactionHash,
     },
   ])
 
