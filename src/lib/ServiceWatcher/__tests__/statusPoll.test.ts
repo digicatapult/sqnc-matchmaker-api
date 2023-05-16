@@ -2,11 +2,15 @@ import { describe, beforeEach, afterEach, it } from 'mocha'
 import sinon from 'sinon'
 import { expect } from 'chai'
 
-import { serviceState, startStatusHandler, buildCombinedHandler } from '../../../../src/lib/ServiceWatcher/statusPoll'
+import { serviceState, startStatusHandler, buildCombinedHandler } from '../statusPoll'
 
-const okStatus = (i) => ({
+const okStatus = (i: any) => ({
   status: serviceState.UP,
   detail: i,
+})
+
+const noDetailStatus = () => ({
+  status: serviceState.UP,
 })
 
 const withFakeTimesForEvery = function () {
@@ -37,7 +41,7 @@ describe('startStatusHandler', function () {
     this.handler = await startStatusHandler({
       pollingPeriodMs,
       serviceTimeoutMs,
-      getStatus: sinon.stub().resolves(okStatus(0)),
+      getStatus: okStatus(0),
     })
     const status = this.handler.status
     const detail = this.handler.detail
@@ -52,7 +56,7 @@ describe('startStatusHandler', function () {
       getStatus: Array(10)
         .fill(null)
         .reduce((stub, _, i) => {
-          return stub.onCall(i).resolves(okStatus(i))
+          return stub.onCall(i).returns(okStatus(i))
         }, sinon.stub()),
     })
     await this.clock.tickAsync(pollingPeriodMs / 2)
@@ -127,7 +131,7 @@ describe('startStatusHandler', function () {
     this.handler = await startStatusHandler({
       pollingPeriodMs,
       serviceTimeoutMs,
-      getStatus: sinon.stub().resolves({ status: serviceState.UP }),
+      getStatus: noDetailStatus(),
     })
     const status = this.handler.status
     const detail = this.handler.detail

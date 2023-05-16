@@ -9,7 +9,7 @@ const ipfs = new Ipfs({ host: env.IPFS_HOST, port: env.IPFS_PORT, logger })
 
 const startIpfsStatus = () =>
   startStatusHandler({
-    getStatus: ipfs.getStatus,
+    getStatus: ipfs.getStatus(),
     pollingPeriodMs: WATCHER_POLL_PERIOD_MS,
     serviceTimeoutMs: WATCHER_TIMEOUT_MS,
   })

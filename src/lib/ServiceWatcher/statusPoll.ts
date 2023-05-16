@@ -12,7 +12,7 @@ const mkStatusGenerator = async function* ({ getStatus, serviceTimeoutMs }: { ge
   while (true) {
     try {
       const newStatus = await Promise.race([
-        getStatus(),
+        getStatus,
         delay(serviceTimeoutMs, {
           status: serviceState.DOWN,
           detail: {

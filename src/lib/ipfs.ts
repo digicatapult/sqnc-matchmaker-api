@@ -96,7 +96,7 @@ export default class Ipfs {
       const peers = peersResult.Peers || []
       const peerCount = new Set(peers.map((peer: any) => peer.Peer)).size
       return {
-        status: peerCount === 0 ? serviceState.DOWN : serviceState.UP,
+        status: serviceState.UP,
         detail: {
           version: versionResult.Version,
           peerCount: peerCount,

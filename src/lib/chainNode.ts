@@ -93,9 +93,7 @@ export default class ChainNode {
   }
 
   async getStatus() {
-    await this.api.isReadyOrError.catch((error: any) => {
-      return error
-    })
+    await this.api.isReady
     if (!this.api.isConnected) {
       return {
         status: serviceState.DOWN,
