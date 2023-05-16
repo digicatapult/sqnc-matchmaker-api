@@ -99,7 +99,7 @@ const DefaultEventProcessors: EventProcessors = {
             transaction.id,
             {
               type: 'update',
-              id: transaction.id,
+              transaction_id: transaction.id,
               state: 'created',
             },
           ],

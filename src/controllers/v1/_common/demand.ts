@@ -154,7 +154,7 @@ export class DemandController extends Controller {
     })
 
     await this.db.insertDemandComment({
-      id: transaction.id,
+      transaction_id: transaction.id,
       state: 'pending',
       owner: selfAddress,
       demand: demandId,

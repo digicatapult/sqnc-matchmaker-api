@@ -250,14 +250,14 @@ export default class Database {
     return this.db().demand_comment().insert(comment).returning('*')
   }
 
-  updateDemandComment = async (id: UUID, comment: object) => {
+  updateDemandCommentForTransaction = async (transactionId: UUID, comment: object) => {
     return this.db()
       .demand_comment()
       .update({
         ...comment,
         updated_at: this.client.fn.now(),
       })
-      .where({ id })
+      .where({ transaction_id: transactionId })
       .returning('*')
   }
 
