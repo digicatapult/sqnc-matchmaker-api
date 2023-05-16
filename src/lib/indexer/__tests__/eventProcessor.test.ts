@@ -95,7 +95,7 @@ describe('eventProcessor', function () {
 
       expect(result).to.deep.equal({
         demands: new Map([['42', { type: 'update', id: '42', state: 'allocated', latest_token_id: 2 }]]),
-        demandComments: new Map([['10', { type: 'update', id: '10', state: 'created' }]]),
+        demandComments: new Map([['10', { type: 'update', transaction_id: '10', state: 'created' }]]),
       })
     })
 

@@ -36,7 +36,7 @@ export type DemandCommentRecord =
     }
   | {
       type: 'update'
-      id: string
+      transaction_id: string
       state: 'created'
     }
 

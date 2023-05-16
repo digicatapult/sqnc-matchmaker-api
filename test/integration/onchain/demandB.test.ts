@@ -84,7 +84,7 @@ describe('on-chain', function () {
       expect(demandB.latestTokenId).to.equal(lastTokenId + 2)
       expect(demandB.originalTokenId).to.equal(lastTokenId + 1)
 
-      const [maybeComment] = await db.getDemandComment(commentResponse.body.id)
+      const [maybeComment] = await db.getDemandCommentForTransaction(commentResponse.body.id)
       if (!maybeComment) {
         expect.fail('Expected comment to be in db')
       }
