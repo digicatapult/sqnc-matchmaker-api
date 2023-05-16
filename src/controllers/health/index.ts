@@ -1,8 +1,8 @@
 import { Controller, Get, Response, Route, SuccessResponse } from 'tsoa'
 import type { Health } from '../../models'
 import { logger } from '../../lib/logger'
-import { startStatusHandlers } from '../../lib/ServiceWatcher/index'
-import { serviceState } from '../../lib/ServiceWatcher/statusPoll'
+import { startStatusHandlers } from '../../lib/service-watcher/index'
+import { serviceState } from '../../lib/service-watcher/statusPoll'
 import { ServiceUnavailable } from '../../lib/error-handler/index'
 
 @Route('health')

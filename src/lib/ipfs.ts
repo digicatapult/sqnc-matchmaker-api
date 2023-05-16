@@ -1,5 +1,5 @@
 import { Logger } from 'pino'
-import { serviceState } from './ServiceWatcher/statusPoll'
+import { serviceState } from './service-watcher/statusPoll'
 import type { MetadataFile } from './payload'
 import { HttpResponse } from './error-handler'
 

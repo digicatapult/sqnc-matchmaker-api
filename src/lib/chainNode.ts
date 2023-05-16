@@ -2,7 +2,7 @@ import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/ap
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
-import { serviceState } from './ServiceWatcher/statusPoll'
+import { serviceState } from './service-watcher/statusPoll'
 import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
 
@@ -92,7 +92,7 @@ export default class ChainNode {
     return this.keyring
   }
 
-  async getStatus() {
+  getStatus = async () => {
     await this.api.isReady
     if (!this.api.isConnected) {
       return {

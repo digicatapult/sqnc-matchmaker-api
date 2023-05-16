@@ -4,13 +4,9 @@ import { expect } from 'chai'
 
 import { serviceState, startStatusHandler, buildCombinedHandler } from '../statusPoll'
 
-const okStatus = (i: any) => ({
+const okStatus = (i: number) => ({
   status: serviceState.UP,
   detail: i,
-})
-
-const noDetailStatus = () => ({
-  status: serviceState.UP,
 })
 
 const withFakeTimesForEvery = function () {
@@ -41,7 +37,7 @@ describe('startStatusHandler', function () {
     this.handler = await startStatusHandler({
       pollingPeriodMs,
       serviceTimeoutMs,
-      getStatus: okStatus(0),
+      getStatus: sinon.stub().resolves(okStatus(0)),
     })
     const status = this.handler.status
     const detail = this.handler.detail
@@ -56,7 +52,7 @@ describe('startStatusHandler', function () {
       getStatus: Array(10)
         .fill(null)
         .reduce((stub, _, i) => {
-          return stub.onCall(i).returns(okStatus(i))
+          return stub.onCall(i).resolves(okStatus(i))
         }, sinon.stub()),
     })
     await this.clock.tickAsync(pollingPeriodMs / 2)
@@ -114,7 +110,6 @@ describe('startStatusHandler', function () {
         .onFirstCall()
         .resolves({ status: serviceState.UP })
         .onSecondCall()
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         .returns(new Promise(() => {})),
     })
     await this.clock.tickAsync(pollingPeriodMs)
@@ -131,7 +126,7 @@ describe('startStatusHandler', function () {
     this.handler = await startStatusHandler({
       pollingPeriodMs,
       serviceTimeoutMs,
-      getStatus: noDetailStatus(),
+      getStatus: sinon.stub().resolves({ status: serviceState.UP }),
     })
     const status = this.handler.status
     const detail = this.handler.detail

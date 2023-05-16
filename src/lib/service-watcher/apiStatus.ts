@@ -1,7 +1,7 @@
 import { startStatusHandler } from './statusPoll'
 import env from '../../env'
 import ChainNode from '../chainNode'
-import { logger } from '../../lib/logger'
+import { logger } from '../logger'
 
 const { WATCHER_POLL_PERIOD_MS, WATCHER_TIMEOUT_MS } = env
 const node = new ChainNode({
@@ -13,7 +13,7 @@ const node = new ChainNode({
 
 const startApiStatus = () =>
   startStatusHandler({
-    getStatus: node.getStatus(),
+    getStatus: node.getStatus,
     pollingPeriodMs: WATCHER_POLL_PERIOD_MS,
     serviceTimeoutMs: WATCHER_TIMEOUT_MS,
   })
