@@ -28,7 +28,7 @@ RUN npm ci --production
 
 RUN npm install @digicatapult/dscp-process-management@latest
 
-COPY --from=builder /dscp-matchmaker-api/build .
+COPY --from=builder /dscp-matchmaker-api/build ./build
 
 EXPOSE 80
-CMD [ "npm", "./index.js" ]
+CMD [ "npm", "start" ]
