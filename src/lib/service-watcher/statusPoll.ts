@@ -1,19 +1,40 @@
 export const serviceState = {
-  UP: Symbol('status-up'),
-  DOWN: Symbol('status-down'),
-  ERROR: Symbol('status-error'),
+  UP: 'up',
+  DOWN: 'down',
+  ERROR: 'error',
+} as const
+const stateSet = new Set([...Object.values(serviceState)])
+type serviceStateType = typeof serviceState
+export type SERVICE_STATE = serviceStateType['UP' | 'DOWN' | 'ERROR']
+
+const delayedResolve = <T>(delayMs: number, result: T): Promise<T> =>
+  new Promise((resolve) => setTimeout(resolve, delayMs, result))
+
+export type Status = {
+  status: SERVICE_STATE
+  detail: Record<string, unknown> | null
 }
 
-const stateSymbols: Set<symbol> = new Set(Object.values(serviceState))
+type GetStatus = () => Promise<Status>
 
-const delay = (delayMs: number, result: any) => new Promise((resolve) => setTimeout(resolve, delayMs, result))
+type StatusHandler = {
+  get status(): SERVICE_STATE
+  get detail(): Record<string, unknown> | null
+  close: () => Promise<void>
+}
 
-const mkStatusGenerator = async function* ({ getStatus, serviceTimeoutMs }: { getStatus: any; serviceTimeoutMs: any }) {
+const mkStatusGenerator = async function* ({
+  getStatus,
+  serviceTimeoutMs,
+}: {
+  getStatus: GetStatus
+  serviceTimeoutMs: number
+}): AsyncGenerator<Status, Status, undefined> {
   while (true) {
     try {
-      const newStatus = await Promise.race([
+      const newStatus: Status = await Promise.race([
         getStatus(),
-        delay(serviceTimeoutMs, {
+        delayedResolve(serviceTimeoutMs, {
           status: serviceState.DOWN,
           detail: {
             message: 'Timeout fetching status',
@@ -21,7 +42,7 @@ const mkStatusGenerator = async function* ({ getStatus, serviceTimeoutMs }: { ge
         }),
       ])
 
-      if (stateSymbols.has(newStatus.status)) {
+      if (stateSet.has(newStatus.status)) {
         yield {
           status: newStatus.status,
           detail: newStatus.detail === undefined ? null : newStatus.detail,
@@ -43,11 +64,11 @@ export const startStatusHandler = async ({
   serviceTimeoutMs,
   getStatus,
 }: {
-  pollingPeriodMs: any
-  serviceTimeoutMs: any
-  getStatus: any
-}) => {
-  let status: any = null
+  pollingPeriodMs: number
+  serviceTimeoutMs: number
+  getStatus: GetStatus
+}): Promise<StatusHandler> => {
+  let status: Status | null = null
   const statusGenerator = mkStatusGenerator({ getStatus, serviceTimeoutMs })
   status = (await statusGenerator.next()).value
 
@@ -66,20 +87,23 @@ export const startStatusHandler = async ({
 
   return {
     get status() {
-      return status.status
+      return status?.status || serviceState.ERROR
     },
     get detail() {
-      return status.detail
+      return status?.detail || null
     },
-    close: () => {
-      statusGenerator.return
+    close: async () => {
+      await statusGenerator.return({
+        status: 'error',
+        detail: null,
+      })
     },
   }
 }
 
-export const buildCombinedHandler = async (handlerMap: any) => {
+export const buildCombinedHandler = async (handlerMap: Map<string, StatusHandler>) => {
   const getStatus = () =>
-    [...handlerMap].reduce((accStatus, [, h]) => {
+    [...handlerMap].reduce((accStatus: SERVICE_STATE, [, h]) => {
       const handlerStatus = h.status
       if (accStatus === serviceState.UP) {
         return handlerStatus
@@ -98,7 +122,7 @@ export const buildCombinedHandler = async (handlerMap: any) => {
       return getStatus()
     },
     get detail() {
-      return Object.fromEntries([...handlerMap])
+      return Object.fromEntries([...handlerMap].map(([k, h]) => [k, { status: h.status, detail: h.detail }]))
     },
     close: () => {
       for (const handler of handlerMap.values()) {

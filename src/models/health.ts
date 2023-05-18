@@ -4,7 +4,7 @@ export interface Health {
   details: {
     [k: string]: {
       status: string
-      detail: string
+      detail: Record<string, unknown> | null
     }
   }
 }

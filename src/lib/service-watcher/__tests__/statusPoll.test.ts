@@ -6,7 +6,7 @@ import { serviceState, startStatusHandler, buildCombinedHandler } from '../statu
 
 const okStatus = (i: number) => ({
   status: serviceState.UP,
-  detail: i,
+  detail: { v: i },
 })
 
 const withFakeTimesForEvery = function () {
@@ -42,7 +42,7 @@ describe('startStatusHandler', function () {
     const status = this.handler.status
     const detail = this.handler.detail
     expect(status).to.deep.equal(serviceState.UP)
-    expect(detail).to.deep.equal(0)
+    expect(detail).to.deep.equal({ v: 0 })
   })
 
   it('should poll status every period', async function () {
@@ -61,7 +61,7 @@ describe('startStatusHandler', function () {
       const status = this.handler.status
       const detail = this.handler.detail
       expect(status).to.deep.equal(serviceState.UP)
-      expect(detail).to.deep.equal(1 + (i >> 1))
+      expect(detail).to.deep.equal({ v: 1 + (i >> 1) })
     }
   })
 
@@ -110,7 +110,11 @@ describe('startStatusHandler', function () {
         .onFirstCall()
         .resolves({ status: serviceState.UP })
         .onSecondCall()
-        .returns(new Promise(() => {})),
+        .returns(
+          new Promise(() => {
+            // never resolve
+          })
+        ),
     })
     await this.clock.tickAsync(pollingPeriodMs)
     await this.clock.tickAsync(serviceTimeoutMs)
@@ -150,7 +154,7 @@ describe('startStatusHandler', function () {
       const status = this.handler.status
       const detail = this.handler.detail
       expect(status).to.deep.equal(serviceState.UP)
-      expect(detail).to.deep.equal(1 + (i >> 1))
+      expect(detail).to.deep.equal({ v: 1 + (i >> 1) })
     }
     this.handler.close()
     for (let i = 5; i < 10; i++) {
@@ -158,7 +162,7 @@ describe('startStatusHandler', function () {
       const status = this.handler.status
       const detail = this.handler.detail
       expect(status).to.deep.equal(serviceState.UP)
-      expect(detail).to.deep.equal(1 + (5 >> 1))
+      expect(detail).to.deep.equal({ v: 1 + (5 >> 1) })
     }
   })
 })
@@ -166,76 +170,164 @@ describe('startStatusHandler', function () {
 describe('buildCombinedHandler', function () {
   it('should combine multiple UP statuses to UP', async function () {
     const handlersMap = new Map([
-      ['a', { status: serviceState.UP, detail: 1 }],
-      ['b', { status: serviceState.UP, detail: 2 }],
+      [
+        'a',
+        {
+          get status() {
+            return serviceState.UP
+          },
+          get detail() {
+            return { v: 1 }
+          },
+          close: () => Promise.resolve(),
+        },
+      ],
+      [
+        'b',
+        {
+          get status() {
+            return serviceState.UP
+          },
+          get detail() {
+            return { v: 2 }
+          },
+          close: () => Promise.resolve(),
+        },
+      ],
     ])
     const result = await buildCombinedHandler(handlersMap)
     expect(result.status).to.equal(serviceState.UP)
     expect(result.detail).to.deep.equal({
       a: {
         status: serviceState.UP,
-        detail: 1,
+        detail: { v: 1 },
       },
       b: {
         status: serviceState.UP,
-        detail: 2,
+        detail: { v: 2 },
       },
     })
   })
 
   it('should combine UP and DOWN statuses to DOWN', async function () {
     const handlersMap = new Map([
-      ['a', { status: serviceState.UP, detail: 1 }],
-      ['b', { status: serviceState.DOWN, detail: 2 }],
+      [
+        'a',
+        {
+          get status() {
+            return serviceState.UP
+          },
+          get detail() {
+            return { v: 1 }
+          },
+          close: () => Promise.resolve(),
+        },
+      ],
+      [
+        'b',
+        {
+          get status() {
+            return serviceState.DOWN
+          },
+          get detail() {
+            return { v: 2 }
+          },
+          close: () => Promise.resolve(),
+        },
+      ],
     ])
     const result = await buildCombinedHandler(handlersMap)
     expect(result.status).to.equal(serviceState.DOWN)
     expect(result.detail).to.deep.equal({
       a: {
         status: serviceState.UP,
-        detail: 1,
+        detail: { v: 1 },
       },
       b: {
         status: serviceState.DOWN,
-        detail: 2,
+        detail: { v: 2 },
       },
     })
   })
 
   it('should combine UP and ERROR statuses to ERROR', async function () {
     const handlersMap = new Map([
-      ['a', { status: serviceState.UP, detail: 1 }],
-      ['b', { status: serviceState.ERROR, detail: 2 }],
+      [
+        'a',
+        {
+          get status() {
+            return serviceState.UP
+          },
+          get detail() {
+            return { v: 1 }
+          },
+          close: () => Promise.resolve(),
+        },
+      ],
+      [
+        'b',
+        {
+          get status() {
+            return serviceState.ERROR
+          },
+          get detail() {
+            return { v: 2 }
+          },
+          close: () => Promise.resolve(),
+        },
+      ],
     ])
     const result = await buildCombinedHandler(handlersMap)
     expect(result.status).to.equal(serviceState.ERROR)
     expect(result.detail).to.deep.equal({
       a: {
         status: serviceState.UP,
-        detail: 1,
+        detail: { v: 1 },
       },
       b: {
         status: serviceState.ERROR,
-        detail: 2,
+        detail: { v: 2 },
       },
     })
   })
 
   it('should combine DOWN and ERROR statuses to DOWN', async function () {
     const handlersMap = new Map([
-      ['a', { status: serviceState.DOWN, detail: 1 }],
-      ['b', { status: serviceState.ERROR, detail: 2 }],
+      [
+        'a',
+        {
+          get status() {
+            return serviceState.DOWN
+          },
+          get detail() {
+            return { v: 1 }
+          },
+          close: () => Promise.resolve(),
+        },
+      ],
+      [
+        'b',
+        {
+          get status() {
+            return serviceState.ERROR
+          },
+          get detail() {
+            return { v: 2 }
+          },
+          close: () => Promise.resolve(),
+        },
+      ],
     ])
     const result = await buildCombinedHandler(handlersMap)
     expect(result.status).to.equal(serviceState.DOWN)
     expect(result.detail).to.deep.equal({
       a: {
         status: serviceState.DOWN,
-        detail: 1,
+        detail: { v: 1 },
       },
       b: {
         status: serviceState.ERROR,
-        detail: 2,
+        detail: { v: 2 },
       },
     })
   })
