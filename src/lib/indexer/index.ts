@@ -228,14 +228,12 @@ export default class Indexer {
 
       if (changeSet.demandComments) {
         for (const [, comment] of changeSet.demandComments) {
-          const { type, ...record } = comment
-          switch (type) {
-            case 'insert':
-              await db.insertDemandComment(record)
-              break
-            case 'update':
-              await db.updateDemandComment(record.id, record)
-              break
+          if (comment.type === 'insert') {
+            const { type, ...record } = comment
+            await db.insertDemandComment(record)
+          } else {
+            const { type, ...record } = comment
+            await db.updateDemandCommentForTransaction(record.transaction_id, record)
           }
         }
       }

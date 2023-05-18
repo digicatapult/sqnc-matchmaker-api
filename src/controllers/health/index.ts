@@ -1,4 +1,4 @@
-import { Controller, Get, Response, Route, SuccessResponse } from 'tsoa'
+import { Controller, Get, Response, Route, SuccessResponse, Hidden } from 'tsoa'
 import type { Health } from '../../models'
 import { logger } from '../../lib/logger'
 import { startStatusHandlers } from '../../lib/service-watcher/index'
@@ -13,6 +13,7 @@ export class health extends Controller {
 
   @Response<ServiceUnavailable>(503)
   @SuccessResponse(200)
+  @Hidden()
   @Get('/')
   public async get(): Promise<Health> {
     logger.debug({ msg: 'new request received', controller: '/health' })
