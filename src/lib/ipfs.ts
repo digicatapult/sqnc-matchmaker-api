@@ -92,9 +92,9 @@ export default class Ipfs {
         }
       }
 
-      const [versionResult, peersResult]: any = await Promise.all(results.map((r) => r.json()))
-      const peers = peersResult.Peers || []
-      const peerCount = new Set(peers.map((peer: any) => peer.Peer)).size
+      const [versionResult, peersResult] = await Promise.all(results.map((r) => r.json()))
+      const peers: { Peer: unknown }[] = peersResult.Peers || []
+      const peerCount = new Set(peers.map((peer) => peer.Peer)).size
       return {
         status: serviceState.UP,
         detail: {
