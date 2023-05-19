@@ -1,6 +1,9 @@
 import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
+import { container } from 'tsyringe'
+import { ServiceWatcher } from '../../../src/lib/service-watcher'
+
 import createHttpServer from '../../../src/server'
 import { get } from '../../helper/routeHelper'
 import { responses as healthResponses } from '../../helper/healthHelper'
@@ -23,6 +26,12 @@ describe('health check', () => {
       app = await createHttpServer()
     })
 
+    after(async function () {
+      const serviceWatcher = container.resolve<ServiceWatcher>(ServiceWatcher)
+      await serviceWatcher.close()
+      container.reset()
+    })
+
     it('health check', async function () {
       const actualResult = await get(app, '/health')
       const response = healthResponses.ok(getSpecVersion(actualResult), getIpfsVersion(actualResult))
@@ -36,6 +45,12 @@ describe('health check', () => {
 
     before(async function () {
       app = await createHttpServer()
+    })
+
+    after(async function () {
+      const serviceWatcher = container.resolve<ServiceWatcher>(ServiceWatcher)
+      await serviceWatcher.close()
+      container.reset()
     })
 
     withIpfsMockError()

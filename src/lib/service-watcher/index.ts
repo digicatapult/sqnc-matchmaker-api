@@ -10,6 +10,7 @@ export class ServiceWatcher {
     readonly detail: {
       [k: string]: Status
     }
+    close: () => void
   }>
 
   constructor() {
@@ -21,6 +22,7 @@ export class ServiceWatcher {
     readonly detail: {
       [k: string]: Status
     }
+    close: () => void
   }> => {
     const handlers = new Map()
     const [apiStatus, ipfsStatus] = await Promise.all([startApiStatus(), startIpfsStatus()])
@@ -36,5 +38,10 @@ export class ServiceWatcher {
 
   public get detail() {
     return this.handlersP.then(({ detail }) => detail)
+  }
+
+  public async close() {
+    const handlers = await this.handlersP
+    handlers.close()
   }
 }
