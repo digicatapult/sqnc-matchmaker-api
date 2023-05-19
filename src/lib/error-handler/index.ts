@@ -1,7 +1,6 @@
 import { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 import { ValidateError } from 'tsoa'
 import { Health } from '../../models'
-//import { Health } from '../../models'
 
 import { logger } from '../logger'
 
@@ -41,7 +40,6 @@ export class NotFound extends HttpResponse implements INotFound {
     super({ code: 404, message: `${item} not found` })
     this.item = item
     this.name = 'not found'
-    // this.stack = (<any> new Error()).stack
   }
 }
 
@@ -51,7 +49,6 @@ export class NotFound extends HttpResponse implements INotFound {
 export class BadRequest extends HttpResponse implements IBadRequest {
   constructor(message = 'bad request') {
     super({ code: 400, message })
-    // this.stack = (<any> new Error()).stack
   }
 }
 
@@ -74,7 +71,7 @@ export const errorHandler = function errorHandler(
 ): ExResponse | void {
   if (err instanceof ValidateError) {
     logger.warn(`Handled Validation Error for ${req.path}: %s`, JSON.stringify(err.fields))
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { status, ...rest } = err
 
     return res.status(422).send({

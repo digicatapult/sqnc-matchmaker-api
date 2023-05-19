@@ -68,8 +68,9 @@ export default class ChainNode {
     this.keyring = new Keyring({ type: 'sr25519' })
     this.roles = []
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    this.api.isReadyOrError.catch(() => {}) // prevent unhandled promise rejection errors
+    this.api.isReadyOrError.catch(() => {
+      // prevent unhandled promise rejection errors
+    })
 
     this.api.on('disconnected', () => {
       this.logger.warn(`Disconnected from substrate node at ${host}:${port}`)
@@ -82,14 +83,6 @@ export default class ChainNode {
     this.api.on('error', (err) => {
       this.logger.error(`Error from substrate node connection. Error was ${err.message || JSON.stringify(err)}`)
     })
-  }
-
-  getApi(): ApiPromise {
-    return this.api
-  }
-
-  getKeyring(): Keyring {
-    return this.keyring
   }
 
   getStatus = async () => {

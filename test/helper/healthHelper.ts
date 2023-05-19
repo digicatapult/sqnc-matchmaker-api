@@ -1,5 +1,5 @@
 export const responses = {
-  ok: (dscpRuntimeVersion: any, ipfsVersion: any) => ({
+  ok: (dscpRuntimeVersion: number, ipfsVersion: string) => ({
     code: 200,
     body: {
       status: 'ok',
@@ -30,7 +30,7 @@ export const responses = {
       },
     },
   }),
-  ipfsDown: (dscpRuntimeVersion: any) => ({
+  ipfsDown: (dscpRuntimeVersion: number) => ({
     code: 503,
     body: {
       status: 'down',
