@@ -17,7 +17,7 @@
   },
   "overrides": [
     {
-      "files": ["**/*.test.ts"],
+      "files": ["**/*.test.ts", "test/**/*.ts"],
       "rules": {
         "prettier/prettier": "error",
         "@typescript-eslint/no-explicit-any": "off"

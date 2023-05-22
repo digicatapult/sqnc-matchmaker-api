@@ -2,7 +2,7 @@ import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/ap
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
-
+import { serviceState } from './service-watcher/statusPoll'
 import { Logger } from 'pino'
 import { TransactionState } from '../models/transaction'
 
@@ -68,8 +68,9 @@ export default class ChainNode {
     this.keyring = new Keyring({ type: 'sr25519' })
     this.roles = []
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    this.api.isReadyOrError.catch(() => {}) // prevent unhandled promise rejection errors
+    this.api.isReadyOrError.catch(() => {
+      // prevent unhandled promise rejection errors
+    })
 
     this.api.on('disconnected', () => {
       this.logger.warn(`Disconnected from substrate node at ${host}:${port}`)
@@ -82,6 +83,34 @@ export default class ChainNode {
     this.api.on('error', (err) => {
       this.logger.error(`Error from substrate node connection. Error was ${err.message || JSON.stringify(err)}`)
     })
+  }
+
+  getStatus = async () => {
+    await this.api.isReady
+    if (!this.api.isConnected) {
+      return {
+        status: serviceState.DOWN,
+        detail: {
+          message: 'Cannot connect to substrate node',
+        },
+      }
+    }
+    const [chain, runtime] = await Promise.all([this.api.runtimeChain, this.api.runtimeVersion])
+    return {
+      status: serviceState.UP,
+      detail: {
+        chain,
+        runtime: {
+          name: runtime.specName,
+          versions: {
+            spec: runtime.specVersion.toNumber(),
+            impl: runtime.implVersion.toNumber(),
+            authoring: runtime.authoringVersion.toNumber(),
+            transaction: runtime.transactionVersion.toNumber(),
+          },
+        },
+      },
+    }
   }
 
   async getLastFinalisedBlockHash(): Promise<HEX> {

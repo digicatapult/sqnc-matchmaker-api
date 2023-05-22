@@ -1,5 +1,6 @@
 import { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 import { ValidateError } from 'tsoa'
+import { Health } from '../../models'
 
 import { logger } from '../logger'
 
@@ -39,7 +40,6 @@ export class NotFound extends HttpResponse implements INotFound {
     super({ code: 404, message: `${item} not found` })
     this.item = item
     this.name = 'not found'
-    // this.stack = (<any> new Error()).stack
   }
 }
 
@@ -49,25 +49,39 @@ export class NotFound extends HttpResponse implements INotFound {
 export class BadRequest extends HttpResponse implements IBadRequest {
   constructor(message = 'bad request') {
     super({ code: 400, message })
-    // this.stack = (<any> new Error()).stack
+  }
+}
+
+export class ServiceUnavailable extends HttpResponse {
+  public code: number
+  public data: Health
+
+  constructor(code: number, data: Health) {
+    super({ code: 503, message: '' })
+    this.code = code
+    this.data = data
   }
 }
 
 export const errorHandler = function errorHandler(
-  err: Error & { code: number },
+  err: Error & { code: number; data?: object },
   req: ExRequest,
   res: ExResponse,
   next: NextFunction
 ): ExResponse | void {
   if (err instanceof ValidateError) {
     logger.warn(`Handled Validation Error for ${req.path}: %s`, JSON.stringify(err.fields))
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { status, ...rest } = err
 
     return res.status(422).send({
       ...rest,
       message: 'Validation failed',
     })
+  }
+  if (err instanceof ServiceUnavailable) {
+    logger.warn('Error thrown in Health Watcher')
+    return res.status(err.code).json(err.data)
   }
   if (err instanceof HttpResponse) {
     logger.warn('Error thrown in handler: %s', err.message)

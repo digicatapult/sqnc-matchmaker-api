@@ -1,23 +1,55 @@
-import { Controller, Get, Route, Request, Hidden } from 'tsoa'
-import { Logger } from 'pino'
-
-import * as Ex from 'express'
+import { Controller, Get, Response, Route, SuccessResponse, Hidden } from 'tsoa'
 import type { Health } from '../../models'
 import { logger } from '../../lib/logger'
+import { serviceState } from '../../lib/service-watcher/statusPoll'
+import { ServiceUnavailable } from '../../lib/error-handler/index'
+
+import { ServiceWatcher } from '../../lib/service-watcher'
+import { injectable } from 'tsyringe'
+
+const packageVersion = process.env.npm_package_version ? process.env.npm_package_version : 'unknown'
+
+const serviceStatusStrings = {
+  [serviceState.UP]: 'ok',
+  [serviceState.DOWN]: 'down',
+  [serviceState.ERROR]: 'error',
+}
+
 @Route('health')
-export class health extends Controller {
-  constructor() {
+@injectable()
+export class HealthController extends Controller {
+  constructor(private serviceWatcher: ServiceWatcher) {
     super()
   }
 
-  @Get('/')
+  @Response<ServiceUnavailable>(503)
+  @SuccessResponse(200)
   @Hidden()
-  public async get(@Request() req: Ex.Request & { log: Logger; req_id: string }): Promise<Health> {
+  @Get('/')
+  public async get(): Promise<Health> {
     logger.debug({ msg: 'new request received', controller: '/health' })
 
-    return Promise.resolve({
-      message: 'success',
-      req_id: req.req_id,
-    })
+    const status = await this.serviceWatcher.status
+    const details = await this.serviceWatcher.detail
+
+    const response: Health = {
+      status: serviceStatusStrings[status] || 'error',
+      version: packageVersion,
+      details:
+        details &&
+        Object.fromEntries(
+          Object.entries(details).map(([depName, { status, detail }]) => {
+            return [
+              depName,
+              {
+                status: serviceStatusStrings[status] || 'error',
+                detail: detail,
+              },
+            ]
+          })
+        ),
+    }
+    if (status !== serviceState.UP) throw new ServiceUnavailable(503, response)
+    return response
   }
 }

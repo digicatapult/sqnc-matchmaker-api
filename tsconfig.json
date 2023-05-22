@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "experimentalDecorators": true,
-    "target": "es6",
+    "emitDecoratorMetadata": true,
+    "target": "ESNext",
     "module": "commonjs",
     "rootDir": "./src",
     "baseUrl": "./",
@@ -18,7 +19,7 @@
     "esModuleInterop": true,
     "paths":{
       "pino": ["node_modules/pino"],
-      "types": ["types"]
+      "types": ["types"],
     }
   },
   "exclude": [

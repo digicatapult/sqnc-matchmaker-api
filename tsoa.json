@@ -103,6 +103,7 @@
   },
   "routes": {
     "routesDir": "src",
-    "authenticationModule": "./src/lib/authentication.ts"
+    "authenticationModule": "./src/lib/authentication.ts",
+    "iocModule": "src/ioc"
   }
 }
