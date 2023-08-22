@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/dscp-matchmaker-api",
-  "version": "1.2.39",
+  "version": "1.2.40",
   "description": "An OpenAPI Matchmaking API service for DSCP",
   "main": "src/index.ts",
   "scripts": {
@@ -80,7 +80,7 @@
     "multer": "^1.4.5-lts.1",
     "pg": "^8.11.3",
     "pino": "^8.15.0",
-    "swagger-ui-express": "^4.6.3",
+    "swagger-ui-express": "^5.0.0",
     "tsoa": "^5.1.1",
     "tsyringe": "^4.8.0",
     "uuid": "^9.0.0"
