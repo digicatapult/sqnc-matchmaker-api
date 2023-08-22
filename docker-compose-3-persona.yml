@@ -18,7 +18,7 @@ networks:
       driver: default
 
 services:
-# -------------------------------------------------------------------- member-a
+  # -------------------------------------------------------------------- member-a
   member-a-postgres-matchmaker-api:
     image: postgres:15.3-alpine
     container_name: member-a-postgres-matchmaker-api
@@ -31,7 +31,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=dscp-matchmaker-api
     networks: ['member-a']
-  
+
   member-a-postgres-identity:
     image: postgres:15.3-alpine
     container_name: member-a-postgres-identity
@@ -44,7 +44,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=dscp-identity
     networks: ['member-a']
-  
+
   member-a-identity:
     image: digicatapult/dscp-identity-service:latest
     container_name: member-a-identity
@@ -73,8 +73,7 @@ services:
   member-a-node:
     image: digicatapult/dscp-node:latest
     container_name: member-a-node
-    command:
-      --base-path /data
+    command: --base-path /data
       --alice
       --unsafe-ws-external
       --unsafe-rpc-external
@@ -94,9 +93,9 @@ services:
       dockerfile: 'Dockerfile'
     command: /bin/sh -c "
       sleep 10 &&
-      npx knex migrate:latest --knexfile lib/db/knexfile &&
+      npx knex migrate:latest --knexfile build/lib/db/knexfile &&
       npx @digicatapult/dscp-process-management@latest create -h member-a-node -p 9944 -u //Alice \"$(cat processFlows.json)\" &&
-      node ./index.js"
+      npm start"
     environment:
       - PORT=8000
       - NODE_HOST=member-a-node
@@ -121,7 +120,7 @@ services:
     restart: on-failure
     networks: ['member-a', 'ipfs']
 
-# -------------------------------------------------------------------- member-b
+  # -------------------------------------------------------------------- member-b
   member-b-postgres-matchmaker-api:
     image: postgres:15.3-alpine
     container_name: member-b-postgres-matchmaker-api
@@ -134,7 +133,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=dscp-matchmaker-api
     networks: ['member-b']
-  
+
   member-b-postgres-identity:
     image: postgres:15.3-alpine
     container_name: member-b-postgres-identity
@@ -176,8 +175,7 @@ services:
   member-b-node:
     image: digicatapult/dscp-node:latest
     container_name: member-b-node
-    command:
-      --base-path /data/
+    command: --base-path /data/
       --bob
       --unsafe-ws-external
       --unsafe-rpc-external
@@ -198,8 +196,8 @@ services:
       dockerfile: 'Dockerfile'
     command: /bin/sh -c "
       sleep 10 &&
-      npx knex migrate:latest --knexfile lib/db/knexfile &&
-      node ./index.js"
+      npx knex migrate:latest --knexfile build/lib/db/knexfile &&
+      npm start"
     environment:
       - PORT=8010
       - NODE_HOST=member-b-node
@@ -224,7 +222,7 @@ services:
     restart: on-failure
     networks: ['member-b', 'ipfs']
 
-# ------------------------------------------------------------------- optimiser
+  # ------------------------------------------------------------------- optimiser
 
   optimiser-postgres-matchmaker-api:
     image: postgres:15.3-alpine
@@ -238,7 +236,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=dscp-matchmaker-api
     networks: ['optimiser']
-  
+
   optimiser-postgres-identity:
     image: postgres:15.3-alpine
     container_name: optimiser-postgres-identity
@@ -279,8 +277,7 @@ services:
   optimiser-node:
     image: digicatapult/dscp-node:latest
     container_name: optimiser-node
-    command:
-      --base-path /data/
+    command: --base-path /data/
       --charlie
       --unsafe-ws-external
       --unsafe-rpc-external
@@ -301,8 +298,8 @@ services:
       dockerfile: 'Dockerfile'
     command: /bin/sh -c "
       sleep 10 &&
-      npx knex migrate:latest --knexfile lib/db/knexfile &&
-      node ./index.js"
+      npx knex migrate:latest --knexfile build/lib/db/knexfile &&
+      npm start"
     environment:
       - PORT=8020
       - NODE_HOST=optimiser-node
@@ -327,7 +324,7 @@ services:
     restart: on-failure
     networks: ['optimiser', 'ipfs']
 
-# ------------------------------------------------------------------------ ipfs
+  # ------------------------------------------------------------------------ ipfs
   ipfs:
     image: ipfs/go-ipfs:v0.22.0
     container_name: ipfs
