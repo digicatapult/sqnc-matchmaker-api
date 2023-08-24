@@ -1,9 +1,8 @@
-
 version: '3'
 
 services:
   postgres-matchmaker-api:
-    image: postgres:15.3-alpine
+    image: postgres:15.4-alpine
     container_name: postgres-matchmaker-api
     ports:
       - 5432:5432
@@ -13,9 +12,9 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=dscp-matchmaker-api
-  
+
   postgres-identity-service:
-    image: postgres:15.3-alpine
+    image: postgres:15.4-alpine
     container_name: postgres-identity
     ports:
       - 5433:5432
@@ -25,7 +24,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=dscp-identity-service
-  
+
   dscp-identity-service:
     image: digicatapult/dscp-identity-service:latest
     container_name: identity-service
@@ -49,8 +48,7 @@ services:
   dscp-node:
     image: digicatapult/dscp-node:latest
     container_name: node
-    command:
-      --base-path /data/
+    command: --base-path /data/
       --dev
       --unsafe-ws-external
       --unsafe-rpc-external

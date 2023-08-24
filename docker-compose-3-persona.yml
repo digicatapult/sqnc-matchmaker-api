@@ -20,7 +20,7 @@ networks:
 services:
   # -------------------------------------------------------------------- member-a
   member-a-postgres-matchmaker-api:
-    image: postgres:15.3-alpine
+    image: postgres:15.4-alpine
     container_name: member-a-postgres-matchmaker-api
     ports:
       - 5432:5432
@@ -33,7 +33,7 @@ services:
     networks: ['member-a']
 
   member-a-postgres-identity:
-    image: postgres:15.3-alpine
+    image: postgres:15.4-alpine
     container_name: member-a-postgres-identity
     ports:
       - 5433:5432
@@ -122,7 +122,7 @@ services:
 
   # -------------------------------------------------------------------- member-b
   member-b-postgres-matchmaker-api:
-    image: postgres:15.3-alpine
+    image: postgres:15.4-alpine
     container_name: member-b-postgres-matchmaker-api
     ports:
       - 5442:5432
@@ -135,7 +135,7 @@ services:
     networks: ['member-b']
 
   member-b-postgres-identity:
-    image: postgres:15.3-alpine
+    image: postgres:15.4-alpine
     container_name: member-b-postgres-identity
     ports:
       - 5443:5432
@@ -225,7 +225,7 @@ services:
   # ------------------------------------------------------------------- optimiser
 
   optimiser-postgres-matchmaker-api:
-    image: postgres:15.3-alpine
+    image: postgres:15.4-alpine
     container_name: optimiser-postgres-matchmaker-api
     ports:
       - 5452:5432
@@ -238,7 +238,7 @@ services:
     networks: ['optimiser']
 
   optimiser-postgres-identity:
-    image: postgres:15.3-alpine
+    image: postgres:15.4-alpine
     container_name: optimiser-postgres-identity
     ports:
       - 5453:5432
