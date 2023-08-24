@@ -281,7 +281,7 @@ export default class ChainNode {
     const apiAtBlock = await this.api.at(blockhash)
     const processRanEventIndexes = (await apiAtBlock.query.system.eventTopics(processRanTopic)) as unknown as [
       never,
-      number
+      number,
     ][]
     if (processRanEventIndexes.length === 0) {
       return []
