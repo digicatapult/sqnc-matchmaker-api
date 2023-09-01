@@ -87,7 +87,6 @@ export const match2Seed = async () => {
     },
   ])
 
-
   await db.demand().insert([
     {
       id: seededDemandAId,
@@ -99,7 +98,6 @@ export const match2Seed = async () => {
       updated_at: exampleDate,
     },
   ])
-
 
   await db.demand().insert([
     {

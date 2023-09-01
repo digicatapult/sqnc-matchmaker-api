@@ -3,7 +3,7 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer'
-import { seed, cleanup, seededDemandBId } from '../../seeds'
+import { cleanup, seededDemandBId } from '../../seeds/onchainSeeds/transaction.seed'
 
 import { withIdentitySelfMock } from '../../helper/mock'
 import Database from '../../../src/lib/db'
@@ -30,7 +30,7 @@ describe('on-chain', function () {
   withIdentitySelfMock()
 
   beforeEach(async function () {
-    await seed()
+    await cleanup()
   })
 
   afterEach(async function () {
