@@ -1,5 +1,5 @@
+// import { selfAddress } from '../../helper/mock'
 import Database from '../../../src/lib/db'
-import { selfAddress } from '../../helper/mock'
 
 const db = new Database().db()
 
@@ -8,7 +8,6 @@ export const cleanup = async () => {
   await db.demand().del()
   await db.transaction().del()
   await db.match2().del()
-  await db.demand_comment().del()
 }
 
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -45,30 +44,17 @@ export const seededMatch2NotAcceptableB = '097d3905-72aa-4517-85d2-0091d26fceac'
 export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c9474784d'
 export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
 
-
 export const seed = async () => {
-    await cleanup()
-  
-    await db.attachment().insert([
-      {
-        id: parametersAttachmentId,
-        filename: 'test.txt',
-        ipfs_hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
-        size: 42,
-        created_at: exampleDate,
-      },
-    ])
-  
-    await db.demand().insert([
-      {
-        id: seededDemandAId,
-        owner: selfAddress,
-        subtype: 'demand_a',
-        state: 'pending',
-        parameters_attachment_id: parametersAttachmentId,
-        created_at: exampleDate,
-        updated_at: exampleDate,
-      },
-    ])
+  await cleanup()
+  await db.attachment().insert([
+    {
+      id: parametersAttachmentId,
+      filename: 'test.txt',
+      ipfs_hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
+      size: 42,
+      created_at: exampleDate,
+    },
+  ])
 
-  }
+
+}

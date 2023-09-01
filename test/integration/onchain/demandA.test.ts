@@ -40,7 +40,6 @@ describe('on-chain', function () {
   describe('demandA', () => {
     it('creates an demandA on chain', async () => {
       const lastTokenId = await node.getLastTokenId()
-
       const {
         body: { id: demandAId },
       } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
