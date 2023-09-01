@@ -5,8 +5,8 @@ import { expect } from 'chai'
 import createHttpServer from '../../../src/server'
 import { get } from '../../helper/routeHelper'
 import {
-  seed,
   cleanup,
+  transactionSeed,
   nonExistentId,
   seededDemandBCommentTransactionId,
   seededDemandBId,
@@ -15,7 +15,7 @@ import {
   seededDemandACommentTransactionId,
   seededDemandAId,
   seededDemandACommentTransactionId2,
-} from '../../seeds'
+} from '../../seeds/offchainSeeds/transaction.seed'
 
 describe('transaction', () => {
   let app: Express
@@ -25,7 +25,7 @@ describe('transaction', () => {
   })
 
   beforeEach(async function () {
-    await seed()
+    await transactionSeed()
   })
 
   afterEach(async function () {

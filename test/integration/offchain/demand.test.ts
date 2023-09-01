@@ -5,8 +5,8 @@ import { expect } from 'chai'
 import createHttpServer from '../../../src/server'
 import { post, get } from '../../helper/routeHelper'
 import {
-  seed,
   cleanup,
+  demandSeed,
   parametersAttachmentId,
   exampleDate,
   seededDemandAId,
@@ -22,7 +22,7 @@ import {
   seededDemandBCommentTransactionId2,
   seededDemandAAlreadyAllocated,
   seededDemandBAlreadyAllocated,
-} from '../../seeds'
+} from '../../seeds/offchainSeeds/demand.seed'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
 import { assertIsoDate, assertUUID } from '../../helper/assertions'
@@ -51,7 +51,7 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
     withIdentitySelfMock()
 
     beforeEach(async function () {
-      await seed()
+      await demandSeed()
     })
 
     afterEach(async function () {
