@@ -4,7 +4,7 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer'
 import { post } from '../../helper/routeHelper'
-import { seed, cleanup, parametersAttachmentId, seededDemandAId } from '../../seeds'
+import { seed, cleanup, parametersAttachmentId, seededDemandAId } from '../../seeds/onchainSeeds/demandA.seed'
 
 import { selfAddress, withIdentitySelfMock } from '../../helper/mock'
 import Database, { DemandRow } from '../../../src/lib/db'
@@ -40,7 +40,6 @@ describe('on-chain', function () {
   describe('demandA', () => {
     it('creates an demandA on chain', async () => {
       const lastTokenId = await node.getLastTokenId()
-
       const {
         body: { id: demandAId },
       } = await post(context.app, '/v1/demandA', { parametersAttachmentId })

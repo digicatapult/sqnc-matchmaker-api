@@ -5,8 +5,8 @@ import { expect } from 'chai'
 import createHttpServer from '../../../src/server'
 import { post, get } from '../../helper/routeHelper'
 import {
-  seed,
   cleanup,
+  match2Seed,
   seededDemandBId,
   seededDemandAId,
   nonExistentId,
@@ -27,7 +27,7 @@ import {
   seededDemandAWithTokenId,
   seededRejectionTransactionId,
   seededMatch2NotInRoles,
-} from '../../seeds'
+} from '../../seeds/offchainSeeds/offchain.match2.seed'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
 import { assertIsoDate, assertUUID } from '../../helper/assertions'
@@ -42,7 +42,7 @@ describe('match2', () => {
   withIdentitySelfMock()
 
   beforeEach(async function () {
-    await seed()
+    await match2Seed()
   })
 
   afterEach(async function () {

@@ -1,5 +1,5 @@
-import Database from '../../src/lib/db'
-import { notSelfAddress, selfAddress } from '../helper/mock'
+import { notSelfAddress, selfAddress } from '../../helper/mock'
+import Database from '../../../src/lib/db'
 
 const db = new Database().db()
 
@@ -8,7 +8,6 @@ export const cleanup = async () => {
   await db.demand().del()
   await db.transaction().del()
   await db.match2().del()
-  await db.demand_comment().del()
 }
 
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -51,9 +50,8 @@ const seededDemandBWithTokenId = 'b005f4a1-400e-410e-aa72-8e97385f63e6'
 const seededMatch2TokenId = 43
 const seededDemandTokenId = 42
 
-export const seed = async () => {
+export const match2Seed = async () => {
   await cleanup()
-
   await db.attachment().insert([
     {
       id: parametersAttachmentId,
@@ -89,63 +87,6 @@ export const seed = async () => {
     },
   ])
 
-  await db.transaction().insert([
-    {
-      id: seededDemandBCreationTransactionId2,
-      api_type: 'demand_b',
-      transaction_type: 'creation',
-      local_id: seededDemandBId,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
-    },
-  ])
-
-  await db.transaction().insert([
-    {
-      id: seededDemandBCommentTransactionId,
-      api_type: 'demand_b',
-      transaction_type: 'comment',
-      local_id: seededDemandBId,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
-    },
-    {
-      id: seededDemandBCommentTransactionId2,
-      api_type: 'demand_b',
-      transaction_type: 'comment',
-      local_id: seededDemandBId,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
-    },
-  ])
-
-  await db.demand_comment().insert([
-    {
-      id: seededDemandBCommentTransactionId,
-      owner: selfAddress,
-      state: 'pending',
-      demand: seededDemandBId,
-      attachment: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
-    },
-    {
-      id: seededDemandBCommentTransactionId2,
-      owner: selfAddress,
-      state: 'created',
-      demand: seededDemandBId,
-      attachment: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
-    },
-  ])
-
   await db.demand().insert([
     {
       id: seededDemandAId,
@@ -153,76 +94,6 @@ export const seed = async () => {
       subtype: 'demand_a',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
-    },
-  ])
-
-  await db.transaction().insert([
-    {
-      id: seededDemandACreationTransactionId,
-      api_type: 'demand_a',
-      transaction_type: 'creation',
-      local_id: seededDemandAId,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
-    },
-  ])
-
-  await db.transaction().insert([
-    {
-      id: seededDemandACreationTransactionId2,
-      api_type: 'demand_a',
-      transaction_type: 'creation',
-      local_id: seededDemandAId,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
-    },
-  ])
-
-  await db.transaction().insert([
-    {
-      id: seededDemandACommentTransactionId,
-      api_type: 'demand_a',
-      transaction_type: 'comment',
-      local_id: seededDemandAId,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
-    },
-    {
-      id: seededDemandACommentTransactionId2,
-      api_type: 'demand_a',
-      transaction_type: 'comment',
-      local_id: seededDemandAId,
-      state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
-      hash: transactionHash,
-    },
-  ])
-
-  await db.demand_comment().insert([
-    {
-      id: seededDemandACommentTransactionId,
-      owner: selfAddress,
-      state: 'pending',
-      demand: seededDemandAId,
-      attachment: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
-    },
-    {
-      id: seededDemandACommentTransactionId2,
-      owner: selfAddress,
-      state: 'created',
-      demand: seededDemandAId,
-      attachment: parametersAttachmentId,
       created_at: exampleDate,
       updated_at: exampleDate,
     },

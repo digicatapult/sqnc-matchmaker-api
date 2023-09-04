@@ -52,6 +52,7 @@ services:
       --dev
       --unsafe-ws-external
       --unsafe-rpc-external
+      --ws-max-connections 512
       --rpc-cors all
     ports:
       - 30333:30333

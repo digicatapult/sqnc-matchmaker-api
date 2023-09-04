@@ -4,7 +4,7 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer'
 import { post } from '../../helper/routeHelper'
-import { seed, cleanup, parametersAttachmentId } from '../../seeds'
+import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed'
 
 import { withIdentitySelfMock } from '../../helper/mock'
 import Database, { DemandRow, Match2Row } from '../../../src/lib/db'

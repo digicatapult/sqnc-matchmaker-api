@@ -5,11 +5,8 @@ import { expect } from 'chai'
 import createHttpServer from '../../../src/server'
 import { get, post, postFile } from '../../helper/routeHelper'
 
-import Database from '../../../src/lib/db'
 import { withIpfsMockError, withIpfsMock } from '../../helper/mock'
-import { seed } from '../../seeds'
-
-const db = new Database().db()
+import { cleanup, attachmentSeed } from '../../seeds/offchainSeeds/attachment.seed'
 
 describe('attachment', () => {
   const size = 100
@@ -25,7 +22,7 @@ describe('attachment', () => {
   })
 
   afterEach(async () => {
-    await db.attachment().del()
+    await cleanup()
   })
 
   describe('invalid requests', () => {
@@ -58,7 +55,7 @@ describe('attachment', () => {
   })
 
   describe('list attachments', () => {
-    beforeEach(async () => await seed())
+    beforeEach(async () => await attachmentSeed())
 
     it('returns attachments', async () => {
       const { status, body } = await get(app, `/v1/attachment`)
