@@ -1,4 +1,3 @@
-// import { selfAddress } from '../../helper/mock'
 import Database from '../../../src/lib/db'
 
 const db = new Database().db()
@@ -55,6 +54,4 @@ export const seed = async () => {
       created_at: exampleDate,
     },
   ])
-
-
 }

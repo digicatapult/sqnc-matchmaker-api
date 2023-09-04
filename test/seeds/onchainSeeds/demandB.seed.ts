@@ -51,75 +51,71 @@ const seededMatch2TokenId = 43
 const seededDemandTokenId = 42
 
 export const seed = async () => {
-    await cleanup()
-  
-    await db.attachment().insert([
-      {
-        id: parametersAttachmentId,
-        filename: 'test.txt',
-        ipfs_hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
-        size: 42,
-        created_at: exampleDate,
-      },
-    ])
-  
-    await db.demand().insert([
-      {
-        id: seededDemandBId,
-        owner: selfAddress,
-        subtype: 'demand_b',
-        state: 'pending',
-        parameters_attachment_id: parametersAttachmentId,
-        created_at: exampleDate,
-        updated_at: exampleDate,
-      },
-    ])
-  
-    await db.demand().insert([
-      {
-        id: seededDemandANotOwnedId,
-        owner: notSelfAddress,
-        subtype: 'demand_a',
-        state: 'created',
-        parameters_attachment_id: parametersAttachmentId,
-        latest_token_id: seededDemandTokenId,
-        original_token_id: seededDemandTokenId,
-        created_at: exampleDate,
-        updated_at: exampleDate,
-      },
-    ])
-  
+  await cleanup()
 
-  
-    await db.demand().insert([
-      {
-        id: seededDemandBWithTokenId,
-        owner: selfAddress,
-        subtype: 'demand_b',
-        state: 'created',
-        parameters_attachment_id: parametersAttachmentId,
-        latest_token_id: seededDemandTokenId,
-        original_token_id: seededDemandTokenId,
-        created_at: exampleDate,
-        updated_at: exampleDate,
-      },
-    ])
-  
-    await db.match2().insert([
-      {
-        id: seededMatch2NotAcceptableA,
-        state: 'acceptedB',
-        optimiser: selfAddress,
-        member_a: notSelfAddress,
-        member_b: selfAddress,
-        demand_a_id: seededDemandANotOwnedId,
-        demand_b_id: seededDemandBWithTokenId,
-        latest_token_id: seededMatch2TokenId,
-        original_token_id: seededMatch2TokenId,
-        created_at: exampleDate,
-        updated_at: exampleDate,
-      },
-    ])
-  
-   
-  }
+  await db.attachment().insert([
+    {
+      id: parametersAttachmentId,
+      filename: 'test.txt',
+      ipfs_hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
+      size: 42,
+      created_at: exampleDate,
+    },
+  ])
+
+  await db.demand().insert([
+    {
+      id: seededDemandBId,
+      owner: selfAddress,
+      subtype: 'demand_b',
+      state: 'pending',
+      parameters_attachment_id: parametersAttachmentId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+
+  await db.demand().insert([
+    {
+      id: seededDemandANotOwnedId,
+      owner: notSelfAddress,
+      subtype: 'demand_a',
+      state: 'created',
+      parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: seededDemandTokenId,
+      original_token_id: seededDemandTokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+
+  await db.demand().insert([
+    {
+      id: seededDemandBWithTokenId,
+      owner: selfAddress,
+      subtype: 'demand_b',
+      state: 'created',
+      parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: seededDemandTokenId,
+      original_token_id: seededDemandTokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+
+  await db.match2().insert([
+    {
+      id: seededMatch2NotAcceptableA,
+      state: 'acceptedB',
+      optimiser: selfAddress,
+      member_a: notSelfAddress,
+      member_b: selfAddress,
+      demand_a_id: seededDemandANotOwnedId,
+      demand_b_id: seededDemandBWithTokenId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
+      created_at: exampleDate,
+      updated_at: exampleDate,
+    },
+  ])
+}
