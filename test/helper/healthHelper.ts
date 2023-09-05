@@ -36,7 +36,7 @@ export const responses = {
       },
     },
   }),
-  ipfsDown: (dscpRuntimeVersion: number) => ({
+  ipfsDown: (dscpRuntimeVersion: number, identityVersion: string) => ({
     code: 503,
     body: {
       status: 'down',
@@ -66,7 +66,7 @@ export const responses = {
         identity: {
           status: 'ok',
           detail: {
-            version: 'some version',
+            version: identityVersion,
           },
         },
       },
