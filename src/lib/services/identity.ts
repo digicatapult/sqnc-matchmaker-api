@@ -1,17 +1,6 @@
 import { NotFound, HttpResponse } from '../error-handler'
 import env from '../../env'
-
-type serviceStateType = typeof serviceState
-export type SERVICE_STATE = serviceStateType['UP' | 'DOWN' | 'ERROR']
-export type Status = {
-  status: SERVICE_STATE
-  detail: Record<string, unknown> | null
-}
-export const serviceState = {
-  UP: 'up',
-  DOWN: 'down',
-  ERROR: 'error',
-} as const
+import { Status, serviceState } from '../service-watcher/statusPoll'
 
 const URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}/v1`
 
