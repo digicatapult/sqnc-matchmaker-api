@@ -1,5 +1,5 @@
 export const responses = {
-  ok: (dscpRuntimeVersion: number, ipfsVersion: string) => ({
+  ok: (dscpRuntimeVersion: number, ipfsVersion: string, identityVersion: string) => ({
     code: 200,
     body: {
       status: 'ok',
@@ -25,6 +25,12 @@ export const responses = {
           detail: {
             version: ipfsVersion,
             peerCount: 1,
+          },
+        },
+        identity: {
+          status: 'ok',
+          detail: {
+            version: identityVersion,
           },
         },
       },
@@ -55,6 +61,12 @@ export const responses = {
           status: 'down',
           detail: {
             message: 'Error getting status from IPFS node',
+          },
+        },
+        identity: {
+          status: 'ok',
+          detail: {
+            version: 'some version',
           },
         },
       },

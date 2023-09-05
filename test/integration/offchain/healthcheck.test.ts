@@ -15,6 +15,9 @@ const getSpecVersion = (actualResult: any) => {
 const getIpfsVersion = (actualResult: any) => {
   return actualResult?._body?.details?.ipfs?.detail?.version
 }
+const getIdentityVersion = (actualResult: any) => {
+  return actualResult?._body?.detail?.version
+}
 
 describe('health check', () => {
   describe('happy path', function () {
@@ -34,7 +37,12 @@ describe('health check', () => {
 
     it('health check', async function () {
       const actualResult = await get(app, '/health')
-      const response = healthResponses.ok(getSpecVersion(actualResult), getIpfsVersion(actualResult))
+      console.log(actualResult.body.details.identity)
+      const response = healthResponses.ok(
+        getSpecVersion(actualResult),
+        getIpfsVersion(actualResult),
+        getIdentityVersion(actualResult)
+      )
       expect(actualResult.status).to.equal(response.code)
       expect(actualResult.body).to.deep.equal(response.body)
     })
