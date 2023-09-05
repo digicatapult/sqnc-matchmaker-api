@@ -37,7 +37,6 @@ describe('health check', () => {
 
     it('health check', async function () {
       const actualResult = await get(app, '/health')
-      // console.log(actualResult.body.details.identity)
       const response = healthResponses.ok(
         getSpecVersion(actualResult),
         getIpfsVersion(actualResult),

@@ -11,7 +11,6 @@ export default class IdentityClass {
     try {
       const res = await getHealth()
       if (res) {
-        // console.log(res.version)
         if (res.version.length < 1) {
           return {
             status: serviceState.DOWN,
@@ -38,7 +37,7 @@ export default class IdentityClass {
     }
   }
 }
-
+// TODO : refactor into the class above. Ticket: https://digicatapult.atlassian.net/browse/L3-182
 const getMemberByAlias = async (alias: string) => {
   const res = await fetch(`${URL_PREFIX}/members/${encodeURIComponent(alias)}`)
 
