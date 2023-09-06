@@ -1,6 +1,7 @@
 import { singleton } from 'tsyringe'
 import startApiStatus from './apiStatus'
 import startIpfsStatus from './ipfsStatus'
+import startIdentityStatus from './identityStatus'
 import { buildCombinedHandler, SERVICE_STATE, Status } from './statusPoll'
 
 @singleton()
@@ -25,9 +26,14 @@ export class ServiceWatcher {
     close: () => void
   }> => {
     const handlers = new Map()
-    const [apiStatus, ipfsStatus] = await Promise.all([startApiStatus(), startIpfsStatus()])
+    const [apiStatus, ipfsStatus, identityStatus] = await Promise.all([
+      startApiStatus(),
+      startIpfsStatus(),
+      startIdentityStatus(),
+    ])
     handlers.set('api', apiStatus)
     handlers.set('ipfs', ipfsStatus)
+    handlers.set('identity', identityStatus)
 
     return buildCombinedHandler(handlers)
   }
