@@ -12,12 +12,14 @@ import {
 } from '../../../models/demand'
 import { DATE, UUID } from '../../../models/strings'
 import { BadRequest, NotFound } from '../../../lib/error-handler/index'
-import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
+import IdentityClass from '../../../lib/services/identity'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
 import { demandCommentCreate, demandCreate } from '../../../lib/payload'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
+
+const identityClass = new IdentityClass()
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
@@ -47,7 +49,7 @@ export class DemandController extends Controller {
       throw new BadRequest('Attachment not found')
     }
 
-    const { address: selfAddress, alias: selfAlias } = await getMemberBySelf()
+    const { address: selfAddress, alias: selfAlias } = await identityClass.getMemberBySelf()
 
     const [demand] = await this.db.insertDemand({
       owner: selfAddress,
@@ -141,7 +143,7 @@ export class DemandController extends Controller {
     const [comment] = await this.db.getAttachment(attachmentId)
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
 
-    const { address: selfAddress } = await getMemberBySelf()
+    const { address: selfAddress } = await identityClass.getMemberBySelf()
 
     const extrinsic = await this.node.prepareRunProcess(demandCommentCreate(demand, comment))
 
@@ -193,7 +195,7 @@ export class DemandController extends Controller {
 }
 
 const responseWithAlias = async (demand: DemandRow): Promise<DemandResponse> => {
-  const { alias: ownerAlias } = await getMemberByAddress(demand.owner)
+  const { alias: ownerAlias } = await identityClass.getMemberByAddress(demand.owner)
 
   return {
     id: demand.id,
@@ -213,7 +215,7 @@ const responseWithComments = async (
   const aliasMap = new Map(
     await Promise.all(
       commentors.map(async (commentor) => {
-        const { alias } = await getMemberByAddress(commentor)
+        const { alias } = await identityClass.getMemberByAddress(commentor)
         return [commentor, alias] as const
       })
     )

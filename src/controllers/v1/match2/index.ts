@@ -17,7 +17,7 @@ import type { Logger } from 'pino'
 import { logger } from '../../../lib/logger'
 import Database, { DemandRow, Match2Row } from '../../../lib/db'
 import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index'
-import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
+import IdentityClass from '../../../lib/services/identity'
 import { Match2Request, Match2Response, Match2State } from '../../../models/match2'
 import { DATE, UUID } from '../../../models/strings'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
@@ -26,6 +26,8 @@ import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
+
+const identityClass = new IdentityClass()
 
 @Route('v1/match2')
 @Tags('match2')
@@ -66,7 +68,7 @@ export class Match2Controller extends Controller {
     validatePreLocal(maybeDemandB, 'demand_b', 'DemandB')
     const demandB = maybeDemandB as DemandRow
 
-    const { address: selfAddress } = await getMemberBySelf()
+    const { address: selfAddress } = await identityClass.getMemberBySelf()
 
     const [match2] = await this.db.insertMatch2({
       optimiser: selfAddress,
@@ -217,7 +219,7 @@ export class Match2Controller extends Controller {
     validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
     const demandB = maybeDemandB as DemandRow
 
-    const { address: selfAddress } = await getMemberBySelf()
+    const { address: selfAddress } = await identityClass.getMemberBySelf()
     const ownsDemandA = demandA.owner === selfAddress
     const ownsDemandB = demandB.owner === selfAddress
 
@@ -323,7 +325,7 @@ export class Match2Controller extends Controller {
     if (!match2) throw new NotFound('match2')
 
     const roles = [match2.memberA, match2.memberB, match2.optimiser]
-    const { address: selfAddress } = await getMemberBySelf()
+    const { address: selfAddress } = await identityClass.getMemberBySelf()
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
 
     const rejectableStates: Match2State[] = ['proposed', 'acceptedA', 'acceptedB']
@@ -391,9 +393,9 @@ export class Match2Controller extends Controller {
 
 const responseWithAliases = async (match2: Match2Row): Promise<Match2Response> => {
   const [{ alias: optimiser }, { alias: memberA }, { alias: memberB }] = await Promise.all([
-    getMemberByAddress(match2.optimiser),
-    getMemberByAddress(match2.memberA),
-    getMemberByAddress(match2.memberB),
+    identityClass.getMemberByAddress(match2.optimiser),
+    identityClass.getMemberByAddress(match2.memberA),
+    identityClass.getMemberByAddress(match2.memberB),
   ])
 
   return {
