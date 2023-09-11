@@ -17,7 +17,7 @@ import type { Logger } from 'pino'
 import { logger } from '../../../lib/logger'
 import Database, { DemandRow, Match2Row } from '../../../lib/db'
 import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index'
-import IdentityClass from '../../../lib/services/identity'
+import Identity from '../../../lib/services/identity'
 import { Match2Request, Match2Response, Match2State } from '../../../models/match2'
 import { DATE, UUID } from '../../../models/strings'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
@@ -26,8 +26,7 @@ import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
-
-const identityClass = new IdentityClass()
+import { container } from 'tsyringe'
 
 @Route('v1/match2')
 @Tags('match2')
@@ -36,6 +35,7 @@ export class Match2Controller extends Controller {
   log: Logger
   db: Database
   node: ChainNode
+  identity: Identity
 
   constructor() {
     super()
@@ -47,6 +47,7 @@ export class Match2Controller extends Controller {
       logger,
       userUri: env.USER_URI,
     })
+    this.identity = container.resolve(Identity)
   }
 
   /**
@@ -68,7 +69,7 @@ export class Match2Controller extends Controller {
     validatePreLocal(maybeDemandB, 'demand_b', 'DemandB')
     const demandB = maybeDemandB as DemandRow
 
-    const { address: selfAddress } = await identityClass.getMemberBySelf()
+    const { address: selfAddress } = await this.identity.getMemberBySelf()
 
     const [match2] = await this.db.insertMatch2({
       optimiser: selfAddress,
@@ -79,7 +80,7 @@ export class Match2Controller extends Controller {
       demand_b_id: demandBId,
     })
 
-    return responseWithAliases(match2)
+    return responseWithAliases(match2, this.identity)
   }
 
   /**
@@ -94,7 +95,7 @@ export class Match2Controller extends Controller {
     }
 
     const match2s = await this.db.getMatch2s(query)
-    const result = await Promise.all(match2s.map(async (match2) => responseWithAliases(match2)))
+    const result = await Promise.all(match2s.map(async (match2) => responseWithAliases(match2, this.identity)))
     return result
   }
 
@@ -109,7 +110,7 @@ export class Match2Controller extends Controller {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
 
-    return responseWithAliases(match2)
+    return responseWithAliases(match2, this.identity)
   }
 
   /**
@@ -219,7 +220,7 @@ export class Match2Controller extends Controller {
     validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
     const demandB = maybeDemandB as DemandRow
 
-    const { address: selfAddress } = await identityClass.getMemberBySelf()
+    const { address: selfAddress } = await this.identity.getMemberBySelf()
     const ownsDemandA = demandA.owner === selfAddress
     const ownsDemandB = demandB.owner === selfAddress
 
@@ -325,7 +326,7 @@ export class Match2Controller extends Controller {
     if (!match2) throw new NotFound('match2')
 
     const roles = [match2.memberA, match2.memberB, match2.optimiser]
-    const { address: selfAddress } = await identityClass.getMemberBySelf()
+    const { address: selfAddress } = await this.identity.getMemberBySelf()
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
 
     const rejectableStates: Match2State[] = ['proposed', 'acceptedA', 'acceptedB']
@@ -391,11 +392,11 @@ export class Match2Controller extends Controller {
   }
 }
 
-const responseWithAliases = async (match2: Match2Row): Promise<Match2Response> => {
+const responseWithAliases = async (match2: Match2Row, identity: Identity): Promise<Match2Response> => {
   const [{ alias: optimiser }, { alias: memberA }, { alias: memberB }] = await Promise.all([
-    identityClass.getMemberByAddress(match2.optimiser),
-    identityClass.getMemberByAddress(match2.memberA),
-    identityClass.getMemberByAddress(match2.memberB),
+    identity.getMemberByAddress(match2.optimiser),
+    identity.getMemberByAddress(match2.memberA),
+    identity.getMemberByAddress(match2.memberB),
   ])
 
   return {
