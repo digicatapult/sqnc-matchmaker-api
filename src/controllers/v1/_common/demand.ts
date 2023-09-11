@@ -17,18 +17,22 @@ import { demandCommentCreate, demandCreate } from '../../../lib/payload'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
-import { container } from 'tsyringe'
+import { injectable } from 'tsyringe'
 import Identity from '../../../lib/services/identity'
 
+@injectable()
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
   dbDemandSubtype: 'demand_a' | 'demand_b'
   log: Logger
   db: Database
   node: ChainNode
-  identity: Identity
+  // identity: Identity
 
-  constructor(demandType: 'demandA' | 'demandB') {
+  constructor(
+    demandType: 'demandA' | 'demandB',
+    private identity: Identity
+  ) {
     super()
     this.demandType = demandType
     this.dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'
@@ -40,7 +44,7 @@ export class DemandController extends Controller {
       logger,
       userUri: env.USER_URI,
     })
-    this.identity = container.resolve(Identity)
+    // this.identity = container.resolve(Identity)
   }
 
   public async createDemand({ parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {

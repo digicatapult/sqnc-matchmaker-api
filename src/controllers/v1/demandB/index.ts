@@ -6,13 +6,14 @@ import { BadRequest, NotFound } from '../../../lib/error-handler/index'
 import { TransactionResponse } from '../../../models/transaction'
 
 import { DemandController } from '../_common/demand'
+import Identity from '../../../lib/services/identity'
 
 @Route('v1/demandB')
 @Tags('demandB')
 @Security('BearerAuth')
 export class DemandBController extends DemandController {
   constructor() {
-    super('demandB')
+    super('demandB', new Identity())
   }
 
   /**

@@ -26,18 +26,19 @@ import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
-import { container } from 'tsyringe'
+import { injectable } from 'tsyringe'
 
 @Route('v1/match2')
+@injectable()
 @Tags('match2')
 @Security('BearerAuth')
 export class Match2Controller extends Controller {
   log: Logger
   db: Database
   node: ChainNode
-  identity: Identity
+  // identity: Identity
 
-  constructor() {
+  constructor(private identity: Identity) {
     super()
     this.log = logger.child({ controller: '/match2' })
     this.db = new Database()
@@ -47,7 +48,7 @@ export class Match2Controller extends Controller {
       logger,
       userUri: env.USER_URI,
     })
-    this.identity = container.resolve(Identity)
+    // this.identity = container.resolve(Identity)
   }
 
   /**
