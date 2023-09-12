@@ -6,14 +6,16 @@ import { BadRequest, NotFound } from '../../../lib/error-handler/index'
 import { TransactionResponse } from '../../../models/transaction'
 
 import { DemandController } from '../_common/demand'
+import { injectable } from 'tsyringe'
 import Identity from '../../../lib/services/identity'
 
 @Route('v1/demandA')
+@injectable()
 @Tags('demandA')
 @Security('BearerAuth')
 export class DemandAController extends DemandController {
-  constructor() {
-    super('demandA', new Identity())
+  constructor(identity: Identity) {
+    super('demandA', identity)
   }
 
   /**

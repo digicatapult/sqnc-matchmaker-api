@@ -36,7 +36,6 @@ export class Match2Controller extends Controller {
   log: Logger
   db: Database
   node: ChainNode
-  // identity: Identity
 
   constructor(private identity: Identity) {
     super()
@@ -48,7 +47,7 @@ export class Match2Controller extends Controller {
       logger,
       userUri: env.USER_URI,
     })
-    // this.identity = container.resolve(Identity)
+    this.identity = identity
   }
 
   /**

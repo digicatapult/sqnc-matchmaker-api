@@ -7,13 +7,15 @@ import { TransactionResponse } from '../../../models/transaction'
 
 import { DemandController } from '../_common/demand'
 import Identity from '../../../lib/services/identity'
+import { injectable } from 'tsyringe'
 
 @Route('v1/demandB')
+@injectable()
 @Tags('demandB')
 @Security('BearerAuth')
 export class DemandBController extends DemandController {
-  constructor() {
-    super('demandB', new Identity())
+  constructor(identity: Identity) {
+    super('demandB', identity)
   }
 
   /**
