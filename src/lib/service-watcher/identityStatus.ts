@@ -1,14 +1,14 @@
 import { startStatusHandler } from './statusPoll'
 import env from '../../env'
-import IdentityClass from '../services/identity'
+import Identity from '../services/identity'
 
 const { WATCHER_POLL_PERIOD_MS, WATCHER_TIMEOUT_MS } = env
 
-const identityClass = new IdentityClass()
+const identity = new Identity()
 
 const startIdentityStatus = () =>
   startStatusHandler({
-    getStatus: identityClass.getStatus.bind(identityClass),
+    getStatus: identity.getStatus.bind(identity),
     pollingPeriodMs: WATCHER_POLL_PERIOD_MS,
     serviceTimeoutMs: WATCHER_TIMEOUT_MS,
   })

@@ -12,12 +12,12 @@ import {
 } from '../../../models/demand'
 import { DATE, UUID } from '../../../models/strings'
 import { BadRequest, NotFound } from '../../../lib/error-handler/index'
-import { getMemberByAddress, getMemberBySelf } from '../../../lib/services/identity'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
 import { demandCommentCreate, demandCreate } from '../../../lib/payload'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
+import Identity from '../../../lib/services/identity'
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
@@ -25,8 +25,9 @@ export class DemandController extends Controller {
   log: Logger
   db: Database
   node: ChainNode
+  private identity: Identity
 
-  constructor(demandType: 'demandA' | 'demandB') {
+  constructor(demandType: 'demandA' | 'demandB', identity: Identity) {
     super()
     this.demandType = demandType
     this.dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'
@@ -38,6 +39,7 @@ export class DemandController extends Controller {
       logger,
       userUri: env.USER_URI,
     })
+    this.identity = identity
   }
 
   public async createDemand({ parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
@@ -47,7 +49,7 @@ export class DemandController extends Controller {
       throw new BadRequest('Attachment not found')
     }
 
-    const { address: selfAddress, alias: selfAlias } = await getMemberBySelf()
+    const { address: selfAddress, alias: selfAlias } = await this.identity.getMemberBySelf()
 
     const [demand] = await this.db.insertDemand({
       owner: selfAddress,
@@ -73,7 +75,7 @@ export class DemandController extends Controller {
     }
 
     const demands = await this.db.getDemands(query)
-    const result = await Promise.all(demands.map(async (demand) => responseWithAlias(demand)))
+    const result = await Promise.all(demands.map(async (demand) => responseWithAlias(demand, this.identity)))
     return result
   }
 
@@ -83,7 +85,7 @@ export class DemandController extends Controller {
 
     const comments = await this.db.getDemandComments(demandId, 'created')
 
-    return responseWithComments(await responseWithAlias(demand), comments)
+    return responseWithComments(await responseWithAlias(demand, this.identity), comments, this.identity)
   }
 
   public async createDemandOnChain(demandId: UUID): Promise<TransactionResponse> {
@@ -141,7 +143,7 @@ export class DemandController extends Controller {
     const [comment] = await this.db.getAttachment(attachmentId)
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
 
-    const { address: selfAddress } = await getMemberBySelf()
+    const { address: selfAddress } = await this.identity.getMemberBySelf()
 
     const extrinsic = await this.node.prepareRunProcess(demandCommentCreate(demand, comment))
 
@@ -192,8 +194,8 @@ export class DemandController extends Controller {
   }
 }
 
-const responseWithAlias = async (demand: DemandRow): Promise<DemandResponse> => {
-  const { alias: ownerAlias } = await getMemberByAddress(demand.owner)
+const responseWithAlias = async (demand: DemandRow, identity: Identity): Promise<DemandResponse> => {
+  const { alias: ownerAlias } = await identity.getMemberByAddress(demand.owner)
 
   return {
     id: demand.id,
@@ -207,13 +209,14 @@ const responseWithAlias = async (demand: DemandRow): Promise<DemandResponse> => 
 
 const responseWithComments = async (
   demand: DemandResponse,
-  comments: DemandCommentRow[]
+  comments: DemandCommentRow[],
+  identity: Identity
 ): Promise<DemandWithCommentsResponse> => {
   const commentors = [...new Set(comments.map((comment) => comment.owner))]
   const aliasMap = new Map(
     await Promise.all(
       commentors.map(async (commentor) => {
-        const { alias } = await getMemberByAddress(commentor)
+        const { alias } = await identity.getMemberByAddress(commentor)
         return [commentor, alias] as const
       })
     )
