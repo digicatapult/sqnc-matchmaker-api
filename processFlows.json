@@ -1705,27 +1705,7 @@
           }
         }
       },
-
-      { "op": "And" },
-      {
-        "restriction": {
-          "SenderHasOutputRole": {
-            "index": 0,
-            "roleKey": "MemberA"
-          }
-        }
-      },
-      {
-        "restriction": {
-          "SenderHasOutputRole": {
-            "index": 0,
-            "roleKey": "MemberB"
-          }
-        }
-      },
-      { "op": "Or" },
       { "op": "And" } ,
-
       {
         "restriction": {
           "MatchInputOutputRole": {
@@ -1865,26 +1845,6 @@
           }
         }
       },
-
-      { "op": "And" },
-      {
-        "restriction": {
-          "SenderHasOutputRole": {
-            "index": 1,
-            "roleKey": "MemberA"
-          }
-        }
-      },
-      {
-        "restriction": {
-          "SenderHasOutputRole": {
-            "index": 1,
-            "roleKey": "MemberB"
-          }
-        }
-      },
-      { "op": "Or" },
-
       { "op": "And" },
       {
         "restriction": {
