@@ -2047,12 +2047,18 @@
       },
       { "op": "Or" },
       { "op": "And" },
-
-
+      {
+        "restriction": {
+          "FixedOutputMetadataValueType": {
+            "index": 2,
+            "metadataKey": "comment",
+            "metadataValueType": "File"
+          }
+        }
+      },
       { "op": "And" },
       { "op": "Or" },
       { "op": "And" }
-
     ]
   }
 ]
