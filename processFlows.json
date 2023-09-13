@@ -1705,7 +1705,27 @@
           }
         }
       },
+
       { "op": "And" },
+      {
+        "restriction": {
+          "SenderHasOutputRole": {
+            "index": 0,
+            "roleKey": "MemberA"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "SenderHasOutputRole": {
+            "index": 0,
+            "roleKey": "MemberB"
+          }
+        }
+      },
+      { "op": "Or" },
+      { "op": "And" } ,
+
       {
         "restriction": {
           "MatchInputOutputRole": {
@@ -1845,6 +1865,26 @@
           }
         }
       },
+
+      { "op": "And" },
+      {
+        "restriction": {
+          "SenderHasOutputRole": {
+            "index": 1,
+            "roleKey": "MemberA"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "SenderHasOutputRole": {
+            "index": 1,
+            "roleKey": "MemberB"
+          }
+        }
+      },
+      { "op": "Or" },
+
       { "op": "And" },
       {
         "restriction": {
@@ -2031,32 +2071,9 @@
       { "op": "And" },
       {
         "restriction": {
-          "FixedInputMetadataValue": {
-            "index": 2,
-            "metadataKey": "state",
-            "metadataValue": {
-              "Literal": "acceptedFinal"
-            }
-          }
-        }
-      },
-      {
-        "restriction": {
           "SenderHasOutputRole": {
             "index": 2,
             "roleKey": "MemberA"
-          }
-        }
-      },
-      { "op": "Or" },
-      {
-        "restriction": {
-          "FixedInputMetadataValue": {
-            "index": 2,
-            "metadataKey": "state",
-            "metadataValue": {
-              "Literal": "acceptedFinal"
-            }
           }
         }
       },
@@ -2068,6 +2085,10 @@
           }
         }
       },
+      { "op": "Or" },
+      { "op": "And" },
+
+
       { "op": "And" },
       { "op": "Or" },
       { "op": "And" }
