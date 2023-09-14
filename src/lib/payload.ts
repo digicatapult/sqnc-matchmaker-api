@@ -153,7 +153,7 @@ export const match2AcceptFinal = (match2: Match2Row, demandA: DemandRow, demandB
   ],
 })
 
-export const match2Cancel = (match2: Match2Row): Payload =>({
+export const match2Cancel = (match2: Match2Row): Payload => ({
   process: { id: 'match2-cancel', version: 1 },
   inputs: [match2.latestTokenId as number],
   outputs: [],
