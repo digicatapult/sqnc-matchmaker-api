@@ -21,7 +21,7 @@ import Identity from '../../../lib/services/identity'
 import { Match2Request, Match2Response, Match2State } from '../../../models/match2'
 import { DATE, UUID } from '../../../models/strings'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
-import { match2AcceptFinal, match2AcceptFirst, match2Propose, match2Reject } from '../../../lib/payload'
+import { match2AcceptFinal, match2AcceptFirst, match2Cancel, match2Propose, match2Reject } from '../../../lib/payload'
 import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
@@ -310,6 +310,39 @@ export class Match2Controller extends Controller {
     if (!match2) throw new NotFound('match2')
 
     return await this.db.getTransactionsByLocalId(query)
+  }
+
+  /**
+   * A member cancels a match2 {match2Id} on-chain.
+   * @summary Cancel a match2 on-chain
+   * @param match2Id The match2's identifier
+   */
+  @Post('{match2Id}/cancellation')
+  @Response<NotFound>(404, 'Item not found')
+  @Response<BadRequest>(400, 'Request was invalid')
+  @SuccessResponse('200')
+  public async cancelMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('match2')
+
+    const roles = [match2.memberA, match2.memberB]
+
+    const { address: selfAddress } = await this.identity.getMemberBySelf()
+    if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
+
+    if (match2.state !== 'acceptedFinal') throw new BadRequest('Match2 state must be acceptedFinal')
+
+    const extrinsic = await this.node.prepareRunProcess(match2Cancel(match2))
+    const [transaction] = await this.db.insertTransaction({
+      transaction_type: 'cancellation',
+      api_type: 'match2',
+      local_id: match2Id,
+      state: 'submitted',
+      hash: extrinsic.hash.toHex(),
+    })
+
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+    return transaction
   }
 
   /**
