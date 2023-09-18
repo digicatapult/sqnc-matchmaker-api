@@ -40,6 +40,7 @@ export const seededMatch2WithAllocatedDemands = '27965a5f-f3dd-4110-82e7-68f59bb
 export const seededMatch2AcceptedA = '347411d3-3750-49dd-a548-88e9f2616d9c'
 export const seededMatch2AcceptedFinal = '85a50fd9-f20f-4a61-a7e4-3ad49b7c3f21'
 export const seededMatch2CancellationId = '85a50fd9-f20f-4a61-a7e4-3ad49b7c3f22'
+export const seededMatch2CancellationId2 = '85a50fd9-f20f-4a61-a7e4-3ad49b7c3f23'
 export const seededMatch2NotAcceptableA = '46d7dbe8-aaef-472e-af9f-ecdd2681d3a5'
 export const seededMatch2NotAcceptableB = '097d3905-72aa-4517-85d2-0091d26fceac'
 export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c9474784d'
@@ -302,6 +303,19 @@ export const match2Seed = async () => {
   await db.transaction().insert([
     {
       id: seededMatch2CancellationId,
+      api_type: 'match2',
+      transaction_type: 'cancellation',
+      local_id: seededMatch2Id,
+      state: 'submitted',
+      created_at: exampleDate,
+      updated_at: exampleDate,
+      hash: transactionHash,
+    },
+  ])
+
+  await db.transaction().insert([
+    {
+      id: seededMatch2CancellationId2,
       api_type: 'match2',
       transaction_type: 'cancellation',
       local_id: seededMatch2Id,
