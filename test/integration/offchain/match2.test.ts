@@ -27,6 +27,7 @@ import {
   seededDemandAWithTokenId,
   seededRejectionTransactionId,
   seededMatch2NotInRoles,
+  seededMatch2CancellationId,
 } from '../../seeds/offchainSeeds/offchain.match2.seed'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
@@ -215,6 +216,20 @@ describe('match2', () => {
         localId: '85a50fd9-f20f-4a61-a7e4-3ad49b7c3f21',
         apiType: 'match2',
         transactionType: 'cancellation',
+      })
+    })
+
+    it('it should get a cancellation transaction', async () => {
+      const { status, body } = await get(app, `/v1/match2/${seededMatch2Id}/cancellation/${seededMatch2CancellationId}`)
+      expect(status).to.equal(200)
+      expect(body).to.deep.equal({
+        id: seededMatch2CancellationId,
+        apiType: 'match2',
+        transactionType: 'cancellation',
+        localId: seededMatch2Id,
+        state: 'submitted',
+        submittedAt: exampleDate,
+        updatedAt: exampleDate,
       })
     })
   })
@@ -460,6 +475,18 @@ describe('match2', () => {
       const response = await post(app, `/v1/match2/f960e4a1-6182-4dd3-8ac2-6f3fad995551/cancellation`, {})
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Match2 state must be acceptedFinal')
+    })
+
+    it('non-existent match2 when getting a cancellation - 404', async () => {
+      const response = await get(app, `/v1/match2/${nonExistentId}/cancellation/${seededMatch2CancellationId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-existent transaction when getting a cancellation - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2Id}/cancellation/${nonExistentId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('cancellation not found')
     })
   })
 })
