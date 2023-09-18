@@ -208,11 +208,7 @@ describe('match2', () => {
     })
 
     it('it cancels an existing match2 that is in final state', async () => {
-      const { status, body } = await post(
-        app,
-        `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`,
-        {}
-      )
+      const { status, body } = await post(app, `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`, {})
       expect(status).to.equal(200)
       expect(body).to.deep.contain({
         state: 'submitted',
