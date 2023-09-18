@@ -390,6 +390,32 @@ export class Match2Controller extends Controller {
 
     return await this.db.getTransactionsByLocalId(query)
   }
+
+  /**
+   * @summary Get all of a match2's cancellation transactions
+   * @param match2Id The match2's identifier
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{match2Id}/cancellation')
+  public async getMatch2Cancellations(
+    @Path() match2Id: UUID,
+    @Query() updated_since?: DATE
+  ): Promise<TransactionResponse[]> {
+    const query: {
+      localId: UUID
+      transactionType: TransactionType
+      updatedSince?: Date
+    } = { localId: match2Id, transactionType: 'cancellation' }
+    if (updated_since) {
+      query.updatedSince = parseDateParam(updated_since)
+    }
+
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('match2')
+
+    return await this.db.getTransactionsByLocalId(query)
+  }
 }
 
 const responseWithAliases = async (match2: Match2Row, identity: Identity): Promise<Match2Response> => {
