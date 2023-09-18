@@ -214,7 +214,12 @@ describe('match2', () => {
         {}
       )
       expect(status).to.equal(200)
-      expect(body).to.deep.equal({})
+      expect(body).to.deep.contain({
+        state: 'submitted',
+        localId: '85a50fd9-f20f-4a61-a7e4-3ad49b7c3f21',
+        apiType: 'match2',
+        transactionType: 'cancellation',
+      })
     })
   })
 
