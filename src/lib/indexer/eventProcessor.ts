@@ -11,6 +11,7 @@ const processNames = [
   'match2-acceptFinal',
   'demand-comment',
   'match2-reject',
+  'match2-cancel',
 ] as const
 type PROCESSES_TUPLE = typeof processNames
 type PROCESSES = PROCESSES_TUPLE[number]
@@ -235,6 +236,29 @@ const DefaultEventProcessors: EventProcessors = {
             state: 'rejected',
           },
         ],
+      ]),
+    }
+  },
+
+  'match2-cancel': (version, _transaction, _sender, inputs, _outputs) => {
+    if (version !== 1) {
+      throw new Error(`Incompatible version ${version} for match2-cancel process`)
+    }
+
+    const demandALocalId = inputs[0].localId
+    const demandAId = _outputs[0].id
+    const demandBLocalId = inputs[1].localId
+    const demandBId = _outputs[1].id
+    const matchLocalId = inputs[2].localId
+    const matchId = _outputs[2].id
+
+    return {
+      demands: new Map([
+        [demandALocalId, { type: 'update', id: demandALocalId, latest_token_id: demandAId, state: 'cancelled' }],
+        [demandBLocalId, { type: 'update', id: demandBLocalId, latest_token_id: demandBId, state: 'cancelled' }],
+      ]),
+      matches: new Map([
+        [matchLocalId, { type: 'update', id: matchLocalId, latest_token_id: matchId, state: 'cancelled' }],
       ]),
     }
   },
