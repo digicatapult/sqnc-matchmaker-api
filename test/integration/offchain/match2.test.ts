@@ -490,6 +490,18 @@ describe('match2', () => {
       expect(response.body).to.equal('Match2 state must be acceptedFinal')
     })
 
+    it('non-existent match2 when getting a cancellation - 404', async () => {
+      const response = await get(app, `/v1/match2/${nonExistentId}/cancellation/${seededMatch2CancellationId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-existent transaction when getting a cancellation - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2Id}/cancellation/${nonExistentId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('cancellation not found')
+    })
+
     it('non-existent match2 when listing cancellations - 404', async () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/cancellation`)
       expect(response.status).to.equal(404)

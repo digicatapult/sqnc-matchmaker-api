@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/dscp-matchmaker-api",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "An OpenAPI Matchmaking API service for DSCP",
   "main": "src/index.ts",
   "scripts": {
