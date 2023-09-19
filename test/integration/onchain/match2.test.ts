@@ -228,5 +228,71 @@ describe('on-chain', function () {
       // no output token means latest token ID remains the same
       expect(match2Rejected.latestTokenId).to.equal(match2LatestTokenId)
     })
+
+    it('should cancel an acceptedFinal match2 on-chain', async () => {
+      // propose
+      const proposal = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
+
+      // wait for block to finalise
+      await pollTransactionState(db, proposal.body.id, 'finalised')
+
+      const [maybeMatch2] = await db.getMatch2(match2LocalId)
+      const match2 = maybeMatch2 as Match2Row
+      const match2OriginalId = match2.originalTokenId
+      const lastTokenId = await node.getLastTokenId()
+
+      // submit accept to chain
+      const responseAcceptA = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
+      expect(responseAcceptA.status).to.equal(201)
+
+      // wait for block to finalise
+      await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
+
+      // check local entities update with token id
+      const [maybeMatch2AcceptA] = await db.getMatch2(match2LocalId)
+      const match2AcceptA = maybeMatch2AcceptA as Match2Row
+      expect(match2AcceptA.latestTokenId).to.equal(lastTokenId + 1)
+      expect(match2AcceptA.state).to.equal('acceptedA')
+      expect(match2AcceptA.originalTokenId).to.equal(match2OriginalId)
+
+      // submit 2nd accept to chain
+      const responseAcceptFinal = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
+      expect(responseAcceptFinal.status).to.equal(201)
+
+      // wait for block to finalise
+      await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
+
+      //cancell accepted match2
+      const cancellation = await post(context.app, `/v1/match2/${match2LocalId}/cancellation`, {})
+      expect(cancellation.status).to.equal(200)
+      console.log(cancellation.status, cancellation.body)
+
+      // wait for block to finalise
+      await pollTransactionState(db, cancellation.body.id, 'finalised')
+      console.log('here')
+
+      // check local entities update with token id
+      const [maybeDemandA] = await db.getDemand(demandALocalId)
+      console.log('and there')
+      const demandA = maybeDemandA as DemandRow
+      console.log(`latest token id: ${demandA.latestTokenId}`)
+      console.log(`last token id: ${lastTokenId}`)
+      expect(demandA.latestTokenId).to.equal(lastTokenId + 2)
+      expect(demandA.state).to.equal('cancelled')
+      expect(demandA.originalTokenId).to.equal(demandAOriginalId)
+
+      const [maybeDemandB] = await db.getDemand(demandBLocalId)
+      const demandB = maybeDemandB as DemandRow
+      expect(demandB.latestTokenId).to.equal(lastTokenId + 3)
+      expect(demandB.state).to.equal('cancelled')
+      expect(demandB.originalTokenId).to.equal(demandBOriginalId)
+
+      const [maybeMatch2AcceptFinal] = await db.getMatch2(match2LocalId)
+      // console.log(maybeMatch2AcceptFinal)
+      const match2AcceptFinal = maybeMatch2AcceptFinal as Match2Row
+      expect(match2AcceptFinal.latestTokenId).to.equal(lastTokenId + 4)
+      expect(match2AcceptFinal.state).to.equal('cancelled')
+      expect(match2AcceptFinal.originalTokenId).to.equal(match2OriginalId)
+    })
   })
 })
