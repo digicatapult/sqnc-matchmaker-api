@@ -347,7 +347,7 @@ export class Match2Controller extends Controller {
 
   /**
    * @summary Get all of a match2's cancellation transactions
-   * @param match2Id {string} The match2's identifier
+   * @param {UUID} match2Id The match2's identifier
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
