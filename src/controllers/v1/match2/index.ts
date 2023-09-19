@@ -370,6 +370,24 @@ export class Match2Controller extends Controller {
   }
 
   /**
+   * @summary Get a match2 cancellation transaction by ID
+   * @param match2Id The match2's identifier
+   * @param cancellationId The match2's rejection ID
+   */
+  @Response<NotFound>(404, 'Item not found.')
+  @SuccessResponse('200')
+  @Get('{match2Id}/cancellation/{cancellationId}')
+  public async getMatch2Cancellation(@Path() match2Id: UUID, cancellationId: UUID): Promise<TransactionResponse> {
+    const [match2] = await this.db.getMatch2(match2Id)
+    if (!match2) throw new NotFound('match2')
+
+    const [cancellation] = await this.db.getTransaction(cancellationId)
+    if (!cancellation) throw new NotFound('cancellation')
+
+    return cancellation
+  }
+
+  /**
    * A member rejects a match2 {match2Id} on-chain.
    * @summary Reject a match2 on-chain
    * @param match2Id The match2's identifier
