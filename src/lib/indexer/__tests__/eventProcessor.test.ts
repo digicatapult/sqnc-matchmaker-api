@@ -315,4 +315,42 @@ describe('eventProcessor', function () {
       })
     })
   })
+
+  describe('match2-cancel', function () {
+    it('should error with version != 1', function () {
+      let error: Error | null = null
+      try {
+        eventProcessors['match2-cancel'](0, null, 'alice', [], [])
+      } catch (err) {
+        error = err instanceof Error ? err : null
+      }
+      expect(error).instanceOf(Error)
+    })
+
+    it('should update the states of the match2 and demands', function () {
+      const result = eventProcessors['match2-cancel'](
+        1,
+        null,
+        'alice',
+        [
+          { id: 1, localId: 'id_1' },
+          { id: 2, localId: 'id_2' },
+          { id: 3, localId: 'id_3' },
+        ],
+        [
+          { id: 4, roles: new Map(), metadata: new Map() },
+          { id: 5, roles: new Map(), metadata: new Map() },
+          { id: 6, roles: new Map(), metadata: new Map() },
+        ]
+      )
+
+      expect(result).to.deep.equal({
+        demands: new Map([
+          ['id_1', { type: 'update', id: 'id_1', state: 'cancelled', latest_token_id: 4 }],
+          ['id_2', { type: 'update', id: 'id_2', state: 'cancelled', latest_token_id: 5 }],
+        ]),
+        matches: new Map([['id_3', { type: 'update', id: 'id_3', state: 'cancelled', latest_token_id: 6 }]]),
+      })
+    })
+  })
 })
