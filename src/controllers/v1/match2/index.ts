@@ -324,6 +324,11 @@ export class Match2Controller extends Controller {
   public async cancelMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
+    const [demandA] = await this.db.getDemand(match2?.demandA)
+    const [demandB] = await this.db.getDemand(match2?.demandB)
+
+    if (!demandA) throw new NotFound('demandA')
+    if (!demandB) throw new NotFound('demandB')
 
     const roles = [match2.memberA, match2.memberB]
 
@@ -332,7 +337,7 @@ export class Match2Controller extends Controller {
 
     if (match2.state !== 'acceptedFinal') throw new BadRequest('Match2 state must be acceptedFinal')
 
-    const extrinsic = await this.node.prepareRunProcess(match2Cancel(match2))
+    const extrinsic = await this.node.prepareRunProcess(match2Cancel(match2, demandA, demandB))
     const [transaction] = await this.db.insertTransaction({
       transaction_type: 'cancellation',
       api_type: 'match2',
