@@ -153,7 +153,12 @@ export const match2AcceptFinal = (match2: Match2Row, demandA: DemandRow, demandB
   ],
 })
 
-export const match2Cancel = (match2: Match2Row, demandA: DemandRow, demandB: DemandRow): Payload => ({
+export const match2Cancel = (
+  match2: Match2Row,
+  demandA: DemandRow,
+  demandB: DemandRow,
+  comment: AttachmentRow
+): Payload => ({
   process: { id: 'match2-cancel', version: 1 },
   inputs: [demandA.latestTokenId as number, demandB.latestTokenId as number, match2.latestTokenId as number],
   outputs: [
@@ -186,6 +191,7 @@ export const match2Cancel = (match2: Match2Row, demandA: DemandRow, demandB: Dem
         demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
         demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
         originalId: { type: 'TOKEN_ID', value: match2.originalTokenId as number },
+        comment: { type: 'FILE', value: bs58ToHex(comment.ipfsHash) },
       },
     },
   ],

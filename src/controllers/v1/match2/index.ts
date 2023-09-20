@@ -27,6 +27,7 @@ import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
 import { injectable } from 'tsyringe'
+import { Match2Attachment } from '../../../models/attachment'
 
 @Route('v1/match2')
 @injectable()
@@ -321,7 +322,10 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('200')
-  public async cancelMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+  public async cancelMatch2OnChain(
+    @Path() match2Id: UUID,
+    @Body() { attachmentId }: Match2Attachment
+  ): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
     const [demandA] = await this.db.getDemand(match2?.demandA)
@@ -329,6 +333,9 @@ export class Match2Controller extends Controller {
 
     if (!demandA) throw new NotFound('demandA')
     if (!demandB) throw new NotFound('demandB')
+    //check if attachment exists
+    const [attachment] = await this.db.getAttachment(attachmentId)
+    if (!attachment) throw new BadRequest(`${attachmentId} not found`)
 
     const roles = [match2.memberA, match2.memberB]
 
@@ -337,7 +344,7 @@ export class Match2Controller extends Controller {
 
     if (match2.state !== 'acceptedFinal') throw new BadRequest('Match2 state must be acceptedFinal')
 
-    const extrinsic = await this.node.prepareRunProcess(match2Cancel(match2, demandA, demandB))
+    const extrinsic = await this.node.prepareRunProcess(match2Cancel(match2, demandA, demandB, attachment))
     const [transaction] = await this.db.insertTransaction({
       transaction_type: 'cancellation',
       api_type: 'match2',

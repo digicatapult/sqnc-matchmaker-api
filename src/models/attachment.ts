@@ -21,3 +21,7 @@ export interface Attachment {
   size: number | null
   createdAt: Date
 }
+
+export interface Match2Attachment {
+  attachmentId: UUID
+}

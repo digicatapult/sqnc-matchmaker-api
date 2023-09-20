@@ -262,8 +262,9 @@ describe('on-chain', function () {
       // wait for block to finalise
       await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
 
-      //cancell accepted match2
-      const cancellation = await post(context.app, `/v1/match2/${match2LocalId}/cancellation`, {})
+      const cancellation = await post(context.app, `/v1/match2/${match2LocalId}/cancellation`, {
+        attachmentId: parametersAttachmentId,
+      })
       expect(cancellation.status).to.equal(200)
       console.log(cancellation.status, cancellation.body)
 
