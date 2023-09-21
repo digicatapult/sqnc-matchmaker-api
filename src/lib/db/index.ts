@@ -1,7 +1,5 @@
 import knex, { Knex } from 'knex'
-import type { Logger } from 'pino'
 
-import { logger } from '../logger'
 import { pgConfig } from './knexfile'
 import { DemandState, DemandSubtype } from '../../models/demand'
 import { HEX, UUID } from '../../models/strings'
@@ -146,17 +144,12 @@ function restore0x(input: ProcessedBlockTrimmed): ProcessedBlock {
 const clientSingleton: Knex = knex(pgConfig)
 
 export default class Database {
-  private client: Knex
-  private log: Logger
   public db: () => Models<() => QueryBuilder>
 
-  constructor() {
-    this.log = logger
-    this.client = clientSingleton
+  constructor(private client: Knex = clientSingleton) {
     const models = tablesList.reduce((acc, name) => {
-      this.log.debug(`initializing ${name} db model`)
       return {
-        [name]: () => this.client(name),
+        [name]: () => client(name),
         ...acc,
       }
     }, {}) as Models<() => QueryBuilder>
@@ -406,10 +399,7 @@ export default class Database {
 
   withTransaction = (update: (db: Database) => Promise<void>) => {
     return this.client.transaction(async (trx) => {
-      const decorated: Database = {
-        ...this,
-        client: trx,
-      }
+      const decorated = new Database(trx)
       await update(decorated)
     })
   }
