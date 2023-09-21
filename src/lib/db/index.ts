@@ -144,7 +144,7 @@ function restore0x(input: ProcessedBlockTrimmed): ProcessedBlock {
 const clientSingleton: Knex = knex(pgConfig)
 
 export default class Database {
-  private db: () => Models<() => QueryBuilder>
+  public db: () => Models<() => QueryBuilder>
 
   constructor(private client: Knex = clientSingleton) {
     const models = tablesList.reduce((acc, name) => {
