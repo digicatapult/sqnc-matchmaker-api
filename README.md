@@ -133,11 +133,15 @@ Allows the creation of an initial local state for an entity. Note this is essent
 
 ### Entity updates
 
-Allows different kind of updates to be prepared and applied to an entity. For example, a `demandB` must be submitted via a `creation` action.
+Allows different kind of updates to be prepared and applied to an entity. For example, a `demandB` or `match2` must be submitted via a `creation` action.
 
 - `POST /v1/demandB/{demandBId}/creation` - create a creation `creation` transaction and send it to the blockchain.
 - `GET /v1/demandB/{demandBId}/creation` - list a demandB's `creation` transactions and their status.
 - `GET /v1/demandB/{demandBId}/creation/{creationId}` - get the details of a demandB `creation` transaction.
+
+- `POST/v1/match2/{match2Id}/cancellation` - submits cancellation request and creates a transaction that is ready to be synced up 
+- `GET /v1/match2/{match2Id}/cancellation` - retrieves all cancellation transactions for `match2Id`
+- `GET /v1/match2/{match2Id}/cancellation/{cancellationId}` - retrieves a specific cancellation transaction containing more details about it's state
 
 ### Attachment API
 
@@ -228,3 +232,8 @@ At any time a `demandA` or `demandB` can be commented on by any member by `POST`
 #### Rejecting match2
 
 At any time after a `match2` is `proposed`, and before it reaches `acceptedFinal` state, any of its members can reject the `match2` using [`POST /v1/match2/{id}/rejection`](http://localhost:8000/swagger/#/match2/RejectMatch2OnChain). Once a `match2` is rejected, it is permanently closed.
+
+#### Cancelling match2
+
+At any time after a `match2` is in `acceptedFinal` state, any of its members can cancel the `match2` using [`POST /v1/match2/{id}/cancellation`](http://localhost:3000/swagger/#/match2/CancelMatch2OnChain). Once a `match2` is rejected, it is permanently closed.
+
