@@ -352,6 +352,13 @@ export class Match2Controller extends Controller {
       state: 'submitted',
       hash: extrinsic.hash.toHex(),
     })
+    await this.db.insertMatch2Comment({
+      transaction_id: transaction.id,
+      state: 'submitted',
+      owner: selfAddress,
+      match2: match2Id,
+      attachment: attachmentId,
+    })
 
     this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
     return transaction

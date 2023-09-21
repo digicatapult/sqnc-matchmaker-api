@@ -270,7 +270,7 @@ export default class Database {
   }
 
   insertMatch2Comment = async (comment: object) => {
-    return this.db().demand_comment().insert(comment).returning('*')
+    return this.db().match2_comment().insert(comment).returning('*')
   }
 
   updateMatch2CommentForTransaction = async (transactionId: UUID, comment: object) => {

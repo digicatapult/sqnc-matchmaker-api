@@ -60,7 +60,7 @@ export type MatchRecord =
       original_token_id?: number
       latest_token_id?: number
     }
-export type MatchCommentRecord =
+export type Match2CommentRecord =
   | {
       type: 'insert'
       id: string
@@ -88,7 +88,7 @@ export type ChangeSet = {
   demands?: Map<string, DemandRecord>
   matches?: Map<string, MatchRecord>
   demandComments?: Map<string, DemandCommentRecord>
-  match2Comments?: Map<string, MatchCommentRecord>
+  match2Comments?: Map<string, Match2CommentRecord>
 }
 
 const mergeMaps = <T extends Change>(base?: Map<string, T>, update?: Map<string, T>) => {
