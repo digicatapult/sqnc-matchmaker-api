@@ -2,7 +2,14 @@ import { v4 as UUIDv4 } from 'uuid'
 
 import { UUID } from '../../models/strings'
 import { Transaction } from '../db'
-import { AttachmentRecord, ChangeSet, DemandCommentRecord, DemandRecord, MatchRecord } from './changeSet'
+import {
+  AttachmentRecord,
+  ChangeSet,
+  DemandCommentRecord,
+  DemandRecord,
+  Match2CommentRecord,
+  MatchRecord,
+} from './changeSet'
 
 const processNames = [
   'demand-create',
@@ -251,12 +258,53 @@ const DefaultEventProcessors: EventProcessors = {
     const demandBId = _outputs[1].id
     const matchLocalId = inputs[2].localId
     const matchId = _outputs[2].id
+    const match2Cancel = _outputs[2]
+
+    const match2Update: MatchRecord = {
+      type: 'update',
+      id: matchLocalId,
+      state: getOrError(match2Cancel.metadata, 'state'),
+      latest_token_id: match2Cancel.id,
+    }
+
+    if (_transaction) {
+      return {
+        match2Comments: new Map([
+          [
+            _transaction.id,
+            {
+              type: 'update',
+              transaction_id: _transaction.id,
+              state: 'created',
+            },
+          ],
+        ]),
+        match2s: new Map([[matchLocalId, match2Update]]),
+      }
+    }
+
+    const attachment: AttachmentRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      ipfs_hash: getOrError(match2Cancel.metadata, 'comment'),
+    }
+
+    const comment: Match2CommentRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      state: 'created',
+      match2: matchLocalId,
+      owner: _sender,
+      attachment: attachment.id,
+    }
 
     return {
       demands: new Map([
         [demandALocalId, { type: 'update', id: demandALocalId, latest_token_id: demandAId, state: 'cancelled' }],
         [demandBLocalId, { type: 'update', id: demandBLocalId, latest_token_id: demandBId, state: 'cancelled' }],
       ]),
+      attachments: new Map([[attachment.id, attachment]]),
+      match2Comments: new Map([[comment.id, comment]]),
       matches: new Map([
         [matchLocalId, { type: 'update', id: matchLocalId, latest_token_id: matchId, state: 'cancelled' }],
       ]),

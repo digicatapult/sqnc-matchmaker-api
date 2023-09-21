@@ -266,18 +266,13 @@ describe('on-chain', function () {
         attachmentId: parametersAttachmentId,
       })
       expect(cancellation.status).to.equal(200)
-      console.log(cancellation.status, cancellation.body)
 
       // wait for block to finalise
       await pollTransactionState(db, cancellation.body.id, 'finalised')
-      console.log('here')
 
       // check local entities update with token id
       const [maybeDemandA] = await db.getDemand(demandALocalId)
-      console.log('and there')
       const demandA = maybeDemandA as DemandRow
-      console.log(`latest token id: ${demandA.latestTokenId}`)
-      console.log(`last token id: ${lastTokenId}`)
       expect(demandA.latestTokenId).to.equal(lastTokenId + 2)
       expect(demandA.state).to.equal('cancelled')
       expect(demandA.originalTokenId).to.equal(demandAOriginalId)
@@ -289,7 +284,6 @@ describe('on-chain', function () {
       expect(demandB.originalTokenId).to.equal(demandBOriginalId)
 
       const [maybeMatch2AcceptFinal] = await db.getMatch2(match2LocalId)
-      // console.log(maybeMatch2AcceptFinal)
       const match2AcceptFinal = maybeMatch2AcceptFinal as Match2Row
       expect(match2AcceptFinal.latestTokenId).to.equal(lastTokenId + 4)
       expect(match2AcceptFinal.state).to.equal('cancelled')
