@@ -2,7 +2,14 @@ import { v4 as UUIDv4 } from 'uuid'
 
 import { UUID } from '../../models/strings'
 import { Transaction } from '../db'
-import { AttachmentRecord, ChangeSet, DemandCommentRecord, DemandRecord, MatchRecord } from './changeSet'
+import {
+  AttachmentRecord,
+  ChangeSet,
+  DemandCommentRecord,
+  DemandRecord,
+  MatchCommentRecord,
+  MatchRecord,
+} from './changeSet'
 
 const processNames = [
   'demand-create',
@@ -11,6 +18,7 @@ const processNames = [
   'match2-acceptFinal',
   'demand-comment',
   'match2-reject',
+  'match2-comment',
   'match2-cancel',
 ] as const
 type PROCESSES_TUPLE = typeof processNames
@@ -237,6 +245,58 @@ const DefaultEventProcessors: EventProcessors = {
           },
         ],
       ]),
+    }
+  },
+  'match2-comment': (version, transaction, sender, inputs, outputs) => {
+    if (version !== 1) {
+      throw new Error(`Incompatible version ${version} for match2-propose process`)
+    }
+
+    const newMatch2Cancel = outputs[0]
+    const match2Id = inputs[0].localId
+
+    const match2Update: MatchRecord = {
+      type: 'update',
+      id: match2Id,
+      state: getOrError(newMatch2Cancel.metadata, 'state'),
+      latest_token_id: newMatch2Cancel.id,
+    }
+
+    if (transaction) {
+      return {
+        match2Comments: new Map([
+          [
+            transaction.id,
+            {
+              type: 'update',
+              transaction_id: transaction.id,
+              state: 'created',
+            },
+          ],
+        ]),
+        match2s: new Map([[match2Id, match2Update]]),
+      }
+    }
+
+    const attachment: AttachmentRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      ipfs_hash: getOrError(newMatch2Cancel.metadata, 'comment'),
+    }
+
+    const comment: MatchCommentRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      state: 'created',
+      match2: match2Id,
+      owner: sender,
+      attachment: attachment.id,
+    }
+
+    return {
+      attachments: new Map([[attachment.id, attachment]]),
+      match2Comments: new Map([[comment.id, comment]]),
+      match2s: new Map([[match2Id, match2Update]]),
     }
   },
 

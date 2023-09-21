@@ -8,7 +8,15 @@ import { HEX, UUID } from '../../models/strings'
 import { Match2State } from '../../models/match2'
 import { TransactionApiType, TransactionState, TransactionType } from '../../models/transaction'
 
-const tablesList = ['attachment', 'demand', 'transaction', 'match2', 'processed_blocks', 'demand_comment'] as const
+const tablesList = [
+  'attachment',
+  'demand',
+  'transaction',
+  'match2',
+  'processed_blocks',
+  'demand_comment',
+  'match2_comment',
+] as const
 type TABLES_TUPLE = typeof tablesList
 type TABLE = TABLES_TUPLE[number]
 
@@ -253,6 +261,21 @@ export default class Database {
   updateDemandCommentForTransaction = async (transactionId: UUID, comment: object) => {
     return this.db()
       .demand_comment()
+      .update({
+        ...comment,
+        updated_at: this.client.fn.now(),
+      })
+      .where({ transaction_id: transactionId })
+      .returning('*')
+  }
+
+  insertMatch2Comment = async (comment: object) => {
+    return this.db().demand_comment().insert(comment).returning('*')
+  }
+
+  updateMatch2CommentForTransaction = async (transactionId: UUID, comment: object) => {
+    return this.db()
+      .match2_comment()
       .update({
         ...comment,
         updated_at: this.client.fn.now(),
