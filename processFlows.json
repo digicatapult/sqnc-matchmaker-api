@@ -111,6 +111,21 @@
           }
         }
       },
+      { "op": "And" },
+      {
+        "restriction": {
+          "OutputHasMetadata": {
+            "index": 0,
+            "metadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "None": {}
+        }
+      },
+      { "op": "NotL" },
       { "op": "And" }
     ]
   },
@@ -739,6 +754,47 @@
         }
       },
       { "op": "And" },
+      { "op": "Or" },
+      { "op": "And" },
+      {
+        "restriction": {
+          "InputHasMetadata": {
+            "index": 0,
+            "metadataKey": "replaces"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "None": {}
+        }
+      },
+      { "op": "NotL" },
+      {
+        "restriction": {
+          "OutputHasMetadata": {
+            "index": 0,
+            "metadataKey": "replaces"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "None": {}
+        }
+      },
+      { "op": "NotL" },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 0,
+            "inputMetadataKey": "replaces",
+            "outputIndex": 0,
+            "outputMetadataKey": "replaces"
+          }
+        }
+      },
       { "op": "Or" },
       { "op": "And" },
       {
@@ -1549,7 +1605,7 @@
   },
   {
     "name": "match2-cancel",
-    "version":1,
+    "version": 1,
     "program":[
       {
         "restriction": {
@@ -2058,5 +2114,658 @@
       },
       { "op": "And" }
     ]
+  },
+  {
+    "name": "rematch2-propose",
+    "version": 1,
+    "program": [
+      {
+        "restriction": {
+          "FixedNumberOfInputs": {
+            "numInputs": 3
+          }
+        }
+      },
+      {
+        "restriction": {
+          "FixedNumberOfOutputs": {
+            "numInputs": 4
+          }
+        }
+      },
+      {
+        "restriction": {
+          "MatchInputOutputRole": {
+            "inputIndex": 0,
+            "inputRoleKey": "Owner",
+            "outputIndex": 0,
+            "outputRoleKey": "Owner"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 0,
+            "metadataKey": "type",
+            "metadataValue": {
+              "Literal": "DEMAND"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 0,
+            "inputMetadataKey": "type",
+            "outputIndex": 0,
+            "outputMetadataKey": "type"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 0,
+            "metadataKey": "subtype",
+            "metadataValue": {
+              "Literal": "demand_a"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 0,
+            "inputMetadataKey": "subtype",
+            "outputIndex": 0,
+            "outputMetadataKey": "subtype"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 0,
+            "metadataKey": "version",
+            "metadataValue": {
+              "Literal": "1"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 0,
+            "inputMetadataKey": "version",
+            "outputIndex": 0,
+            "outputMetadataKey": "version"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 0,
+            "inputMetadataKey": "originalId",
+            "outputIndex": 0,
+            "outputMetadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "InputHasMetadata": {
+            "index": 0,
+            "metadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "None": {}
+        }
+      },
+      { "op": "NotL" },
+      {
+        "restriction": {
+          "MatchInputIdOutputMetadataValue": {
+            "inputIndex": 0,
+            "outputIndex": 0,
+            "outputMetadataKey": "originalId"
+          }
+        }
+      },
+      { "op": "And" },
+      { "op": "Or" },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 0,
+            "metadataKey": "state",
+            "metadataValue": {
+              "Literal": "allocated"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 0,
+            "inputMetadataKey": "state",
+            "outputIndex": 0,
+            "outputMetadataKey": "state"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputRole": {
+            "inputIndex": 1,
+            "inputRoleKey": "Optimiser",
+            "outputIndex": 1,
+            "outputRoleKey": "Optimiser"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputRole": {
+            "inputIndex": 1,
+            "inputRoleKey": "MemberA",
+            "outputIndex": 1,
+            "outputRoleKey": "MemberA"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputRole": {
+            "inputIndex": 1,
+            "inputRoleKey": "MemberB",
+            "outputIndex": 1,
+            "outputRoleKey": "MemberB"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 1,
+            "metadataKey": "type",
+            "metadataValue": {
+              "Literal": "MATCH2"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 1,
+            "inputMetadataKey": "type",
+            "outputIndex": 1,
+            "outputMetadataKey": "type"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 1,
+            "metadataKey": "version",
+            "metadataValue": {
+              "Literal": "1"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 1,
+            "inputMetadataKey": "version",
+            "outputIndex": 1,
+            "outputMetadataKey": "version"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 0,
+            "inputMetadataKey": "originalId",
+            "outputIndex": 1,
+            "outputMetadataKey": "demandA"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 1,
+            "inputMetadataKey": "demandA",
+            "outputIndex": 1,
+            "outputMetadataKey": "demandA"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 1,
+            "inputMetadataKey": "originalId",
+            "outputIndex": 1,
+            "outputMetadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "InputHasMetadata": {
+            "index": 1,
+            "metadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "None": {}
+        }
+      },
+      { "op": "NotL" },
+      {
+        "restriction": {
+          "MatchInputIdOutputMetadataValue": {
+            "inputIndex": 1,
+            "outputIndex": 1,
+            "outputMetadataKey": "originalId"
+          }
+        }
+      },
+      { "op": "And" },
+      { "op": "Or" },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 1,
+            "metadataKey": "state",
+            "metadataValue": {
+              "Literal": "acceptedFinal"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 1,
+            "inputMetadataKey": "state",
+            "outputIndex": 1,
+            "outputMetadataKey": "state"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputRole": {
+            "inputIndex": 2,
+            "inputRoleKey": "Owner",
+            "outputIndex": 2,
+            "outputRoleKey": "Owner"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 2,
+            "metadataKey": "type",
+            "metadataValue": {
+              "Literal": "DEMAND"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 2,
+            "inputMetadataKey": "type",
+            "outputIndex": 2,
+            "outputMetadataKey": "type"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 2,
+            "metadataKey": "subtype",
+            "metadataValue": {
+              "Literal": "demand_b"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 2,
+            "inputMetadataKey": "subtype",
+            "outputIndex": 2,
+            "outputMetadataKey": "subtype"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 2,
+            "metadataKey": "version",
+            "metadataValue": {
+              "Literal": "1"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 2,
+            "inputMetadataKey": "version",
+            "outputIndex": 2,
+            "outputMetadataKey": "version"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 2,
+            "inputMetadataKey": "originalId",
+            "outputIndex": 2,
+            "outputMetadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "InputHasMetadata": {
+            "index": 2,
+            "metadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "None": {}
+        }
+      },
+      { "op": "NotL" },
+      {
+        "restriction": {
+          "MatchInputIdOutputMetadataValue": {
+            "inputIndex": 2,
+            "outputIndex": 2,
+            "outputMetadataKey": "originalId"
+          }
+        }
+      },
+      { "op": "And" },
+      { "op": "Or" },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedInputMetadataValue": {
+            "index": 2,
+            "metadataKey": "state",
+            "metadataValue": {
+              "Literal": "created"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 2,
+            "inputMetadataKey": "state",
+            "outputIndex": 2,
+            "outputMetadataKey": "state"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "SenderHasOutputRole": {
+            "index": 3,
+            "roleKey": "Optimiser"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputRole": {
+            "inputIndex": 0,
+            "inputRoleKey": "Owner",
+            "outputIndex": 3,
+            "outputRoleKey": "MemberA"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputRole": {
+            "inputIndex": 2,
+            "inputRoleKey": "Owner",
+            "outputIndex": 3,
+            "outputRoleKey": "MemberB"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedOutputMetadataValue": {
+            "index": 3,
+            "metadataKey": "type",
+            "metadataValue": {
+              "Literal": "MATCH2"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedOutputMetadataValue": {
+            "index": 3,
+            "metadataKey": "version",
+            "metadataValue": {
+              "Literal": "1"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "FixedOutputMetadataValue": {
+            "index": 3,
+            "metadataKey": "state",
+            "metadataValue": {
+              "Literal": "proposed"
+            }
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 0,
+            "inputMetadataKey": "originalId",
+            "outputIndex": 3,
+            "outputMetadataKey": "demandA"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "InputHasMetadata": {
+            "index": 0,
+            "metadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "None": {}
+        }
+      },
+      { "op": "NotL" },
+      {
+        "restriction": {
+          "MatchInputIdOutputMetadataValue": {
+            "inputIndex": 0,
+            "outputIndex": 3,
+            "outputMetadataKey": "demandA"
+          }
+        }
+      },
+      { "op": "And" },
+      { "op": "Or" },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 2,
+            "inputMetadataKey": "originalId",
+            "outputIndex": 3,
+            "outputMetadataKey": "demandB"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "InputHasMetadata": {
+            "index": 2,
+            "metadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "None": {}
+        }
+      },
+      { "op": "NotL" },
+      {
+        "restriction": {
+          "MatchInputIdOutputMetadataValue": {
+            "inputIndex": 2,
+            "outputIndex": 3,
+            "outputMetadataKey": "demandB"
+          }
+        }
+      },
+      { "op": "And" },
+      { "op": "Or" },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 1,
+            "inputMetadataKey": "originalId",
+            "outputIndex": 3,
+            "outputMetadataKey": "replaces"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "InputHasMetadata": {
+            "index": 1,
+            "metadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "None": {}
+        }
+      },
+      { "op": "NotL" },
+      {
+        "restriction": {
+          "MatchInputIdOutputMetadataValue": {
+            "inputIndex": 1,
+            "outputIndex": 3,
+            "outputMetadataKey": "replaces"
+          }
+        }
+      },
+      { "op": "And" },
+      { "op": "Or" },
+      { "op": "And" },
+      {
+        "restriction": {
+          "OutputHasMetadata": {
+            "index": 3,
+            "metadataKey": "originalId"
+          }
+        }
+      },
+      {
+        "restriction": {
+          "None": {}
+        }
+      },
+      { "op": "NotL" },
+      { "op": "And" }
+    ]
+  },
+  {
+    "name": "rematch2-acceptFinal",
+    "version": 1,
+    "program": []
   }
 ]
