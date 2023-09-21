@@ -18,7 +18,6 @@ const processNames = [
   'match2-acceptFinal',
   'demand-comment',
   'match2-reject',
-  'match2-comment',
   'match2-cancel',
 ] as const
 type PROCESSES_TUPLE = typeof processNames
