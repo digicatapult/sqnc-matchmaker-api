@@ -111,21 +111,6 @@
           }
         }
       },
-      { "op": "And" },
-      {
-        "restriction": {
-          "OutputHasMetadata": {
-            "index": 0,
-            "metadataKey": "originalId"
-          }
-        }
-      },
-      {
-        "restriction": {
-          "None": {}
-        }
-      },
-      { "op": "NotL" },
       { "op": "And" }
     ]
   },
