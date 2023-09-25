@@ -354,7 +354,7 @@ export class Match2Controller extends Controller {
     })
     await this.db.insertMatch2Comment({
       transaction_id: transaction.id,
-      state: 'submitted',
+      state: 'pending',
       owner: selfAddress,
       match2: match2Id,
       attachment: attachmentId,
