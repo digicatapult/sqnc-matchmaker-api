@@ -85,6 +85,7 @@ const DefaultEventProcessors: EventProcessors = {
       demands: new Map([[demand.id, demand]]),
     }
   },
+
   'demand-comment': (version, transaction, sender, inputs, outputs) => {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for match2-propose process`)
@@ -137,6 +138,7 @@ const DefaultEventProcessors: EventProcessors = {
       demands: new Map([[demandId, demandUpdate]]),
     }
   },
+
   'match2-propose': (version, transaction, _sender, inputs, outputs) => {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for match2-propose process`)
@@ -181,6 +183,7 @@ const DefaultEventProcessors: EventProcessors = {
       matches: new Map([[match.id, match]]),
     }
   },
+
   'match2-accept': (version, _transaction, _sender, inputs, outputs) => {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for match2-accept process`)
@@ -225,6 +228,7 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
     }
   },
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   'match2-reject': (version, _transaction, _sender, inputs, _outputs) => {
     if (version !== 1) {

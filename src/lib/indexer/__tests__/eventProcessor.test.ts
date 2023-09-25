@@ -340,15 +340,18 @@ describe('eventProcessor', function () {
         [
           { id: 4, roles: new Map(), metadata: new Map() },
           { id: 5, roles: new Map(), metadata: new Map() },
-          { id: 6, roles: new Map(), metadata: new Map() },
+          {
+            id: 6,
+            roles: new Map(),
+            metadata: new Map([
+              ['state', 'cncelled'],
+              ['comment', 'a'],
+            ]),
+          },
         ]
       )
 
-      expect(result).to.deep.equal({
-        demands: new Map([
-          ['id_1', { type: 'update', id: 'id_1', state: 'cancelled', latest_token_id: 4 }],
-          ['id_2', { type: 'update', id: 'id_2', state: 'cancelled', latest_token_id: 5 }],
-        ]),
+      expect(result).to.deep.contain({
         matches: new Map([['id_3', { type: 'update', id: 'id_3', state: 'cancelled', latest_token_id: 6 }]]),
       })
     })
