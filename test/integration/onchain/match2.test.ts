@@ -265,6 +265,7 @@ describe('on-chain', function () {
       const cancellation = await post(context.app, `/v1/match2/${match2LocalId}/cancellation`, {
         attachmentId: parametersAttachmentId,
       })
+      console.log(cancellation)
       expect(cancellation.status).to.equal(200)
 
       // wait for block to finalise
