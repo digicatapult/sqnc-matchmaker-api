@@ -59,7 +59,7 @@ export class Match2Controller extends Controller {
   @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
   public async proposeMatch2(
-    @Body() { demandA: demandAId, demandB: demandBId }: Match2Request
+    @Body() { demandA: demandAId, demandB: demandBId, replaces: replacesMatch2Id }: Match2Request
   ): Promise<Match2Response> {
     const [maybeDemandA] = await this.db.getDemand(demandAId)
     validatePreLocal(maybeDemandA, 'demand_a', 'DemandA')
@@ -70,7 +70,7 @@ export class Match2Controller extends Controller {
     const demandB = maybeDemandB as DemandRow
 
     const { address: selfAddress } = await this.identity.getMemberBySelf()
-
+    ///but we have to insert our nw match otherwise we'd have nothing to propose
     const [match2] = await this.db.insertMatch2({
       optimiser: selfAddress,
       member_a: demandA.owner,
@@ -80,7 +80,23 @@ export class Match2Controller extends Controller {
       demand_b_id: demandBId,
     })
 
-    return responseWithAliases(match2, this.identity)
+    //if replaces is passed check that match2 we are referring to contains the same demands as the demands we want to reassign
+    if (replacesMatch2Id) {
+      const [maybeOriginalMatch2] = await this.db.getMatch2(replacesMatch2Id)
+      const originalMatch2 = maybeOriginalMatch2 as Match2Row
+      if (originalMatch2.state !== 'acceptedFinal') {
+        throw new Error(`Referrenced match2 to be replaced is not in 'acceptedFinal' state.`)
+      }
+
+      const originalDemandA = originalMatch2.demandA
+      const originalDemandB = originalMatch2.demandB
+      if (!(originalDemandA === demandAId && originalDemandB === demandBId)) {
+        throw new Error(`Demand Ids for original match2 and replacement match2 are not the same.`)
+      }
+      this.proposeMatch2OnChain(match2.id, replacesMatch2Id) //we are sending over new db entry match2 - this is our new proposed match and 'replacesMatch2Id' which is the ID of the old match we are trying to replace
+    }
+
+    return responseWithAliases(match2, this.identity) //we could change this to optionally return the 'replaces' match2 id as well
   }
 
   /**
@@ -122,7 +138,17 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
-  public async proposeMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+  /**
+   * *** maybe a helper function to handle the validations
+   * L3-218:
+   * - check if match2 already exists
+   * - if match2 already exists the refered to match2 is in the state acceptedFinal
+   * - the demandA is in the state completed // validatePreOnChain(maybeDemandA, 'demand_a', 'DemandA') const demandA = maybeDemandA as DemandRow const [maybeDemandB] = await this.db.getDemand(match2.demandB) validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
+   * - the refered to match2 refers to the same demandA
+   * - the demandB is in the state created
+   * - if all of the above did not trip - perform a match2Propose flow
+   */
+  public async proposeMatch2OnChain(@Path() match2Id: UUID, @Body() replaces: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
     if (match2.state !== 'pending') throw new BadRequest(`Match2 must have state: 'pending'`)

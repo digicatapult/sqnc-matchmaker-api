@@ -48,4 +48,8 @@ export interface Match2Request {
    * ID of the demandB
    */
   demandB: UUID
+  /**
+   * ID of the Match2 that it is replacing
+   */
+  replaces?: UUID //is this optional?
 }
