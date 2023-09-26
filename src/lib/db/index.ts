@@ -101,6 +101,7 @@ export interface Match2Row {
   originalTokenId: number | null
   createdAt: Date
   updatedAt: Date
+  replaces?: UUID
 }
 
 const transactionColumns = [
