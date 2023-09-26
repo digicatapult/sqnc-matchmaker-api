@@ -139,11 +139,9 @@ Allows different kind of updates to be prepared and applied to an entity. For ex
 - `GET /v1/demandB/{demandBId}/creation` - list a demandB's `creation` transactions and their status.
 - `GET /v1/demandB/{demandBId}/creation/{creationId}` - get the details of a demandB `creation` transaction.
 
-- `POST/v1/match2/{match2Id}/cancellation` - submits cancellation request and creates a transaction that is ready to be synced up 
-- `GET /v1/match2/{match2Id}/cancellation` - retrieves all cancellation transactions for `match2Id`
-- `GET /v1/match2/{match2Id}/cancellation/{cancellationId}` - retrieves a specific cancellation transaction containing more details about it's state
-
-### Attachment API
+- `POST/v1/match2/{match2Id}/cancellation` - submits cancellation request and creates a transaction
+- `GET /v1/match2/{match2Id}/cancellation` - retrieves all cancellation transactions for specific `match2Id`
+- `GET /v1/match2/{match2Id}/cancellation/{cancellationId}` - retrieves a specific cancellation transaction
 
 The last top level entity `attachment`, which accepts a `multipart/form-data` payload for uploading a file or `application/json` for uploading JSON as a file. This will return an `id` that can then be used when preparing entity updates to attach files.
 
