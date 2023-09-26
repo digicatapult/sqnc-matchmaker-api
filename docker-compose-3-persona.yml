@@ -338,6 +338,8 @@ services:
       - 8080:8080
       - 5001:5001
     networks: ['ipfs']
+    volumes:
+      - ipfs:/data/ipfs
 
 volumes:
   member-a-matchmaker-api-storage:
