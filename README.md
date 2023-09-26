@@ -235,5 +235,5 @@ At any time after a `match2` is `proposed`, and before it reaches `acceptedFinal
 
 #### Cancelling match2
 
-At any time after a `match2` is in `acceptedFinal` state, any of its members can cancel the `match2` using [`POST /v1/match2/{id}/cancellation`](http://localhost:3000/swagger/#/match2/CancelMatch2OnChain). Once a `match2` is rejected, it is permanently closed.
+At any time after a `match2` is in `acceptedFinal` state either `memberA` or `memberB` can cancel the `match2` using [`POST /v1/match2/{id}/cancellation`](http://localhost:3000/swagger/#/match2/CancelMatch2OnChain). Once a `match2` is cancelled, it is permanently closed. Howecer, optimiser won't be able to cancel a `match2` 
 
