@@ -264,29 +264,6 @@ const DefaultEventProcessors: EventProcessors = {
     const matchId = _outputs[2].id
     const match2Cancel = _outputs[2]
 
-    const match2Update: MatchRecord = {
-      type: 'update',
-      id: matchLocalId,
-      state: getOrError(match2Cancel.metadata, 'state'),
-      latest_token_id: match2Cancel.id,
-    }
-
-    if (_transaction) {
-      return {
-        match2Comments: new Map([
-          [
-            _transaction.id,
-            {
-              type: 'update',
-              transaction_id: _transaction.id,
-              state: 'created',
-            },
-          ],
-        ]),
-        match2s: new Map([[matchLocalId, match2Update]]),
-      }
-    }
-
     const attachment: AttachmentRecord = {
       type: 'insert',
       id: UUIDv4(),
