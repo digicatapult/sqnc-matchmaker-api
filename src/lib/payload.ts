@@ -55,6 +55,43 @@ export const demandCommentCreate = (demand: DemandRow, comment: AttachmentRow): 
   ],
 })
 
+export const rematch2Propose = (match2: Match2Row, demandA: DemandRow, demandB: DemandRow): Payload => ({
+  process: { id: 'rematch2-propose', version: 1 },
+  inputs: [demandA.latestTokenId as number, demandB.latestTokenId as number],
+  outputs: [
+    {
+      roles: { Owner: demandA.owner },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.DEMAND },
+        state: { type: 'LITERAL', value: 'allocated' },
+        subtype: { type: 'LITERAL', value: demandA.subtype },
+        originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+      },
+    },
+    {
+      roles: { Owner: demandB.owner },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.DEMAND },
+        state: { type: 'LITERAL', value: 'created' },
+        subtype: { type: 'LITERAL', value: demandB.subtype },
+        originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
+      },
+    },
+    {
+      roles: { Optimiser: match2.optimiser, MemberA: match2.memberA, MemberB: match2.memberB },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.MATCH2 },
+        state: { type: 'LITERAL', value: 'proposed' },
+        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+        demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
+      },
+    },
+  ],
+})
+
 export const match2Propose = (match2: Match2Row, demandA: DemandRow, demandB: DemandRow): Payload => ({
   process: { id: 'match2-propose', version: 1 },
   inputs: [demandA.latestTokenId as number, demandB.latestTokenId as number],

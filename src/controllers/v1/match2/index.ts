@@ -21,12 +21,13 @@ import Identity from '../../../lib/services/identity'
 import { Match2Request, Match2Response, Match2State } from '../../../models/match2'
 import { DATE, UUID } from '../../../models/strings'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
-import { match2AcceptFinal, match2AcceptFirst, match2Cancel, match2Propose, match2Reject } from '../../../lib/payload'
+import { match2AcceptFinal, match2AcceptFirst, match2Cancel, rematch2Propose, match2Propose, match2Reject } from '../../../lib/payload'
 import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
 import { injectable } from 'tsyringe'
+
 
 @Route('v1/match2')
 @injectable()
@@ -50,6 +51,18 @@ export class Match2Controller extends Controller {
     this.identity = identity
   }
 
+  private rematch2Validator(match2: any) {
+    /* TODO
+    - If replaces is passed we should validate that:
+    the refered to match2 refers to the same demandA 
+    the demandA is in the state completed
+    the refered to match2 is in the state acceptedFinal
+    the demandB is in the state created
+    */
+    this.log.info('validator: ', { match2 })
+    return true
+  }
+
   /**
    * A Member proposes a new match2 for a demandA and a demandB by referencing each demand.
    * @summary Propose a new match2
@@ -59,8 +72,15 @@ export class Match2Controller extends Controller {
   @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
   public async proposeMatch2(
-    @Body() { demandA: demandAId, demandB: demandBId, replaces: replacesMatch2Id }: Match2Request
-  ): Promise<Match2Response> {
+    @Body() { demandA: demandAId, demandB: demandBId, replaces }: Match2Request
+  ): Promise<Match2Response | null> {
+    const isRepl: boolean = this.rematch2Validator(await this.db.getMatch2(replaces || '').then((rows) => rows[0]))
+
+    if (replaces && isRepl) {  
+      console.log('onChain....:', await this.proposeMatch2OnChain(replaces, true))
+      return null
+    }
+
     const [maybeDemandA] = await this.db.getDemand(demandAId)
     validatePreLocal(maybeDemandA, 'demand_a', 'DemandA')
     const demandA = maybeDemandA as DemandRow
@@ -79,22 +99,6 @@ export class Match2Controller extends Controller {
       demand_a_id: demandAId,
       demand_b_id: demandBId,
     })
-
-    //if replaces is passed check that match2 we are referring to contains the same demands as the demands we want to reassign
-    if (replacesMatch2Id) {
-      const [maybeOriginalMatch2] = await this.db.getMatch2(replacesMatch2Id)
-      const originalMatch2 = maybeOriginalMatch2 as Match2Row
-      if (originalMatch2.state !== 'acceptedFinal') {
-        throw new Error(`Referrenced match2 to be replaced is not in 'acceptedFinal' state.`)
-      }
-
-      const originalDemandA = originalMatch2.demandA
-      const originalDemandB = originalMatch2.demandB
-      if (!(originalDemandA === demandAId && originalDemandB === demandBId)) {
-        throw new Error(`Demand Ids for original match2 and replacement match2 are not the same.`)
-      }
-      this.proposeMatch2OnChain(match2.id, replacesMatch2Id) //we are sending over new db entry match2 - this is our new proposed match and 'replacesMatch2Id' which is the ID of the old match we are trying to replace
-    }
 
     return responseWithAliases(match2, this.identity) //we could change this to optionally return the 'replaces' match2 id as well
   }
@@ -148,7 +152,7 @@ export class Match2Controller extends Controller {
    * - the demandB is in the state created
    * - if all of the above did not trip - perform a match2Propose flow
    */
-  public async proposeMatch2OnChain(@Path() match2Id: UUID, @Body() replaces: UUID): Promise<TransactionResponse> {
+  public async proposeMatch2OnChain(@Path() match2Id: UUID, @Body() isReplace: boolean): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
     if (match2.state !== 'pending') throw new BadRequest(`Match2 must have state: 'pending'`)
@@ -161,7 +165,9 @@ export class Match2Controller extends Controller {
     validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
     const demandB = maybeDemandB as DemandRow
 
-    const extrinsic = await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
+    const extrinsic = isReplace ? 
+      await this.node.prepareRunProcess(rematch2Propose(match2, demandA, demandB)) :
+      await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
 
     const [transaction] = await this.db.insertTransaction({
       transaction_type: 'proposal',

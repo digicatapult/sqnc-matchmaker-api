@@ -129,6 +129,7 @@ const DefaultEventProcessors: EventProcessors = {
       demands: new Map([[demandId, demandUpdate]]),
     }
   },
+  
   'match2-propose': (version, transaction, _sender, inputs, outputs) => {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for match2-propose process`)
