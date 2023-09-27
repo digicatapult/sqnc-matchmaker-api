@@ -265,12 +265,6 @@ const DefaultEventProcessors: EventProcessors = {
     const match2Cancel = _outputs[2]
 
     if (_transaction) {
-      const match2Updates: MatchRecord = {
-        type: 'update',
-        id: matchLocalId,
-        state: getOrError(match2Cancel.metadata, 'state'),
-        latest_token_id: match2Cancel.id,
-      }
       return {
         /* not sure about this one, check in with Matt:
         match2Comments: new Map([
@@ -283,7 +277,7 @@ const DefaultEventProcessors: EventProcessors = {
             },
           ],
         ]), */
-        matches: new Map([[matchLocalId, match2Updates]]),
+        matches: new Map([[matchLocalId, { type: 'update', id: matchLocalId, latest_token_id: matchId, state: 'cancelled' }]]),
       }
     }
 
