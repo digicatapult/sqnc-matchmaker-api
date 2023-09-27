@@ -29,7 +29,6 @@ import {
   match2Propose,
   match2Reject,
 } from '../../../lib/payload'
-import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
@@ -57,18 +56,6 @@ export class Match2Controller extends Controller {
     this.identity = identity
   }
 
-  private rematch2Validator(match2: any) {
-    /* TODO
-    - If replaces is passed we should validate that:
-    the refered to match2 refers to the same demandA 
-    the demandA is in the state completed
-    the refered to match2 is in the state acceptedFinal
-    the demandB is in the state created
-    */
-    this.log.info('validator: ', { match2 })
-    return true
-  }
-
   /**
    * A Member proposes a new match2 for a demandA and a demandB by referencing each demand.
    * @summary Propose a new match2
@@ -80,21 +67,30 @@ export class Match2Controller extends Controller {
   public async proposeMatch2(
     @Body() { demandA: demandAId, demandB: demandBId, replaces }: Match2Request
   ): Promise<Match2Response | null> {
-    const isRepl: boolean = this.rematch2Validator(await this.db.getMatch2(replaces || '').then((rows) => rows[0]))
-
-    if (replaces && isRepl) {
-      console.log('onChain....:', await this.proposeMatch2OnChain(replaces, true))
-      return null
-    }
     const [maybeDemandA] = await this.db.getDemand(demandAId)
-    validatePreLocal(maybeDemandA, 'demand_a', 'DemandA')
+    validatePreLocal(maybeDemandA, 'DemandA', {
+      subtype: 'demand_a',
+      state: replaces ? 'allocated' : 'created',
+    })
     const demandA = maybeDemandA as DemandRow
 
     const [maybeDemandB] = await this.db.getDemand(demandBId)
-    validatePreLocal(maybeDemandB, 'demand_b', 'DemandB')
+    validatePreLocal(maybeDemandB, 'DemandB', {
+      subtype: 'demand_b',
+      state: 'created',
+    })
     const demandB = maybeDemandB as DemandRow
 
     const { address: selfAddress } = await this.identity.getMemberBySelf()
+
+    if (replaces) {
+      const [maybeOriginalMatch2] = await this.db.getMatch2(replaces)
+      validatePreLocal(maybeOriginalMatch2, 'Match2', {
+        state: 'acceptedFinal',
+        demandA: demandAId,
+      })
+    }
+
     const [match2] = await this.db.insertMatch2({
       optimiser: selfAddress,
       member_a: demandA.owner,
@@ -102,7 +98,9 @@ export class Match2Controller extends Controller {
       state: 'pending',
       demand_a_id: demandAId,
       demand_b_id: demandBId,
+      replaces_id: replaces,
     })
+
     return responseWithAliases(match2, this.identity) //we could change this to optionally return the 'replaces' match2 id as well
   }
 
@@ -155,20 +153,28 @@ export class Match2Controller extends Controller {
    * - the demandB is in the state created
    * - if all of the above did not trip - perform a match2Propose flow
    */
-  public async proposeMatch2OnChain(@Path() match2Id: UUID, @Body() isReplace: boolean): Promise<TransactionResponse> {
-    const [match2] = await this.db.getMatch2(match2Id)
-    if (!match2) throw new NotFound('match2')
-    if (match2.state !== 'pending') throw new BadRequest(`Match2 must have state: 'pending'`)
+  public async proposeMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+    const [maybeMatch2] = await this.db.getMatch2(match2Id)
+    validatePreLocal(maybeMatch2, 'Match2', {
+      state: 'pending',
+    })
+    const match2 = maybeMatch2 as Match2Row
 
     const [maybeDemandA] = await this.db.getDemand(match2.demandA)
-    validatePreOnChain(maybeDemandA, 'demand_a', 'DemandA')
+    validatePreOnChain(maybeDemandA, 'DemandA', {
+      subtype: 'demand_a',
+      state: match2.replaces ? 'allocated' : 'created',
+    })
     const demandA = maybeDemandA as DemandRow
 
     const [maybeDemandB] = await this.db.getDemand(match2.demandB)
-    validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
+    validatePreOnChain(maybeDemandB, 'DemandB', {
+      subtype: 'demand_b',
+      state: 'created',
+    })
     const demandB = maybeDemandB as DemandRow
 
-    const extrinsic = isReplace
+    const extrinsic = match2.replaces
       ? await this.node.prepareRunProcess(rematch2Propose(match2, demandA, demandB))
       : await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
 
@@ -240,19 +246,27 @@ export class Match2Controller extends Controller {
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
   public async acceptMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
-    const [match2] = await this.db.getMatch2(match2Id)
-    if (!match2) throw new NotFound('match2')
+    const [maybeMatch2] = await this.db.getMatch2(match2Id)
+    validatePreOnChain(maybeMatch2, 'Match2', {})
+    const match2 = maybeMatch2 as Match2Row
 
     const state = match2.state
 
-    if (state === 'acceptedFinal') throw new BadRequest(`Already ${'acceptedFinal'}`)
+    if (state !== 'proposed' && state !== 'acceptedA' && state !== 'acceptedB')
+      throw new BadRequest(`state should not be ${state}`)
 
     const [maybeDemandA] = await this.db.getDemand(match2.demandA)
-    validatePreOnChain(maybeDemandA, 'demand_a', 'DemandA')
+    validatePreOnChain(maybeDemandA, 'DemandA', {
+      subtype: 'demand_a',
+      state: match2.replaces ? 'allocated' : 'created',
+    })
     const demandA = maybeDemandA as DemandRow
 
     const [maybeDemandB] = await this.db.getDemand(match2.demandB)
-    validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
+    validatePreOnChain(maybeDemandB, 'DemandB', {
+      subtype: 'demand_b',
+      state: 'created',
+    })
     const demandB = maybeDemandB as DemandRow
 
     const { address: selfAddress } = await this.identity.getMemberBySelf()
@@ -514,58 +528,36 @@ const responseWithAliases = async (match2: Match2Row, identity: Identity): Promi
     demandB: match2.demandB,
     createdAt: match2.createdAt.toISOString(),
     updatedAt: match2.updatedAt.toISOString(),
+    replaces: match2.replaces ? match2.replaces : '', //atm returns " " if no replaces id present - do we want it to return null instead?
   }
 }
 
-const validatePreLocal = (demand: DemandRow | undefined, subtype: DemandSubtype, key: string) => {
-  if (!demand) {
-    throw new BadRequest(`${key} not found`)
+const validatePreLocal = <T>(maybeT: T | undefined, rowType: string, condition: { [key in keyof T]?: T[key] }) => {
+  if (!maybeT) {
+    throw new BadRequest(`${rowType} not found`)
   }
 
-  if (demand.subtype !== subtype) {
-    throw new BadRequest(`${key} must be ${subtype}`)
-  }
-
-  if (demand.state === 'allocated') {
-    throw new BadRequest(`${key} is already ${'allocated'}`)
-  }
-}
-
-const validatePreOnChain = (maybeDemand: DemandRow | undefined, subtype: DemandSubtype, key: string) => {
-  validatePreLocal(maybeDemand, subtype, key)
-  const demand = maybeDemand as DemandRow
-
-  if (!demand.latestTokenId) {
-    throw new BadRequest(`${key} must be on chain`)
-  }
-}
-
-async function prepareExtrinsicForTransactionHelper(
-  demandA: DemandRow,
-  demandB: DemandRow,
-  match2: Match2Row,
-  db: Database,
-  node: ChainNode,
-  replaces?: UUID
-) {
-  if (replaces) {
-    match2.replaces = replaces
-    const [maybeOriginalMatch2] = await db.getMatch2(replaces)
-    const originalMatch2 = maybeOriginalMatch2 as Match2Row
-    if (originalMatch2.state !== 'acceptedFinal') {
-      throw new Error(`Referrenced match2 to be replaced is not in 'acceptedFinal' state.`)
+  const conditionKeys = Object.keys(condition) as (keyof T)[]
+  for (const key of conditionKeys) {
+    if (maybeT[key] !== condition[key]) {
+      throw new BadRequest(`${String(key)} must be ${condition[key]}`)
     }
+  }
+}
 
-    const originalDemandA = originalMatch2.demandA
-    const originalDemandB = originalMatch2.demandB
-    if (!(originalDemandA === demandA.id)) {
-      throw new Error(`DemandA Ids for original match2 and replacement match2 is not the same.`)
-    }
-    const [maybeOldDemandB] = await db.getDemand(originalDemandB)
-    validatePreLocal(maybeOldDemandB, 'demand_b', 'DemandB')
-    // const oldDemandB = maybeOldDemandB as DemandRow
-    return await node.prepareRunProcess(match2Propose(match2, demandA, demandB))
-  } else {
-    return await node.prepareRunProcess(match2Propose(match2, demandA, demandB))
+const validatePreOnChain = <
+  T extends {
+    latestTokenId: number | null
+  },
+>(
+  maybeT: T | undefined,
+  rowType: string,
+  condition: { [key in keyof T]?: T[key] }
+) => {
+  validatePreLocal(maybeT, rowType, condition)
+  const t = maybeT as T
+
+  if (!t.latestTokenId) {
+    throw new BadRequest(`${rowType} must be on chain`)
   }
 }

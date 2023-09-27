@@ -34,6 +34,7 @@ export interface Match2Response {
   demandB: UUID
   createdAt: DATE
   updatedAt: DATE
+  replaces?: UUID
 }
 
 /**
@@ -51,5 +52,5 @@ export interface Match2Request {
   /**
    * ID of the Match2 that it is replacing
    */
-  replaces?: UUID //is this optional?
+  replaces?: UUID
 }

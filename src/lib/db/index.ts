@@ -83,6 +83,7 @@ const match2Columns = [
   'member_b AS memberB',
   'demand_a_id AS demandA',
   'demand_b_id AS demandB',
+  'replaces_id AS replaces',
   'latest_token_id AS latestTokenId',
   'original_token_id AS originalTokenId',
   'created_at AS createdAt',
