@@ -21,7 +21,14 @@ import Identity from '../../../lib/services/identity'
 import { Match2Request, Match2Response, Match2State } from '../../../models/match2'
 import { DATE, UUID } from '../../../models/strings'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
-import { match2AcceptFinal, match2AcceptFirst, match2Cancel, match2Propose, match2Reject } from '../../../lib/payload'
+import {
+  match2AcceptFinal,
+  match2AcceptFirst,
+  match2Cancel,
+  rematch2Propose,
+  match2Propose,
+  match2Reject,
+} from '../../../lib/payload'
 import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
@@ -50,6 +57,18 @@ export class Match2Controller extends Controller {
     this.identity = identity
   }
 
+  private rematch2Validator(match2: any) {
+    /* TODO
+    - If replaces is passed we should validate that:
+    the refered to match2 refers to the same demandA 
+    the demandA is in the state completed
+    the refered to match2 is in the state acceptedFinal
+    the demandB is in the state created
+    */
+    this.log.info('validator: ', { match2 })
+    return true
+  }
+
   /**
    * A Member proposes a new match2 for a demandA and a demandB by referencing each demand.
    * @summary Propose a new match2
@@ -60,7 +79,13 @@ export class Match2Controller extends Controller {
   @SuccessResponse('201')
   public async proposeMatch2(
     @Body() { demandA: demandAId, demandB: demandBId, replaces }: Match2Request
-  ): Promise<Match2Response> {
+  ): Promise<Match2Response | null> {
+    const isRepl: boolean = this.rematch2Validator(await this.db.getMatch2(replaces || '').then((rows) => rows[0]))
+
+    if (replaces && isRepl) {
+      console.log('onChain....:', await this.proposeMatch2OnChain(replaces, true))
+      return null
+    }
     const [maybeDemandA] = await this.db.getDemand(demandAId)
     validatePreLocal(maybeDemandA, 'demand_a', 'DemandA')
     const demandA = maybeDemandA as DemandRow
@@ -78,15 +103,6 @@ export class Match2Controller extends Controller {
       demand_a_id: demandAId,
       demand_b_id: demandBId,
     })
-    //if replaces is passed check that match2 we are referring to contains the same demands as the demands we want to reassign
-    if (replaces) {
-      const [_match2Existing] = await this.db.getMatch2(replaces)
-      const match2Existing = _match2Existing as Match2Row
-      if (!match2Existing) {
-        throw new Error(`The provided id for existing match does not exist in the database.`)
-      }
-      this.proposeMatch2OnChain(replaces) //we are sending over new db entry match2 - this is our new proposed match and 'replaces' which is the ID of the old match we are trying to replace
-    }
     return responseWithAliases(match2, this.identity) //we could change this to optionally return the 'replaces' match2 id as well
   }
 
@@ -139,7 +155,7 @@ export class Match2Controller extends Controller {
    * - the demandB is in the state created
    * - if all of the above did not trip - perform a match2Propose flow
    */
-  public async proposeMatch2OnChain(@Path() match2Id: UUID, @Body() replaces?: UUID): Promise<TransactionResponse> {
+  public async proposeMatch2OnChain(@Path() match2Id: UUID, @Body() isReplace: boolean): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
     if (match2.state !== 'pending') throw new BadRequest(`Match2 must have state: 'pending'`)
@@ -152,8 +168,9 @@ export class Match2Controller extends Controller {
     validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
     const demandB = maybeDemandB as DemandRow
 
-    //if 'replaces' parameter is passed in, want to make sure everything matches up
-    const extrinsic = await prepareExtrinsicForTransactionHelper(demandA, demandB, match2, this.db, this.node, replaces)
+    const extrinsic = isReplace
+      ? await this.node.prepareRunProcess(rematch2Propose(match2, demandA, demandB))
+      : await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
 
     const [transaction] = await this.db.insertTransaction({
       transaction_type: 'proposal',
