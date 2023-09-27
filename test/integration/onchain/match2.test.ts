@@ -273,19 +273,19 @@ describe('on-chain', function () {
       // check local entities update with token id
       const [maybeDemandA] = await db.getDemand(demandALocalId)
       const demandA = maybeDemandA as DemandRow
-      expect(demandA.latestTokenId).to.equal(lastTokenId + 5)
+      expect(demandA.latestTokenId).to.equal(lastTokenId + 2)
       expect(demandA.state).to.equal('cancelled')
       expect(demandA.originalTokenId).to.equal(demandAOriginalId)
 
       const [maybeDemandB] = await db.getDemand(demandBLocalId)
       const demandB = maybeDemandB as DemandRow
-      expect(demandB.latestTokenId).to.equal(lastTokenId + 6)
+      expect(demandB.latestTokenId).to.equal(lastTokenId + 3)
       expect(demandB.state).to.equal('cancelled')
       expect(demandB.originalTokenId).to.equal(demandBOriginalId)
 
       const [maybeMatch2AcceptFinal] = await db.getMatch2(match2LocalId)
       const match2AcceptFinal = maybeMatch2AcceptFinal as Match2Row
-      expect(match2AcceptFinal.latestTokenId).to.equal(lastTokenId + 7)
+      expect(match2AcceptFinal.latestTokenId).to.equal(lastTokenId + 4)
       expect(match2AcceptFinal.state).to.equal('cancelled')
       expect(match2AcceptFinal.originalTokenId).to.equal(match2OriginalId)
     })
