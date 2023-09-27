@@ -277,7 +277,14 @@ const DefaultEventProcessors: EventProcessors = {
             },
           ],
         ]), */
-        matches: new Map([[matchLocalId, { type: 'update', id: matchLocalId, latest_token_id: matchId, state: 'cancelled' }]]),
+        /* I THINK IT SHOULD Contain demands too */
+        demands: new Map([
+          [demandALocalId, { type: 'update', id: demandALocalId, latest_token_id: demandAId, state: 'cancelled' }],
+          [demandBLocalId, { type: 'update', id: demandBLocalId, latest_token_id: demandBId, state: 'cancelled' }],
+        ]),
+        matches: new Map([
+          [matchLocalId, { type: 'update', id: matchLocalId, latest_token_id: matchId, state: 'cancelled' }],
+        ]),
       }
     }
 
