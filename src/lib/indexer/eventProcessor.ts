@@ -11,6 +11,7 @@ const processNames = [
   'match2-acceptFinal',
   'demand-comment',
   'match2-reject',
+  'rematch2-propose',
 ] as const
 type PROCESSES_TUPLE = typeof processNames
 type PROCESSES = PROCESSES_TUPLE[number]
@@ -132,6 +133,50 @@ const DefaultEventProcessors: EventProcessors = {
   'match2-propose': (version, transaction, _sender, inputs, outputs) => {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for match2-propose process`)
+    }
+
+    const newDemands = [
+      { id: inputs[0].localId, tokenId: outputs[0].id },
+      { id: inputs[1].localId, tokenId: outputs[1].id },
+    ]
+    const newMatchId = outputs[2].id
+    const newMatch = outputs[2]
+
+    if (transaction) {
+      const id = transaction.localId
+      return {
+        demands: new Map(
+          newDemands.map(({ id, tokenId }) => [id, { type: 'update', id, state: 'created', latest_token_id: tokenId }])
+        ),
+        matches: new Map([
+          [id, { type: 'update', id, state: 'proposed', latest_token_id: newMatchId, original_token_id: newMatchId }],
+        ]),
+      }
+    }
+
+    const match: MatchRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      optimiser: getOrError(newMatch.roles, 'optimiser'),
+      member_a: getOrError(newMatch.roles, 'membera'),
+      member_b: getOrError(newMatch.roles, 'memberb'),
+      state: 'proposed',
+      demand_a_id: inputs[0].localId,
+      demand_b_id: inputs[1].localId,
+      latest_token_id: newMatchId,
+      original_token_id: newMatchId,
+    }
+
+    return {
+      demands: new Map(
+        newDemands.map(({ id, tokenId }) => [id, { type: 'update', id, state: 'created', latest_token_id: tokenId }])
+      ),
+      matches: new Map([[match.id, match]]),
+    }
+  },
+  'rematch2-propose': (version, transaction, _sender, inputs, outputs) => {
+    if (version !== 1) {
+      throw new Error(`Incompatible version ${version} for rematch2-propose process`)
     }
 
     const newDemands = [

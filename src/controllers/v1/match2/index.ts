@@ -143,16 +143,6 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
-  /**
-   * *** maybe a helper function to handle the validations
-   * L3-218:
-   * - check if match2 already exists
-   * - if match2 already exists the refered to match2 is in the state acceptedFinal
-   * - the demandA is in the state completed // validatePreOnChain(maybeDemandA, 'demand_a', 'DemandA') const demandA = maybeDemandA as DemandRow const [maybeDemandB] = await this.db.getDemand(match2.demandB) validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
-   * - the refered to match2 refers to the same demandA
-   * - the demandB is in the state created
-   * - if all of the above did not trip - perform a match2Propose flow
-   */
   public async proposeMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
     const [maybeMatch2] = await this.db.getMatch2(match2Id)
     validatePreLocal(maybeMatch2, 'Match2', {
@@ -173,7 +163,6 @@ export class Match2Controller extends Controller {
       state: 'created',
     })
     const demandB = maybeDemandB as DemandRow
-
     const extrinsic = match2.replaces
       ? await this.node.prepareRunProcess(rematch2Propose(match2, demandA, demandB))
       : await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
