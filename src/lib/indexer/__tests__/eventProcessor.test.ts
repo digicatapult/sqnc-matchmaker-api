@@ -317,8 +317,9 @@ describe('eventProcessor', function () {
     })
   })
 
-  describe('match2-cancel', function () {
+  describe('match2-cancel', () => {
     let cancelResult: ChangeSet
+
     describe('if transaction already exists', () => {
       beforeEach(() => {
         cancelResult = eventProcessors['match2-cancel'](
@@ -337,7 +338,7 @@ describe('eventProcessor', function () {
               id: 6,
               roles: new Map(),
               metadata: new Map([
-                ['state', 'cncelled'],
+                ['state', 'cancelled'],
                 ['comment', 'existing_transaction'],
               ]),
             },
