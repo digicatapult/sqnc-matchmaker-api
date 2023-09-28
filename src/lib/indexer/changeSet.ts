@@ -60,6 +60,20 @@ export type MatchRecord =
       original_token_id?: number
       latest_token_id?: number
     }
+export type Match2CommentRecord =
+  | {
+      type: 'insert'
+      id: string
+      state: 'created'
+      owner: string
+      match2: string
+      attachment: string
+    }
+  | {
+      type: 'update'
+      transaction_id: string
+      state: 'created'
+    }
 
 export type AttachmentRecord = {
   type: 'insert'
@@ -74,6 +88,7 @@ export type ChangeSet = {
   demands?: Map<string, DemandRecord>
   matches?: Map<string, MatchRecord>
   demandComments?: Map<string, DemandCommentRecord>
+  match2Comments?: Map<string, Match2CommentRecord>
 }
 
 const mergeMaps = <T extends Change>(base?: Map<string, T>, update?: Map<string, T>) => {

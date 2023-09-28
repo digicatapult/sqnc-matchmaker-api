@@ -16,7 +16,7 @@ import { withAppAndIndexer } from '../../helper/chainTest'
 import { UUID } from '../../../src/models/strings'
 
 describe('on-chain', function () {
-  this.timeout(60000)
+  this.timeout(120000)
   const db = new Database()
   const node = new ChainNode({
     host: env.NODE_HOST,
@@ -39,22 +39,22 @@ describe('on-chain', function () {
   })
 
   describe('match2', async () => {
-    let demandAOriginalId: number
-    let demandBOriginalId: number
-    let demandALocalId: UUID
-    let demandBLocalId: UUID
-    let match2LocalId: UUID
+    let ids: {
+      originalDemandB: number
+      originalDemandA: number
+      demandA: UUID
+      demandB: UUID
+      match2: UUID
+    }
 
     beforeEach(async () => {
       // prepare an unallocated demandA + demandB + local match2
-
       const {
         body: { id: demandAId },
       } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
       const {
         body: { id: demandATransactionId },
       } = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
-
       const {
         body: { id: demandBId },
       } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
@@ -63,28 +63,28 @@ describe('on-chain', function () {
       } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {})
 
       await pollTransactionState(db, demandATransactionId, 'finalised')
-      const [maybeDemandA] = await db.getDemand(demandAId)
-      const demandA = maybeDemandA as DemandRow
-      demandALocalId = demandAId
-      demandAOriginalId = demandA.originalTokenId as number
-
+      const [demandA]: DemandRow[] = await db.getDemand(demandAId)
       await pollTransactionState(db, demandBTransactionId, 'finalised')
-      const [maybeDemandB] = await db.getDemand(demandBId)
-      const demandB = maybeDemandB as DemandRow
-      demandBLocalId = demandBId
-      demandBOriginalId = demandB.originalTokenId as number
+      const [demandB]: DemandRow[] = await db.getDemand(demandBId)
 
       const {
         body: { id: match2Id },
-      } = await post(context.app, '/v1/match2', { demandA: demandAId, demandB: demandBId })
-      match2LocalId = match2Id
+      } = await post(context.app, '/v1/match2', { demandA: demandA.id, demandB: demandB.id })
+
+      ids = {
+        originalDemandB: demandB.originalTokenId as number,
+        originalDemandA: demandA.originalTokenId as number,
+        demandA: demandAId,
+        demandB: demandBId,
+        match2: match2Id,
+      }
     })
 
     it('should propose a match2 on-chain', async () => {
       const lastTokenId = await node.getLastTokenId()
 
       // submit to chain
-      const response = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
+      const response = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
       expect(response.status).to.equal(201)
 
       const { id: transactionId, state } = response.body
@@ -97,17 +97,17 @@ describe('on-chain', function () {
       await pollTransactionState(db, transactionId, 'finalised')
 
       // check local entities update with token id
-      const [maybeDemandA] = await db.getDemand(demandALocalId)
+      const [maybeDemandA] = await db.getDemand(ids.demandA)
       const demandA = maybeDemandA as DemandRow
       expect(demandA.latestTokenId).to.equal(lastTokenId + 1)
-      expect(demandA.originalTokenId).to.equal(demandAOriginalId)
+      expect(demandA.originalTokenId).to.equal(ids.originalDemandA)
 
-      const [maybeDemandB] = await db.getDemand(demandBLocalId)
+      const [maybeDemandB] = await db.getDemand(ids.demandB)
       const demandB = maybeDemandB as DemandRow
       expect(demandB.latestTokenId).to.equal(lastTokenId + 2)
-      expect(demandB.originalTokenId).to.equal(demandBOriginalId)
+      expect(demandB.originalTokenId).to.equal(ids.originalDemandB)
 
-      const [maybeMatch2] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2] = await db.getMatch2(ids.match2)
       const match2 = maybeMatch2 as Match2Row
       expect(match2.latestTokenId).to.equal(lastTokenId + 3)
       expect(match2.originalTokenId).to.equal(lastTokenId + 3)
@@ -115,51 +115,51 @@ describe('on-chain', function () {
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
       // propose
-      const proposal = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
+      const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
 
       // wait for block to finalise
       await pollTransactionState(db, proposal.body.id, 'finalised')
 
-      const [maybeMatch2] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2] = await db.getMatch2(ids.match2)
       const match2 = maybeMatch2 as Match2Row
       const match2OriginalId = match2.originalTokenId
       const lastTokenId = await node.getLastTokenId()
 
       // submit accept to chain
-      const responseAcceptA = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
+      const responseAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
       expect(responseAcceptA.status).to.equal(201)
 
       // wait for block to finalise
       await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
 
       // check local entities update with token id
-      const [maybeMatch2AcceptA] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2AcceptA] = await db.getMatch2(ids.match2)
       const match2AcceptA = maybeMatch2AcceptA as Match2Row
       expect(match2AcceptA.latestTokenId).to.equal(lastTokenId + 1)
       expect(match2AcceptA.state).to.equal('acceptedA')
       expect(match2AcceptA.originalTokenId).to.equal(match2OriginalId)
 
       // submit 2nd accept to chain
-      const responseAcceptFinal = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
+      const responseAcceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
       expect(responseAcceptFinal.status).to.equal(201)
 
       // wait for block to finalise
       await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
 
       // check local entities update with token id
-      const [maybeDemandA] = await db.getDemand(demandALocalId)
+      const [maybeDemandA] = await db.getDemand(ids.demandA)
       const demandA = maybeDemandA as DemandRow
       expect(demandA.latestTokenId).to.equal(lastTokenId + 2)
       expect(demandA.state).to.equal('allocated')
-      expect(demandA.originalTokenId).to.equal(demandAOriginalId)
+      expect(demandA.originalTokenId).to.equal(ids.originalDemandA)
 
-      const [maybeDemandB] = await db.getDemand(demandBLocalId)
+      const [maybeDemandB] = await db.getDemand(ids.demandB)
       const demandB = maybeDemandB as DemandRow
       expect(demandB.latestTokenId).to.equal(lastTokenId + 3)
       expect(demandB.state).to.equal('allocated')
-      expect(demandB.originalTokenId).to.equal(demandBOriginalId)
+      expect(demandB.originalTokenId).to.equal(ids.originalDemandB)
 
-      const [maybeMatch2AcceptFinal] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2AcceptFinal] = await db.getMatch2(ids.match2)
       const match2AcceptFinal = maybeMatch2AcceptFinal as Match2Row
       expect(match2AcceptFinal.latestTokenId).to.equal(lastTokenId + 4)
       expect(match2AcceptFinal.state).to.equal('acceptedFinal')
@@ -168,25 +168,25 @@ describe('on-chain', function () {
 
     it('should reject a proposed match2 on-chain', async () => {
       // propose
-      const proposal = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
+      const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
       expect(proposal.status).to.equal(201)
 
       // wait for block to finalise
       await pollTransactionState(db, proposal.body.id, 'finalised')
 
-      const [maybeMatch2] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2] = await db.getMatch2(ids.match2)
       const match2 = maybeMatch2 as Match2Row
       const match2LatestTokenId = match2.latestTokenId
 
       // reject match2
-      const rejection = await post(context.app, `/v1/match2/${match2LocalId}/rejection`, {})
+      const rejection = await post(context.app, `/v1/match2/${ids.match2}/rejection`, {})
       expect(rejection.status).to.equal(200)
 
       // wait for block to finalise
       await pollTransactionState(db, rejection.body.id, 'finalised')
 
       // check local entities update with token id
-      const [maybeMatch2Rejected] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2Rejected] = await db.getMatch2(ids.match2)
       const match2Rejected = maybeMatch2Rejected as Match2Row
       expect(match2Rejected.state).to.equal('rejected')
 
@@ -196,37 +196,75 @@ describe('on-chain', function () {
 
     it('should reject an acceptedA match2 on-chain', async () => {
       // propose
-      const proposal = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
+      const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
       expect(proposal.status).to.equal(201)
 
       // wait for block to finalise
       await pollTransactionState(db, proposal.body.id, 'finalised')
 
       // acceptA
-      const acceptA = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
+      const acceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
       expect(acceptA.status).to.equal(201)
 
       // wait for block to finalise
       await pollTransactionState(db, acceptA.body.id, 'finalised')
 
-      const [maybeMatch2] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2] = await db.getMatch2(ids.match2)
       const match2 = maybeMatch2 as Match2Row
       const match2LatestTokenId = match2.latestTokenId
 
       // reject match2
-      const rejection = await post(context.app, `/v1/match2/${match2LocalId}/rejection`, {})
+      const rejection = await post(context.app, `/v1/match2/${ids.match2}/rejection`, {})
       expect(rejection.status).to.equal(200)
 
       // wait for block to finalise
       await pollTransactionState(db, rejection.body.id, 'finalised')
 
       // check local entities update with token id
-      const [maybeMatch2Rejected] = await db.getMatch2(match2LocalId)
+      const [maybeMatch2Rejected] = await db.getMatch2(ids.match2)
       const match2Rejected = maybeMatch2Rejected as Match2Row
       expect(match2Rejected.state).to.equal('rejected')
 
       // no output token means latest token ID remains the same
       expect(match2Rejected.latestTokenId).to.equal(match2LatestTokenId)
+    })
+
+    it('should cancel an acceptedFinal match2 on-chain', async () => {
+      const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
+      await pollTransactionState(db, proposal.body.id, 'finalised')
+      const { originalTokenId } = await db.getMatch2(ids.match2).then((el: Match2Row[]) => el[0])
+
+      const acceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+      await pollTransactionState(db, acceptA.body.id, 'finalised')
+      const acceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+      await pollTransactionState(db, acceptFinal.body.id, 'finalised')
+      const lastTokenId = await node.getLastTokenId()
+
+      // submit a cancellation request
+      const data = { attachmentId: parametersAttachmentId }
+      const cancel = await post(context.app, `/v1/match2/${ids.match2}/cancellation`, data)
+      await pollTransactionState(db, cancel.body.id, 'finalised')
+
+      const demandA: DemandRow = await db.getDemand(ids.demandA).then((rows: DemandRow[]) => rows[0])
+      const demandB: DemandRow = await db.getDemand(ids.demandB).then((rows: DemandRow[]) => rows[0])
+      const match2: Match2Row = await db.getMatch2(ids.match2).then((rows: Match2Row[]) => rows[0])
+
+      expect(cancel.status).to.equal(200)
+      expect(demandA).to.deep.contain({
+        latestTokenId: lastTokenId + 1,
+        state: 'cancelled',
+      })
+      expect(demandB).to.deep.contain({
+        latestTokenId: lastTokenId + 2,
+        state: 'cancelled',
+      })
+      expect(match2).to.deep.contain({
+        latestTokenId: lastTokenId + 3,
+        state: 'cancelled',
+        demandA: demandA.id,
+        demandB: demandB.id,
+        originalTokenId,
+      })
     })
   })
 })

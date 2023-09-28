@@ -153,10 +153,48 @@ export const match2AcceptFinal = (match2: Match2Row, demandA: DemandRow, demandB
   ],
 })
 
-export const match2Cancel = (match2: Match2Row): Payload => ({
+export const match2Cancel = (
+  match2: Match2Row,
+  demandA: DemandRow,
+  demandB: DemandRow,
+  comment: AttachmentRow
+): Payload => ({
   process: { id: 'match2-cancel', version: 1 },
-  inputs: [match2.latestTokenId as number],
-  outputs: [],
+  inputs: [demandA.latestTokenId as number, demandB.latestTokenId as number, match2.latestTokenId as number],
+  outputs: [
+    {
+      roles: { Owner: demandA.owner },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.DEMAND },
+        state: { type: 'LITERAL', value: 'cancelled' },
+        subtype: { type: 'LITERAL', value: demandA.subtype },
+        originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+      },
+    },
+    {
+      roles: { Owner: demandB.owner },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.DEMAND },
+        state: { type: 'LITERAL', value: 'cancelled' },
+        subtype: { type: 'LITERAL', value: demandB.subtype },
+        originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
+      },
+    },
+    {
+      roles: { Optimiser: match2.optimiser, MemberA: match2.memberA, MemberB: match2.memberB },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.MATCH2 },
+        state: { type: 'LITERAL', value: 'cancelled' },
+        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+        demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
+        originalId: { type: 'TOKEN_ID', value: match2.originalTokenId as number },
+        comment: { type: 'FILE', value: bs58ToHex(comment.ipfsHash) },
+      },
+    },
+  ],
 })
 
 export const match2Reject = (match2: Match2Row): Payload => ({
