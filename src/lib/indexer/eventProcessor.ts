@@ -45,11 +45,15 @@ const getOrError = <T>(map: Map<string, T>, key: string): T => {
   return val
 }
 
+const attachmentPayload = (map: Map<string, string>, key: string): AttachmentRecord => ({
+  type: 'insert',
+  id: UUIDv4(),
+  ipfs_hash: getOrError(map, key),
+})
+
 const DefaultEventProcessors: EventProcessors = {
   'demand-create': (version, transaction, _sender, _inputs, outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for demand-create process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for demand-create process`)
 
     const newDemandId = outputs[0].id
     const newDemand = outputs[0]
@@ -63,12 +67,7 @@ const DefaultEventProcessors: EventProcessors = {
       }
     }
 
-    const attachment: AttachmentRecord = {
-      type: 'insert',
-      id: UUIDv4(),
-      ipfs_hash: getOrError(newDemand.metadata, 'parameters'),
-    }
-
+    const attachment: AttachmentRecord = attachmentPayload(newDemand.metadata, 'parameters')
     const demand: DemandRecord = {
       type: 'insert',
       id: UUIDv4(),
@@ -87,9 +86,7 @@ const DefaultEventProcessors: EventProcessors = {
   },
 
   'demand-comment': (version, transaction, sender, inputs, outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for match2-propose process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-propose process`)
 
     const newDemand = outputs[0]
     const demandId = inputs[0].localId
@@ -117,12 +114,7 @@ const DefaultEventProcessors: EventProcessors = {
       }
     }
 
-    const attachment: AttachmentRecord = {
-      type: 'insert',
-      id: UUIDv4(),
-      ipfs_hash: getOrError(newDemand.metadata, 'comment'),
-    }
-
+    const attachment: AttachmentRecord = attachmentPayload(newDemand.metadata, 'comment')
     const comment: DemandCommentRecord = {
       type: 'insert',
       id: UUIDv4(),
@@ -140,9 +132,7 @@ const DefaultEventProcessors: EventProcessors = {
   },
 
   'match2-propose': (version, transaction, _sender, inputs, outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for match2-propose process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-propose process`)
 
     const newDemands = [
       { id: inputs[0].localId, tokenId: outputs[0].id },
@@ -185,9 +175,7 @@ const DefaultEventProcessors: EventProcessors = {
   },
 
   'match2-accept': (version, _transaction, _sender, inputs, outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for match2-accept process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-accept process`)
 
     const localId = inputs[0].localId
     const match = outputs[0]
@@ -207,9 +195,7 @@ const DefaultEventProcessors: EventProcessors = {
     }
   },
   'match2-acceptFinal': (version, _transaction, _sender, inputs, outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for match2-acceptFinal process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-acceptFinal process`)
 
     const demandALocalId = inputs[0].localId
     const demandAId = outputs[0].id
@@ -231,74 +217,54 @@ const DefaultEventProcessors: EventProcessors = {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   'match2-reject': (version, _transaction, _sender, inputs, _outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for match2-reject process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-reject process`)
 
     const localId = inputs[0].localId
 
     return {
-      matches: new Map([
-        [
-          localId,
-          {
-            id: localId,
-            type: 'update',
-            state: 'rejected',
-          },
-        ],
-      ]),
+      matches: new Map([[localId, { id: localId, type: 'update', state: 'rejected' }]]),
     }
   },
 
-'match2-cancel': (version, transaction, sender, inputs, outputs) => {
-  if (version !== 1) {
-    throw new Error(`Incompatible version ${version} for match2-cancel process`)
-  }
+  'match2-cancel': (version, transaction, sender, inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-cancel process`)
 
-  const [ _localDemandA, _localDemandB, _localMatch] = inputs
-  const [ _demandA, _demandB, _match] = outputs 
+    const [{ localId: localDemandAId }, { localId: localDemandBId }, { localId: matchLocalId }] = inputs
+    const [demandA, demandB, match] = outputs
+    const shared: { type: 'update'; state: 'cancelled' } = { type: 'update', state: 'cancelled' }
 
-  const demands: Map<string, DemandRecord> = new Map([
-    [_localDemandA.localId, { type: 'update', id: _localDemandA.localId, latest_token_id: _demandA.id, state: 'cancelled' }],
-    [_localDemandB.localId, { type: 'update', id: _localDemandB.localId, latest_token_id: _demandB.id, state: 'cancelled' }],
-  ])
-  const matches: Map<string, MatchRecord> = new Map([
-    [_localMatch.localId, { type: 'update', id: _localMatch.localId, latest_token_id: _match.id, state: 'cancelled' }],
-  ])
+    const demands: Map<string, DemandRecord> = new Map([
+      [localDemandAId, { id: localDemandAId, latest_token_id: demandA.id, ...shared }],
+      [localDemandBId, { id: localDemandBId, latest_token_id: demandB.id, ...shared }],
+    ])
+    const matches: Map<string, MatchRecord> = new Map([
+      [matchLocalId, { id: matchLocalId, latest_token_id: match.id, ...shared }],
+    ])
 
-  if (transaction) return {
+    if (transaction)
+      return {
+        match2Comments: new Map([[transaction.id, { ...shared, transaction_id: transaction.id, state: 'created' }]]),
+        demands,
+        matches,
+      }
+
+    const attachment: AttachmentRecord = attachmentPayload(match.metadata, 'comment')
+    const comment: Match2CommentRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      state: 'created',
+      match2: matchLocalId,
+      owner: sender,
+      attachment: attachment.id,
+    }
+
+    return {
+      attachments: new Map([[attachment.id, attachment]]),
+      match2Comments: new Map([[comment.id, comment]]),
       demands,
       matches,
-  }
-
-  const attachment: AttachmentRecord = {
-    type: 'insert',
-    id: UUIDv4(),
-    ipfs_hash: getOrError(_match.metadata, 'comment'),
-  }
-
-  const comment: Match2CommentRecord = {
-    type: 'insert',
-    id: UUIDv4(),
-    state: 'created',
-    match2: _localMatch.localId,
-    owner: sender,
-    attachment: attachment.id,
-  }
-
-  return {
-    demands: new Map([
-      [_localDemandA.localId, { type: 'update', id: _localDemandA.localId, latest_token_id: _demandA.id, state: 'cancelled' }],
-      [_localDemandB.localId, { type: 'update', id: _localDemandB.localId, latest_token_id: _demandB.id, state: 'cancelled' }],
-    ]),
-    attachments: new Map([[attachment.id, attachment]]),
-    match2Comments: new Map([[comment.id, comment]]),
-    matches: new Map([
-      [_localMatch.localId, { type: 'update', id: _localMatch.localId, latest_token_id: _match.id, state: 'cancelled' }],
-    ]),
-  }
-},
+    }
+  },
 }
 
 export default DefaultEventProcessors

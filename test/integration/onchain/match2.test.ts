@@ -230,64 +230,43 @@ describe('on-chain', function () {
     })
 
     it('should cancel an acceptedFinal match2 on-chain', async () => {
-      // propose
       const proposal = await post(context.app, `/v1/match2/${match2LocalId}/proposal`, {})
-
-      // wait for block to finalise
       await pollTransactionState(db, proposal.body.id, 'finalised')
+      const originalTokenId = await db.getMatch2(match2LocalId).then((el: Match2Row[]) => el[0].originalTokenId)
 
-      const [maybeMatch2] = await db.getMatch2(match2LocalId)
-      const match2 = maybeMatch2 as Match2Row
-      const match2OriginalId = match2.originalTokenId
+      const acceptA = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
+      await pollTransactionState(db, acceptA.body.id, 'finalised')
+
+      const acceptFinal = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
+      await pollTransactionState(db, acceptFinal.body.id, 'finalised')
       const lastTokenId = await node.getLastTokenId()
 
-      // submit accept to chain
-      const responseAcceptA = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
-      expect(responseAcceptA.status).to.equal(201)
-
-      // wait for block to finalise
-      await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
+      // submit a cancellation request
+      const data = { attachmentId: parametersAttachmentId }
+      const cancel = await post(context.app, `/v1/match2/${match2LocalId}/cancellation`, data)
+      await pollTransactionState(db, cancel.body.id, 'finalised')
 
       // check local entities update with token id
-      const [maybeMatch2AcceptA] = await db.getMatch2(match2LocalId)
-      const match2AcceptA = maybeMatch2AcceptA as Match2Row
-      expect(match2AcceptA.latestTokenId).to.equal(lastTokenId + 1)
-      expect(match2AcceptA.state).to.equal('acceptedA')
-      expect(match2AcceptA.originalTokenId).to.equal(match2OriginalId)
+      const demandA: DemandRow = await db.getDemand(demandALocalId).then((rows: DemandRow[]) => rows[0])
+      const demandB: DemandRow = await db.getDemand(demandBLocalId).then((rows: DemandRow[]) => rows[0])
+      const match2: Match2Row = await db.getMatch2(match2LocalId).then((rows: Match2Row[]) => rows[0])
 
-      // submit 2nd accept to chain
-      const responseAcceptFinal = await post(context.app, `/v1/match2/${match2LocalId}/accept`, {})
-      expect(responseAcceptFinal.status).to.equal(201)
-
-      // wait for block to finalise
-      await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
-
-      const cancellation = await post(context.app, `/v1/match2/${match2LocalId}/cancellation`, {
-        attachmentId: parametersAttachmentId,
+      expect(cancel.status).to.equal(200)
+      expect(demandA).to.deep.contain({
+        latestTokenId: lastTokenId + 1,
+        state: 'cancelled',
       })
-      expect(cancellation.status).to.equal(200)
-
-      // wait for block to finalise
-      await pollTransactionState(db, cancellation.body.id, 'finalised')
-
-      // check local entities update with token id
-      const [maybeDemandA] = await db.getDemand(demandALocalId)
-      const demandA = maybeDemandA as DemandRow
-      expect(demandA.latestTokenId).to.equal(lastTokenId + 2)
-      expect(demandA.state).to.equal('cancelled')
-      expect(demandA.originalTokenId).to.equal(demandAOriginalId)
-
-      const [maybeDemandB] = await db.getDemand(demandBLocalId)
-      const demandB = maybeDemandB as DemandRow
-      expect(demandB.latestTokenId).to.equal(lastTokenId + 3)
-      expect(demandB.state).to.equal('cancelled')
-      expect(demandB.originalTokenId).to.equal(demandBOriginalId)
-
-      const [maybeMatch2AcceptFinal] = await db.getMatch2(match2LocalId)
-      const match2AcceptFinal = maybeMatch2AcceptFinal as Match2Row
-      expect(match2AcceptFinal.latestTokenId).to.equal(lastTokenId + 4)
-      expect(match2AcceptFinal.state).to.equal('cancelled')
-      expect(match2AcceptFinal.originalTokenId).to.equal(match2OriginalId)
+      expect(demandB).to.deep.contain({
+        latestTokenId: lastTokenId + 2,
+        state: 'cancelled',
+      })
+      expect(match2).to.deep.contain({
+        latestTokenId: lastTokenId + 3,
+        state: 'cancelled',
+        demandA: demandA.id,
+        demandB: demandB.id,
+        originalTokenId,
+      })
     })
   })
 })

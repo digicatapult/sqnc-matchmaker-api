@@ -13,6 +13,7 @@ import {
   Query,
 } from 'tsoa'
 import type { Logger } from 'pino'
+import { injectable } from 'tsyringe'
 
 import { logger } from '../../../lib/logger'
 import Database, { DemandRow, Match2Row } from '../../../lib/db'
@@ -26,8 +27,6 @@ import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
-import { injectable } from 'tsyringe'
-import { Match2Attachment } from '../../../models/attachment'
 
 @Route('v1/match2')
 @injectable()
@@ -324,24 +323,21 @@ export class Match2Controller extends Controller {
   @SuccessResponse('200')
   public async cancelMatch2OnChain(
     @Path() match2Id: UUID,
-    @Body() { attachmentId }: Match2Attachment
+    @Body() { attachmentId }: Match2Request
   ): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
     const [demandA] = await this.db.getDemand(match2?.demandA)
-    const [demandB] = await this.db.getDemand(match2?.demandB)
-
     if (!demandA) throw new NotFound('demandA')
+    const [demandB] = await this.db.getDemand(match2?.demandB)
     if (!demandB) throw new NotFound('demandB')
     //check if attachment exists
     const [attachment] = await this.db.getAttachment(attachmentId)
     if (!attachment) throw new BadRequest(`${attachmentId} not found`)
 
     const roles = [match2.memberA, match2.memberB]
-
     const { address: selfAddress } = await this.identity.getMemberBySelf()
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
-
     if (match2.state !== 'acceptedFinal') throw new BadRequest('Match2 state must be acceptedFinal')
 
     const extrinsic = await this.node.prepareRunProcess(match2Cancel(match2, demandA, demandB, attachment))
@@ -352,15 +348,16 @@ export class Match2Controller extends Controller {
       state: 'submitted',
       hash: extrinsic.hash.toHex(),
     })
+
     await this.db.insertMatch2Comment({
       transaction_id: transaction.id,
-      state: 'pending',
+      state: 'created',
       owner: selfAddress,
       match2: match2Id,
       attachment: attachmentId,
     })
-
     this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+
     return transaction
   }
 

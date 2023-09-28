@@ -39,7 +39,7 @@ export interface Match2Response {
 /**
  * The required properties of a request to create a Match2
  */
-export interface Match2Request {
+export type Match2Request = {
   /**
    * ID of the demandA
    */
@@ -48,4 +48,9 @@ export interface Match2Request {
    * ID of the demandB
    */
   demandB: UUID
+} & {
+  /**
+   * ID of the attachment that is match2-cancel comment
+   */
+  attachmentId: UUID
 }
