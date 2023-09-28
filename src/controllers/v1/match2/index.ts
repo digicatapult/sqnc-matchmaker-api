@@ -144,11 +144,29 @@ export class Match2Controller extends Controller {
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
   public async proposeMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
-    const [maybeMatch2] = await this.db.getMatch2(match2Id)
+    const [maybeMatch2] = await this.db.getMatch2(match2Id) //new match
     validatePreLocal(maybeMatch2, 'Match2', {
       state: 'pending',
     })
     const match2 = maybeMatch2 as Match2Row
+
+    let originalMatch: { match2: Match2Row; demandB: DemandRow } | null = null //old match2
+    if (match2.replaces) {
+      const [maybeOriginalMatch2] = await this.db.getMatch2(match2.replaces)
+      validatePreLocal(maybeOriginalMatch2, 'Match2', {
+        state: 'acceptedFinal',
+      })
+      const originalMatch2 = maybeOriginalMatch2 as Match2Row
+
+      const [maybeOriginalDemandB] = await this.db.getDemand(originalMatch2.demandB) //old demandB
+      validatePreOnChain(maybeOriginalDemandB, 'DemandB', {
+        subtype: 'demand_b',
+        state: 'allocated',
+      })
+      const originalDemandB = maybeOriginalDemandB as DemandRow
+
+      originalMatch = { match2: originalMatch2, demandB: originalDemandB }
+    }
 
     const [maybeDemandA] = await this.db.getDemand(match2.demandA)
     validatePreOnChain(maybeDemandA, 'DemandA', {
@@ -157,14 +175,14 @@ export class Match2Controller extends Controller {
     })
     const demandA = maybeDemandA as DemandRow
 
-    const [maybeDemandB] = await this.db.getDemand(match2.demandB)
+    const [maybeDemandB] = await this.db.getDemand(match2.demandB) //new demandB
     validatePreOnChain(maybeDemandB, 'DemandB', {
       subtype: 'demand_b',
       state: 'created',
     })
     const demandB = maybeDemandB as DemandRow
-    const extrinsic = match2.replaces
-      ? await this.node.prepareRunProcess(rematch2Propose(match2, demandA, demandB))
+    const extrinsic = originalMatch
+      ? await this.node.prepareRunProcess(rematch2Propose(match2, demandA, originalMatch, demandB))
       : await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
 
     const [transaction] = await this.db.insertTransaction({
@@ -517,7 +535,7 @@ const responseWithAliases = async (match2: Match2Row, identity: Identity): Promi
     demandB: match2.demandB,
     createdAt: match2.createdAt.toISOString(),
     updatedAt: match2.updatedAt.toISOString(),
-    replaces: match2.replaces ? match2.replaces : '', //atm returns " " if no replaces id present - do we want it to return null instead?
+    replaces: match2.replaces ? match2.replaces : undefined,
   }
 }
 

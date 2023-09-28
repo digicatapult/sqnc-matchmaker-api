@@ -52,6 +52,7 @@ export type MatchRecord =
       demand_b_id: string
       latest_token_id: number
       original_token_id: number
+      replaces_id?: UUID
     }
   | {
       type: 'update'

@@ -178,26 +178,41 @@ const DefaultEventProcessors: EventProcessors = {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for rematch2-propose process`)
     }
-
-    const newDemands = [
-      { id: inputs[0].localId, tokenId: outputs[0].id },
-      { id: inputs[1].localId, tokenId: outputs[1].id },
-    ]
-    const newMatchId = outputs[2].id
-    const newMatch = outputs[2]
+    const demandA = inputs[0]
+    const newDemandB = inputs[2]
+    const newMatchId = outputs[1].id
+    const newMatch = outputs[1]
 
     if (transaction) {
       const id = transaction.localId
       return {
-        demands: new Map(
-          newDemands.map(({ id, tokenId }) => [id, { type: 'update', id, state: 'created', latest_token_id: tokenId }])
-        ),
+        demands: new Map([
+          [demandA.localId, { type: 'update', id: demandA.localId, latest_token_id: demandA.id, state: 'allocated' }],
+          [
+            newDemandB.localId,
+            {
+              type: 'update',
+              id: newDemandB.localId,
+              latest_token_id: newDemandB.id,
+              state: 'created',
+            },
+          ],
+        ]),
         matches: new Map([
-          [id, { type: 'update', id, state: 'proposed', latest_token_id: newMatchId, original_token_id: newMatchId }],
+          [
+            id,
+            {
+              type: 'update',
+              id,
+              state: 'proposed',
+              latest_token_id: newMatchId,
+              original_token_id: newMatchId,
+              replaces_id: inputs[1].localId,
+            },
+          ],
         ]),
       }
     }
-
     const match: MatchRecord = {
       type: 'insert',
       id: UUIDv4(),
@@ -206,15 +221,25 @@ const DefaultEventProcessors: EventProcessors = {
       member_b: getOrError(newMatch.roles, 'memberb'),
       state: 'proposed',
       demand_a_id: inputs[0].localId,
-      demand_b_id: inputs[1].localId,
+      demand_b_id: inputs[2].localId,
       latest_token_id: newMatchId,
       original_token_id: newMatchId,
+      replaces_id: inputs[1].localId,
     }
 
     return {
-      demands: new Map(
-        newDemands.map(({ id, tokenId }) => [id, { type: 'update', id, state: 'created', latest_token_id: tokenId }])
-      ),
+      demands: new Map([
+        [demandA.localId, { type: 'update', id: demandA.localId, latest_token_id: demandA.id, state: 'allocated' }],
+        [
+          newDemandB.localId,
+          {
+            type: 'update',
+            id: newDemandB.localId,
+            latest_token_id: newDemandB.id,
+            state: 'created',
+          },
+        ],
+      ]),
       matches: new Map([[match.id, match]]),
     }
   },
