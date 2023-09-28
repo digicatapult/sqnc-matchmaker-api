@@ -3,6 +3,7 @@ import { describe, it } from 'mocha'
 import eventProcessors from '../eventProcessor'
 import { expect } from 'chai'
 import { Transaction } from '../../db'
+import { ChangeSet } from '../changeSet'
 
 describe('eventProcessor', function () {
   describe('demand-create', function () {
@@ -317,7 +318,62 @@ describe('eventProcessor', function () {
   })
 
   describe('match2-cancel', function () {
-    it('should error with version != 1', function () {
+    let cancelResult: ChangeSet
+    describe('if transaction already exists', () => {
+      beforeEach(() => {
+        cancelResult = eventProcessors['match2-cancel'](
+          1,
+          { localId: 'id_3', id: 'transaction_id' } as Transaction,
+          'alice',
+          [
+            { id: 1, localId: 'demandA_id' },
+            { id: 2, localId: 'demandB_id' },
+            { id: 3, localId: 'match2_id' },
+          ],
+          [
+            { id: 4, roles: new Map(), metadata: new Map() },
+            { id: 5, roles: new Map(), metadata: new Map() },
+            {
+              id: 6,
+              roles: new Map(),
+              metadata: new Map([
+                ['state', 'cncelled'],
+                ['comment', 'existing_transaction'],
+              ]),
+            },
+          ]
+        )
+      })
+
+      it('does not insert attachment and returns [matches, demands, match2Comments]', () => {
+        expect(cancelResult).to.not.have.keys(['attachment'])
+        expect(cancelResult).to.have.keys(['matches', 'demands', 'match2Comments'])
+      })
+
+      it('updates demands and existing match2 with cancelled state', () => {
+        const { matches, demands } = cancelResult
+
+        expect(matches).to.deep.equal(
+          new Map([['match2_id', { type: 'update', id: 'match2_id', state: 'cancelled', latest_token_id: 6 }]])
+        )
+        expect(demands).to.deep.equal(
+          new Map([
+            ['demandA_id', { type: 'update', id: 'demandA_id', state: 'cancelled', latest_token_id: 4 }],
+            ['demandB_id', { type: 'update', id: 'demandB_id', state: 'cancelled', latest_token_id: 5 }],
+          ])
+        )
+      })
+
+      it('and updates a match2-comment usig transaction id', () => {
+        const { match2Comments } = cancelResult
+
+        expect(match2Comments).to.deep.equal(
+          new Map([['transaction_id', { type: 'update', state: 'created', transaction_id: 'transaction_id' }]])
+        )
+      })
+    })
+
+    it('returns error with version != 1', function () {
       let error: Error | null = null
       try {
         eventProcessors['match2-cancel'](0, null, 'alice', [], [])
@@ -327,7 +383,7 @@ describe('eventProcessor', function () {
       expect(error).instanceOf(Error)
     })
 
-    it('should update the states of the match2 and demands', function () {
+    it('updates the states of the match2 and demands and inserts attachment with a comment', () => {
       const result = eventProcessors['match2-cancel'](
         1,
         null,
@@ -345,13 +401,18 @@ describe('eventProcessor', function () {
             roles: new Map(),
             metadata: new Map([
               ['state', 'cncelled'],
-              ['comment', 'a'],
+              ['comment', 'transaction-is-null'],
             ]),
           },
         ]
       )
 
+      expect(result).to.have.keys(['matches', 'demands', 'match2Comments', 'attachments'])
       expect(result).to.deep.contain({
+        demands: new Map([
+          ['id_1', { type: 'update', id: 'id_1', state: 'cancelled', latest_token_id: 4 }],
+          ['id_2', { type: 'update', id: 'id_2', state: 'cancelled', latest_token_id: 5 }],
+        ]),
         matches: new Map([['id_3', { type: 'update', id: 'id_3', state: 'cancelled', latest_token_id: 6 }]]),
       })
     })
