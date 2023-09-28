@@ -61,16 +61,13 @@ export class Match2Controller extends Controller {
   public async proposeMatch2(
     @Body() { demandA: demandAId, demandB: demandBId }: Match2Request
   ): Promise<Match2Response> {
-    const [maybeDemandA] = await this.db.getDemand(demandAId)
-    validatePreLocal(maybeDemandA, 'demand_a', 'DemandA')
-    const demandA = maybeDemandA as DemandRow
+    const [demandA]: DemandRow[] = await this.db.getDemand(demandAId)
+    validatePreLocal(demandA, 'demand_a', 'DemandA')
 
-    const [maybeDemandB] = await this.db.getDemand(demandBId)
-    validatePreLocal(maybeDemandB, 'demand_b', 'DemandB')
-    const demandB = maybeDemandB as DemandRow
+    const [demandB]: DemandRow[] = await this.db.getDemand(demandBId)
+    validatePreLocal(demandB, 'demand_b', 'DemandB')
 
     const { address: selfAddress } = await this.identity.getMemberBySelf()
-
     const [match2] = await this.db.insertMatch2({
       optimiser: selfAddress,
       member_a: demandA.owner,
@@ -80,7 +77,7 @@ export class Match2Controller extends Controller {
       demand_b_id: demandBId,
     })
 
-    return responseWithAliases(match2, this.identity)
+    return await responseWithAliases(match2, this.identity)
   }
 
   /**
@@ -127,13 +124,11 @@ export class Match2Controller extends Controller {
     if (!match2) throw new NotFound('match2')
     if (match2.state !== 'pending') throw new BadRequest(`Match2 must have state: 'pending'`)
 
-    const [maybeDemandA] = await this.db.getDemand(match2.demandA)
-    validatePreOnChain(maybeDemandA, 'demand_a', 'DemandA')
-    const demandA = maybeDemandA as DemandRow
+    const [demandA]: DemandRow[] = await this.db.getDemand(match2.demandA)
+    validatePreOnChain(demandA, 'demand_a', 'DemandA')
 
-    const [maybeDemandB] = await this.db.getDemand(match2.demandB)
-    validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
-    const demandB = maybeDemandB as DemandRow
+    const [demandB]: DemandRow[] = await this.db.getDemand(match2.demandB)
+    validatePreOnChain(demandB, 'demand_b', 'DemandB')
 
     const extrinsic = await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
 
@@ -212,13 +207,11 @@ export class Match2Controller extends Controller {
 
     if (state === 'acceptedFinal') throw new BadRequest(`Already ${'acceptedFinal'}`)
 
-    const [maybeDemandA] = await this.db.getDemand(match2.demandA)
-    validatePreOnChain(maybeDemandA, 'demand_a', 'DemandA')
-    const demandA = maybeDemandA as DemandRow
+    const [demandA]: DemandRow[] = await this.db.getDemand(match2.demandA)
+    validatePreOnChain(demandA, 'demand_a', 'DemandA')
 
-    const [maybeDemandB] = await this.db.getDemand(match2.demandB)
-    validatePreOnChain(maybeDemandB, 'demand_b', 'DemandB')
-    const demandB = maybeDemandB as DemandRow
+    const [demandB]: DemandRow[] = await this.db.getDemand(match2.demandB)
+    validatePreOnChain(demandB, 'demand_b', 'DemandB')
 
     const { address: selfAddress } = await this.identity.getMemberBySelf()
     const ownsDemandA = demandA.owner === selfAddress
@@ -479,26 +472,19 @@ export class Match2Controller extends Controller {
 }
 
 const responseWithAliases = async (match2: Match2Row, identity: Identity): Promise<Match2Response> => {
-  const [{ alias: optimiser }, { alias: memberA }, { alias: memberB }] = await Promise.all([
-    identity.getMemberByAddress(match2.optimiser),
-    identity.getMemberByAddress(match2.memberA),
-    identity.getMemberByAddress(match2.memberB),
-  ])
+  const { originalTokenId, latestTokenId, ...rest } = match2
 
   return {
-    id: match2.id,
-    state: match2.state,
-    optimiser,
-    memberA,
-    memberB,
-    demandA: match2.demandA,
-    demandB: match2.demandB,
+    ...rest,
+    optimiser: await identity.getMemberByAddress(match2.optimiser).then(({ alias }) => alias),
+    memberA: await identity.getMemberByAddress(match2.memberA).then(({ alias }) => alias),
+    memberB: await identity.getMemberByAddress(match2.memberB).then(({ alias }) => alias),
     createdAt: match2.createdAt.toISOString(),
     updatedAt: match2.updatedAt.toISOString(),
   }
 }
 
-const validatePreLocal = (demand: DemandRow | undefined, subtype: DemandSubtype, key: string) => {
+const validatePreLocal = (demand: DemandRow, subtype: DemandSubtype, key: string) => {
   if (!demand) {
     throw new BadRequest(`${key} not found`)
   }
@@ -512,9 +498,8 @@ const validatePreLocal = (demand: DemandRow | undefined, subtype: DemandSubtype,
   }
 }
 
-const validatePreOnChain = (maybeDemand: DemandRow | undefined, subtype: DemandSubtype, key: string) => {
-  validatePreLocal(maybeDemand, subtype, key)
-  const demand = maybeDemand as DemandRow
+const validatePreOnChain = (demand: DemandRow, subtype: DemandSubtype, key: string) => {
+  validatePreLocal(demand, subtype, key)
 
   if (!demand.latestTokenId) {
     throw new BadRequest(`${key} must be on chain`)
