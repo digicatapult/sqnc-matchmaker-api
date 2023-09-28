@@ -19,7 +19,7 @@ import { logger } from '../../../lib/logger'
 import Database, { DemandRow, Match2Row } from '../../../lib/db'
 import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index'
 import Identity from '../../../lib/services/identity'
-import { Match2Request, Match2Response, Match2State } from '../../../models/match2'
+import { Match2CancelRequest, Match2Request, Match2Response, Match2State } from '../../../models/match2'
 import { DATE, UUID } from '../../../models/strings'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
 import { match2AcceptFinal, match2AcceptFirst, match2Cancel, match2Propose, match2Reject } from '../../../lib/payload'
@@ -316,7 +316,7 @@ export class Match2Controller extends Controller {
   @SuccessResponse('200')
   public async cancelMatch2OnChain(
     @Path() match2Id: UUID,
-    @Body() { attachmentId }: Match2Request
+    @Body() { attachmentId }: Match2CancelRequest
   ): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
