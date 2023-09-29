@@ -20,6 +20,47 @@ export interface MetadataFile {
 
 export type Metadata = Record<string, { type: string; value: string | number }>
 
+type Match2CancelOutputs = {
+  demandA: DemandRow
+  demandB: DemandRow
+  match2: Match2Row
+  comment?: AttachmentRow
+}
+const generateMatch2CancelOutputs = ({ demandA, demandB, match2, comment }: Match2CancelOutputs): Output[] => {
+  return [{
+    roles: { Owner: demandA.owner },
+    metadata: {
+      version: { type: 'LITERAL', value: '1' },
+      type: { type: 'LITERAL', value: TokenType.DEMAND },
+      state: { type: 'LITERAL', value: 'cancelled' },
+      subtype: { type: 'LITERAL', value: demandA.subtype },
+      originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+    },
+  },
+  {
+    roles: { Owner: demandB.owner },
+    metadata: {
+      version: { type: 'LITERAL', value: '1' },
+      type: { type: 'LITERAL', value: TokenType.DEMAND },
+      state: { type: 'LITERAL', value: 'cancelled' },
+      subtype: { type: 'LITERAL', value: demandB.subtype },
+      originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
+    },
+  },
+  {
+    roles: { Optimiser: match2.optimiser, MemberA: match2.memberA, MemberB: match2.memberB },
+    metadata: {
+      version: { type: 'LITERAL', value: '1' },
+      type: { type: 'LITERAL', value: TokenType.MATCH2 },
+      state: { type: 'LITERAL', value: 'cancelled' },
+      demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+      demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
+      originalId: { type: 'TOKEN_ID', value: match2.originalTokenId as number },
+      ...comment ? { comment: { type: 'FILE', value: bs58ToHex(comment.ipfsHash) }} : {},
+    },
+  }]
+}
+
 export const demandCreate = (demand: DemandWithAttachmentRow): Payload => ({
   process: { id: 'demand-create', version: 1 },
   inputs: [],
@@ -116,7 +157,7 @@ export const match2AcceptFirst = (
 })
 
 export const match2AcceptFinal = (match2: Match2Row, demandA: DemandRow, demandB: DemandRow): Payload => ({
-  process: { id: 'match2-acceptFinal', version: 1 },
+  process: { id: 'match1-acceptFinal', version: 1 },
   inputs: [demandA.latestTokenId as number, demandB.latestTokenId as number, match2.latestTokenId as number],
   outputs: [
     {
@@ -161,44 +202,46 @@ export const match2Cancel = (
 ): Payload => ({
   process: { id: 'match2-cancel', version: 1 },
   inputs: [demandA.latestTokenId as number, demandB.latestTokenId as number, match2.latestTokenId as number],
-  outputs: [
-    {
-      roles: { Owner: demandA.owner },
-      metadata: {
-        version: { type: 'LITERAL', value: '1' },
-        type: { type: 'LITERAL', value: TokenType.DEMAND },
-        state: { type: 'LITERAL', value: 'cancelled' },
-        subtype: { type: 'LITERAL', value: demandA.subtype },
-        originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
-      },
-    },
-    {
-      roles: { Owner: demandB.owner },
-      metadata: {
-        version: { type: 'LITERAL', value: '1' },
-        type: { type: 'LITERAL', value: TokenType.DEMAND },
-        state: { type: 'LITERAL', value: 'cancelled' },
-        subtype: { type: 'LITERAL', value: demandB.subtype },
-        originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
-      },
-    },
-    {
-      roles: { Optimiser: match2.optimiser, MemberA: match2.memberA, MemberB: match2.memberB },
-      metadata: {
-        version: { type: 'LITERAL', value: '1' },
-        type: { type: 'LITERAL', value: TokenType.MATCH2 },
-        state: { type: 'LITERAL', value: 'cancelled' },
-        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
-        demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
-        originalId: { type: 'TOKEN_ID', value: match2.originalTokenId as number },
-        comment: { type: 'FILE', value: bs58ToHex(comment.ipfsHash) },
-      },
-    },
-  ],
+  outputs: generateMatch2CancelOutputs({ demandA, demandB, match2, comment }),
 })
 
 export const match2Reject = (match2: Match2Row): Payload => ({
   process: { id: 'match2-reject', version: 1 },
   inputs: [match2.latestTokenId as number],
-  outputs: [],
+  outputs: []
 })
+
+type Rematch2AcceptFinalArgs = { match2: Match2Row, demandA: DemandRow, demandB: DemandRow, newDemandB: DemandRow, newMatch2: Match2Row}
+// due to the number of args turning into an object so order is mandatory
+export const rematch2AcceptFinal = ({ match2, demandA, demandB, newDemandB, newMatch2 }: Rematch2AcceptFinalArgs): Payload => {
+  const rows: Array<Match2Row | DemandRow> = [demandA, demandB, match2, newDemandB, newMatch2]
+
+  return {
+    process: { id: 'rematch2-acceptFinal', version: 1 },
+    inputs: rows.map(({ latestTokenId }) => latestTokenId) as number[],
+    outputs: [
+      ...generateMatch2CancelOutputs({ demandA, demandB, match2 }),
+      {
+        roles: { Owner: newDemandB.owner },
+        metadata: {
+          version: { type: 'LITERAL', value: '1' },
+          type: { type: 'LITERAL', value: TokenType.DEMAND },
+          state: { type: 'LITERAL', value: 'allocated' },
+          subtype: { type: 'LITERAL', value: newDemandB.subtype },
+          originalId: { type: 'TOKEN_ID', value: newDemandB.originalTokenId as number },
+        },
+      },
+      {
+        roles: { Optimiser: newMatch2.optimiser, MemberA: newMatch2.memberA, MemberB: newMatch2.memberB },
+        metadata: {
+          version: { type: 'LITERAL', value: '1' },
+          type: { type: 'LITERAL', value: TokenType.MATCH2 },
+          state: { type: 'LITERAL', value: 'acceptedFinal' },
+          demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+          demandB: { type: 'TOKEN_ID', value: newDemandB.originalTokenId as number },
+          originalId: { type: 'TOKEN_ID', value: newMatch2.originalTokenId as number },
+        },
+      },
+    ],
+  }
+}

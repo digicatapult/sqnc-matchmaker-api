@@ -22,7 +22,7 @@ import Identity from '../../../lib/services/identity'
 import { Match2CancelRequest, Match2Request, Match2Response, Match2State } from '../../../models/match2'
 import { DATE, UUID } from '../../../models/strings'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
-import { match2AcceptFinal, match2AcceptFirst, match2Cancel, match2Propose, match2Reject } from '../../../lib/payload'
+import { match2AcceptFinal, match2AcceptFirst, match2Cancel, match2Propose, match2Reject, rematch2AcceptFinal } from '../../../lib/payload'
 import { DemandSubtype } from '../../../models/demand'
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
@@ -199,13 +199,11 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
-  public async acceptMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+  public async acceptMatch2OnChain(@Path() match2Id: UUID, @Body() { rematch2Id }: { rematch2Id: UUID }): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
 
     const state = match2.state
-
-    if (state === 'acceptedFinal') throw new BadRequest(`Already ${'acceptedFinal'}`)
 
     const [demandA]: DemandRow[] = await this.db.getDemand(match2.demandA)
     validatePreOnChain(demandA, 'demand_a', 'DemandA')
@@ -217,6 +215,7 @@ export class Match2Controller extends Controller {
     const ownsDemandA = demandA.owner === selfAddress
     const ownsDemandB = demandB.owner === selfAddress
 
+    // helper
     const acceptAB = async () => {
       const newState = ownsDemandA ? 'acceptedA' : 'acceptedB'
 
@@ -234,6 +233,7 @@ export class Match2Controller extends Controller {
       return transaction
     }
 
+    // helper
     const acceptFinal = async () => {
       const extrinsic = await this.node.prepareRunProcess(match2AcceptFinal(match2, demandA, demandB))
 
@@ -249,6 +249,37 @@ export class Match2Controller extends Controller {
       return transaction
     }
 
+    //helper
+    const acceptRematch = async () => {
+      const [newMatch2] = await this.db.getMatch2(rematch2Id)
+      if (!newMatch2) throw new NotFound('rematch2')
+
+      const [newDemandB]: DemandRow[] = await this.db.getDemand(newMatch2.demandB)
+      validatePreOnChain(demandB, 'demand_b', 'DemandB')
+
+      const { address: selfAddress } = await this.identity.getMemberBySelf()
+      const newState = ownsDemandA ? 'acceptedA' : 'acceptedB'
+
+      const extrinsic = await this.node.prepareRunProcess(rematch2AcceptFinal({
+        match2,
+        demandA,
+        demandB,
+        newDemandB,
+        newMatch2,
+      }))
+
+      const [transaction] = await this.db.insertTransaction({
+        transaction_type: 'accept',
+        api_type: 'rematch2',
+        local_id: rematch2Id,
+        state: 'submitted',
+        hash: extrinsic.hash.toHex(),
+      })
+
+      this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+      return transaction 
+    }
+
     switch (state) {
       case 'proposed':
         if (!ownsDemandA && !ownsDemandB) throw new BadRequest(`You do not own an acceptable demand`)
@@ -259,6 +290,9 @@ export class Match2Controller extends Controller {
       case 'acceptedB':
         if (!ownsDemandA) throw new BadRequest(`You do not own an acceptable demand`)
         return await acceptFinal()
+      case 'acceptedFinal':
+        if (!ownsDemandA && !ownsDemandB) throw new BadRequest(`You do not own an acceptable demand`)
+        return await acceptRematch()
       default:
         throw new HttpResponse({})
     }
