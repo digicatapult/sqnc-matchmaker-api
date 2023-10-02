@@ -48,7 +48,7 @@ export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
 
 const seededDemandANotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
 const seededDemandBNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
-const seededDemandBWithTokenId = 'b005f4a1-400e-410e-aa72-8e97385f63e6'
+export const seededDemandBWithTokenId = 'b005f4a1-400e-410e-aa72-8e97385f63e6'
 const seededMatch2TokenId = 43
 const seededDemandTokenId = 42
 
@@ -286,6 +286,7 @@ export const match2Seed = async () => {
     },
   ])
 
+  //added token ids to this match
   await db.match2().insert([
     {
       id: seededMatch2AcceptedFinal,
@@ -295,6 +296,8 @@ export const match2Seed = async () => {
       member_b: selfAddress,
       demand_a_id: seededDemandAId,
       demand_b_id: seededDemandBId,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
       created_at: exampleDate,
       updated_at: exampleDate,
     },
