@@ -70,14 +70,14 @@ export class Match2Controller extends Controller {
     const [maybeDemandA] = await this.db.getDemand(demandAId)
     validatePreLocal(maybeDemandA, 'DemandA', {
       subtype: 'demand_a',
-      state: replaces ? 'allocated' : 'created',
+      state: replaces ? 'allocated' : 'pending',
     })
     const demandA = maybeDemandA as DemandRow
 
     const [maybeDemandB] = await this.db.getDemand(demandBId)
     validatePreLocal(maybeDemandB, 'DemandB', {
       subtype: 'demand_b',
-      state: 'created',
+      state: 'pending',
     })
     const demandB = maybeDemandB as DemandRow
 
@@ -547,7 +547,7 @@ const validatePreLocal = <T>(maybeT: T | undefined, rowType: string, condition: 
   const conditionKeys = Object.keys(condition) as (keyof T)[]
   for (const key of conditionKeys) {
     if (maybeT[key] !== condition[key]) {
-      throw new BadRequest(`${String(key)} must be ${condition[key]}`)
+      throw new BadRequest(`${String(key)} must be ${condition[key]}, is: ${maybeT[key]}`)
     }
   }
 }

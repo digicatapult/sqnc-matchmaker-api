@@ -272,13 +272,13 @@ describe('match2', () => {
     it('demandA not an demandA - 400', async () => {
       const response = await post(app, '/v1/match2', { demandA: seededDemandBId, demandB: seededDemandBId })
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('DemandA must be demand_a')
+      expect(response.body).to.equal('subtype must be demand_a, is: demand_b')
     })
 
     it('demandB not a demandB - 400', async () => {
       const response = await post(app, '/v1/match2', { demandA: seededDemandAId, demandB: seededDemandAId })
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('DemandB must be demand_b')
+      expect(response.body).to.equal('subtype must be demand_b, is: demand_a')
     })
 
     it('demandA allocated - 400', async () => {
@@ -287,7 +287,7 @@ describe('match2', () => {
         demandB: seededDemandBId,
       })
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('DemandA is already allocated')
+      expect(response.body).to.equal('state must be pending, is: allocated')
     })
 
     it('demandB allocated - 400', async () => {
@@ -296,7 +296,7 @@ describe('match2', () => {
         demandB: seededDemandBAlreadyAllocated,
       })
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('DemandB is already allocated')
+      expect(response.body).to.equal('state must be pending, is: allocated')
     })
 
     it('invalid demand uuid - 422', async () => {
@@ -313,7 +313,7 @@ describe('match2', () => {
     it('incorrect state when creating on-chain - 400', async () => {
       const response = await post(app, `/v1/match2/${seededMatch2AcceptedA}/proposal`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal(`Match2 must have state: 'pending'`)
+      expect(response.body).to.equal(`state must be pending, is: acceptedA`)
     })
 
     it('demandA missing token ID - 400', async () => {
@@ -325,7 +325,7 @@ describe('match2', () => {
 
       const response = await post(app, `/v1/match2/${createMatch2.body.id}/proposal`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('DemandA must be on chain')
+      expect(response.body).to.equal('state must be created, is: pending')
     })
 
     it('demandB missing token ID - 400', async () => {
@@ -343,7 +343,7 @@ describe('match2', () => {
     it('demand allocated - 400', async () => {
       const response = await post(app, `/v1/match2/${seededMatch2WithAllocatedDemands}/proposal`, {})
       expect(response.status).to.equal(400)
-      expect(response.body).to.equal('DemandA is already allocated')
+      expect(response.body).to.equal('state must be created, is: allocated')
     })
 
     it('non-existent proposal ID - 404', async () => {
