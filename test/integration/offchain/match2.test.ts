@@ -53,6 +53,7 @@ describe('match2', () => {
 
   describe('happy path', () => {
     it('should create a match2', async () => {
+      //both demands are pending
       const response = await post(app, '/v1/match2', { demandA: seededDemandAId, demandB: seededDemandBId })
       expect(response.status).to.equal(201)
 
@@ -264,6 +265,7 @@ describe('match2', () => {
     })
 
     it('non-existent demandB - 400', async () => {
+      //this fails on DemandAId - cuz it's pending
       const response = await post(app, '/v1/match2', { demandA: seededDemandAId, demandB: nonExistentId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('DemandB not found')
@@ -276,6 +278,7 @@ describe('match2', () => {
     })
 
     it('demandB not a demandB - 400', async () => {
+      //fails because demandA is pending
       const response = await post(app, '/v1/match2', { demandA: seededDemandAId, demandB: seededDemandAId })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('subtype must be demand_b, is: demand_a')
