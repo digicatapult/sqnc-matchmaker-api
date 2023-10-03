@@ -42,6 +42,7 @@ export interface Match2Response {
 export type Match2Request = {
   demandA: UUID
   demandB: UUID
+  replaces?: UUID
 }
 
 export type Match2CancelRequest = {

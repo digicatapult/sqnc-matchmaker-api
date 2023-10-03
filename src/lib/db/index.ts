@@ -93,6 +93,7 @@ const match2Columns = [
   'demand_b_id AS demandB',
   'latest_token_id AS latestTokenId',
   'original_token_id AS originalTokenId',
+  'replaces_id AS replacesId',
   'created_at AS createdAt',
   'updated_at AS updatedAt',
 ]
@@ -105,6 +106,7 @@ export interface Match2Row {
   memberB: string
   demandA: UUID
   demandB: UUID
+  replacesId?: UUID
   latestTokenId: number | null
   originalTokenId: number | null
   createdAt: Date
