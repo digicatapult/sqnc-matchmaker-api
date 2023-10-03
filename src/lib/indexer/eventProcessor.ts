@@ -178,27 +178,50 @@ const DefaultEventProcessors: EventProcessors = {
     if (version !== 1) {
       throw new Error(`Incompatible version ${version} for rematch2-propose process`)
     }
-    const demandA = inputs[0]
-    const newDemandB = inputs[2]
-    const newMatchId = outputs[1].id
-    const newMatch = outputs[1]
+    const demandAIn = inputs[0]
+    const demandAOut = outputs[0]
+    const oldMatchIn = inputs[1]
+    const oldMatchOut = outputs[1]
+    const newDemandBIn = inputs[2]
+    const newDemandBOut = outputs[2]
+    const newMatchId = outputs[3].id
+    const newMatch = outputs[3]
+
+    const commonUpdates: ChangeSet = {
+      demands: new Map([
+        [
+          demandAIn.localId,
+          { type: 'update', id: demandAIn.localId, latest_token_id: demandAOut.id, state: 'allocated' },
+        ],
+        [
+          newDemandBIn.localId,
+          {
+            type: 'update',
+            id: newDemandBIn.localId,
+            latest_token_id: newDemandBOut.id,
+            state: 'created',
+          },
+        ],
+      ]),
+      matches: new Map([
+        [
+          oldMatchIn.localId,
+          {
+            type: 'update',
+            id: oldMatchIn.localId,
+            state: 'acceptedFinal',
+            latest_token_id: oldMatchOut.id,
+          },
+        ],
+      ]),
+    }
 
     if (transaction) {
       const id = transaction.localId
       return {
-        demands: new Map([
-          [demandA.localId, { type: 'update', id: demandA.localId, latest_token_id: demandA.id, state: 'allocated' }],
-          [
-            newDemandB.localId,
-            {
-              type: 'update',
-              id: newDemandB.localId,
-              latest_token_id: newDemandB.id,
-              state: 'created',
-            },
-          ],
-        ]),
+        demands: commonUpdates.demands,
         matches: new Map([
+          ...(commonUpdates.matches || []),
           [
             id,
             {
@@ -207,7 +230,6 @@ const DefaultEventProcessors: EventProcessors = {
               state: 'proposed',
               latest_token_id: newMatchId,
               original_token_id: newMatchId,
-              replaces_id: inputs[1].localId,
             },
           ],
         ]),
@@ -220,27 +242,16 @@ const DefaultEventProcessors: EventProcessors = {
       member_a: getOrError(newMatch.roles, 'membera'),
       member_b: getOrError(newMatch.roles, 'memberb'),
       state: 'proposed',
-      demand_a_id: inputs[0].localId,
-      demand_b_id: inputs[2].localId,
+      demand_a_id: demandAIn.localId,
+      demand_b_id: newDemandBIn.localId,
       latest_token_id: newMatchId,
       original_token_id: newMatchId,
-      replaces_id: inputs[1].localId,
+      replaces_id: oldMatchIn.localId,
     }
 
     return {
-      demands: new Map([
-        [demandA.localId, { type: 'update', id: demandA.localId, latest_token_id: demandA.id, state: 'allocated' }],
-        [
-          newDemandB.localId,
-          {
-            type: 'update',
-            id: newDemandB.localId,
-            latest_token_id: newDemandB.id,
-            state: 'created',
-          },
-        ],
-      ]),
-      matches: new Map([[match.id, match]]),
+      demands: commonUpdates.demands,
+      matches: new Map([...(commonUpdates.matches || []), [match.id, match]]),
     }
   },
   'match2-accept': (version, _transaction, _sender, inputs, outputs) => {
