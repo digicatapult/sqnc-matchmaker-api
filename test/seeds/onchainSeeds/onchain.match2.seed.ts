@@ -12,6 +12,7 @@ export const cleanup = async () => {
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
 
 export const parametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
+export const attachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233ea77'
 export const seededDemandAId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
 export const seededDemandBId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
 export const seededDemandACreationTransactionId = 'bfd86663-9b2f-4f38-86e5-acdafa5f57fc'

@@ -38,19 +38,17 @@ export interface Match2Response {
 }
 
 /**
- * The required properties of a request to create a Match2
+ * The required properties of a POST body to create a Match2 or cancel
  */
-export interface Match2Request {
-  /**
-   * ID of the demandA
-   */
+export type Match2Request = {
   demandA: UUID
-  /**
-   * ID of the demandB
-   */
   demandB: UUID
   /**
    * ID of the Match2 that it is replacing
    */
   replaces?: UUID
+}
+
+export type Match2CancelRequest = {
+  attachmentId: UUID
 }

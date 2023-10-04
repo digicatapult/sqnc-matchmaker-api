@@ -237,6 +237,17 @@ export default class Indexer {
           }
         }
       }
+      if (changeSet.match2Comments) {
+        for (const [, comment] of changeSet.match2Comments) {
+          if (comment.type === 'insert') {
+            const { type, ...record } = comment
+            await db.insertMatch2Comment(record)
+          } else {
+            const { type, ...record } = comment
+            await db.updateMatch2CommentForTransaction(record.transaction_id, record)
+          }
+        }
+      }
     })
   }
 }

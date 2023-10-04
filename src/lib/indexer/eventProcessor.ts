@@ -2,7 +2,14 @@ import { v4 as UUIDv4 } from 'uuid'
 
 import { UUID } from '../../models/strings'
 import { Transaction } from '../db'
-import { AttachmentRecord, ChangeSet, DemandCommentRecord, DemandRecord, MatchRecord } from './changeSet'
+import {
+  AttachmentRecord,
+  ChangeSet,
+  DemandCommentRecord,
+  DemandRecord,
+  Match2CommentRecord,
+  MatchRecord,
+} from './changeSet'
 
 const processNames = [
   'demand-create',
@@ -12,6 +19,7 @@ const processNames = [
   'demand-comment',
   'match2-reject',
   'rematch2-propose',
+  'match2-cancel',
 ] as const
 type PROCESSES_TUPLE = typeof processNames
 type PROCESSES = PROCESSES_TUPLE[number]
@@ -38,11 +46,15 @@ const getOrError = <T>(map: Map<string, T>, key: string): T => {
   return val
 }
 
+const attachmentPayload = (map: Map<string, string>, key: string): AttachmentRecord => ({
+  type: 'insert',
+  id: UUIDv4(),
+  ipfs_hash: getOrError(map, key),
+})
+
 const DefaultEventProcessors: EventProcessors = {
   'demand-create': (version, transaction, _sender, _inputs, outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for demand-create process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for demand-create process`)
 
     const newDemandId = outputs[0].id
     const newDemand = outputs[0]
@@ -56,12 +68,7 @@ const DefaultEventProcessors: EventProcessors = {
       }
     }
 
-    const attachment: AttachmentRecord = {
-      type: 'insert',
-      id: UUIDv4(),
-      ipfs_hash: getOrError(newDemand.metadata, 'parameters'),
-    }
-
+    const attachment: AttachmentRecord = attachmentPayload(newDemand.metadata, 'parameters')
     const demand: DemandRecord = {
       type: 'insert',
       id: UUIDv4(),
@@ -78,10 +85,9 @@ const DefaultEventProcessors: EventProcessors = {
       demands: new Map([[demand.id, demand]]),
     }
   },
+
   'demand-comment': (version, transaction, sender, inputs, outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for match2-propose process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-propose process`)
 
     const newDemand = outputs[0]
     const demandId = inputs[0].localId
@@ -109,12 +115,7 @@ const DefaultEventProcessors: EventProcessors = {
       }
     }
 
-    const attachment: AttachmentRecord = {
-      type: 'insert',
-      id: UUIDv4(),
-      ipfs_hash: getOrError(newDemand.metadata, 'comment'),
-    }
-
+    const attachment: AttachmentRecord = attachmentPayload(newDemand.metadata, 'comment')
     const comment: DemandCommentRecord = {
       type: 'insert',
       id: UUIDv4(),
@@ -130,10 +131,9 @@ const DefaultEventProcessors: EventProcessors = {
       demands: new Map([[demandId, demandUpdate]]),
     }
   },
+
   'match2-propose': (version, transaction, _sender, inputs, outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for match2-propose process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-propose process`)
 
     const newDemands = [
       { id: inputs[0].localId, tokenId: outputs[0].id },
@@ -254,10 +254,9 @@ const DefaultEventProcessors: EventProcessors = {
       matches: new Map([...(commonUpdates.matches || []), [match.id, match]]),
     }
   },
+
   'match2-accept': (version, _transaction, _sender, inputs, outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for match2-accept process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-accept process`)
 
     const localId = inputs[0].localId
     const match = outputs[0]
@@ -277,9 +276,7 @@ const DefaultEventProcessors: EventProcessors = {
     }
   },
   'match2-acceptFinal': (version, _transaction, _sender, inputs, outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for match2-acceptFinal process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-acceptFinal process`)
 
     const demandALocalId = inputs[0].localId
     const demandAId = outputs[0].id
@@ -298,25 +295,55 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
     }
   },
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   'match2-reject': (version, _transaction, _sender, inputs, _outputs) => {
-    if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for match2-reject process`)
-    }
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-reject process`)
 
     const localId = inputs[0].localId
 
     return {
-      matches: new Map([
-        [
-          localId,
-          {
-            id: localId,
-            type: 'update',
-            state: 'rejected',
-          },
-        ],
-      ]),
+      matches: new Map([[localId, { id: localId, type: 'update', state: 'rejected' }]]),
+    }
+  },
+
+  'match2-cancel': (version, transaction, sender, inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-cancel process`)
+
+    const [{ localId: localDemandAId }, { localId: localDemandBId }, { localId: matchLocalId }] = inputs
+    const [demandA, demandB, match] = outputs
+    const shared: { type: 'update'; state: 'cancelled' } = { type: 'update', state: 'cancelled' }
+
+    const demands: Map<string, DemandRecord> = new Map([
+      [localDemandAId, { id: localDemandAId, latest_token_id: demandA.id, ...shared }],
+      [localDemandBId, { id: localDemandBId, latest_token_id: demandB.id, ...shared }],
+    ])
+    const matches: Map<string, MatchRecord> = new Map([
+      [matchLocalId, { id: matchLocalId, latest_token_id: match.id, ...shared }],
+    ])
+
+    if (transaction)
+      return {
+        match2Comments: new Map([[transaction.id, { ...shared, transaction_id: transaction.id, state: 'created' }]]),
+        demands,
+        matches,
+      }
+
+    const attachment: AttachmentRecord = attachmentPayload(match.metadata, 'comment')
+    const comment: Match2CommentRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      state: 'created',
+      match2: matchLocalId,
+      owner: sender,
+      attachment: attachment.id,
+    }
+
+    return {
+      attachments: new Map([[attachment.id, attachment]]),
+      match2Comments: new Map([[comment.id, comment]]),
+      demands,
+      matches,
     }
   },
 }

@@ -31,6 +31,7 @@ import {
   seededMatch2CancellationId,
   seededMatch2CancellationId2,
 } from '../../seeds/offchainSeeds/offchain.match2.seed'
+import { parametersAttachmentId } from '../../seeds/offchainSeeds/offchain.match2.seed'
 
 import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
 import { assertIsoDate, assertUUID } from '../../helper/assertions'
@@ -215,7 +216,9 @@ describe('match2', () => {
     })
 
     it('cancels an existing match2 that is in final state', async () => {
-      const { status, body } = await post(app, `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`, {})
+      const { status, body } = await post(app, `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`, {
+        attachmentId: parametersAttachmentId,
+      })
 
       expect(status).to.equal(200)
       expect(body).to.deep.contain({
@@ -491,19 +494,25 @@ describe('match2', () => {
     })
 
     it('non-existent match2 when cancelling - 404', async () => {
-      const response = await post(app, `/v1/match2/a789ad47-91c3-446e-90f9-a7c9b233ea11/cancellation`, {})
+      const response = await post(app, `/v1/match2/a789ad47-91c3-446e-90f9-a7c9b233ea11/cancellation`, {
+        attachmentId: parametersAttachmentId,
+      })
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('match2 not found')
     })
 
     it('with invalid role - 400', async () => {
-      const response = await post(app, `/v1/match2/619fb8ca-4dd9-4843-8c7a-9d9c9474784e/cancellation`, {})
+      const response = await post(app, `/v1/match2/619fb8ca-4dd9-4843-8c7a-9d9c9474784e/cancellation`, {
+        attachmentId: parametersAttachmentId,
+      })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('You do not have a role on the match2')
     })
 
     it('with invalid state - 400', async () => {
-      const response = await post(app, `/v1/match2/f960e4a1-6182-4dd3-8ac2-6f3fad995551/cancellation`, {})
+      const response = await post(app, `/v1/match2/f960e4a1-6182-4dd3-8ac2-6f3fad995551/cancellation`, {
+        attachmentId: parametersAttachmentId,
+      })
       expect(response.status).to.equal(400)
       expect(response.body).to.equal('Match2 state must be acceptedFinal')
     })

@@ -13,12 +13,13 @@ import {
   Query,
 } from 'tsoa'
 import type { Logger } from 'pino'
+import { injectable } from 'tsyringe'
 
 import { logger } from '../../../lib/logger'
 import Database, { DemandRow, Match2Row } from '../../../lib/db'
 import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index'
 import Identity from '../../../lib/services/identity'
-import { Match2Request, Match2Response, Match2State } from '../../../models/match2'
+import { Match2CancelRequest, Match2Request, Match2Response, Match2State } from '../../../models/match2'
 import { DATE, UUID } from '../../../models/strings'
 import { TransactionResponse, TransactionType } from '../../../models/transaction'
 import {
@@ -32,7 +33,6 @@ import {
 import ChainNode from '../../../lib/chainNode'
 import env from '../../../env'
 import { parseDateParam } from '../../../lib/utils/queryParams'
-import { injectable } from 'tsyringe'
 
 @Route('v1/match2')
 @injectable()
@@ -101,7 +101,7 @@ export class Match2Controller extends Controller {
       replaces_id: replaces,
     })
 
-    return responseWithAliases(match2, this.identity) //we could change this to optionally return the 'replaces' match2 id as well
+    return await responseWithAliases(match2, this.identity)
   }
 
   /**
@@ -377,18 +377,26 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('200')
-  public async cancelMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+  public async cancelMatch2OnChain(
+    @Path() match2Id: UUID,
+    @Body() { attachmentId }: Match2CancelRequest
+  ): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
+    const [demandA] = await this.db.getDemand(match2?.demandA)
+    if (!demandA) throw new NotFound('demandA')
+    const [demandB] = await this.db.getDemand(match2?.demandB)
+    if (!demandB) throw new NotFound('demandB')
+    //check if attachment exists
+    const [attachment] = await this.db.getAttachment(attachmentId)
+    if (!attachment) throw new BadRequest(`${attachmentId} not found`)
 
     const roles = [match2.memberA, match2.memberB]
-
     const { address: selfAddress } = await this.identity.getMemberBySelf()
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
-
     if (match2.state !== 'acceptedFinal') throw new BadRequest('Match2 state must be acceptedFinal')
 
-    const extrinsic = await this.node.prepareRunProcess(match2Cancel(match2))
+    const extrinsic = await this.node.prepareRunProcess(match2Cancel(match2, demandA, demandB, attachment))
     const [transaction] = await this.db.insertTransaction({
       transaction_type: 'cancellation',
       api_type: 'match2',
@@ -397,7 +405,15 @@ export class Match2Controller extends Controller {
       hash: extrinsic.hash.toHex(),
     })
 
+    await this.db.insertMatch2Comment({
+      transaction_id: transaction.id,
+      state: 'created',
+      owner: selfAddress,
+      match2: match2Id,
+      attachment: attachmentId,
+    })
     this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+
     return transaction
   }
 
@@ -519,20 +535,13 @@ export class Match2Controller extends Controller {
 }
 
 const responseWithAliases = async (match2: Match2Row, identity: Identity): Promise<Match2Response> => {
-  const [{ alias: optimiser }, { alias: memberA }, { alias: memberB }] = await Promise.all([
-    identity.getMemberByAddress(match2.optimiser),
-    identity.getMemberByAddress(match2.memberA),
-    identity.getMemberByAddress(match2.memberB),
-  ])
+  const { originalTokenId, latestTokenId, ...rest } = match2
 
   return {
-    id: match2.id,
-    state: match2.state,
-    optimiser,
-    memberA,
-    memberB,
-    demandA: match2.demandA,
-    demandB: match2.demandB,
+    ...rest,
+    optimiser: await identity.getMemberByAddress(match2.optimiser).then(({ alias }) => alias),
+    memberA: await identity.getMemberByAddress(match2.memberA).then(({ alias }) => alias),
+    memberB: await identity.getMemberByAddress(match2.memberB).then(({ alias }) => alias),
     createdAt: match2.createdAt.toISOString(),
     updatedAt: match2.updatedAt.toISOString(),
     replaces: match2.replaces ? match2.replaces : undefined,
