@@ -221,7 +221,6 @@ export default class ChainNode {
         .catch((err) => {
           transactionDbUpdate('failed')
           this.logger.warn(`Error in run process transaction: ${err}`)
-          throw err
         })
     })
   }
