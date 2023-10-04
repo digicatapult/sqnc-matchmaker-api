@@ -187,13 +187,14 @@ describe('on-chain', function () {
       const newDemandB = maybeNewDemandB as DemandRow
       expect(newDemandB.state).to.equal('created')
       expect(newDemandB.latestTokenId).to.equal(lastTokenId + 3)
-      if (ids.rematch2) {
-        //this looks a bit funky - alternative suggestions are wellcome
-        const [maybereMatch2] = await db.getMatch2(ids.rematch2)
-        const rematch2 = maybereMatch2 as Match2Row
-        expect(rematch2.state).to.equal('proposed')
-        expect(rematch2.latestTokenId).to.equal(lastTokenId + 4)
+
+      if (!ids.rematch2) {
+        expect.fail('Rematch 2 token must have been created')
       }
+      const [maybereMatch2] = await db.getMatch2(ids.rematch2)
+      const rematch2 = maybereMatch2 as Match2Row
+      expect(rematch2.state).to.equal('proposed')
+      expect(rematch2.latestTokenId).to.equal(lastTokenId + 4)
     })
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
