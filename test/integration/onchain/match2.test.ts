@@ -80,7 +80,6 @@ describe('on-chain', function () {
       } = await post(context.app, `/v1/demandB/${newDemandBId}/creation`, {})
 
       await pollTransactionState(db, newDemandBTransactionId, 'finalised')
-      // ids.newDemandB = newDemandBId
 
       const {
         body: { id: match2Id },

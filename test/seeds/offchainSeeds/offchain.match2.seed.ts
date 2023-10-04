@@ -30,6 +30,7 @@ export const seededRejectionTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e0707
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
 export const exampleDate = '2023-01-01T00:00:00.000Z'
 export const seededDemandAWithTokenId = '64d89075-0059-4a8a-87da-c6715d64d0a9'
+export const seededDemandBWithTokenId = 'b005f4a1-400e-410e-aa72-8e97385f63e6'
 
 export const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
 export const seededDemandBMissingTokenId = 'b2348deb-d967-4317-8637-2867ced70356'
@@ -48,7 +49,6 @@ export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
 
 const seededDemandANotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
 const seededDemandBNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
-export const seededDemandBWithTokenId = 'b005f4a1-400e-410e-aa72-8e97385f63e6'
 const seededMatch2TokenId = 43
 const seededDemandTokenId = 42
 
