@@ -171,58 +171,47 @@ export default class ChainNode {
     return signed
   }
 
-  async submitRunProcess(
+  submitRunProcess(
     extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>,
     transactionDbUpdate: (state: TransactionState) => Promise<void>
-  ): Promise<number[]> {
+  ): void {
     this.logger.debug('Submitting Transaction %j', extrinsic.hash.toHex())
-    return new Promise((resolve, reject) => {
-      let unsub: () => void
-      extrinsic
-        .send((result: SubmittableResult) => {
-          this.logger.debug('result.status %s', JSON.stringify(result.status))
+    extrinsic
+      .send((result: SubmittableResult): void | Promise<void> => {
+        this.logger.debug('result.status %s', JSON.stringify(result.status))
 
-          const { dispatchError, status } = result
+        const { dispatchError, status } = result
 
-          if (dispatchError) {
-            this.logger.warn('dispatch error %s', dispatchError)
-            transactionDbUpdate('failed')
-            unsub()
-            if (dispatchError.isModule) {
-              const decoded = this.api.registry.findMetaError(dispatchError.asModule)
-              throw new Error(`Node dispatch error: ${decoded.name}`)
-            } else {
-              throw new Error(`Unknown node dispatch error: ${dispatchError}`)
-            }
-          }
-
-          if (status.isInBlock) {
-            transactionDbUpdate('inBlock')
-          }
-
-          if (status.isFinalized) {
-            const processRanEvent = result.events.find(({ event: { method } }) => method === 'ProcessRan')
-            const data = processRanEvent?.event?.data as EventData
-            const tokens = data?.outputs?.map((x) => x.toNumber())
-
-            if (tokens) {
-              transactionDbUpdate('finalised')
-              resolve(tokens)
-            } else {
-              transactionDbUpdate('failed')
-              reject(Error('No token IDs returned'))
-            }
-            unsub()
-          }
-        })
-        .then((res) => {
-          unsub = res
-        })
-        .catch((err) => {
+        if (dispatchError) {
+          this.logger.warn('dispatch error %s', dispatchError)
           transactionDbUpdate('failed')
-          this.logger.warn(`Error in run process transaction: ${err}`)
-        })
-    })
+          if (dispatchError.isModule) {
+            const decoded = this.api.registry.findMetaError(dispatchError.asModule)
+            throw new Error(`Node dispatch error: ${decoded.name}`)
+          }
+
+          throw new Error(`Unknown node dispatch error: ${dispatchError}`)
+        }
+
+        if (status.isInBlock) transactionDbUpdate('inBlock')
+        if (status.isFinalized) {
+          const processRanEvent = result.events.find(({ event: { method } }) => method === 'ProcessRan')
+          const data = processRanEvent?.event?.data as EventData
+          const tokens = data?.outputs?.map((x) => x.toNumber())
+
+          if (!tokens) {
+            transactionDbUpdate('failed')
+            throw new Error('No token IDs returned')
+          }
+
+          transactionDbUpdate('finalised')
+        }
+      })
+      .then((res) => res)
+      .catch((err) => {
+        transactionDbUpdate('failed')
+        this.logger.warn(`Error in run process transaction: ${err}`)
+      })
   }
 
   async processRoles(roles: Record<string, string>) {
