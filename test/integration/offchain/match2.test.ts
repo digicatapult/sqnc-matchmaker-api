@@ -55,7 +55,6 @@ describe('match2', () => {
 
   describe('happy path', () => {
     it('should create a match2', async () => {
-      //both demands were pending - now using the ones with tokenID and in created state
       const response = await post(app, '/v1/match2', {
         demandA: seededDemandAWithTokenId,
         demandB: seededDemandBWithTokenId,
