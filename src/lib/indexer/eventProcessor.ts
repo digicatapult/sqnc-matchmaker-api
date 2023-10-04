@@ -18,6 +18,7 @@ const processNames = [
   'match2-acceptFinal',
   'demand-comment',
   'match2-reject',
+  'rematch2-propose',
   'match2-cancel',
 ] as const
 type PROCESSES_TUPLE = typeof processNames
@@ -171,6 +172,86 @@ const DefaultEventProcessors: EventProcessors = {
         newDemands.map(({ id, tokenId }) => [id, { type: 'update', id, state: 'created', latest_token_id: tokenId }])
       ),
       matches: new Map([[match.id, match]]),
+    }
+  },
+  'rematch2-propose': (version, transaction, _sender, inputs, outputs) => {
+    if (version !== 1) {
+      throw new Error(`Incompatible version ${version} for rematch2-propose process`)
+    }
+    const demandAIn = inputs[0]
+    const demandAOut = outputs[0]
+    const oldMatchIn = inputs[1]
+    const oldMatchOut = outputs[1]
+    const newDemandBIn = inputs[2]
+    const newDemandBOut = outputs[2]
+    const newMatchId = outputs[3].id
+    const newMatch = outputs[3]
+
+    const commonUpdates: ChangeSet = {
+      demands: new Map([
+        [
+          demandAIn.localId,
+          { type: 'update', id: demandAIn.localId, latest_token_id: demandAOut.id, state: 'allocated' },
+        ],
+        [
+          newDemandBIn.localId,
+          {
+            type: 'update',
+            id: newDemandBIn.localId,
+            latest_token_id: newDemandBOut.id,
+            state: 'created',
+          },
+        ],
+      ]),
+      matches: new Map([
+        [
+          oldMatchIn.localId,
+          {
+            type: 'update',
+            id: oldMatchIn.localId,
+            state: 'acceptedFinal',
+            latest_token_id: oldMatchOut.id,
+          },
+        ],
+      ]),
+    }
+
+    if (transaction) {
+      const id = transaction.localId
+      return {
+        demands: commonUpdates.demands,
+        matches: new Map([
+          ...(commonUpdates.matches || []),
+          [
+            id,
+            {
+              type: 'update',
+              id,
+              state: 'proposed',
+              latest_token_id: newMatchId,
+              original_token_id: newMatchId,
+            },
+          ],
+        ]),
+      }
+    }
+    const match: MatchRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      optimiser: getOrError(newMatch.roles, 'optimiser'),
+      member_a: getOrError(newMatch.roles, 'membera'),
+      member_b: getOrError(newMatch.roles, 'memberb'),
+      state: 'proposed',
+      demand_a_id: demandAIn.localId,
+      demand_b_id: newDemandBIn.localId,
+      latest_token_id: newMatchId,
+      original_token_id: newMatchId,
+      replaces_id: oldMatchIn.localId,
+    }
+
+    return {
+      demands: commonUpdates.demands,
+      matches: new Map([...(commonUpdates.matches || []), [match.id, match]]),
     }
   },
 
