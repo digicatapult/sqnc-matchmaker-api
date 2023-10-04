@@ -395,6 +395,51 @@ describe('eventProcessor', function () {
       })
     })
   })
+  describe('rematch2-acceptFinal', function () {
+    it('should error with version != 1', function () {
+      let error: Error | null = null
+      try {
+        eventProcessors['rematch2-acceptFinal'](0, null, 'alice', [], [])
+      } catch (err) {
+        error = err instanceof Error ? err : null
+      }
+      expect(error).instanceOf(Error)
+    })
+
+    it('should update the states of the two match2s and all three demands', function () {
+      const result = eventProcessors['rematch2-acceptFinal'](
+        1,
+        null,
+        'alice',
+        [
+          { id: 1, localId: 'id_1' }, //demandA
+          { id: 2, localId: 'id_2' }, //oldDemandB
+          { id: 3, localId: 'id_3' }, //oldMatch2
+          { id: 4, localId: 'id_4' }, //newDemandB
+          { id: 5, localId: 'id_5' }, //newMatch2
+        ],
+        [
+          { id: 6, roles: new Map(), metadata: new Map() }, //demandA
+          { id: 7, roles: new Map(), metadata: new Map() }, //oldDemandB
+          { id: 8, roles: new Map(), metadata: new Map() }, //oldMatch2
+          { id: 9, roles: new Map(), metadata: new Map() }, //newDemandB
+          { id: 10, roles: new Map(), metadata: new Map() }, //newMatch2
+        ]
+      )
+
+      expect(result).to.deep.equal({
+        demands: new Map([
+          ['id_1', { type: 'update', id: 'id_1', state: 'allocated', latest_token_id: 6 }], //demandA
+          ['id_2', { type: 'update', id: 'id_2', state: 'cancelled', latest_token_id: 7 }], //oldDemandB
+          ['id_4', { type: 'update', id: 'id_4', state: 'allocated', latest_token_id: 9 }], //newDemandB
+        ]),
+        matches: new Map([
+          ['id_3', { type: 'update', id: 'id_3', state: 'cancelled', latest_token_id: 8 }], //oldMatch2
+          ['id_5', { type: 'update', id: 'id_5', state: 'acceptedFinal', latest_token_id: 10 }], //newMatch2
+        ]),
+      })
+    })
+  })
 
   describe('match2-reject', function () {
     it('should error with version != 1', function () {

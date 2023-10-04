@@ -19,6 +19,7 @@ const processNames = [
   'demand-comment',
   'match2-reject',
   'rematch2-propose',
+  'rematch2-acceptFinal',
   'match2-cancel',
 ] as const
 type PROCESSES_TUPLE = typeof processNames
@@ -292,6 +293,47 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
       matches: new Map([
         [matchLocalId, { type: 'update', id: matchLocalId, latest_token_id: matchId, state: 'acceptedFinal' }],
+      ]),
+    }
+  },
+  'rematch2-acceptFinal': (version, _transaction, _sender, inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for rematch2-acceptFinal process`)
+
+    const demandAIn = inputs[0]
+    const demandAOut = outputs[0]
+    const oldDemandBIn = inputs[1]
+    const oldDemandBOut = outputs[1]
+    const oldMatch2In = inputs[2]
+    const oldMatch2Out = outputs[2]
+    const newDemandBIn = inputs[3]
+    const newDemandBOut = outputs[3]
+    const newMatch2In = inputs[4] //rematch
+    const newMatch2Out = outputs[4] //rematch
+
+    return {
+      demands: new Map([
+        [
+          demandAIn.localId,
+          { type: 'update', id: demandAIn.localId, latest_token_id: demandAOut.id, state: 'allocated' },
+        ],
+        [
+          oldDemandBIn.localId,
+          { type: 'update', id: oldDemandBIn.localId, latest_token_id: oldDemandBOut.id, state: 'cancelled' },
+        ],
+        [
+          newDemandBIn.localId,
+          { type: 'update', id: newDemandBIn.localId, latest_token_id: newDemandBOut.id, state: 'allocated' },
+        ],
+      ]),
+      matches: new Map([
+        [
+          oldMatch2In.localId,
+          { type: 'update', id: oldMatch2In.localId, latest_token_id: oldMatch2Out.id, state: 'cancelled' },
+        ],
+        [
+          newMatch2In.localId,
+          { type: 'update', id: newMatch2In.localId, latest_token_id: newMatch2Out.id, state: 'acceptedFinal' },
+        ],
       ]),
     }
   },
