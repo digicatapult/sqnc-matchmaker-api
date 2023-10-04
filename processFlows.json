@@ -2363,6 +2363,17 @@
         "restriction": {
           "MatchInputOutputMetadataValue": {
             "inputIndex": 1,
+            "inputMetadataKey": "demandB",
+            "outputIndex": 1,
+            "outputMetadataKey": "demandB"
+          }
+        }
+      },
+      { "op": "And" },
+      {
+        "restriction": {
+          "MatchInputOutputMetadataValue": {
+            "inputIndex": 1,
             "inputMetadataKey": "originalId",
             "outputIndex": 1,
             "outputMetadataKey": "originalId"
