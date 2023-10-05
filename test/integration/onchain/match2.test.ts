@@ -3,11 +3,11 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer'
-import { post } from '../../helper/routeHelper'
+import { post, get } from '../../helper/routeHelper'
 import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed'
 
 import { withIdentitySelfMock } from '../../helper/mock'
-import Database, { DemandRow, Match2Row } from '../../../src/lib/db'
+import Database, { DemandRow, Match2Row, Transaction } from '../../../src/lib/db'
 import ChainNode from '../../../src/lib/chainNode'
 import { logger } from '../../../src/lib/logger'
 import env from '../../../src/env'
@@ -195,6 +195,35 @@ describe('on-chain', function () {
       const rematch2 = maybereMatch2 as Match2Row
       expect(rematch2.state).to.equal('proposed')
       expect(rematch2.latestTokenId).to.equal(lastTokenId + 4)
+    })
+
+    describe('if multiple accepts have been submitted', () => {
+      it('handles error and marks only one transaction finalised and others as failed', async () => {
+        const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
+        await pollTransactionState(db, proposal.body.id, 'finalised')
+
+        const acceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+        await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+        await pollTransactionState(db, acceptA.body.id, 'finalised')
+
+        const { body: transactions } = await get(context.app, `/v1/match2/${ids.match2}/accept`)
+        const failed = transactions.filter((el: Transaction) => el.state === 'failed')
+        const finalised = transactions.filter((el: Transaction) => el.state === 'finalised')
+
+        expect(transactions.length).to.equal(2)
+        expect(failed[0]).to.deep.include({
+          state: 'failed',
+          localId: ids.match2,
+          apiType: 'match2',
+          transactionType: 'accept',
+        })
+        expect(finalised[0]).to.deep.include({
+          state: 'finalised',
+          localId: ids.match2,
+          apiType: 'match2',
+          transactionType: 'accept',
+        })
+      })
     })
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
