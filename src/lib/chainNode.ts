@@ -171,13 +171,13 @@ export default class ChainNode {
     return signed
   }
 
-  submitRunProcess(
+  async submitRunProcess(
     extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>,
     transactionDbUpdate: (state: TransactionState) => Promise<void>
-  ): void {
-    this.logger.debug('Submitting Transaction %j', extrinsic.hash.toHex())
-    extrinsic
-      .send((result: SubmittableResult): void | Promise<void> => {
+  ): Promise<void> {
+    try {
+      this.logger.debug('Submitting Transaction %j', extrinsic.hash.toHex())
+      const unsub: () => void = await extrinsic.send((result: SubmittableResult): void => {
         this.logger.debug('result.status %s', JSON.stringify(result.status))
 
         const { dispatchError, status } = result
@@ -205,13 +205,13 @@ export default class ChainNode {
           }
 
           transactionDbUpdate('finalised')
+          unsub()
         }
       })
-      .then((res) => res)
-      .catch((err) => {
-        transactionDbUpdate('failed')
-        this.logger.warn(`Error in run process transaction: ${err}`)
-      })
+    } catch (err) {
+      transactionDbUpdate('failed')
+      this.logger.warn(`Error in run process transaction: ${err}`)
+    }
   }
 
   async processRoles(roles: Record<string, string>) {
