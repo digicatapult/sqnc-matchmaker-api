@@ -185,6 +185,7 @@ export default class ChainNode {
         if (dispatchError) {
           this.logger.warn('dispatch error %s', dispatchError)
           transactionDbUpdate('failed')
+          unsub()
           if (dispatchError.isModule) {
             const decoded = this.api.registry.findMetaError(dispatchError.asModule)
             throw new Error(`Node dispatch error: ${decoded.name}`)
