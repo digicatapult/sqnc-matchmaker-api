@@ -265,9 +265,21 @@ export const match2Reject = (match2: Match2Row): Payload => ({
   outputs: [],
 })
 
-type Rematch2AcceptFinalArgs = { match2: Match2Row, demandA: DemandRow, demandB: DemandRow, newDemandB: DemandRow, newMatch2: Match2Row}
+type Rematch2AcceptFinalArgs = {
+  match2: Match2Row
+  demandA: DemandRow
+  demandB: DemandRow
+  newDemandB: DemandRow
+  newMatch2: Match2Row
+}
 // due to the number of args turning into an object so order is mandatory
-export const rematch2AcceptFinal = ({ match2, demandA, demandB, newDemandB, newMatch2 }: Rematch2AcceptFinalArgs): Payload => {
+export const rematch2AcceptFinal = ({
+  match2,
+  demandA,
+  demandB,
+  newDemandB,
+  newMatch2,
+}: Rematch2AcceptFinalArgs): Payload => {
   const rows: Array<Match2Row | DemandRow> = [demandA, demandB, match2, newDemandB, newMatch2]
 
   return {

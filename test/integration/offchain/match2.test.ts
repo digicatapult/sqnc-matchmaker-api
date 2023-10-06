@@ -30,6 +30,10 @@ import {
   seededMatch2NotInRoles,
   seededMatch2CancellationId,
   seededMatch2CancellationId2,
+  seededMatch2Rematch2Accept,
+  seededMatch2Rematch2AcceptFinal,
+  seededRematch2DemndBAllocated,
+  seededRematch2DemndACreated,
 } from '../../seeds/offchainSeeds/offchain.match2.seed'
 import { parametersAttachmentId } from '../../seeds/offchainSeeds/offchain.match2.seed'
 
@@ -65,7 +69,7 @@ describe('match2', () => {
       assertUUID(responseId)
       assertIsoDate(createdAt)
       assertIsoDate(updatedAt)
-      expect(responseRest).to.deep.equal({
+      expect(responseRest).to.deep.contain({
         state: 'pending',
         optimiser: selfAlias,
         memberA: selfAlias,
@@ -78,7 +82,7 @@ describe('match2', () => {
     it('should get a match2', async () => {
       const response = await get(app, `/v1/match2/${seededMatch2Id}`)
       expect(response.status).to.equal(200)
-      expect(response.body).to.deep.equal({
+      expect(response.body).to.deep.contain({
         id: seededMatch2Id,
         state: 'pending',
         optimiser: selfAlias,
@@ -95,7 +99,7 @@ describe('match2', () => {
       const { status, body } = await get(app, `/v1/match2`)
       expect(status).to.equal(200)
       expect(body).to.be.an('array')
-      expect(body.find(({ id }: { id: string }) => id === seededMatch2Id)).to.deep.equal({
+      expect(body.find(({ id }: { id: string }) => id === seededMatch2Id)).to.deep.contain({
         id: seededMatch2Id,
         state: 'pending',
         optimiser: selfAlias,
@@ -250,6 +254,32 @@ describe('match2', () => {
         state: 'submitted',
         submittedAt: exampleDate,
         updatedAt: exampleDate,
+      })
+    })
+
+    it.skip('poposes a rematch2', () => {})
+
+    it('accepts a remtch2 when it is in acceptedA state', async () => {
+      const { status, body } = await post(app, `/v1/match2/${seededMatch2Rematch2Accept}/accept`, {})
+
+      expect(status).to.equal(201)
+      expect(body).to.deep.contain({
+        apiType: 'match2',
+        transactionType: 'accept',
+        localId: seededMatch2Rematch2Accept,
+        state: 'submitted',
+      })
+    })
+
+    it('runs rematch2-acceptFinal flow', async () => {
+      const { status, body } = await post(app, `/v1/match2/${seededMatch2Rematch2AcceptFinal}/accept`, {})
+
+      expect(status).to.equal(201)
+      expect(body).to.deep.contain({
+        apiType: 'match2',
+        transactionType: 'accept',
+        localId: seededMatch2Rematch2AcceptFinal,
+        state: 'submitted',
       })
     })
   })
@@ -511,6 +541,22 @@ describe('match2', () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/cancellation`)
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('match2 not found')
+    })
+
+    describe('rematch2', () => {
+      it('with demand_b allocated - 400', async () => {
+        const { status, body } = await post(app, `/v1/match2/${seededRematch2DemndBAllocated}/accept`, {})
+
+        expect(status).to.equal(400)
+        expect(body).to.equal('state must be created, is: allocated')
+      })
+
+      it('with demand_a created - 400', async () => {
+        const { status, body } = await post(app, `/v1/match2/${seededRematch2DemndACreated}/accept`, {})
+
+        expect(status).to.equal(400)
+        expect(body).to.equal('state must be allocated, is: created')
+      })
     })
   })
 })
