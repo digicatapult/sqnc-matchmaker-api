@@ -233,6 +233,105 @@ describe('eventProcessor', function () {
     })
   })
 
+  describe('rematch2-propose', function () {
+    it('should error with version != 1', function () {
+      let error: Error | null = null
+      try {
+        eventProcessors['rematch2-propose'](0, null, 'alice', [], [])
+      } catch (err) {
+        error = err instanceof Error ? err : null
+      }
+      expect(error).instanceOf(Error)
+    })
+
+    it('should return update to demand if transaction exists', function () {
+      const result = eventProcessors['rematch2-propose'](
+        1,
+        { localId: 'id_42' } as Transaction,
+        'alice',
+        [
+          { id: 1, localId: 'id_1' }, //demandA
+          { id: 2, localId: 'id_2' }, //old match2
+          { id: 3, localId: 'id_3' }, //new demandB
+        ],
+        [
+          { id: 4, roles: new Map(), metadata: new Map() }, //demandA
+          { id: 5, roles: new Map(), metadata: new Map() }, //old match2
+          { id: 6, roles: new Map(), metadata: new Map() }, //new demandB
+          { id: 7, roles: new Map(), metadata: new Map() }, //new match2
+        ]
+      )
+
+      expect(result).to.deep.equal({
+        demands: new Map([
+          ['id_1', { type: 'update', id: 'id_1', state: 'allocated', latest_token_id: 4 }], //demandA
+          ['id_3', { type: 'update', id: 'id_3', state: 'created', latest_token_id: 6 }], //new DemandB
+        ]),
+        matches: new Map([
+          ['id_2', { type: 'update', id: 'id_2', state: 'acceptedFinal', latest_token_id: 5 }], //old match2
+          ['id_42', { type: 'update', id: 'id_42', state: 'proposed', latest_token_id: 7, original_token_id: 7 }], //new match2
+        ]),
+      })
+    })
+
+    it('should return update to demands and new match if transaction does not exist', function () {
+      const result = eventProcessors['rematch2-propose'](
+        1,
+        null,
+        'alice',
+        [
+          { id: 1, localId: 'id_1' }, //demandA
+          { id: 2, localId: 'id_2' }, //old match2
+          { id: 3, localId: 'id_3' }, //new demandB
+        ],
+        [
+          { id: 4, roles: new Map(), metadata: new Map() }, //demandA
+          { id: 5, roles: new Map(), metadata: new Map() }, //old match2
+          { id: 6, roles: new Map(), metadata: new Map() }, //new demandB
+          {
+            id: 7,
+            roles: new Map([
+              ['optimiser', 'o'],
+              ['membera', 'a'],
+              ['memberb', 'b'],
+            ]),
+            metadata: new Map([
+              ['demandA', 'da'],
+              ['demandB', 'db'],
+            ]),
+          }, //new match2
+        ]
+      )
+      expect(result.demands).to.deep.equal(
+        new Map([
+          ['id_1', { type: 'update', id: 'id_1', state: 'allocated', latest_token_id: 4 }], //demandA
+          ['id_3', { type: 'update', id: 'id_3', state: 'created', latest_token_id: 6 }], //new DemandB
+        ])
+      )
+
+      expect(result.matches?.size).to.equal(2)
+      const [[oldMatchId, oldMatch], [newMatch2Id, newMatch2]] = [...(result.matches || [])]
+      expect(newMatch2).to.deep.equal({
+        type: 'insert',
+        id: newMatch2Id,
+        optimiser: 'o',
+        member_a: 'a',
+        member_b: 'b',
+        state: 'proposed',
+        demand_a_id: 'id_1',
+        demand_b_id: 'id_3',
+        latest_token_id: 7,
+        original_token_id: 7,
+        replaces_id: 'id_2',
+      })
+      expect(oldMatch).to.deep.equal({
+        type: 'update',
+        id: oldMatchId,
+        state: 'acceptedFinal',
+        latest_token_id: 5,
+      })
+    })
+  })
   describe('match2-accept', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
@@ -293,6 +392,51 @@ describe('eventProcessor', function () {
           ['id_2', { type: 'update', id: 'id_2', state: 'allocated', latest_token_id: 5 }],
         ]),
         matches: new Map([['id_3', { type: 'update', id: 'id_3', state: 'acceptedFinal', latest_token_id: 6 }]]),
+      })
+    })
+  })
+  describe('rematch2-acceptFinal', function () {
+    it('should error with version != 1', function () {
+      let error: Error | null = null
+      try {
+        eventProcessors['rematch2-acceptFinal'](0, null, 'alice', [], [])
+      } catch (err) {
+        error = err instanceof Error ? err : null
+      }
+      expect(error).instanceOf(Error)
+    })
+
+    it('should update the states of the two match2s and all three demands', function () {
+      const result = eventProcessors['rematch2-acceptFinal'](
+        1,
+        null,
+        'alice',
+        [
+          { id: 1, localId: 'id_1' }, //demandA
+          { id: 2, localId: 'id_2' }, //oldDemandB
+          { id: 3, localId: 'id_3' }, //oldMatch2
+          { id: 4, localId: 'id_4' }, //newDemandB
+          { id: 5, localId: 'id_5' }, //newMatch2
+        ],
+        [
+          { id: 6, roles: new Map(), metadata: new Map() }, //demandA
+          { id: 7, roles: new Map(), metadata: new Map() }, //oldDemandB
+          { id: 8, roles: new Map(), metadata: new Map() }, //oldMatch2
+          { id: 9, roles: new Map(), metadata: new Map() }, //newDemandB
+          { id: 10, roles: new Map(), metadata: new Map() }, //newMatch2
+        ]
+      )
+
+      expect(result).to.deep.equal({
+        demands: new Map([
+          ['id_1', { type: 'update', id: 'id_1', state: 'allocated', latest_token_id: 6 }], //demandA
+          ['id_2', { type: 'update', id: 'id_2', state: 'cancelled', latest_token_id: 7 }], //oldDemandB
+          ['id_4', { type: 'update', id: 'id_4', state: 'allocated', latest_token_id: 9 }], //newDemandB
+        ]),
+        matches: new Map([
+          ['id_3', { type: 'update', id: 'id_3', state: 'cancelled', latest_token_id: 8 }], //oldMatch2
+          ['id_5', { type: 'update', id: 'id_5', state: 'acceptedFinal', latest_token_id: 10 }], //newMatch2
+        ]),
       })
     })
   })
