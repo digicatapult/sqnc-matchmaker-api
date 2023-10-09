@@ -297,6 +297,7 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
     }
   },
+  /* why this is here? should it not be part of l3-195?
   'rematch2-acceptFinal': (version, _transaction, _sender, inputs, outputs) => {
     if (version !== 1) throw new Error(`Incompatible version ${version} for rematch2-acceptFinal process`)
 
@@ -338,6 +339,7 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
     }
   },
+  */
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   'match2-reject': (version, _transaction, _sender, inputs, _outputs) => {

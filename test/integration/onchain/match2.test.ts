@@ -197,6 +197,50 @@ describe('on-chain', function () {
       expect(rematch2.latestTokenId).to.equal(lastTokenId + 4)
     })
 
+    it.only('accepts a rematch2 proposal', async () => {
+      const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
+      await pollTransactionState(db, proposal.body.id, 'finalised')
+      const resAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+      await pollTransactionState(db, resAcceptA.body.id, 'finalised')
+      const resAcceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+      await pollTransactionState(db, resAcceptFinal.body.id, 'finalised')
+
+      const lastTokenId = await node.getLastTokenId()
+      const reMatch = await post(context.app, '/v1/match2', {
+        demandA: ids.demandA,
+        demandB: ids.newDemandB,
+        replaces: ids.match2,
+      })
+      ids.rematch2 = reMatch.body['id'] as string
+
+      const resProposal = await post(context.app, `/v1/match2/${ids.rematch2}/proposal`, {})
+      console.log({ resProposal, reMatch })
+      await pollTransactionState(db, resProposal.body.id, 'finalised')
+
+      // output
+      const [match2]: Match2Row[] = await db.getMatch2(ids.match2)
+      const [demandA]: DemandRow[] = await db.getDemand(ids.demandA)
+      const [demandB]: DemandRow[] = await db.getDemand(match2.demandB)
+      const [newDemandB]: DemandRow[] = await db.getDemand(ids.newDemandB)
+      const [rematch2]: Match2Row[] = await db.getMatch2(ids.rematch2)
+
+      expect(demandA.state).to.equal('allocated')
+      expect(demandA.latestTokenId).to.equal(lastTokenId + 1)
+      expect(demandA.originalTokenId).to.equal(ids.originalDemandA)
+
+      expect(demandB.state).to.equal('allocated')
+      expect(demandB.latestTokenId).to.equal(lastTokenId + 2)
+
+      expect(match2.state).to.equal('cancelled')
+      expect(match2.latestTokenId).to.equal(lastTokenId + 3)
+
+      expect(newDemandB.state).to.equal('allocated')
+      expect(newDemandB.latestTokenId).to.equal(lastTokenId + 4)
+
+      expect(rematch2.state).to.equal('acceptedA')
+      expect(rematch2.latestTokenId).to.equal(lastTokenId + 5)
+    })
+
     describe('if multiple accepts have been submitted', () => {
       it('handles error and marks only one transaction finalised and others as failed', async () => {
         const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
