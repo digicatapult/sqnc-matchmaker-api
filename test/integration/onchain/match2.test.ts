@@ -197,7 +197,7 @@ describe('on-chain', function () {
       expect(rematch2.latestTokenId).to.equal(lastTokenId + 4)
     })
 
-    it.only('accepts a rematch2 proposal', async () => {
+    it('accepts a rematch2 proposal', async () => {
       const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
       await pollTransactionState(db, proposal.body.id, 'finalised')
       const resAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
@@ -205,17 +205,20 @@ describe('on-chain', function () {
       const resAcceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
       await pollTransactionState(db, resAcceptFinal.body.id, 'finalised')
 
-      const lastTokenId = await node.getLastTokenId()
       const reMatch = await post(context.app, '/v1/match2', {
         demandA: ids.demandA,
         demandB: ids.newDemandB,
         replaces: ids.match2,
       })
-      ids.rematch2 = reMatch.body['id'] as string
+      ids.rematch2 = reMatch.body['id'] as UUID 
 
       const resProposal = await post(context.app, `/v1/match2/${ids.rematch2}/proposal`, {})
-      console.log({ resProposal, reMatch })
       await pollTransactionState(db, resProposal.body.id, 'finalised')
+      const lastTokenId = await node.getLastTokenId()
+      const resRematchAccept = await post(context.app, `/v1/match2/${ids.rematch2}/accept`, {})
+      await pollTransactionState(db, resRematchAccept.body.id, 'finalised')
+      const resFinal = await post(context.app, `/v1/match2/${ids.rematch2}/accept`, {})
+      await pollTransactionState(db, resFinal.body.id, 'finalised')
 
       // output
       const [match2]: Match2Row[] = await db.getMatch2(ids.match2)
@@ -228,7 +231,7 @@ describe('on-chain', function () {
       expect(demandA.latestTokenId).to.equal(lastTokenId + 1)
       expect(demandA.originalTokenId).to.equal(ids.originalDemandA)
 
-      expect(demandB.state).to.equal('allocated')
+      expect(demandB.state).to.equal('cancelled')
       expect(demandB.latestTokenId).to.equal(lastTokenId + 2)
 
       expect(match2.state).to.equal('cancelled')
