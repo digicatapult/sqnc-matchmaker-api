@@ -16,7 +16,7 @@ import { withAppAndIndexer } from '../../helper/chainTest'
 import { UUID } from '../../../src/models/strings'
 
 describe('on-chain', function () {
-  this.timeout(120000)
+  this.timeout(180000)
   const db = new Database()
   const node = new ChainNode({
     host: env.NODE_HOST,

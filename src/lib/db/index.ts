@@ -106,7 +106,6 @@ export interface Match2Row {
   memberB: string
   demandA: UUID
   demandB: UUID
-  replacesId?: UUID
   latestTokenId: number | null
   originalTokenId: number | null
   createdAt: Date
