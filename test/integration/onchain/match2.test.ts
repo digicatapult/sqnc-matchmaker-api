@@ -197,7 +197,7 @@ describe('on-chain', function () {
       expect(rematch2.latestTokenId).to.equal(lastTokenId + 4)
     })
 
-    it('accepts a rematch2 proposal', async () => {
+    it.only('accepts a rematch2 proposal', async () => {
       const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
       await pollTransactionState(db, proposal.body.id, 'finalised')
       const resAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})

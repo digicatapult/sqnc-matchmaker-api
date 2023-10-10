@@ -316,10 +316,8 @@ export class Match2Controller extends Controller {
       return transaction
     }
 
-    const [oldMatch2]: Match2Row[] = match2.replacesId ? await this.db.getMatch2(match2.replacesId) : []
-    if (match2.replacesId) return acceptRematch()
-    if (state !== 'proposed' && state !== 'acceptedA' && state !== 'acceptedB')
-      throw new BadRequest(`state should not be ${state}`)
+    const [oldMatch2]: Match2Row[] = match2.replaces ? await this.db.getMatch2(match2.replaces) : []
+    if (match2.replaces) return acceptRematch()
 
     switch (state) {
       case 'proposed':
