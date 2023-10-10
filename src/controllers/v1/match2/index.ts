@@ -243,7 +243,6 @@ export class Match2Controller extends Controller {
     if (!match2.replacesId && state !== 'proposed' && state !== 'acceptedA' && state !== 'acceptedB')
       throw new BadRequest(`state should not be ${state}`)
 
-
     const [demandA]: DemandRow[] = await this.db.getDemand(match2.demandA)
     validatePreOnChain(demandA, 'DemandA', {
       subtype: 'demand_a',
@@ -258,8 +257,9 @@ export class Match2Controller extends Controller {
 
     const acceptAB = async () => {
       const newState = ownsDemandA ? 'acceptedA' : 'acceptedB'
-      console.log({ oldMatch2 })
-      const extrinsic = await this.node.prepareRunProcess(match2AcceptFirst(match2, newState, demandA, demandB, match2.replacesId ? oldMatch2?.originalTokenId : null ))
+      const extrinsic = await this.node.prepareRunProcess(
+        match2AcceptFirst(match2, newState, demandA, demandB, match2.replacesId ? oldMatch2?.originalTokenId : null)
+      )
       const [transaction] = await this.db.insertTransaction({
         transaction_type: 'accept',
         api_type: 'match2',

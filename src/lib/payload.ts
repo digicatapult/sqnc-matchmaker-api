@@ -159,7 +159,7 @@ export const match2AcceptFirst = (
   newState: 'acceptedA' | 'acceptedB',
   demandA: DemandRow,
   demandB: DemandRow,
-  replaces?: number | null,
+  replaces?: number | null
 ): Payload => ({
   process: { id: 'match2-accept', version: 1 },
   inputs: [match2.latestTokenId as number],
@@ -173,7 +173,7 @@ export const match2AcceptFirst = (
         demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
         demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
         originalId: { type: 'TOKEN_ID', value: match2.originalTokenId as number },
-        ...replaces ? { replaces: { type: 'TOKEN_ID', value: replaces }} : {},
+        ...(replaces ? { replaces: { type: 'TOKEN_ID', value: replaces } } : {}),
       },
     },
   ],

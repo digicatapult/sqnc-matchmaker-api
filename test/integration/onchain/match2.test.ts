@@ -210,7 +210,7 @@ describe('on-chain', function () {
         demandB: ids.newDemandB,
         replaces: ids.match2,
       })
-      ids.rematch2 = reMatch.body['id'] as UUID 
+      ids.rematch2 = reMatch.body['id'] as UUID
 
       const resProposal = await post(context.app, `/v1/match2/${ids.rematch2}/proposal`, {})
       await pollTransactionState(db, resProposal.body.id, 'finalised')
