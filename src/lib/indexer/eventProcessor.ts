@@ -21,7 +21,6 @@ const processNames = [
   'rematch2-propose',
   'rematch2-acceptFinal',
   'match2-cancel',
-  'rematch2-acceptFinal',
 ] as const
 type PROCESSES_TUPLE = typeof processNames
 type PROCESSES = PROCESSES_TUPLE[number]
