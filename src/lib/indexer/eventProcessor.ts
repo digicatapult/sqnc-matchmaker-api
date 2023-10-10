@@ -296,7 +296,6 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
     }
   },
-  /* why this is here? should it not be part of l3-195?
   'rematch2-acceptFinal': (version, _transaction, _sender, inputs, outputs) => {
     if (version !== 1) throw new Error(`Incompatible version ${version} for rematch2-acceptFinal process`)
 
@@ -338,7 +337,6 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
     }
   },
-  */
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   'match2-reject': (version, _transaction, _sender, inputs, _outputs) => {
@@ -386,43 +384,6 @@ const DefaultEventProcessors: EventProcessors = {
     return {
       attachments: new Map([[attachment.id, attachment]]),
       match2Comments: new Map([[comment.id, comment]]),
-      demands,
-      matches,
-    }
-  },
-
-  'rematch2-acceptFinal': (version, _transaction, _sender, inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-cancel process`)
-
-    const [
-      { localId: localDemandAId },
-      { localId: localDemandBId },
-      { localId: matchLocalId },
-      { localId: localNewDemandBId },
-      { localId: newMatchLocalId },
-    ] = inputs
-    const [demandA, demandB, match, newDemandB, newMatch] = outputs
-
-    const demands: Map<string, DemandRecord> = new Map([
-      [localDemandAId, { type: 'update', id: localDemandAId, latest_token_id: demandA.id, state: 'allocated' }],
-      [localDemandBId, { type: 'update', id: localDemandBId, latest_token_id: demandB.id, state: 'cancelled ' }],
-      [localNewDemandBId, { type: 'update', id: localDemandBId, latest_token_id: newDemandB.id, state: 'allocated' }],
-    ])
-    const matches: Map<string, MatchRecord> = new Map([
-      [matchLocalId, { type: 'update', id: matchLocalId, latest_token_id: match.id, state: 'cancelled' }],
-      [
-        newMatchLocalId,
-        {
-          type: 'update',
-          replaces_id: null,
-          id: newMatchLocalId,
-          latest_token_id: newMatch.id,
-          state: 'acceptedFinal',
-        },
-      ],
-    ])
-
-    return {
       demands,
       matches,
     }
