@@ -94,7 +94,6 @@ const match2Columns = [
   'replaces_id AS replaces',
   'latest_token_id AS latestTokenId',
   'original_token_id AS originalTokenId',
-  'replaces_id AS replacesId',
   'created_at AS createdAt',
   'updated_at AS updatedAt',
 ]
