@@ -239,7 +239,7 @@ export class Match2Controller extends Controller {
     const [match2]: Match2Row[] = await this.db.getMatch2(match2Id)
     validatePreOnChain(match2, 'Match2', {})
 
-    const state = match2.state
+    const state: Match2State = match2.state
     if (!match2.replaces && state !== 'proposed' && state !== 'acceptedA' && state !== 'acceptedB')
       throw new BadRequest(`state should not be ${state}`)
 
@@ -290,11 +290,7 @@ export class Match2Controller extends Controller {
     }
 
     const acceptRematch = async () => {
-      const ownsNewDemandB = demandB.owner === selfAddress
-      if (!ownsDemandA && !ownsNewDemandB) throw new BadRequest(`You do not own an acceptable demand`)
-      if (match2.state === 'proposed') return acceptAB()
       const [oldDemandB]: DemandRow[] = await this.db.getDemand(oldMatch2.demandB)
-
       const extrinsic = await this.node.prepareRunProcess(
         rematch2AcceptFinal({
           oldMatch2,
@@ -315,7 +311,7 @@ export class Match2Controller extends Controller {
 
       return transaction
     }
-
+    
     switch (state) {
       case 'proposed':
         if (!ownsDemandA && !ownsDemandB) throw new BadRequest(`You do not own an acceptable demand`)

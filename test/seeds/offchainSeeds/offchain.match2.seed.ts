@@ -483,7 +483,7 @@ export const match2Seed = async () => {
     },
     {
       id: seededMatch2Rematch2AcceptFinal,
-      state: 'acceptedFinal',
+      state: 'acceptedA',
       optimiser: selfAddress,
       member_a: selfAddress,
       member_b: selfAddress,

@@ -257,8 +257,6 @@ describe('match2', () => {
       })
     })
 
-    it.skip('poposes a rematch2', () => {})
-
     it('accepts a remtch2 when it is in acceptedA state', async () => {
       const { status, body } = await post(app, `/v1/match2/${seededMatch2Rematch2Accept}/accept`, {})
 
