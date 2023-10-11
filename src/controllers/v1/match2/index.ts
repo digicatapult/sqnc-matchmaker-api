@@ -311,7 +311,7 @@ export class Match2Controller extends Controller {
 
       return transaction
     }
-    
+
     switch (state) {
       case 'proposed':
         if (!ownsDemandA && !ownsDemandB) throw new BadRequest(`You do not own an acceptable demand`)
