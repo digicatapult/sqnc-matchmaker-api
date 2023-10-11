@@ -317,9 +317,6 @@ export class Match2Controller extends Controller {
     }
 
     const [oldMatch2]: Match2Row[] = match2.replaces ? await this.db.getMatch2(match2.replaces) : []
-    if (match2.replaces) return acceptRematch()
-    if (state !== 'proposed' && state !== 'acceptedA' && state !== 'acceptedB')
-      throw new BadRequest(`state should not be ${state}`)
 
     switch (state) {
       case 'proposed':
@@ -328,6 +325,7 @@ export class Match2Controller extends Controller {
       case 'acceptedA':
       case 'acceptedB':
         if (!ownsDemandB || !ownsDemandA) throw new BadRequest(`You do not own an acceptable demand`)
+        if (match2.replaces) return acceptRematch()
         return acceptFinal()
       default:
         throw new HttpResponse({})
