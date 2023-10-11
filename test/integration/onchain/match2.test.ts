@@ -16,7 +16,7 @@ import { withAppAndIndexer } from '../../helper/chainTest'
 import { UUID } from '../../../src/models/strings'
 
 describe('on-chain', function () {
-  this.timeout(120000)
+  this.timeout(180000)
   const db = new Database()
   const node = new ChainNode({
     host: env.NODE_HOST,
@@ -27,16 +27,10 @@ describe('on-chain', function () {
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)
-
   withIdentitySelfMock()
 
-  beforeEach(async function () {
-    await seed()
-  })
-
-  afterEach(async function () {
-    await cleanup()
-  })
+  beforeEach(async () => await seed())
+  afterEach(async () => await cleanup())
 
   describe('match2', async () => {
     let ids: {
@@ -50,9 +44,6 @@ describe('on-chain', function () {
     }
 
     beforeEach(async () => {
-      // prepare an unallocated demandA + demandB + local match2
-      //prepare additional demandB to use in the rematch2 flow
-
       const {
         body: { id: demandAId },
       } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
@@ -195,6 +186,53 @@ describe('on-chain', function () {
       const rematch2 = maybereMatch2 as Match2Row
       expect(rematch2.state).to.equal('proposed')
       expect(rematch2.latestTokenId).to.equal(lastTokenId + 4)
+    })
+
+    it('accepts a rematch2 proposal', async () => {
+      const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
+      await pollTransactionState(db, proposal.body.id, 'finalised')
+      const resAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+      await pollTransactionState(db, resAcceptA.body.id, 'finalised')
+      const resAcceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+      await pollTransactionState(db, resAcceptFinal.body.id, 'finalised')
+
+      const reMatch = await post(context.app, '/v1/match2', {
+        demandA: ids.demandA,
+        demandB: ids.newDemandB,
+        replaces: ids.match2,
+      })
+      ids.rematch2 = reMatch.body['id'] as UUID
+
+      const resProposal = await post(context.app, `/v1/match2/${ids.rematch2}/proposal`, {})
+      await pollTransactionState(db, resProposal.body.id, 'finalised')
+      const resRematchAccept = await post(context.app, `/v1/match2/${ids.rematch2}/accept`, {})
+      await pollTransactionState(db, resRematchAccept.body.id, 'finalised')
+      const lastTokenId = await node.getLastTokenId()
+      const resFinal = await post(context.app, `/v1/match2/${ids.rematch2}/accept`, {})
+      await pollTransactionState(db, resFinal.body.id, 'finalised')
+
+      // output
+      const [match2]: Match2Row[] = await db.getMatch2(ids.match2)
+      const [demandA]: DemandRow[] = await db.getDemand(ids.demandA)
+      const [demandB]: DemandRow[] = await db.getDemand(match2.demandB)
+      const [newDemandB]: DemandRow[] = await db.getDemand(ids.newDemandB)
+      const [rematch2]: Match2Row[] = await db.getMatch2(ids.rematch2)
+
+      expect(demandA.state).to.equal('allocated')
+      expect(demandA.latestTokenId).to.equal(lastTokenId + 1)
+      expect(demandA.originalTokenId).to.equal(ids.originalDemandA)
+
+      expect(demandB.state).to.equal('cancelled')
+      expect(demandB.latestTokenId).to.equal(lastTokenId + 2)
+
+      expect(match2.state).to.equal('cancelled')
+      expect(match2.latestTokenId).to.equal(lastTokenId + 3)
+
+      expect(newDemandB.state).to.equal('allocated')
+      expect(newDemandB.latestTokenId).to.equal(lastTokenId + 4)
+
+      expect(rematch2.state).to.equal('acceptedFinal')
+      expect(rematch2.latestTokenId).to.equal(lastTokenId + 5)
     })
 
     describe('if multiple accepts have been submitted', () => {
