@@ -27,16 +27,10 @@ describe('on-chain', function () {
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)
-
   withIdentitySelfMock()
 
-  beforeEach(async function () {
-    await seed()
-  })
-
-  afterEach(async function () {
-    await cleanup()
-  })
+  beforeEach(async () => await seed())
+  afterEach(async () => await cleanup())
 
   describe('match2', async () => {
     let ids: {
@@ -50,9 +44,6 @@ describe('on-chain', function () {
     }
 
     beforeEach(async () => {
-      // prepare an unallocated demandA + demandB + local match2
-      //prepare additional demandB to use in the rematch2 flow
-
       const {
         body: { id: demandAId },
       } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
@@ -197,7 +188,7 @@ describe('on-chain', function () {
       expect(rematch2.latestTokenId).to.equal(lastTokenId + 4)
     })
 
-    it.only('accepts a rematch2 proposal', async () => {
+    it('accepts a rematch2 proposal', async () => {
       const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
       await pollTransactionState(db, proposal.body.id, 'finalised')
       const resAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
@@ -214,9 +205,9 @@ describe('on-chain', function () {
 
       const resProposal = await post(context.app, `/v1/match2/${ids.rematch2}/proposal`, {})
       await pollTransactionState(db, resProposal.body.id, 'finalised')
-      const lastTokenId = await node.getLastTokenId()
       const resRematchAccept = await post(context.app, `/v1/match2/${ids.rematch2}/accept`, {})
       await pollTransactionState(db, resRematchAccept.body.id, 'finalised')
+      const lastTokenId = await node.getLastTokenId()
       const resFinal = await post(context.app, `/v1/match2/${ids.rematch2}/accept`, {})
       await pollTransactionState(db, resFinal.body.id, 'finalised')
 
@@ -240,7 +231,7 @@ describe('on-chain', function () {
       expect(newDemandB.state).to.equal('allocated')
       expect(newDemandB.latestTokenId).to.equal(lastTokenId + 4)
 
-      expect(rematch2.state).to.equal('acceptedA')
+      expect(rematch2.state).to.equal('acceptedFinal')
       expect(rematch2.latestTokenId).to.equal(lastTokenId + 5)
     })
 

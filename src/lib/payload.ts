@@ -267,79 +267,83 @@ export const match2Reject = (match2: Match2Row): Payload => ({
   outputs: [],
 })
 
-type Rematch2AcceptFinalArgs = {
+type Rematch2AcceptFinal = {
   match2: Match2Row
   demandA: DemandRow
   demandB: DemandRow
-  newDemandB: DemandRow
-  newMatch2: Match2Row
+  oldDemandB: DemandRow
+  oldMatch2: Match2Row
 }
+
 // due to the number of args turning into an object so order is mandatory
 export const rematch2AcceptFinal = ({
-  match2,
   demandA,
+  oldDemandB,
+  oldMatch2,
   demandB,
-  newDemandB,
-  newMatch2,
-}: Rematch2AcceptFinalArgs): Payload => {
-  const rows: Array<Match2Row | DemandRow> = [demandA, demandB, match2, newDemandB, newMatch2]
-
-  return {
-    process: { id: 'rematch2-acceptFinal', version: 1 },
-    inputs: rows.map(({ latestTokenId }) => latestTokenId) as number[],
-    outputs: [
-      {
-        roles: { Owner: demandA.owner },
-        metadata: {
-          version: { type: 'LITERAL', value: '1' },
-          type: { type: 'LITERAL', value: TokenType.DEMAND },
-          state: { type: 'LITERAL', value: 'cancelled' },
-          subtype: { type: 'LITERAL', value: demandA.subtype },
-          originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
-        },
+  match2,
+}: Rematch2AcceptFinal): Payload => ({
+  process: { id: 'rematch2-acceptFinal', version: 1 },
+  inputs: [
+    demandA.latestTokenId,
+    oldDemandB.latestTokenId,
+    oldMatch2.latestTokenId,
+    demandB.latestTokenId,
+    match2.latestTokenId,
+  ] as number[],
+  outputs: [
+    {
+      roles: { Owner: demandA.owner },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.DEMAND },
+        state: { type: 'LITERAL', value: 'allocated' },
+        subtype: { type: 'LITERAL', value: demandA.subtype },
+        originalId: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
       },
-      {
-        roles: { Owner: demandB.owner },
-        metadata: {
-          version: { type: 'LITERAL', value: '1' },
-          type: { type: 'LITERAL', value: TokenType.DEMAND },
-          state: { type: 'LITERAL', value: 'cancelled' },
-          subtype: { type: 'LITERAL', value: demandB.subtype },
-          originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
-        },
+    },
+    {
+      roles: { Owner: oldDemandB.owner },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.DEMAND },
+        state: { type: 'LITERAL', value: 'cancelled' },
+        subtype: { type: 'LITERAL', value: oldDemandB.subtype },
+        originalId: { type: 'TOKEN_ID', value: oldDemandB.originalTokenId as number },
       },
-      {
-        roles: { Optimiser: match2.optimiser, MemberA: match2.memberA, MemberB: match2.memberB },
-        metadata: {
-          version: { type: 'LITERAL', value: '1' },
-          type: { type: 'LITERAL', value: TokenType.MATCH2 },
-          state: { type: 'LITERAL', value: 'cancelled' },
-          demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
-          demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
-          originalId: { type: 'TOKEN_ID', value: match2.originalTokenId as number },
-        },
+    },
+    {
+      roles: { Optimiser: oldMatch2.optimiser, MemberA: oldMatch2.memberA, MemberB: oldMatch2.memberB },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.MATCH2 },
+        state: { type: 'LITERAL', value: 'cancelled' },
+        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+        demandB: { type: 'TOKEN_ID', value: oldDemandB.originalTokenId as number },
+        originalId: { type: 'TOKEN_ID', value: oldMatch2.originalTokenId as number },
       },
-      {
-        roles: { Owner: newDemandB.owner },
-        metadata: {
-          version: { type: 'LITERAL', value: '1' },
-          type: { type: 'LITERAL', value: TokenType.DEMAND },
-          state: { type: 'LITERAL', value: 'allocated' },
-          subtype: { type: 'LITERAL', value: newDemandB.subtype },
-          originalId: { type: 'TOKEN_ID', value: newDemandB.originalTokenId as number },
-        },
+    },
+    {
+      roles: { Owner: demandB.owner },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.DEMAND },
+        state: { type: 'LITERAL', value: 'allocated' },
+        subtype: { type: 'LITERAL', value: demandB.subtype },
+        originalId: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
       },
-      {
-        roles: { Optimiser: newMatch2.optimiser, MemberA: newMatch2.memberA, MemberB: newMatch2.memberB },
-        metadata: {
-          version: { type: 'LITERAL', value: '1' },
-          type: { type: 'LITERAL', value: TokenType.MATCH2 },
-          state: { type: 'LITERAL', value: 'acceptedFinal' },
-          demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
-          demandB: { type: 'TOKEN_ID', value: newDemandB.originalTokenId as number },
-          originalId: { type: 'TOKEN_ID', value: newMatch2.originalTokenId as number },
-        },
+    },
+    {
+      roles: { Optimiser: match2.optimiser, MemberA: match2.memberA, MemberB: match2.memberB },
+      metadata: {
+        version: { type: 'LITERAL', value: '1' },
+        type: { type: 'LITERAL', value: TokenType.MATCH2 },
+        state: { type: 'LITERAL', value: 'acceptedFinal' },
+        demandA: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
+        demandB: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
+        originalId: { type: 'TOKEN_ID', value: match2.originalTokenId as number },
+        replaces: { type: 'TOKEN_ID', value: oldMatch2.originalTokenId as number },
       },
-    ],
-  }
-}
+    },
+  ],
+})

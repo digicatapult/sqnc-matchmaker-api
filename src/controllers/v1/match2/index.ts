@@ -251,6 +251,7 @@ export class Match2Controller extends Controller {
 
     const [demandB]: DemandRow[] = await this.db.getDemand(match2.demandB)
     validatePreOnChain(demandB, 'DemandB', { subtype: 'demand_b', state: 'created' })
+    const [oldMatch2]: Match2Row[] = match2.replaces ? await this.db.getMatch2(match2.replaces) : []
 
     const { address: selfAddress } = await this.identity.getMemberBySelf()
     const ownsDemandA = demandA.owner === selfAddress
@@ -296,14 +297,13 @@ export class Match2Controller extends Controller {
 
       const extrinsic = await this.node.prepareRunProcess(
         rematch2AcceptFinal({
-          match2: oldMatch2,
+          oldMatch2,
           demandA,
-          demandB: oldDemandB,
-          newDemandB: demandB,
-          newMatch2: match2,
+          oldDemandB,
+          demandB,
+          match2,
         })
       )
-
       const [transaction] = await this.db.insertTransaction({
         transaction_type: 'accept',
         api_type: 'match2',
@@ -311,12 +311,10 @@ export class Match2Controller extends Controller {
         state: 'submitted',
         hash: extrinsic.hash.toHex(),
       })
-
       this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+
       return transaction
     }
-
-    const [oldMatch2]: Match2Row[] = match2.replaces ? await this.db.getMatch2(match2.replaces) : []
 
     switch (state) {
       case 'proposed':
