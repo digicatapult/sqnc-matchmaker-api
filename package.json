@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/dscp-matchmaker-api",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "An OpenAPI Matchmaking API service for DSCP",
   "main": "src/index.ts",
   "scripts": {
@@ -38,9 +38,9 @@
   "homepage": "https://github.com/digicatapult/dscp-matchmaker-api#readme",
   "devDependencies": {
     "@polkadot/types": "^10.9.1",
-    "@types/chai": "^4.3.6",
+    "@types/chai": "^4.3.7",
     "@types/cors": "^2.8.14",
-    "@types/express": "^4.17.18",
+    "@types/express": "^4.17.19",
     "@types/mocha": "^10.0.2",
     "@types/node": "^20.8.4",
     "@types/sinon": "^10.0.19",
@@ -55,7 +55,7 @@
     "depcheck": "^1.4.6",
     "eslint": "^8.51.0",
     "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
     "mocha": "^10.2.0",
     "nodemon": "^3.0.1",
     "pino-colada": "^2.2.2",
