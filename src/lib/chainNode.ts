@@ -31,11 +31,6 @@ export interface ProcessRanEvent {
   outputs: number[]
 }
 
-interface RoleEnum {
-  name: string | undefined
-  index: number | undefined
-}
-
 interface SubstrateToken {
   id: number
   metadata: {
@@ -58,7 +53,6 @@ export default class ChainNode {
   private keyring: Keyring
   private logger: Logger
   private userUri: string
-  private roles: RoleEnum[]
 
   constructor({ host, port, logger, userUri }: NodeCtorConfig) {
     this.logger = logger.child({ module: 'ChainNode' })
@@ -66,7 +60,6 @@ export default class ChainNode {
     this.userUri = userUri
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
-    this.roles = []
 
     this.api.isReadyOrError.catch(() => {
       // prevent unhandled promise rejection errors
@@ -129,37 +122,9 @@ export default class ChainNode {
     }
   }
 
-  async getRoles(): Promise<RoleEnum[]> {
-    await this.api.isReady
-
-    const registry = this.api.registry
-    const lookup = registry.lookup
-    const lookupId = registry.getDefinition('DscpNodeRuntimeRole') as `Lookup${number}`
-
-    const rolesEnum = lookup.getTypeDef(lookupId).sub
-    if (Array.isArray(rolesEnum)) {
-      return rolesEnum.map((e) => ({ name: e.name, index: e.index }))
-    } else {
-      throw new Error('No roles found on-chain')
-    }
-  }
-
-  roleToIndex(role: string) {
-    const entry = this.roles.find((e) => e.name === role)
-
-    if (!entry || entry.index === undefined) {
-      throw new Error(`Invalid role: ${role}`)
-    }
-
-    return entry.index
-  }
-
   async prepareRunProcess({ process, inputs, outputs }: Payload) {
     const outputsAsMaps = await Promise.all(
-      outputs.map(async (output: Output) => [
-        await this.processRoles(output.roles),
-        this.processMetadata(output.metadata),
-      ])
+      outputs.map(async (output: Output) => [output.roles, this.processMetadata(output.metadata)])
     )
 
     this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
@@ -213,18 +178,6 @@ export default class ChainNode {
       transactionDbUpdate('failed')
       this.logger.warn(`Error in run process transaction: ${err}`)
     }
-  }
-
-  async processRoles(roles: Record<string, string>) {
-    if (this.roles.length === 0) {
-      this.roles = await this.getRoles()
-    }
-
-    return new Map(
-      Object.entries(roles).map(([key, v]) => {
-        return [this.roleToIndex(key), v]
-      })
-    )
   }
 
   processMetadata(metadata: Metadata) {

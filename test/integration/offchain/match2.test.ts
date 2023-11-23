@@ -269,7 +269,7 @@ describe('match2', () => {
       })
     })
 
-    it('runs rematch2-acceptFinal flow', async () => {
+    it('runs rematch2_acceptFinal flow', async () => {
       const { status, body } = await post(app, `/v1/match2/${seededMatch2Rematch2AcceptFinal}/accept`, {})
 
       expect(status).to.equal(201)
