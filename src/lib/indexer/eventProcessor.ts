@@ -12,15 +12,15 @@ import {
 } from './changeSet'
 
 const processNames = [
-  'demand-create',
-  'match2-propose',
-  'match2-accept',
-  'match2-acceptFinal',
-  'demand-comment',
-  'match2-reject',
-  'rematch2-propose',
-  'rematch2-acceptFinal',
-  'match2-cancel',
+  'demand_create',
+  'match2_propose',
+  'match2_accept',
+  'match2_acceptFinal',
+  'demand_comment',
+  'match2_reject',
+  'rematch2_propose',
+  'rematch2_acceptFinal',
+  'match2_cancel',
 ] as const
 type PROCESSES_TUPLE = typeof processNames
 type PROCESSES = PROCESSES_TUPLE[number]
@@ -54,8 +54,8 @@ const attachmentPayload = (map: Map<string, string>, key: string): AttachmentRec
 })
 
 const DefaultEventProcessors: EventProcessors = {
-  'demand-create': (version, transaction, _sender, _inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for demand-create process`)
+  demand_create: (version, transaction, _sender, _inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for demand_create process`)
 
     const newDemandId = outputs[0].id
     const newDemand = outputs[0]
@@ -87,8 +87,8 @@ const DefaultEventProcessors: EventProcessors = {
     }
   },
 
-  'demand-comment': (version, transaction, sender, inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-propose process`)
+  demand_comment: (version, transaction, sender, inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2_propose process`)
 
     const newDemand = outputs[0]
     const demandId = inputs[0].localId
@@ -133,8 +133,8 @@ const DefaultEventProcessors: EventProcessors = {
     }
   },
 
-  'match2-propose': (version, transaction, _sender, inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-propose process`)
+  match2_propose: (version, transaction, _sender, inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2_propose process`)
 
     const newDemands = [
       { id: inputs[0].localId, tokenId: outputs[0].id },
@@ -175,9 +175,9 @@ const DefaultEventProcessors: EventProcessors = {
       matches: new Map([[match.id, match]]),
     }
   },
-  'rematch2-propose': (version, transaction, _sender, inputs, outputs) => {
+  rematch2_propose: (version, transaction, _sender, inputs, outputs) => {
     if (version !== 1) {
-      throw new Error(`Incompatible version ${version} for rematch2-propose process`)
+      throw new Error(`Incompatible version ${version} for rematch2_propose process`)
     }
     const demandAIn = inputs[0]
     const demandAOut = outputs[0]
@@ -256,8 +256,8 @@ const DefaultEventProcessors: EventProcessors = {
     }
   },
 
-  'match2-accept': (version, _transaction, _sender, inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-accept process`)
+  match2_accept: (version, _transaction, _sender, inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2_accept process`)
 
     const localId = inputs[0].localId
     const match = outputs[0]
@@ -276,8 +276,8 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
     }
   },
-  'match2-acceptFinal': (version, _transaction, _sender, inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-acceptFinal process`)
+  match2_acceptFinal: (version, _transaction, _sender, inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2_acceptFinal process`)
 
     const demandALocalId = inputs[0].localId
     const demandAId = outputs[0].id
@@ -296,8 +296,8 @@ const DefaultEventProcessors: EventProcessors = {
       ]),
     }
   },
-  'rematch2-acceptFinal': (version, _transaction, _sender, inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for rematch2-acceptFinal process`)
+  rematch2_acceptFinal: (version, _transaction, _sender, inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for rematch2_acceptFinal process`)
 
     const demandAIn = inputs[0]
     const demandAOut = outputs[0]
@@ -339,8 +339,8 @@ const DefaultEventProcessors: EventProcessors = {
   },
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  'match2-reject': (version, _transaction, _sender, inputs, _outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-reject process`)
+  match2_reject: (version, _transaction, _sender, inputs, _outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2_reject process`)
 
     const localId = inputs[0].localId
 
@@ -349,8 +349,8 @@ const DefaultEventProcessors: EventProcessors = {
     }
   },
 
-  'match2-cancel': (version, transaction, sender, inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for match2-cancel process`)
+  match2_cancel: (version, transaction, sender, inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for match2_cancel process`)
 
     const [{ localId: localDemandAId }, { localId: localDemandBId }, { localId: matchLocalId }] = inputs
     const [demandA, demandB, match] = outputs

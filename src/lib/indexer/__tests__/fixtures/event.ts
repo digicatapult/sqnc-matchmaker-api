@@ -6,7 +6,7 @@ export const complexEvent: ProcessRanEvent = {
   inputs: [1, 2, 3],
   outputs: [4, 5, 6],
   process: {
-    id: 'demand-create',
+    id: 'demand_create',
     version: 1,
   },
   sender: 'alice',
@@ -18,7 +18,7 @@ export const noInputsOutputs: ProcessRanEvent = {
   inputs: [],
   outputs: [],
   process: {
-    id: 'demand-create',
+    id: 'demand_create',
     version: 1,
   },
   sender: 'alice',

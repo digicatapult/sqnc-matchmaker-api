@@ -6,11 +6,11 @@ import { Transaction } from '../../db'
 import { ChangeSet } from '../changeSet'
 
 describe('eventProcessor', function () {
-  describe('demand-create', function () {
+  describe('demand_create', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['demand-create'](0, null, 'alice', [], [])
+        eventProcessors['demand_create'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -18,7 +18,7 @@ describe('eventProcessor', function () {
     })
 
     it('should return update to demand if transaction exists', function () {
-      const result = eventProcessors['demand-create'](
+      const result = eventProcessors['demand_create'](
         1,
         { localId: '42' } as Transaction,
         'alice',
@@ -34,7 +34,7 @@ describe('eventProcessor', function () {
     })
 
     it("should return new attachment and demand if transaction doesn't exist", function () {
-      const result = eventProcessors['demand-create'](
+      const result = eventProcessors['demand_create'](
         1,
         null,
         'alice',
@@ -74,11 +74,11 @@ describe('eventProcessor', function () {
     })
   })
 
-  describe('demand-comment', function () {
+  describe('demand_comment', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['demand-comment'](0, null, 'alice', [], [])
+        eventProcessors['demand_comment'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -86,7 +86,7 @@ describe('eventProcessor', function () {
     })
 
     it('should return update to demand and demandComment if transaction exists', function () {
-      const result = eventProcessors['demand-comment'](
+      const result = eventProcessors['demand_comment'](
         1,
         { localId: '42', id: '10' } as Transaction,
         'alice',
@@ -101,7 +101,7 @@ describe('eventProcessor', function () {
     })
 
     it("should return new attachment, new comment and update demand if transaction doesn't exist", function () {
-      const result = eventProcessors['demand-comment'](
+      const result = eventProcessors['demand_comment'](
         1,
         null,
         'alice',
@@ -144,11 +144,11 @@ describe('eventProcessor', function () {
     })
   })
 
-  describe('match2-propose', function () {
+  describe('match2_propose', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['match2-propose'](0, null, 'alice', [], [])
+        eventProcessors['match2_propose'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -156,7 +156,7 @@ describe('eventProcessor', function () {
     })
 
     it('should return update to demand if transaction exists', function () {
-      const result = eventProcessors['match2-propose'](
+      const result = eventProcessors['match2_propose'](
         1,
         { localId: 'id_42' } as Transaction,
         'alice',
@@ -183,7 +183,7 @@ describe('eventProcessor', function () {
     })
 
     it('should return update to demands and new match if transaction does not exist', function () {
-      const result = eventProcessors['match2-propose'](
+      const result = eventProcessors['match2_propose'](
         1,
         null,
         'alice',
@@ -233,11 +233,11 @@ describe('eventProcessor', function () {
     })
   })
 
-  describe('rematch2-propose', function () {
+  describe('rematch2_propose', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['rematch2-propose'](0, null, 'alice', [], [])
+        eventProcessors['rematch2_propose'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -245,7 +245,7 @@ describe('eventProcessor', function () {
     })
 
     it('should return update to demand if transaction exists', function () {
-      const result = eventProcessors['rematch2-propose'](
+      const result = eventProcessors['rematch2_propose'](
         1,
         { localId: 'id_42' } as Transaction,
         'alice',
@@ -275,7 +275,7 @@ describe('eventProcessor', function () {
     })
 
     it('should return update to demands and new match if transaction does not exist', function () {
-      const result = eventProcessors['rematch2-propose'](
+      const result = eventProcessors['rematch2_propose'](
         1,
         null,
         'alice',
@@ -332,11 +332,11 @@ describe('eventProcessor', function () {
       })
     })
   })
-  describe('match2-accept', function () {
+  describe('match2_accept', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['match2-accept'](0, null, 'alice', [], [])
+        eventProcessors['match2_accept'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -344,7 +344,7 @@ describe('eventProcessor', function () {
     })
 
     it('should update the state of the match2 to match output', function () {
-      const result = eventProcessors['match2-accept'](
+      const result = eventProcessors['match2_accept'](
         1,
         null,
         'alice',
@@ -358,11 +358,11 @@ describe('eventProcessor', function () {
     })
   })
 
-  describe('match2-acceptFinal', function () {
+  describe('match2_acceptFinal', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['match2-acceptFinal'](0, null, 'alice', [], [])
+        eventProcessors['match2_acceptFinal'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -370,7 +370,7 @@ describe('eventProcessor', function () {
     })
 
     it('should update the states of the match2 and demands', function () {
-      const result = eventProcessors['match2-acceptFinal'](
+      const result = eventProcessors['match2_acceptFinal'](
         1,
         null,
         'alice',
@@ -395,11 +395,11 @@ describe('eventProcessor', function () {
       })
     })
   })
-  describe('rematch2-acceptFinal', function () {
+  describe('rematch2_acceptFinal', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['rematch2-acceptFinal'](0, null, 'alice', [], [])
+        eventProcessors['rematch2_acceptFinal'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -407,7 +407,7 @@ describe('eventProcessor', function () {
     })
 
     it('should update the states of the two match2s and all three demands', function () {
-      const result = eventProcessors['rematch2-acceptFinal'](
+      const result = eventProcessors['rematch2_acceptFinal'](
         1,
         null,
         'alice',
@@ -441,11 +441,11 @@ describe('eventProcessor', function () {
     })
   })
 
-  describe('match2-reject', function () {
+  describe('match2_reject', function () {
     it('should error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['match2-reject'](0, null, 'alice', [], [])
+        eventProcessors['match2_reject'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -453,7 +453,7 @@ describe('eventProcessor', function () {
     })
 
     it('should update the state of the match2 to match output', function () {
-      const result = eventProcessors['match2-reject'](1, null, 'alice', [{ id: 1, localId: 'id_1' }], [])
+      const result = eventProcessors['match2_reject'](1, null, 'alice', [{ id: 1, localId: 'id_1' }], [])
 
       expect(result).to.deep.equal({
         matches: new Map([['id_1', { type: 'update', id: 'id_1', state: 'rejected' }]]),
@@ -461,12 +461,12 @@ describe('eventProcessor', function () {
     })
   })
 
-  describe('match2-cancel', () => {
+  describe('match2_cancel', () => {
     let cancelResult: ChangeSet
 
     describe('if transaction already exists', () => {
       beforeEach(() => {
-        cancelResult = eventProcessors['match2-cancel'](
+        cancelResult = eventProcessors['match2_cancel'](
           1,
           { localId: 'id_3', id: 'transaction_id' } as Transaction,
           'alice',
@@ -509,7 +509,7 @@ describe('eventProcessor', function () {
         )
       })
 
-      it('and updates a match2-comment usig transaction id', () => {
+      it('and updates a match2_comment usig transaction id', () => {
         const { match2Comments } = cancelResult
 
         expect(match2Comments).to.deep.equal(
@@ -521,7 +521,7 @@ describe('eventProcessor', function () {
     it('returns error with version != 1', function () {
       let error: Error | null = null
       try {
-        eventProcessors['match2-cancel'](0, null, 'alice', [], [])
+        eventProcessors['match2_cancel'](0, null, 'alice', [], [])
       } catch (err) {
         error = err instanceof Error ? err : null
       }
@@ -529,7 +529,7 @@ describe('eventProcessor', function () {
     })
 
     it('updates the states of the match2 and demands and inserts attachment with a comment', () => {
-      const result = eventProcessors['match2-cancel'](
+      const result = eventProcessors['match2_cancel'](
         1,
         null,
         'alice',
