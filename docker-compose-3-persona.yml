@@ -53,12 +53,12 @@ services:
       npx knex migrate:latest &&
       node app/index.js"
     ports:
-      - 8001:8001
+      - 9000:9000
     depends_on:
       - member-a-node
       - member-a-postgres-identity
     environment:
-      - PORT=8001
+      - PORT=9000
       - API_HOST=member-a-node
       - API_PORT=9944
       - DB_HOST=member-a-postgres-identity
@@ -94,7 +94,7 @@ services:
     command: /bin/sh -c "
       sleep 10 &&
       npx knex migrate:latest --knexfile build/lib/db/knexfile &&
-      npx @digicatapult/dscp-process-management@latest create -h member-a-node -p 9944 -u //Alice \"$(cat processFlows.json)\" &&
+      npx @digicatapult/dscp-process-management@latest create -h member-a-node -p 9944 -u //Alice -f processFlows.json &&
       npm start"
     environment:
       - PORT=8000
@@ -106,7 +106,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - IDENTITY_SERVICE_HOST=member-a-identity
-      - IDENTITY_SERVICE_PORT=8001
+      - IDENTITY_SERVICE_PORT=9000
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
       - USER_URI=//Alice
@@ -155,12 +155,12 @@ services:
       npx knex migrate:latest &&
       node app/index.js"
     ports:
-      - 8011:8011
+      - 9010:9010
     depends_on:
       - member-b-node
       - member-b-postgres-identity
     environment:
-      - PORT=8011
+      - PORT=9010
       - API_HOST=member-b-node
       - API_PORT=9944
       - DB_HOST=member-b-postgres-identity
@@ -208,7 +208,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - IDENTITY_SERVICE_HOST=member-b-identity
-      - IDENTITY_SERVICE_PORT=8011
+      - IDENTITY_SERVICE_PORT=9010
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
       - USER_URI=//Bob
@@ -258,12 +258,12 @@ services:
       npx knex migrate:latest &&
       node app/index.js"
     ports:
-      - 8021:8021
+      - 9020:9020
     depends_on:
       - optimiser-node
       - optimiser-postgres-identity
     environment:
-      - PORT=8021
+      - PORT=9020
       - API_HOST=optimiser-node
       - API_PORT=9944
       - DB_HOST=optimiser-postgres-identity
@@ -310,7 +310,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - IDENTITY_SERVICE_HOST=optimiser-identity
-      - IDENTITY_SERVICE_PORT=8021
+      - IDENTITY_SERVICE_PORT=9020
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
       - USER_URI=//Charlie

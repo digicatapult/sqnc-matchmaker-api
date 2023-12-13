@@ -189,9 +189,9 @@ curl -X 'PUT' \
 
 Each persona's identity service:
 
-- [MemberA](http://localhost:8001/v1/swagger/)
-- [MemberB](http://localhost:8011/v1/swagger/)
-- [Optimiser](http://localhost:8021/v1/swagger/)
+- [MemberA](http://localhost:9000/v1/swagger/)
+- [MemberB](http://localhost:9010/v1/swagger/)
+- [Optimiser](http://localhost:9020/v1/swagger/)
 
 By default, if no alias is set, the alias is the same as the node address.
 
@@ -233,5 +233,4 @@ At any time after a `match2` is `proposed`, and before it reaches `acceptedFinal
 
 #### Cancelling match2
 
-At any time after a `match2` is in `acceptedFinal` state either `memberA` or `memberB` can cancel the `match2` using [`POST /v1/match2/{id}/cancellation`](http://localhost:3000/swagger/#/match2/CancelMatch2OnChain). Once a `match2` is cancelled, it is permanently closed. However, optimiser won't be able to cancel a `match2` 
-
+At any time after a `match2` is in `acceptedFinal` state either `memberA` or `memberB` can cancel the `match2` using [`POST /v1/match2/{id}/cancellation`](http://localhost:3000/swagger/#/match2/CancelMatch2OnChain). Once a `match2` is cancelled, it is permanently closed. However, optimiser won't be able to cancel a `match2`
