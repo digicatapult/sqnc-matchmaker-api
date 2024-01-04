@@ -75,7 +75,6 @@ services:
     container_name: member-a-node
     command: --base-path /data
       --alice
-      --unsafe-ws-external
       --unsafe-rpc-external
       --rpc-cors all
       --node-key 0000000000000000000000000000000000000000000000000000000000000001
@@ -177,7 +176,6 @@ services:
     container_name: member-b-node
     command: --base-path /data/
       --bob
-      --unsafe-ws-external
       --unsafe-rpc-external
       --rpc-cors all
       --node-key 0000000000000000000000000000000000000000000000000000000000000002
@@ -279,7 +277,6 @@ services:
     container_name: optimiser-node
     command: --base-path /data/
       --charlie
-      --unsafe-ws-external
       --unsafe-rpc-external
       --rpc-cors all
       --node-key 0000000000000000000000000000000000000000000000000000000000000003

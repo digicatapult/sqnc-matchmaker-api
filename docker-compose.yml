@@ -46,13 +46,12 @@ services:
       - AUTH_TYPE=${AUTH_TYPE:-NONE}
 
   dscp-node:
-    image: digicatapult/dscp-node:latest
+    image: digicatapult/dscp-node:v10.0.0-chore_upgrade-deps
     container_name: node
     command: --base-path /data/
       --dev
-      --unsafe-ws-external
       --unsafe-rpc-external
-      --ws-max-connections 512
+      --rpc-max-connections 512
       --rpc-cors all
     ports:
       - 30333:30333
