@@ -198,8 +198,8 @@ describe('eventProcessor', function () {
             id: 5,
             roles: new Map([
               ['optimiser', 'o'],
-              ['membera', 'a'],
-              ['memberb', 'b'],
+              ['member_a', 'a'],
+              ['member_b', 'b'],
             ]),
             metadata: new Map([
               ['demandA', 'da'],
@@ -292,8 +292,8 @@ describe('eventProcessor', function () {
             id: 7,
             roles: new Map([
               ['optimiser', 'o'],
-              ['membera', 'a'],
-              ['memberb', 'b'],
+              ['member_a', 'a'],
+              ['member_b', 'b'],
             ]),
             metadata: new Map([
               ['demandA', 'da'],

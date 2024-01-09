@@ -317,8 +317,11 @@ export class Match2Controller extends Controller {
         if (!ownsDemandA && !ownsDemandB) throw new BadRequest(`You do not own an acceptable demand`)
         return acceptAB()
       case 'acceptedA':
+        if (!ownsDemandB) throw new BadRequest(`You do not own an acceptable demand`)
+        if (match2.replaces) return acceptRematch()
+        return acceptFinal()
       case 'acceptedB':
-        if (!ownsDemandB || !ownsDemandA) throw new BadRequest(`You do not own an acceptable demand`)
+        if (!ownsDemandA) throw new BadRequest(`You do not own an acceptable demand`)
         if (match2.replaces) return acceptRematch()
         return acceptFinal()
       default:
