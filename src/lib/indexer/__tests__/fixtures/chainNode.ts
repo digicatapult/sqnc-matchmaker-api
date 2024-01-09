@@ -1,5 +1,6 @@
 import sinon from 'sinon'
-import ChainNode, { ProcessRanEvent } from '../../../chainNode'
+
+import ChainNode, { ProcessRanEvent } from '../../../chainNode.js'
 
 export const events2: ProcessRanEvent[] = [
   {

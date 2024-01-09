@@ -1,13 +1,17 @@
 import { ValidateError, Get, Post, Route, Path, Response, Body, SuccessResponse, Tags, Security, Query } from 'tsoa'
-
-import { DemandResponse, DemandRequest, DemandCommentRequest, DemandWithCommentsResponse } from '../../../models/demand'
-import { DATE, UUID } from '../../../models/strings'
-import { BadRequest, NotFound } from '../../../lib/error-handler/index'
-import { TransactionResponse } from '../../../models/transaction'
-
-import { DemandController } from '../_common/demand'
-import Identity from '../../../lib/services/identity'
 import { injectable } from 'tsyringe'
+
+import {
+  DemandResponse,
+  DemandRequest,
+  DemandCommentRequest,
+  DemandWithCommentsResponse,
+} from '../../../models/demand.js'
+import { DATE, UUID } from '../../../models/strings.js'
+import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
+import { TransactionResponse } from '../../../models/transaction.js'
+import { DemandController } from '../_common/demand.js'
+import Identity from '../../../lib/services/identity.js'
 
 @Route('v1/demandB')
 @injectable()

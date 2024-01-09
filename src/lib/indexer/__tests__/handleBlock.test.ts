@@ -2,13 +2,12 @@ import { describe, it } from 'mocha'
 import { expect } from 'chai'
 import { SinonStub } from 'sinon'
 
-import BlockHandler from '../handleBlock'
-
-import { withInitialLastProcessedBlock } from './fixtures/db'
-import { withMockLogger } from './fixtures/logger'
-import { events2, withProcessRanEvents } from './fixtures/chainNode'
-import { changeSets2 } from './fixtures/changeSet'
-import { withMockEventHandler } from './fixtures/eventHandler'
+import BlockHandler from '../handleBlock.js'
+import { withInitialLastProcessedBlock } from './fixtures/db.js'
+import { withMockLogger } from './fixtures/logger.js'
+import { events2, withProcessRanEvents } from './fixtures/chainNode.js'
+import { changeSets2 } from './fixtures/changeSet.js'
+import { withMockEventHandler } from './fixtures/eventHandler.js'
 
 describe('BlockHandler', function () {
   describe('handleBlock', function () {

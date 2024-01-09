@@ -1,9 +1,9 @@
 import { describe, it } from 'mocha'
-
-import eventProcessors from '../eventProcessor'
 import { expect } from 'chai'
-import { Transaction } from '../../db'
-import { ChangeSet } from '../changeSet'
+
+import eventProcessors from '../eventProcessor.js'
+import { Transaction } from '../../db/index.js'
+import { ChangeSet } from '../changeSet.js'
 
 describe('eventProcessor', function () {
   describe('demand_create', function () {

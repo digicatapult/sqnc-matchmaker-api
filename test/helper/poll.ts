@@ -1,6 +1,6 @@
-import Database from '../../src/lib/db'
-import { TransactionState, TransactionResponse } from '../../src/models/transaction'
-import { UUID } from '../../src/models/strings'
+import Database from '../../src/lib/db/index.js'
+import { TransactionState, TransactionResponse } from '../../src/models/transaction.js'
+import { UUID } from '../../src/models/strings.js'
 
 export const pollTransactionState = async (
   db: Database,

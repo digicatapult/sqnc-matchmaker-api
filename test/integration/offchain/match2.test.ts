@@ -2,8 +2,8 @@ import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import createHttpServer from '../../../src/server'
-import { post, get } from '../../helper/routeHelper'
+import createHttpServer from '../../../src/server.js'
+import { post, get } from '../../helper/routeHelper.js'
 import {
   cleanup,
   match2Seed,
@@ -34,11 +34,11 @@ import {
   seededMatch2Rematch2AcceptFinal,
   seededRematch2DemndBAllocated,
   seededRematch2DemndACreated,
-} from '../../seeds/offchainSeeds/offchain.match2.seed'
-import { parametersAttachmentId } from '../../seeds/offchainSeeds/offchain.match2.seed'
+} from '../../seeds/offchainSeeds/offchain.match2.seed.js'
+import { parametersAttachmentId } from '../../seeds/offchainSeeds/offchain.match2.seed.js'
 
-import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
-import { assertIsoDate, assertUUID } from '../../helper/assertions'
+import { selfAlias, withIdentitySelfMock } from '../../helper/mock.js'
+import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
 
 describe('match2', () => {
   let app: Express

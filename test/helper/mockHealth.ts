@@ -1,5 +1,6 @@
 import { MockAgent, setGlobalDispatcher, getGlobalDispatcher, Dispatcher } from 'undici'
-import env from '../../src/env'
+
+import env from '../../src/env.js'
 
 export async function withOkMock() {
   let originalDispatcher: Dispatcher

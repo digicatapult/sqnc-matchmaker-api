@@ -18,14 +18,14 @@ import { Logger } from 'pino'
 import express from 'express'
 import { Readable } from 'node:stream'
 
-import { logger } from '../../../lib/logger'
-import Database from '../../../lib/db'
-import type { Attachment } from '../../../models'
-import { BadRequest, NotFound } from '../../../lib/error-handler'
-import type { UUID, DATE } from '../../../models/strings'
-import Ipfs from '../../../lib/ipfs'
-import env from '../../../env'
-import { parseDateParam } from '../../../lib/utils/queryParams'
+import { logger } from '../../../lib/logger.js'
+import Database from '../../../lib/db/index.js'
+import type { Attachment } from '../../../models/index.js'
+import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
+import type { UUID, DATE } from '../../../models/strings.js'
+import Ipfs from '../../../lib/ipfs.js'
+import env from '../../../env.js'
+import { parseDateParam } from '../../../lib/utils/queryParams.js'
 
 const parseAccept = (acceptHeader: string) =>
   acceptHeader

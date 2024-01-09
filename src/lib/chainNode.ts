@@ -1,14 +1,14 @@
+import { Logger } from 'pino'
 import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/api'
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
-import { serviceState } from './service-watcher/statusPoll'
-import { Logger } from 'pino'
-import { TransactionState } from '../models/transaction'
 
-import type { Payload, Output, Metadata } from './payload'
-import { HEX } from '../models/strings'
-import { hexToBs58 } from '../utils/hex'
+import { serviceState } from './service-watcher/statusPoll.js'
+import { TransactionState } from '../models/transaction.js'
+import type { Payload, Output, Metadata } from './payload.js'
+import { HEX } from '../models/strings.js'
+import { hexToBs58 } from '../utils/hex.js'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
