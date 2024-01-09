@@ -9,6 +9,7 @@ import { TransactionState } from '../models/transaction'
 import type { Payload, Output, Metadata } from './payload'
 import { HEX } from '../models/strings'
 import { hexToBs58 } from '../utils/hex'
+import { trim0x } from './utils/shared'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
@@ -271,7 +272,13 @@ export default class ChainNode {
         return [key, value]
       })
     )
-    const roles = new Map(Object.entries(token.roles).map(([role, account]) => [role.toLowerCase(), account]))
+
+    const roles = new Map(
+      Object.entries(token.roles).map(([role, account]) => [
+        Buffer.from(trim0x(role), 'hex').toString('utf8').toLowerCase(),
+        account,
+      ])
+    )
 
     return {
       id: token.id,
