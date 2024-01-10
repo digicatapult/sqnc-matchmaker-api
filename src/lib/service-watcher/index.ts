@@ -1,8 +1,9 @@
 import { singleton } from 'tsyringe'
-import startApiStatus from './apiStatus'
-import startIpfsStatus from './ipfsStatus'
-import startIdentityStatus from './identityStatus'
-import { buildCombinedHandler, SERVICE_STATE, Status } from './statusPoll'
+
+import startApiStatus from './apiStatus.js'
+import startIpfsStatus from './ipfsStatus.js'
+import startIdentityStatus from './identityStatus.js'
+import { buildCombinedHandler, SERVICE_STATE, Status } from './statusPoll.js'
 
 @singleton()
 export class ServiceWatcher {

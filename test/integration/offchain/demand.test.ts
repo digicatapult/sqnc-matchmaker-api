@@ -2,8 +2,8 @@ import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import createHttpServer from '../../../src/server'
-import { post, get } from '../../helper/routeHelper'
+import createHttpServer from '../../../src/server.js'
+import { post, get } from '../../helper/routeHelper.js'
 import {
   cleanup,
   demandSeed,
@@ -22,10 +22,10 @@ import {
   seededDemandBCommentTransactionId2,
   seededDemandAAlreadyAllocated,
   seededDemandBAlreadyAllocated,
-} from '../../seeds/offchainSeeds/demand.seed'
+} from '../../seeds/offchainSeeds/demand.seed.js'
 
-import { selfAlias, withIdentitySelfMock } from '../../helper/mock'
-import { assertIsoDate, assertUUID } from '../../helper/assertions'
+import { selfAlias, withIdentitySelfMock } from '../../helper/mock.js'
+import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
 
 const runDemandTests = (demandType: 'demandA' | 'demandB') => {
   const dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'

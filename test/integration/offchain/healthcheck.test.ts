@@ -2,12 +2,12 @@ import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 import { container } from 'tsyringe'
-import { ServiceWatcher } from '../../../src/lib/service-watcher'
 
-import createHttpServer from '../../../src/server'
-import { get } from '../../helper/routeHelper'
-import { responses as healthResponses } from '../../helper/healthHelper'
-import { withOkMock, withIpfsMockError } from '../../helper/mockHealth'
+import { ServiceWatcher } from '../../../src/lib/service-watcher/index.js'
+import createHttpServer from '../../../src/server.js'
+import { get } from '../../helper/routeHelper.js'
+import { responses as healthResponses } from '../../helper/healthHelper.js'
+import { withOkMock, withIpfsMockError } from '../../helper/mockHealth.js'
 
 const getSpecVersion = (actualResult: any) => {
   return actualResult?._body?.details?.api?.detail?.runtime?.versions?.spec

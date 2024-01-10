@@ -1,6 +1,6 @@
-import * as TokenType from '../models/tokenType'
-import { AttachmentRow, DemandRow, DemandWithAttachmentRow, Match2Row } from './db'
-import { bs58ToHex } from '../utils/hex'
+import * as TokenType from '../models/tokenType.js'
+import { AttachmentRow, DemandRow, DemandWithAttachmentRow, Match2Row } from './db/index.js'
+import { bs58ToHex } from '../utils/hex.js'
 
 export interface Payload {
   process: { id: string; version: number }

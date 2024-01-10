@@ -2,17 +2,16 @@ import { describe, beforeEach, afterEach, it } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import Indexer from '../../../src/lib/indexer'
-import { post } from '../../helper/routeHelper'
-import { seed, cleanup, seededDemandBId, parametersAttachmentId } from '../../seeds/onchainSeeds/demandB.seed'
-
-import { selfAddress, withIdentitySelfMock } from '../../helper/mock'
-import Database, { DemandRow } from '../../../src/lib/db'
-import ChainNode from '../../../src/lib/chainNode'
-import { logger } from '../../../src/lib/logger'
-import env from '../../../src/env'
-import { pollTransactionState } from '../../helper/poll'
-import { withAppAndIndexer } from '../../helper/chainTest'
+import Indexer from '../../../src/lib/indexer/index.js'
+import { post } from '../../helper/routeHelper.js'
+import { seed, cleanup, seededDemandBId, parametersAttachmentId } from '../../seeds/onchainSeeds/demandB.seed.js'
+import { selfAddress, withIdentitySelfMock } from '../../helper/mock.js'
+import Database, { DemandRow } from '../../../src/lib/db/index.js'
+import ChainNode from '../../../src/lib/chainNode.js'
+import { logger } from '../../../src/lib/logger.js'
+import env from '../../../src/env.js'
+import { pollTransactionState } from '../../helper/poll.js'
+import { withAppAndIndexer } from '../../helper/chainTest.js'
 
 describe('on-chain', function () {
   this.timeout(60000)

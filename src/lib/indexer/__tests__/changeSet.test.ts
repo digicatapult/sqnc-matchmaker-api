@@ -1,9 +1,8 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import { findIdTestSet } from './fixtures/changeSet'
-
-import { AttachmentRecord, DemandRecord, MatchRecord, mergeChangeSets, findLocalIdInChangeSet } from '../changeSet'
+import { findIdTestSet } from './fixtures/changeSet.js'
+import { AttachmentRecord, DemandRecord, MatchRecord, mergeChangeSets, findLocalIdInChangeSet } from '../changeSet.js'
 
 const mkAttachment: (i: number) => AttachmentRecord = (i) => ({
   type: 'insert',

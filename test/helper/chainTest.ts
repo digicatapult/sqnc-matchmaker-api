@@ -1,13 +1,13 @@
 import { before, after } from 'mocha'
 import { Express } from 'express'
 
-import createHttpServer from '../../src/server'
-import Indexer from '../../src/lib/indexer'
+import createHttpServer from '../../src/server.js'
+import Indexer from '../../src/lib/indexer/index.js'
 
-import Database from '../../src/lib/db'
-import ChainNode from '../../src/lib/chainNode'
-import { logger } from '../../src/lib/logger'
-import env from '../../src/env'
+import Database from '../../src/lib/db/index.js'
+import ChainNode from '../../src/lib/chainNode.js'
+import { logger } from '../../src/lib/logger.js'
+import env from '../../src/env.js'
 
 const db = new Database()
 

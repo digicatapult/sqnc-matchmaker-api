@@ -1,6 +1,5 @@
-import type { Logger } from 'pino'
-
 import sinon from 'sinon'
+import type { Logger } from 'pino'
 
 export const withMockLogger = () => {
   const inner = {

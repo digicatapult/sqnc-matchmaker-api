@@ -1,23 +1,23 @@
 import { Controller } from 'tsoa'
 import type { Logger } from 'pino'
 
-import { logger } from '../../../lib/logger'
-import Database, { DemandCommentRow, DemandRow } from '../../../lib/db'
+import { logger } from '../../../lib/logger.js'
+import Database, { DemandCommentRow, DemandRow } from '../../../lib/db/index.js'
 import {
   DemandResponse,
   DemandRequest,
   DemandSubtype,
   DemandCommentRequest,
   DemandWithCommentsResponse,
-} from '../../../models/demand'
-import { DATE, UUID } from '../../../models/strings'
-import { BadRequest, NotFound } from '../../../lib/error-handler/index'
-import { TransactionResponse, TransactionType } from '../../../models/transaction'
-import { demandCommentCreate, demandCreate } from '../../../lib/payload'
-import ChainNode from '../../../lib/chainNode'
-import env from '../../../env'
-import { parseDateParam } from '../../../lib/utils/queryParams'
-import Identity from '../../../lib/services/identity'
+} from '../../../models/demand.js'
+import { DATE, UUID } from '../../../models/strings.js'
+import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
+import { TransactionResponse, TransactionType } from '../../../models/transaction.js'
+import { demandCommentCreate, demandCreate } from '../../../lib/payload.js'
+import ChainNode from '../../../lib/chainNode.js'
+import env from '../../../env.js'
+import { parseDateParam } from '../../../lib/utils/queryParams.js'
+import Identity from '../../../lib/services/identity.js'
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'

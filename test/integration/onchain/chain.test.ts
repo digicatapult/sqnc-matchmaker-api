@@ -2,16 +2,15 @@ import { describe } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import Indexer from '../../../src/lib/indexer'
-import { cleanup, seededDemandBId } from '../../seeds/onchainSeeds/transaction.seed'
-
-import { withIdentitySelfMock } from '../../helper/mock'
-import Database from '../../../src/lib/db'
-import ChainNode from '../../../src/lib/chainNode'
-import { logger } from '../../../src/lib/logger'
-import env from '../../../src/env'
-import { pollTransactionState } from '../../helper/poll'
-import { withAppAndIndexer } from '../../helper/chainTest'
+import Indexer from '../../../src/lib/indexer/index.js'
+import { cleanup, seededDemandBId } from '../../seeds/onchainSeeds/transaction.seed.js'
+import { withIdentitySelfMock } from '../../helper/mock.js'
+import Database from '../../../src/lib/db/index.js'
+import ChainNode from '../../../src/lib/chainNode.js'
+import { logger } from '../../../src/lib/logger.js'
+import env from '../../../src/env.js'
+import { pollTransactionState } from '../../helper/poll.js'
+import { withAppAndIndexer } from '../../helper/chainTest.js'
 
 describe('on-chain', function () {
   this.timeout(60000)

@@ -1,10 +1,10 @@
 import knex, { Knex } from 'knex'
 
-import { pgConfig } from './knexfile'
-import { DemandState, DemandSubtype } from '../../models/demand'
-import { HEX, UUID } from '../../models/strings'
-import { Match2State } from '../../models/match2'
-import { TransactionApiType, TransactionState, TransactionType } from '../../models/transaction'
+import { pgConfig } from './knexfile.js'
+import { DemandState, DemandSubtype } from '../../models/demand.js'
+import { HEX, UUID } from '../../models/strings.js'
+import { Match2State } from '../../models/match2.js'
+import { TransactionApiType, TransactionState, TransactionType } from '../../models/transaction.js'
 
 const tablesList = [
   'attachment',
