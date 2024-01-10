@@ -57,9 +57,14 @@ describe('on-chain', function () {
         body: { id: demandBTransactionId },
       } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {})
 
+      await node.sealBlock()
       await pollTransactionState(db, demandATransactionId, 'finalised')
+
       const [demandA]: DemandRow[] = await db.getDemand(demandAId)
+
+      await node.sealBlock()
       await pollTransactionState(db, demandBTransactionId, 'finalised')
+
       const [demandB]: DemandRow[] = await db.getDemand(demandBId)
 
       //additional demandB for testing rematch2 flow
@@ -70,6 +75,7 @@ describe('on-chain', function () {
         body: { id: newDemandBTransactionId },
       } = await post(context.app, `/v1/demandB/${newDemandBId}/creation`, {})
 
+      await node.sealBlock()
       await pollTransactionState(db, newDemandBTransactionId, 'finalised')
 
       const {
@@ -100,6 +106,7 @@ describe('on-chain', function () {
       expect(state).to.equal('submitted')
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, transactionId, 'finalised')
 
       // check local entities update with token id
@@ -125,18 +132,21 @@ describe('on-chain', function () {
       const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
 
       // submit accept to chain
       const responseAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
 
       // submit 2nd accept to chain
       const responseAcceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
 
       const lastTokenId = await node.getLastTokenId()
@@ -160,6 +170,7 @@ describe('on-chain', function () {
       expect(state).to.equal('submitted')
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, transactionId, 'finalised')
 
       // check local entities update with token id
@@ -190,10 +201,17 @@ describe('on-chain', function () {
 
     it('accepts a rematch2 proposal', async () => {
       const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
+      await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
+
       const resAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+
+      await node.sealBlock()
       await pollTransactionState(db, resAcceptA.body.id, 'finalised')
+
       const resAcceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+
+      await node.sealBlock()
       await pollTransactionState(db, resAcceptFinal.body.id, 'finalised')
 
       const reMatch = await post(context.app, '/v1/match2', {
@@ -204,11 +222,19 @@ describe('on-chain', function () {
       ids.rematch2 = reMatch.body['id'] as UUID
 
       const resProposal = await post(context.app, `/v1/match2/${ids.rematch2}/proposal`, {})
+
+      await node.sealBlock()
       await pollTransactionState(db, resProposal.body.id, 'finalised')
+
       const resRematchAccept = await post(context.app, `/v1/match2/${ids.rematch2}/accept`, {})
+
+      await node.sealBlock()
       await pollTransactionState(db, resRematchAccept.body.id, 'finalised')
+
       const lastTokenId = await node.getLastTokenId()
       const resFinal = await post(context.app, `/v1/match2/${ids.rematch2}/accept`, {})
+
+      await node.sealBlock()
       await pollTransactionState(db, resFinal.body.id, 'finalised')
 
       // output
@@ -238,10 +264,14 @@ describe('on-chain', function () {
     describe('if multiple accepts have been submitted', () => {
       it('handles error and marks only one transaction finalised and others as failed', async () => {
         const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
+
+        await node.sealBlock()
         await pollTransactionState(db, proposal.body.id, 'finalised')
 
         const acceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
         await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+
+        await node.sealBlock()
         await pollTransactionState(db, acceptA.body.id, 'finalised')
 
         const { body: transactions } = await get(context.app, `/v1/match2/${ids.match2}/accept`)
@@ -269,6 +299,7 @@ describe('on-chain', function () {
       const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
 
       const [maybeMatch2] = await db.getMatch2(ids.match2)
@@ -281,6 +312,7 @@ describe('on-chain', function () {
       expect(responseAcceptA.status).to.equal(201)
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
 
       // check local entities update with token id
@@ -295,6 +327,7 @@ describe('on-chain', function () {
       expect(responseAcceptFinal.status).to.equal(201)
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
 
       // check local entities update with token id
@@ -323,6 +356,7 @@ describe('on-chain', function () {
       expect(proposal.status).to.equal(201)
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
 
       const [maybeMatch2] = await db.getMatch2(ids.match2)
@@ -334,6 +368,7 @@ describe('on-chain', function () {
       expect(rejection.status).to.equal(200)
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, rejection.body.id, 'finalised')
 
       // check local entities update with token id
@@ -351,6 +386,7 @@ describe('on-chain', function () {
       expect(proposal.status).to.equal(201)
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
 
       // acceptA
@@ -358,6 +394,7 @@ describe('on-chain', function () {
       expect(acceptA.status).to.equal(201)
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, acceptA.body.id, 'finalised')
 
       const [maybeMatch2] = await db.getMatch2(ids.match2)
@@ -369,6 +406,7 @@ describe('on-chain', function () {
       expect(rejection.status).to.equal(200)
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, rejection.body.id, 'finalised')
 
       // check local entities update with token id
@@ -382,18 +420,29 @@ describe('on-chain', function () {
 
     it('should cancel an acceptedFinal match2 on-chain', async () => {
       const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
+
+      await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
+
       const { originalTokenId } = await db.getMatch2(ids.match2).then((el: Match2Row[]) => el[0])
 
       const acceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+
+      await node.sealBlock()
       await pollTransactionState(db, acceptA.body.id, 'finalised')
+
       const acceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
+
+      await node.sealBlock()
       await pollTransactionState(db, acceptFinal.body.id, 'finalised')
+
       const lastTokenId = await node.getLastTokenId()
 
       // submit a cancellation request
       const data = { attachmentId: parametersAttachmentId }
       const cancel = await post(context.app, `/v1/match2/${ids.match2}/cancellation`, data)
+
+      await node.sealBlock()
       await pollTransactionState(db, cancel.body.id, 'finalised')
 
       const demandA: DemandRow = await db.getDemand(ids.demandA).then((rows: DemandRow[]) => rows[0])

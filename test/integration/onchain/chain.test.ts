@@ -53,6 +53,7 @@ describe('on-chain', function () {
       node.submitRunProcess(extrinsic, db.updateTransactionState(transaction.id))
 
       // wait for dispatch error
+      await node.sealBlock()
       const failedTransaction = await pollTransactionState(db, transaction.id, 'failed')
       expect(failedTransaction.state).to.equal('failed')
     })

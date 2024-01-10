@@ -52,6 +52,7 @@ describe('on-chain', function () {
       expect(state).to.equal('submitted')
 
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, transactionId, 'finalised')
 
       // check local demandB updates with token id
@@ -68,6 +69,7 @@ describe('on-chain', function () {
       const creationResponse = await post(context.app, `/v1/demandB/${seededDemandBId}/creation`, {})
       expect(creationResponse.status).to.equal(201)
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, creationResponse.body.id, 'finalised')
 
       // submit to chain
@@ -76,6 +78,7 @@ describe('on-chain', function () {
       })
       expect(commentResponse.status).to.equal(201)
       // wait for block to finalise
+      await node.sealBlock()
       await pollTransactionState(db, commentResponse.body.id, 'finalised')
 
       // check local demandB updates with token id
