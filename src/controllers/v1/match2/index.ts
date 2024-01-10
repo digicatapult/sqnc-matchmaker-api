@@ -15,13 +15,13 @@ import {
 import type { Logger } from 'pino'
 import { injectable } from 'tsyringe'
 
-import { logger } from '../../../lib/logger'
-import Database, { DemandRow, Match2Row } from '../../../lib/db'
-import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index'
-import Identity from '../../../lib/services/identity'
-import { Match2CancelRequest, Match2Request, Match2Response, Match2State } from '../../../models/match2'
-import { DATE, UUID } from '../../../models/strings'
-import { TransactionResponse, TransactionType } from '../../../models/transaction'
+import { logger } from '../../../lib/logger.js'
+import Database, { DemandRow, Match2Row } from '../../../lib/db/index.js'
+import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index.js'
+import Identity from '../../../lib/services/identity.js'
+import { Match2CancelRequest, Match2Request, Match2Response, Match2State } from '../../../models/match2.js'
+import { DATE, UUID } from '../../../models/strings.js'
+import { TransactionResponse, TransactionType } from '../../../models/transaction.js'
 import {
   match2AcceptFinal,
   match2AcceptFirst,
@@ -30,10 +30,10 @@ import {
   match2Propose,
   match2Reject,
   rematch2AcceptFinal,
-} from '../../../lib/payload'
-import ChainNode from '../../../lib/chainNode'
-import env from '../../../env'
-import { parseDateParam } from '../../../lib/utils/queryParams'
+} from '../../../lib/payload.js'
+import ChainNode from '../../../lib/chainNode.js'
+import env from '../../../env.js'
+import { parseDateParam } from '../../../lib/utils/queryParams.js'
 
 @Route('v1/match2')
 @injectable()

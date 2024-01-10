@@ -1,6 +1,6 @@
 import pino, { Logger } from 'pino'
 
-import env from '../env'
+import env from '../env.js'
 
 export const logger: Logger = pino(
   {

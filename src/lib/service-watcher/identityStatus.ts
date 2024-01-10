@@ -1,6 +1,6 @@
-import { startStatusHandler } from './statusPoll'
-import env from '../../env'
-import Identity from '../services/identity'
+import { startStatusHandler } from './statusPoll.js'
+import env from '../../env.js'
+import Identity from '../services/identity.js'
 
 const { WATCHER_POLL_PERIOD_MS, WATCHER_TIMEOUT_MS } = env
 

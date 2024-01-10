@@ -1,4 +1,4 @@
-import { UUID } from './strings'
+import { UUID } from './strings.js'
 
 /**
  * File or JSON attachment

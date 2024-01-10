@@ -1,7 +1,7 @@
-import { startStatusHandler } from './statusPoll'
-import env from '../../env'
-import Ipfs from '../ipfs'
-import { logger } from '../logger'
+import { startStatusHandler } from './statusPoll.js'
+import env from '../../env.js'
+import Ipfs from '../ipfs.js'
+import { logger } from '../logger.js'
 
 const { WATCHER_POLL_PERIOD_MS, WATCHER_TIMEOUT_MS } = env
 

@@ -1,7 +1,7 @@
 import { v4 as UUIDv4 } from 'uuid'
 
-import { UUID } from '../../models/strings'
-import { Transaction } from '../db'
+import { UUID } from '../../models/strings.js'
+import { Transaction } from '../db/index.js'
 import {
   AttachmentRecord,
   ChangeSet,
@@ -9,7 +9,7 @@ import {
   DemandRecord,
   Match2CommentRecord,
   MatchRecord,
-} from './changeSet'
+} from './changeSet.js'
 
 const processNames = [
   'demand_create',

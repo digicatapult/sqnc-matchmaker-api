@@ -1,7 +1,8 @@
-import { NotFound, HttpResponse } from '../error-handler'
-import env from '../../env'
-import { Status, serviceState } from '../service-watcher/statusPoll'
 import { singleton } from 'tsyringe'
+
+import { NotFound, HttpResponse } from '../error-handler/index.js'
+import env from '../../env.js'
+import { Status, serviceState } from '../service-watcher/statusPoll.js'
 
 const URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`
 

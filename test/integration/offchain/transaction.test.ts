@@ -2,8 +2,8 @@ import { describe, before } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import createHttpServer from '../../../src/server'
-import { get } from '../../helper/routeHelper'
+import createHttpServer from '../../../src/server.js'
+import { get } from '../../helper/routeHelper.js'
 import {
   cleanup,
   transactionSeed,
@@ -15,7 +15,7 @@ import {
   seededDemandACommentTransactionId,
   seededDemandAId,
   seededDemandACommentTransactionId2,
-} from '../../seeds/offchainSeeds/transaction.seed'
+} from '../../seeds/offchainSeeds/transaction.seed.js'
 
 describe('transaction', () => {
   let app: Express

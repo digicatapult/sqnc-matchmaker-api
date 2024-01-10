@@ -1,11 +1,10 @@
 import { Logger } from 'pino'
 
-import type Database from '../db/index'
-import ChainNode from '../chainNode'
-
-import DefaultBlockHandler from './handleBlock'
-import { ChangeSet } from './changeSet'
-import { HEX } from '../../models/strings'
+import type Database from '../db/index.js'
+import ChainNode from '../chainNode.js'
+import DefaultBlockHandler from './handleBlock.js'
+import { ChangeSet } from './changeSet.js'
+import { HEX } from '../../models/strings.js'
 
 export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 

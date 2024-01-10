@@ -1,8 +1,9 @@
 import { describe, before, it } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
-import createHttpServer from '../../../src/server'
-import { get } from '../../helper/routeHelper'
+
+import createHttpServer from '../../../src/server.js'
+import { get } from '../../helper/routeHelper.js'
 
 describe('swagger', () => {
   let app: Express

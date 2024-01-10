@@ -6,6 +6,7 @@ src/swagger.json
 src/routes.ts
 dist
 coverage
+.tsimp
 
 .npm
 .env
