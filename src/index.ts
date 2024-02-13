@@ -27,6 +27,6 @@ import { logger } from './lib/logger.js'
   }
 
   app.listen(env.PORT, () => {
-    logger.info(`dscp-matchmaker-api listening on ${env.PORT} port`)
+    logger.info(`sqnc-matchmaker-api listening on ${env.PORT} port`)
   })
 })()

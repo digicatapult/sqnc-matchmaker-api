@@ -1,7 +1,7 @@
 {
-  "name": "@digicatapult/dscp-matchmaker-api",
+  "name": "@digicatapult/sqnc-matchmaker-api",
   "version": "2.1.33",
-  "description": "An OpenAPI Matchmaking API service for DSCP",
+  "description": "An OpenAPI Matchmaking API service for SQNC",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
@@ -18,11 +18,11 @@
     "db:migrate": "npm run db:cmd -- migrate:latest --knexfile src/lib/db/knexfile.ts",
     "db:rollback": "npm run db:cmd -- migrate:rollback --knexfile src/lib/db/knexfile.ts",
     "coverage": "c8 npm run test",
-    "flows": "npx @digicatapult/dscp-process-management@latest create -h localhost -p 9944 -u //Alice -f processFlows.json"
+    "flows": "npx @digicatapult/sqnc-process-management@latest create -h localhost -p 9944 -u //Alice -f processFlows.json"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/digicatapult/dscp-matchmaker-api.git"
+    "url": "git+https://github.com/digicatapult/sqnc-matchmaker-api.git"
   },
   "engines": {
     "node": "20.x.x",
@@ -34,9 +34,9 @@
   "author": "Digital Catapult",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/digicatapult/dscp-matchmaker-api/issues"
+    "url": "https://github.com/digicatapult/sqnc-matchmaker-api/issues"
   },
-  "homepage": "https://github.com/digicatapult/dscp-matchmaker-api#readme",
+  "homepage": "https://github.com/digicatapult/sqnc-matchmaker-api#readme",
   "devDependencies": {
     "@polkadot/types": "^10.11.2",
     "@types/chai": "^4.3.11",

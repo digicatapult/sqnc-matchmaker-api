@@ -1,8 +1,8 @@
-# dscp-matchmaker-api
+# sqnc-matchmaker-api
 
 ## Description
 
-An API facilitating a distributed heterogeneous pairwise matchmaking service utilising the [Distributed Supply Chain Platform](https://github.com/digicatapult/dscp-documentation)
+An API facilitating a distributed heterogeneous pairwise matchmaking service utilising the [Distributed Supply Chain Platform](https://github.com/digicatapult/sqnc-documentation)
 
 ## Configuration
 
@@ -15,15 +15,15 @@ Use a `.env` at root of the repository to set values for the environment variabl
 | ENVIRONMENT_VAR        |    N     |       `example`        | An environment specific variable                                                             |
 | DB_PORT                |    N     |         `5432`         | The port for the database                                                                    |
 | DB_HOST                |    Y     |           -            | The database hostname / host                                                                 |
-| DB_NAME                |    N     | `dscp-matchmaker-api ` | The database name                                                                            |
+| DB_NAME                |    N     | `sqnc-matchmaker-api ` | The database name                                                                            |
 | DB_USERNAME            |    Y     |           -            | The database username                                                                        |
 | DB_PASSWORD            |    Y     |           -            | The database password                                                                        |
-| IDENTITY_SERVICE_HOST  |    Y     |           -            | Hostname of the `dscp-identity-service`                                                      |
-| IDENTITY_SERVICE_PORT  |    N     |         `3000`         | Port of the `dscp-identity-service`                                                          |
-| NODE_HOST              |    Y     |           -            | The hostname of the `dscp-node` the API should connect to                                    |
-| NODE_PORT              |    N     |         `9944`         | The port of the `dscp-node` the API should connect to                                        |
+| IDENTITY_SERVICE_HOST  |    Y     |           -            | Hostname of the `sqnc-identity-service`                                                      |
+| IDENTITY_SERVICE_PORT  |    N     |         `3000`         | Port of the `sqnc-identity-service`                                                          |
+| NODE_HOST              |    Y     |           -            | The hostname of the `sqnc-node` the API should connect to                                    |
+| NODE_PORT              |    N     |         `9944`         | The port of the `sqnc-node` the API should connect to                                        |
 | LOG_LEVEL              |    N     |         `info`         | Logging level. Valid values are [`trace`, `debug`, `info`, `warn`, `error`, `fatal`]         |
-| USER_URI               |    Y     |           -            | The Substrate `URI` representing the private key to use when making `dscp-node` transactions |
+| USER_URI               |    Y     |           -            | The Substrate `URI` representing the private key to use when making `sqnc-node` transactions |
 | IPFS_HOST              |    Y     |           -            | Hostname of the `IPFS` node to use for metadata storage                                      |
 | IPFS_PORT              |    N     |         `5001`         | Port of the `IPFS` node to use for metadata storage                                          |
 | WATCHER_POLL_PERIOD_MS |    N     |        `10000`         | Number of ms between polling of service state                                                |
@@ -95,9 +95,9 @@ npm run test
 
 ## Process Flows
 
-To ensure integrity of data within transactions (and therefore on chain), it's possible to define custom processes that validate transactions. [More info](https://github.com/digicatapult/dscp-documentation/blob/main/docs/tokenModels/guardRails.md).
+To ensure integrity of data within transactions (and therefore on chain), it's possible to define custom processes that validate transactions. [More info](https://github.com/digicatapult/sqnc-documentation/blob/main/docs/tokenModels/guardRails.md).
 
-Process flows covering this API's transactions are in [`processFlows.json`](./processFlows.json). The file is an array of process flows that can be supplied to the [`dscp-process-management`](https://github.com/digicatapult/dscp-process-management) CLI for creating processes on chain:
+Process flows covering this API's transactions are in [`processFlows.json`](./processFlows.json). The file is an array of process flows that can be supplied to the [`sqnc-process-management`](https://github.com/digicatapult/sqnc-process-management) CLI for creating processes on chain:
 
 ```
 npm run flows
@@ -105,7 +105,7 @@ npm run flows
 
 ## API design
 
-`dscp-matchmaker-api` provides a RESTful OpenAPI-based interface for third parties and front-ends to interact with the `DSCP` system. The design prioritises:
+`sqnc-matchmaker-api` provides a RESTful OpenAPI-based interface for third parties and front-ends to interact with the `Sequence` (SQNC) system. The design prioritises:
 
 1. RESTful design principles:
    - all endpoints describing discrete operations on path derived entities.
@@ -166,17 +166,17 @@ The last top level entity `attachment`, which accepts a `multipart/form-data` pa
 
 ### Services
 
-Run `docker compose -f docker-compose-3-persona.yml up -d` to start the required dependencies to fully demo `dscp-matchmaker-api`.
+Run `docker compose -f docker-compose-3-persona.yml up -d` to start the required dependencies to fully demo `sqnc-matchmaker-api`.
 
-The demo involves three personas: `MemberA`, `MemberB` and an `Optimiser`. Each persona has a set of `dscp` services:
+The demo involves three personas: `MemberA`, `MemberB` and an `Optimiser`. Each persona has a set of `sqnc` services:
 
-- dscp-matchmaker-api (+ PostgreSQL)
-- dscp-identity-service (+ PostgreSQL)
-- dscp-node
+- sqnc-matchmaker-api (+ PostgreSQL)
+- sqnc-identity-service (+ PostgreSQL)
+- sqnc-node
 
 There is also a single `ipfs` node for file storage.
 
-Container names are prefixed with the persona e.g. `member-a-node`. Services are networked so that only the `dscp-node` instances communicate cross-persona. Each persona uses a `substrate` well-known identity for their `dscp-node`:
+Container names are prefixed with the persona e.g. `member-a-node`. Services are networked so that only the `sqnc-node` instances communicate cross-persona. Each persona uses a `substrate` well-known identity for their `sqnc-node`:
 
 ```
 "MemberA": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", // alice
@@ -188,7 +188,7 @@ The `docker compose` automatically adds process flows using `MemberA`. Process f
 
 ### Identities
 
-Before transacting, aliases (a human-friendly names) can be set for the pre-configured node addresses using each persona's `dscp-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. For example, to set the self address for `MemberA`, you can either use the [identity service swagger](http://localhost:8001/v1/swagger/#/members/put_members__address_) or run:
+Before transacting, aliases (a human-friendly names) can be set for the pre-configured node addresses using each persona's `sqnc-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. For example, to set the self address for `MemberA`, you can either use the [identity service swagger](http://localhost:8001/v1/swagger/#/members/put_members__address_) or run:
 
 ```
 curl -X 'PUT' \
@@ -222,7 +222,7 @@ Note the meaning in the API of `demandA` and `demandB` are abstract and use-case
 2. They use the returned `id` for `parametersAttachmentId` in the request body to [`POST /v1/demandA`](http://localhost:8000/swagger/#/demandA/Create). At this point, the `demandA` only exists in the `MemberA` database.
 3. When `MemberA` is ready for the `demandA` to exist on chain they [`POST /v1/demandA/{demandAId}/creation`](http://localhost:8000/swagger/#/demandA/CreateDemandAOnChain).
 4. Putting something on chain creates a local `transaction` database entry which records the status of block finalisation. Every route that puts something on chain returns a transaction `id`. These routes also have an accompanying `GET` route that returns all of the transactions of that transaction type e.g. [`GET /v1/demandA/{demandAId}/creation`](http://localhost:8000/swagger/#/demandA/GetAllTransactions) returns the details of all `demandA` creation transactions. The transaction `id` can be supplied to [`GET /v1/demandA/{demandAId}/creation/{creationId}`](http://localhost:8000/swagger/#/demandA/GetDemandACreation) to get that specific transaction. Alternatively [`GET /v1/transaction`](http://localhost:8000/swagger/#/transaction/GetAllTransactions) can be used to get all transactions of any type.
-5. Once the block has finalised, The indexers running on `MemberB` and `Optimiser`'s `dscp-matchmaker-api` will process the block containing the new `demandA` and update their local databases (assuming their `dscp-node` instance is running and connected). They will be able to see the new `demandA` with [`GET /v1/demandA`](http://localhost:8010/swagger/#/demandA/GetAll).
+5. Once the block has finalised, The indexers running on `MemberB` and `Optimiser`'s `sqnc-matchmaker-api` will process the block containing the new `demandA` and update their local databases (assuming their `sqnc-node` instance is running and connected). They will be able to see the new `demandA` with [`GET /v1/demandA`](http://localhost:8010/swagger/#/demandA/GetAll).
 6. `MemberB` creates a [`demandB`](http://localhost:8010/swagger/#/demandB/CreateDemandB)) in a similar manner to creating a `demandA`. It includes a parameters file to describe the parameters of their `demandB`.
 7. When `MemberB` is ready for the `demandB` to exist on chain they [`POST /v1/demandB/{id}/creation`](http://localhost:8010/swagger/#/demandB/CreateDemandBOnChain).
 8. `Optimiser` can now create a [`match2`](http://localhost:8020/swagger/#/match2/ProposeMatch2) that matches a single `demandA` with a single `demandB`. They supply their local `id` for `demandA` and `demandB`.

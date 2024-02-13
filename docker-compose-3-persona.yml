@@ -29,7 +29,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=dscp-matchmaker-api
+      - POSTGRES_DB=sqnc-matchmaker-api
     networks: ['member-a']
 
   member-a-postgres-identity:
@@ -42,11 +42,11 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=dscp-identity
+      - POSTGRES_DB=sqnc-identity
     networks: ['member-a']
 
   member-a-identity:
-    image: digicatapult/dscp-identity-service:latest
+    image: digicatapult/sqnc-identity-service:latest
     container_name: member-a-identity
     command: /bin/sh -c "
       sleep 10 &&
@@ -63,7 +63,7 @@ services:
       - API_PORT=9944
       - DB_HOST=member-a-postgres-identity
       - DB_PORT=5432
-      - DB_NAME=dscp-identity
+      - DB_NAME=sqnc-identity
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
@@ -71,7 +71,7 @@ services:
     networks: ['member-a']
 
   member-a-node:
-    image: digicatapult/dscp-node:latest
+    image: digicatapult/sqnc-node:latest
     container_name: member-a-node
     command: --base-path /data
       --alice
@@ -93,7 +93,7 @@ services:
     command: /bin/sh -c "
       sleep 10 &&
       npx knex migrate:latest --knexfile build/lib/db/knexfile &&
-      npx @digicatapult/dscp-process-management@latest create -h member-a-node -p 9944 -u //Alice -f processFlows.json &&
+      npx @digicatapult/sqnc-process-management@latest create -h member-a-node -p 9944 -u //Alice -f processFlows.json &&
       npm start"
     environment:
       - PORT=8000
@@ -101,7 +101,7 @@ services:
       - NODE_PORT=9944
       - DB_HOST=member-a-postgres-matchmaker-api
       - DB_PORT=5432
-      - DB_NAME=dscp-matchmaker-api
+      - DB_NAME=sqnc-matchmaker-api
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - IDENTITY_SERVICE_HOST=member-a-identity
@@ -130,7 +130,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=dscp-matchmaker-api
+      - POSTGRES_DB=sqnc-matchmaker-api
     networks: ['member-b']
 
   member-b-postgres-identity:
@@ -143,11 +143,11 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=dscp-identity
+      - POSTGRES_DB=sqnc-identity
     networks: ['member-b']
 
   member-b-identity:
-    image: digicatapult/dscp-identity-service:latest
+    image: digicatapult/sqnc-identity-service:latest
     container_name: member-b-identity
     command: /bin/sh -c "
       sleep 10 &&
@@ -164,7 +164,7 @@ services:
       - API_PORT=9944
       - DB_HOST=member-b-postgres-identity
       - DB_PORT=5432
-      - DB_NAME=dscp-identity
+      - DB_NAME=sqnc-identity
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - SELF_ADDRESS=5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
@@ -172,7 +172,7 @@ services:
     networks: ['member-b']
 
   member-b-node:
-    image: digicatapult/dscp-node:latest
+    image: digicatapult/sqnc-node:latest
     container_name: member-b-node
     command: --base-path /data/
       --bob
@@ -202,7 +202,7 @@ services:
       - NODE_PORT=9944
       - DB_HOST=member-b-postgres-matchmaker-api
       - DB_PORT=5432
-      - DB_NAME=dscp-matchmaker-api
+      - DB_NAME=sqnc-matchmaker-api
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - IDENTITY_SERVICE_HOST=member-b-identity
@@ -232,7 +232,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=dscp-matchmaker-api
+      - POSTGRES_DB=sqnc-matchmaker-api
     networks: ['optimiser']
 
   optimiser-postgres-identity:
@@ -245,11 +245,11 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=dscp-identity
+      - POSTGRES_DB=sqnc-identity
     networks: ['optimiser']
 
   optimiser-identity:
-    image: digicatapult/dscp-identity-service:latest
+    image: digicatapult/sqnc-identity-service:latest
     container_name: optimiser-identity
     command: /bin/sh -c "
       sleep 10 &&
@@ -266,14 +266,14 @@ services:
       - API_PORT=9944
       - DB_HOST=optimiser-postgres-identity
       - DB_PORT=5432
-      - DB_NAME=dscp-identity
+      - DB_NAME=sqnc-identity
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - SELF_ADDRESS=5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y
       - AUTH_TYPE=${AUTH_TYPE:-NONE}
     networks: ['optimiser']
   optimiser-node:
-    image: digicatapult/dscp-node:latest
+    image: digicatapult/sqnc-node:latest
     container_name: optimiser-node
     command: --base-path /data/
       --charlie
@@ -303,7 +303,7 @@ services:
       - NODE_PORT=9944
       - DB_HOST=optimiser-postgres-matchmaker-api
       - DB_PORT=5432
-      - DB_NAME=dscp-matchmaker-api
+      - DB_NAME=sqnc-matchmaker-api
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - IDENTITY_SERVICE_HOST=optimiser-identity
