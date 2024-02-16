@@ -2,7 +2,7 @@
 
 ## Description
 
-An API facilitating a distributed heterogeneous pairwise matchmaking service utilising the [Distributed Supply Chain Platform](https://github.com/digicatapult/sqnc-documentation)
+An API facilitating a distributed heterogeneous pairwise matchmaking service utilising Digital Catapult's [Sequence](https://github.com/digicatapult/sqnc-documentation) (SQNC) ledger-based solution
 
 ## Configuration
 
