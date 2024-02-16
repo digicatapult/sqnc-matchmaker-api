@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.6
 FROM node:lts-alpine as builder
 
-WORKDIR /dscp-matchmaker-api
+WORKDIR /sqnc-matchmaker-api
 
 # Install base dependencies
 RUN npm install -g npm@10.x.x
@@ -16,7 +16,7 @@ RUN npm run build
 # service
 FROM node:lts-alpine as service
 
-WORKDIR /dscp-matchmaker-api
+WORKDIR /sqnc-matchmaker-api
 
 RUN apk add --update coreutils
 RUN npm -g install npm@10.x.x
@@ -26,7 +26,7 @@ COPY processFlows.json ./
 
 RUN npm ci --production
 
-COPY --from=builder /dscp-matchmaker-api/build ./build
+COPY --from=builder /sqnc-matchmaker-api/build ./build
 
 EXPOSE 80
 CMD [ "npm", "start" ]

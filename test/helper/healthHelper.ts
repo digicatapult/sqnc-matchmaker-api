@@ -1,5 +1,5 @@
 export const responses = {
-  ok: (dscpRuntimeVersion: number, ipfsVersion: string, identityVersion: string) => ({
+  ok: (sqncRuntimeVersion: number, ipfsVersion: string, identityVersion: string) => ({
     code: 200,
     body: {
       status: 'ok',
@@ -10,11 +10,11 @@ export const responses = {
           detail: {
             chain: 'Development',
             runtime: {
-              name: 'dscp',
+              name: 'sqnc',
               versions: {
                 authoring: 1,
                 impl: 1,
-                spec: dscpRuntimeVersion,
+                spec: sqncRuntimeVersion,
                 transaction: 1,
               },
             },
@@ -36,7 +36,7 @@ export const responses = {
       },
     },
   }),
-  ipfsDown: (dscpRuntimeVersion: number, identityVersion: string) => ({
+  ipfsDown: (sqncRuntimeVersion: number, identityVersion: string) => ({
     code: 503,
     body: {
       status: 'down',
@@ -47,11 +47,11 @@ export const responses = {
           detail: {
             chain: 'Development',
             runtime: {
-              name: 'dscp',
+              name: 'sqnc',
               versions: {
                 authoring: 1,
                 impl: 1,
-                spec: dscpRuntimeVersion,
+                spec: sqncRuntimeVersion,
                 transaction: 1,
               },
             },
