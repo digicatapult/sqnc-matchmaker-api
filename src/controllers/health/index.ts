@@ -49,7 +49,10 @@ export class HealthController extends Controller {
           })
         ),
     }
-    if (status !== serviceState.UP) throw new ServiceUnavailable(503, response)
+    if (status !== serviceState.UP) {
+      logger.debug('Service unavailable: %j', response)
+      throw new ServiceUnavailable(503, response)
+    }
     return response
   }
 }
