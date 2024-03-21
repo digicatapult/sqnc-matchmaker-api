@@ -30,8 +30,8 @@ export class DemandAController extends DemandController {
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
-  public async createDemandA(@Body() { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
-    return super.createDemand({ parametersAttachmentId })
+  public async createDemandA(@Body() body: DemandRequest): Promise<DemandResponse> {
+    return super.createDemand(body)
   }
 
   /**
@@ -102,9 +102,9 @@ export class DemandAController extends DemandController {
   @SuccessResponse('201')
   public async createDemandACommentOnChain(
     @Path() demandAId: UUID,
-    @Body() { attachmentId }: DemandCommentRequest
+    @Body() body: DemandCommentRequest
   ): Promise<TransactionResponse> {
-    return super.createDemandCommentOnChain(demandAId, { attachmentId })
+    return super.createDemandCommentOnChain(demandAId, body)
   }
 
   /**
