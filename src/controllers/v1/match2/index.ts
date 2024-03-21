@@ -65,9 +65,8 @@ export class Match2Controller extends Controller {
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
-  public async proposeMatch2(
-    @Body() { demandA: demandAId, demandB: demandBId, replaces }: Match2Request
-  ): Promise<Match2Response | null> {
+  public async proposeMatch2(@Body() body: Match2Request): Promise<Match2Response | null> {
+    const { demandA: demandAId, demandB: demandBId, replaces } = body
     const [demandA]: DemandRow[] = await this.db.getDemand(demandAId)
     validatePreLocal(demandA, 'DemandA', {
       subtype: 'demand_a',
@@ -381,8 +380,9 @@ export class Match2Controller extends Controller {
   @SuccessResponse('200')
   public async cancelMatch2OnChain(
     @Path() match2Id: UUID,
-    @Body() { attachmentId }: Match2CancelRequest
+    @Body() body: Match2CancelRequest
   ): Promise<TransactionResponse> {
+    const { attachmentId } = body
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
     const [demandA] = await this.db.getDemand(match2?.demandA)
