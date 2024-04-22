@@ -38,7 +38,7 @@ import { parseDateParam } from '../../../lib/utils/queryParams.js'
 @Route('v1/match2')
 @injectable()
 @Tags('match2')
-@Security('BearerAuth')
+@Security('oauth2')
 export class Match2Controller extends Controller {
   log: Logger
   db: Database

@@ -13,10 +13,9 @@
     "outputDirectory": "src",
     "specVersion": 3,
     "securityDefinitions": {
-      "BearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {}
       }
     },
     "specMerging": "recursive",
