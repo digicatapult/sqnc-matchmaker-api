@@ -44,6 +44,7 @@ import { z } from 'zod'
 
 const MemberResponseSchema = z.object({
   address: z.string(),
+  alias: z.string(),
 })
 type MemberResponse = z.infer<typeof MemberResponseSchema>
 @Route('v1/match2')
@@ -561,9 +562,9 @@ const responseWithAliases = async (match2: Match2Row, identity: Identity): Promi
 
   return {
     ...rest,
-    optimiser: await identity.getMemberByAddress(match2.optimiser).then(({ alias }) => alias),
-    memberA: await identity.getMemberByAddress(match2.memberA).then(({ alias }) => alias),
-    memberB: await identity.getMemberByAddress(match2.memberB).then(({ alias }) => alias),
+    optimiser: await identity.getMemberByAddress(match2.optimiser).then(getAlias),
+    memberA: await identity.getMemberByAddress(match2.memberA).then(getAlias),
+    memberB: await identity.getMemberByAddress(match2.memberB).then(getAlias),
     createdAt: match2.createdAt.toISOString(),
     updatedAt: match2.updatedAt.toISOString(),
     replaces: match2.replaces ? match2.replaces : undefined,
@@ -598,4 +599,9 @@ const validatePreOnChain = <
   if (!t.latestTokenId) {
     throw new BadRequest(`${rowType} must be on chain`)
   }
+}
+
+const getAlias = (response: unknown): string => {
+  const res = response as MemberResponse
+  return res.alias
 }

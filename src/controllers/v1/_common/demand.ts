@@ -57,9 +57,10 @@ export class DemandController extends Controller {
       throw new BadRequest('Attachment not found')
     }
 
-    const res: MemberResponse = await this.identity.getMemberBySelf()
-    const selfAddress = res.address
-    const selfAlias = res.alias
+    const res = await this.identity.getMemberBySelf()
+    const typedRes = res as MemberResponse
+    const selfAddress = typedRes.address
+    const selfAlias = typedRes.alias
 
     const [demand] = await this.db.insertDemand({
       owner: selfAddress,
@@ -153,8 +154,9 @@ export class DemandController extends Controller {
     const [comment] = await this.db.getAttachment(attachmentId)
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
 
-    const res: MemberResponse = await this.identity.getMemberBySelf()
-    const selfAddress = res.address
+    const res = await this.identity.getMemberBySelf()
+    const typedRes = res as MemberResponse
+    const selfAddress = typedRes.address
 
     const extrinsic = await this.node.prepareRunProcess(demandCommentCreate(demand, comment))
 
@@ -206,8 +208,9 @@ export class DemandController extends Controller {
 }
 
 const responseWithAlias = async (demand: DemandRow, identity: Identity): Promise<DemandResponse> => {
-  const res: MemberResponse = await identity.getMemberByAddress(demand.owner)
-  const ownerAlias = res.alias
+  const res = await identity.getMemberByAddress(demand.owner)
+  const typedRes = res as MemberResponse
+  const ownerAlias = typedRes.alias
 
   return {
     id: demand.id,
@@ -228,8 +231,9 @@ const responseWithComments = async (
   const aliasMap = new Map(
     await Promise.all(
       commentors.map(async (commentor) => {
-        const res: MemberResponse = await identity.getMemberByAddress(commentor)
-        const alias = res.alias
+        const res = await identity.getMemberByAddress(commentor)
+        const typedRes = res as MemberResponse
+        const alias = typedRes.alias
 
         return [commentor, alias] as const
       })
