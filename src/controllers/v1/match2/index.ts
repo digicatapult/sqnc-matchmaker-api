@@ -556,11 +556,9 @@ const responseWithAliases = async (match2: Match2Row, identity: Identity): Promi
 
   return {
     ...rest,
-    optimiser: await identity
-      .getMemberByAddress(match2.optimiser)
-      .then((result: any) => (result as { alias: any }).alias),
-    memberA: await identity.getMemberByAddress(match2.memberA).then((result: any) => (result as { alias: any }).alias),
-    memberB: await identity.getMemberByAddress(match2.memberB).then((result: any) => (result as { alias: any }).alias),
+    optimiser: await identity.getMemberByAddress(match2.optimiser).then(({ alias }) => alias),
+    memberA: await identity.getMemberByAddress(match2.memberA).then(({ alias }) => alias),
+    memberB: await identity.getMemberByAddress(match2.memberB).then(({ alias }) => alias),
     createdAt: match2.createdAt.toISOString(),
     updatedAt: match2.updatedAt.toISOString(),
     replaces: match2.replaces ? match2.replaces : undefined,
