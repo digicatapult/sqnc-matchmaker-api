@@ -3,12 +3,34 @@ import { Logger } from 'pino'
 import { serviceState } from './service-watcher/statusPoll.js'
 import type { MetadataFile } from './payload.js'
 import { HttpResponse } from './error-handler/index.js'
+import { z } from 'zod'
 
 interface FilestoreResponse {
   Name: string
   Hash: string
   Size: string
 }
+const PeersResponseSchema = z.object({
+  Peers: z.array(z.object({})),
+})
+const VersionResponseSchema = z.object({
+  Version: z.string(),
+})
+const DirDataSchema = z.object({
+  Objects: z.array(
+    z.object({
+      Links: z.array(
+        z.object({
+          Hash: z.string(),
+          Name: z.string(),
+        })
+      ),
+    })
+  ),
+})
+
+type PeersResponse = z.infer<typeof PeersResponseSchema>
+type VersionResponse = z.infer<typeof VersionResponseSchema>
 
 export default class Ipfs {
   private addUrl: string
@@ -62,10 +84,14 @@ export default class Ipfs {
 
     // Parse stream of dir data to get the file hash
     const data = await dirRes.json()
-    const link = data?.Objects?.[0]?.Links?.[0]
+    const parsedData = DirDataSchema.safeParse(data)
+    if (!parsedData.success) {
+      throw new Error(`Error parsing directory from IPFS (${dirRes.status}): ${await dirRes.text()}`)
+    }
+    const link = parsedData.data.Objects?.[0]?.Links?.[0]
 
     if (!link) {
-      throw new Error(`Error parsing directory from IPFS (${dirRes.status}): ${await dirRes.text()}`)
+      throw new Error(`Error extracting link from parsed data (${dirRes.status}): ${await dirRes.text()}`)
     }
     const fileHash = link.Hash
     const filename = link.Name
@@ -92,21 +118,17 @@ export default class Ipfs {
           },
         }
       }
-      const [versionResult, peersResult] = await Promise.all(results.map((r) => r.json()))
-      if (!versionResult) {
-        throw new Error('Error getting version from IPFS node')
-      }
+      const [versionResponse, peersResponse] = await Promise.all(results.map((r) => r.json()))
+      const versionData: VersionResponse = VersionResponseSchema.parse(versionResponse)
+      const peersData: PeersResponse = PeersResponseSchema.parse(peersResponse)
 
-      if (!peersResult) {
-        throw new Error('Error getting peers from IPFS node')
-      }
-
-      const peers: { Peer: unknown }[] = peersResult.Peers || []
+      const peers: { Peer?: unknown }[] = peersData.Peers || []
       const peerCount = new Set(peers.map((peer) => peer.Peer)).size
+
       return {
         status: serviceState.UP,
         detail: {
-          version: versionResult.Version,
+          version: versionData.Version,
           peerCount: peerCount,
         },
       }
