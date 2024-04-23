@@ -3,8 +3,13 @@ import { singleton } from 'tsyringe'
 import { NotFound, HttpResponse } from '../error-handler/index.js'
 import env from '../../env.js'
 import { Status, serviceState } from '../service-watcher/statusPoll.js'
+import { z } from 'zod'
 
 const URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`
+const HealthResponseSchema = z.object({
+  version: z.string(),
+})
+type HealthResponse = z.infer<typeof HealthResponseSchema>
 
 @singleton()
 export default class Identity {
@@ -14,7 +19,8 @@ export default class Identity {
     try {
       const res = await this.getHealth()
       if (res) {
-        if (!res.version.match(/\d+.\d+.\d+/)) {
+        const healthData: HealthResponse = res as HealthResponse
+        if (!healthData.version.match(/\d+.\d+.\d+/)) {
           return {
             status: serviceState.DOWN,
             detail: {
@@ -25,7 +31,7 @@ export default class Identity {
         return {
           status: serviceState.UP,
           detail: {
-            version: res.version,
+            version: healthData.version,
           },
         }
       }
