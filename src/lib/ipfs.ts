@@ -96,8 +96,15 @@ export default class Ipfs {
           },
         }
       }
-
       const [versionResult, peersResult] = await Promise.all(results.map((r) => r.json()))
+      if (!versionResult) {
+        throw new Error('Error getting version from IPFS node')
+      }
+
+      if (!peersResult) {
+        throw new Error('Error getting peers from IPFS node')
+      }
+
       const peers: { Peer: unknown }[] = peersResult.Peers || []
       const peerCount = new Set(peers.map((peer) => peer.Peer)).size
       return {
