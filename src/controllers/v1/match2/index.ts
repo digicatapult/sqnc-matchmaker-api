@@ -50,7 +50,7 @@ type MemberResponse = z.infer<typeof MemberResponseSchema>
 @Route('v1/match2')
 @injectable()
 @Tags('match2')
-@Security('BearerAuth')
+@Security('oauth2')
 export class Match2Controller extends Controller {
   log: Logger
   db: Database

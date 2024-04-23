@@ -59,7 +59,7 @@ const parseAccept = (acceptHeader: string) =>
 
 @Route('v1/attachment')
 @Tags('attachment')
-@Security('BearerAuth')
+@Security('oauth2')
 export class attachment extends Controller {
   log: Logger
   db: Database = new Database()

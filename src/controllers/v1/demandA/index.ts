@@ -16,7 +16,7 @@ import Identity from '../../../lib/services/identity.js'
 @Route('v1/demandA')
 @injectable()
 @Tags('demandA')
-@Security('BearerAuth')
+@Security('oauth2')
 export class DemandAController extends DemandController {
   constructor(identity: Identity) {
     super('demandA', identity)

@@ -10,7 +10,7 @@ import { parseDateParam } from '../../../lib/utils/queryParams.js'
 
 @Route('v1/transaction')
 @Tags('transaction')
-@Security('BearerAuth')
+@Security('oauth2')
 export class TransactionController extends Controller {
   log: Logger
   db: Database
