@@ -3,9 +3,9 @@ import type { Logger } from 'pino'
 
 import { logger } from '../../../lib/logger.js'
 import Database from '../../../lib/db/index.js'
-import { DATE, UUID } from '../../../models/strings.js'
+import type { DATE, UUID } from '../../../models/strings.js'
 import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
-import { TransactionApiType, TransactionResponse, TransactionState } from '../../../models/transaction.js'
+import { type TransactionApiType, type TransactionState, TransactionResponse } from '../../../models/transaction.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 
 @Route('v1/transaction')

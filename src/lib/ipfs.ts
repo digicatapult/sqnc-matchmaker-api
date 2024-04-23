@@ -61,7 +61,11 @@ export default class Ipfs {
     }
 
     // Parse stream of dir data to get the file hash
-    const data = await dirRes.json()
+    const data: any = await dirRes.json()
+    const link1 = data && data.Objects && data.Objects[0] && data.Objects[0].Links && data.Objects[0].Links[0] //check if vals we want to extract are present
+    if (link1 === undefined) {
+      throw new Error('Error when parsing stream of data to get file hash.')
+    }
     const link = data?.Objects?.[0]?.Links?.[0]
 
     if (!link) {

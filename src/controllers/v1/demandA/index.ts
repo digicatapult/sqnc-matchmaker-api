@@ -1,13 +1,13 @@
 import { ValidateError, Get, Post, Route, Path, Response, Body, SuccessResponse, Tags, Security, Query } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import {
+import type {
   DemandResponse,
   DemandRequest,
   DemandCommentRequest,
   DemandWithCommentsResponse,
 } from '../../../models/demand.js'
-import { DATE, UUID } from '../../../models/strings.js'
+import type { DATE, UUID } from '../../../models/strings.js'
 import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
 import { TransactionResponse } from '../../../models/transaction.js'
 import { DemandController } from '../_common/demand.js'

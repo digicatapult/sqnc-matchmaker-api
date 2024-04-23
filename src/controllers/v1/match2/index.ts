@@ -19,9 +19,15 @@ import { logger } from '../../../lib/logger.js'
 import Database, { DemandRow, Match2Row } from '../../../lib/db/index.js'
 import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index.js'
 import Identity from '../../../lib/services/identity.js'
-import { Match2CancelRequest, Match2Request, Match2Response, Match2State } from '../../../models/match2.js'
-import { DATE, UUID } from '../../../models/strings.js'
-import { TransactionResponse, TransactionType } from '../../../models/transaction.js'
+import {
+  type Match2CancelRequest,
+  type Match2Request,
+  type Match2State,
+  Match2Response,
+} from '../../../models/match2.js'
+
+import type { DATE, UUID } from '../../../models/strings.js'
+import { TransactionResponse, type TransactionType } from '../../../models/transaction.js'
 import {
   match2AcceptFinal,
   match2AcceptFirst,
@@ -79,7 +85,11 @@ export class Match2Controller extends Controller {
       state: 'created',
     })
 
-    const { address: selfAddress } = await this.identity.getMemberBySelf()
+    const res: any = await this.identity.getMemberBySelf()
+    if (!res.hasOwnProperty('address')) {
+      throw new Error('Address is missing in response.')
+    }
+    const { address: selfAddress } = res['address']
 
     if (replaces) {
       const [originalMatch2]: Match2Row[] = await this.db.getMatch2(replaces)
@@ -252,7 +262,11 @@ export class Match2Controller extends Controller {
     validatePreOnChain(demandB, 'DemandB', { subtype: 'demand_b', state: 'created' })
     const [oldMatch2]: Match2Row[] = match2.replaces ? await this.db.getMatch2(match2.replaces) : []
 
-    const { address: selfAddress } = await this.identity.getMemberBySelf()
+    const res: any = await this.identity.getMemberBySelf()
+    if (!res.hasOwnProperty('address')) {
+      throw new Error('Address is missing in response.')
+    }
+    const { address: selfAddress } = res['address']
     const ownsDemandA = demandA.owner === selfAddress
     const ownsDemandB = demandB.owner === selfAddress
 
@@ -394,7 +408,11 @@ export class Match2Controller extends Controller {
     if (!attachment) throw new BadRequest(`${attachmentId} not found`)
 
     const roles = [match2.memberA, match2.memberB]
-    const { address: selfAddress } = await this.identity.getMemberBySelf()
+    const res: any = await this.identity.getMemberBySelf()
+    if (!res.hasOwnProperty('address')) {
+      throw new Error('Address is missing in response.')
+    }
+    const { address: selfAddress } = res['address']
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
     if (match2.state !== 'acceptedFinal') throw new BadRequest('Match2 state must be acceptedFinal')
 
@@ -470,7 +488,11 @@ export class Match2Controller extends Controller {
     if (!match2) throw new NotFound('match2')
 
     const roles = [match2.memberA, match2.memberB, match2.optimiser]
-    const { address: selfAddress } = await this.identity.getMemberBySelf()
+    const res: any = await this.identity.getMemberBySelf()
+    if (!res.hasOwnProperty('address')) {
+      throw new Error('Address is missing in response.')
+    }
+    const { address: selfAddress } = res['address']
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
 
     const rejectableStates: Match2State[] = ['proposed', 'acceptedA', 'acceptedB']
@@ -541,9 +563,11 @@ const responseWithAliases = async (match2: Match2Row, identity: Identity): Promi
 
   return {
     ...rest,
-    optimiser: await identity.getMemberByAddress(match2.optimiser).then(({ alias }) => alias),
-    memberA: await identity.getMemberByAddress(match2.memberA).then(({ alias }) => alias),
-    memberB: await identity.getMemberByAddress(match2.memberB).then(({ alias }) => alias),
+    optimiser: await identity
+      .getMemberByAddress(match2.optimiser)
+      .then((result: any) => (result as { alias: any }).alias),
+    memberA: await identity.getMemberByAddress(match2.memberA).then((result: any) => (result as { alias: any }).alias),
+    memberB: await identity.getMemberByAddress(match2.memberB).then((result: any) => (result as { alias: any }).alias),
     createdAt: match2.createdAt.toISOString(),
     updatedAt: match2.updatedAt.toISOString(),
     replaces: match2.replaces ? match2.replaces : undefined,
