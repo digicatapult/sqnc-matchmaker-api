@@ -18,6 +18,14 @@ import ChainNode from '../../../lib/chainNode.js'
 import env from '../../../env.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
+import { z } from 'zod'
+
+const MemberResponseSchema = z.object({
+  address: z.string(),
+  alias: z.string(),
+})
+
+type MemberResponse = z.infer<typeof MemberResponseSchema>
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
@@ -49,12 +57,9 @@ export class DemandController extends Controller {
       throw new BadRequest('Attachment not found')
     }
 
-    const res: any = await this.identity.getMemberBySelf()
-    if (!res.hasOwnProperty('address') || !res.hasOwnProperty('alias')) {
-      throw new Error('Address or alias is missing in response.')
-    }
-    const selfAddress = res['address']
-    const selfAlias = res['alias']
+    const res: MemberResponse = await this.identity.getMemberBySelf()
+    const selfAddress = res.address
+    const selfAlias = res.alias
 
     const [demand] = await this.db.insertDemand({
       owner: selfAddress,
@@ -148,11 +153,8 @@ export class DemandController extends Controller {
     const [comment] = await this.db.getAttachment(attachmentId)
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
 
-    const res: any = await this.identity.getMemberBySelf()
-    if (!res.hasOwnProperty('address')) {
-      throw new Error('Address is missing in response.')
-    }
-    const selfAddress = res['address']
+    const res: MemberResponse = await this.identity.getMemberBySelf()
+    const selfAddress = res.address
 
     const extrinsic = await this.node.prepareRunProcess(demandCommentCreate(demand, comment))
 
@@ -204,11 +206,8 @@ export class DemandController extends Controller {
 }
 
 const responseWithAlias = async (demand: DemandRow, identity: Identity): Promise<DemandResponse> => {
-  const res: any = await identity.getMemberByAddress(demand.owner)
-  if (!res.hasOwnProperty('alias')) {
-    throw new Error('Alias is missing in response.')
-  }
-  const ownerAlias = res['alias']
+  const res: MemberResponse = await identity.getMemberByAddress(demand.owner)
+  const ownerAlias = res.alias
 
   return {
     id: demand.id,
@@ -229,11 +228,8 @@ const responseWithComments = async (
   const aliasMap = new Map(
     await Promise.all(
       commentors.map(async (commentor) => {
-        const res: any = await identity.getMemberByAddress(commentor)
-        if (!res.hasOwnProperty('alias')) {
-          throw new Error('Alias is missing in response.')
-        }
-        const alias = res['alias']
+        const res: MemberResponse = await identity.getMemberByAddress(commentor)
+        const alias = res.alias
 
         return [commentor, alias] as const
       })
