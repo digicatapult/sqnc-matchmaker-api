@@ -3,33 +3,33 @@ import { Logger } from 'pino'
 import { serviceState } from './service-watcher/statusPoll.js'
 import type { MetadataFile } from './payload.js'
 import { HttpResponse } from './error-handler/index.js'
-import { z } from 'zod'
 
 interface FilestoreResponse {
   Name: string
   Hash: string
   Size: string
 }
-const PeersResponseSchema = z.object({
-  Peers: z.array(z.object({})),
-})
+type EmptyObject = object
+type Peers = EmptyObject[]
+type PeersResponse = {
+  Peers?: Peers
+}
 type VersionResponse = {
   Version: string
 }
-const DirDataSchema = z.object({
-  Objects: z.array(
-    z.object({
-      Links: z.array(
-        z.object({
-          Hash: z.string(),
-          Name: z.string(),
-        })
-      ),
-    })
-  ),
-})
+type Link = {
+  Hash: string
+  Name: string
+}
 
-type PeersResponse = z.infer<typeof PeersResponseSchema>
+type LinksObject = {
+  Links: Link[]
+}
+
+type DirDataSchema = {
+  Objects: LinksObject[]
+  success: string
+}
 
 export default class Ipfs {
   private addUrl: string
@@ -82,12 +82,12 @@ export default class Ipfs {
     }
 
     // Parse stream of dir data to get the file hash
-    const data = await dirRes.json()
-    const parsedData = DirDataSchema.safeParse(data)
-    if (!parsedData.success) {
+    const data = (await dirRes.json()) as DirDataSchema
+    // const parsedData = data as DirDataSchema
+    if (!data.success) {
       throw new Error(`Error parsing directory from IPFS (${dirRes.status}): ${await dirRes.text()}`)
     }
-    const link = parsedData.data.Objects?.[0]?.Links?.[0]
+    const link = data.Objects?.[0]?.Links?.[0]
 
     if (!link) {
       throw new Error(`Error extracting link from parsed data (${dirRes.status}): ${await dirRes.text()}`)
@@ -119,7 +119,7 @@ export default class Ipfs {
       }
       const [versionResponse, peersResponse] = await Promise.all(results.map((r) => r.json()))
       const versionData: VersionResponse = versionResponse as VersionResponse
-      const peersData: PeersResponse = PeersResponseSchema.parse(peersResponse)
+      const peersData: PeersResponse = peersResponse as PeersResponse
 
       const peers: { Peer?: unknown }[] = peersData.Peers || []
       const peerCount = new Set(peers.map((peer) => peer.Peer)).size
