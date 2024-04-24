@@ -3,13 +3,11 @@ import { singleton } from 'tsyringe'
 import { NotFound, HttpResponse } from '../error-handler/index.js'
 import env from '../../env.js'
 import { Status, serviceState } from '../service-watcher/statusPoll.js'
-import { z } from 'zod'
 
 const URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`
-const HealthResponseSchema = z.object({
-  version: z.string(),
-})
-type HealthResponse = z.infer<typeof HealthResponseSchema>
+type HealthResponse = {
+  version: string
+}
 
 @singleton()
 export default class Identity {
