@@ -91,8 +91,7 @@ export class Match2Controller extends Controller {
     })
 
     const res = await this.identity.getMemberBySelf()
-    const typedRes = res as MemberResponse
-    const { address: selfAddress } = typedRes
+    const { address: selfAddress } = res
 
     if (replaces) {
       const [originalMatch2]: Match2Row[] = await this.db.getMatch2(replaces)
@@ -266,8 +265,7 @@ export class Match2Controller extends Controller {
     const [oldMatch2]: Match2Row[] = match2.replaces ? await this.db.getMatch2(match2.replaces) : []
 
     const res = await this.identity.getMemberBySelf()
-    const typedRes = res as MemberResponse
-    const { address: selfAddress } = typedRes
+    const { address: selfAddress } = res
     const ownsDemandA = demandA.owner === selfAddress
     const ownsDemandB = demandB.owner === selfAddress
 
@@ -410,8 +408,7 @@ export class Match2Controller extends Controller {
 
     const roles = [match2.memberA, match2.memberB]
     const res = await this.identity.getMemberBySelf()
-    const typedRes = res as MemberResponse
-    const { address: selfAddress } = typedRes
+    const { address: selfAddress } = res
 
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
     if (match2.state !== 'acceptedFinal') throw new BadRequest('Match2 state must be acceptedFinal')
@@ -489,8 +486,7 @@ export class Match2Controller extends Controller {
 
     const roles = [match2.memberA, match2.memberB, match2.optimiser]
     const res = await this.identity.getMemberBySelf()
-    const typedRes = res as MemberResponse
-    const { address: selfAddress } = typedRes
+    const { address: selfAddress } = res
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
 
     const rejectableStates: Match2State[] = ['proposed', 'acceptedA', 'acceptedB']

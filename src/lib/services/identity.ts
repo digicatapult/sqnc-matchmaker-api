@@ -8,6 +8,10 @@ const URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_P
 type HealthResponse = {
   version: string
 }
+type MemberResponse = {
+  address: string
+  alias: string
+}
 
 @singleton()
 export default class Identity {
@@ -67,11 +71,11 @@ export default class Identity {
     throw new HttpResponse({})
   }
 
-  getMemberBySelf = async () => {
+  getMemberBySelf = async (): Promise<MemberResponse> => {
     const res = await fetch(`${URL_PREFIX}/v1/self`)
 
     if (res.ok) {
-      return await res.json()
+      return (await res.json()) as MemberResponse
     }
 
     throw new HttpResponse({})

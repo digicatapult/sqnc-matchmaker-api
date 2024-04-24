@@ -18,10 +18,6 @@ import ChainNode from '../../../lib/chainNode.js'
 import env from '../../../env.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
-type MemberResponse = {
-  address: string
-  alias: string
-}
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
@@ -54,9 +50,8 @@ export class DemandController extends Controller {
     }
 
     const res = await this.identity.getMemberBySelf()
-    const typedRes = res as MemberResponse
-    const selfAddress = typedRes.address
-    const selfAlias = typedRes.alias
+    const selfAddress = res.address
+    const selfAlias = res.alias
 
     const [demand] = await this.db.insertDemand({
       owner: selfAddress,
@@ -151,8 +146,7 @@ export class DemandController extends Controller {
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
 
     const res = await this.identity.getMemberBySelf()
-    const typedRes = res as MemberResponse
-    const selfAddress = typedRes.address
+    const selfAddress = res.address
 
     const extrinsic = await this.node.prepareRunProcess(demandCommentCreate(demand, comment))
 
@@ -205,8 +199,7 @@ export class DemandController extends Controller {
 
 const responseWithAlias = async (demand: DemandRow, identity: Identity): Promise<DemandResponse> => {
   const res = await identity.getMemberByAddress(demand.owner)
-  const typedRes = res as MemberResponse
-  const ownerAlias = typedRes.alias
+  const ownerAlias = res.alias
 
   return {
     id: demand.id,
@@ -228,8 +221,7 @@ const responseWithComments = async (
     await Promise.all(
       commentors.map(async (commentor) => {
         const res = await identity.getMemberByAddress(commentor)
-        const typedRes = res as MemberResponse
-        const alias = typedRes.alias
+        const alias = res.alias
 
         return [commentor, alias] as const
       })
