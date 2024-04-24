@@ -13,9 +13,9 @@ interface FilestoreResponse {
 const PeersResponseSchema = z.object({
   Peers: z.array(z.object({})),
 })
-const VersionResponseSchema = z.object({
-  Version: z.string(),
-})
+type VersionResponse = {
+  Version: string
+}
 const DirDataSchema = z.object({
   Objects: z.array(
     z.object({
@@ -30,7 +30,6 @@ const DirDataSchema = z.object({
 })
 
 type PeersResponse = z.infer<typeof PeersResponseSchema>
-type VersionResponse = z.infer<typeof VersionResponseSchema>
 
 export default class Ipfs {
   private addUrl: string
@@ -119,7 +118,7 @@ export default class Ipfs {
         }
       }
       const [versionResponse, peersResponse] = await Promise.all(results.map((r) => r.json()))
-      const versionData: VersionResponse = VersionResponseSchema.parse(versionResponse)
+      const versionData: VersionResponse = versionResponse as VersionResponse
       const peersData: PeersResponse = PeersResponseSchema.parse(peersResponse)
 
       const peers: { Peer?: unknown }[] = peersData.Peers || []
