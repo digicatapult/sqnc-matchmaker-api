@@ -9,10 +9,8 @@ interface FilestoreResponse {
   Hash: string
   Size: string
 }
-type EmptyObject = object
-type Peers = EmptyObject[]
 type PeersResponse = {
-  Peers?: Peers
+  Peers?: { Peer: object }[]
 }
 type VersionResponse = {
   Version: string
