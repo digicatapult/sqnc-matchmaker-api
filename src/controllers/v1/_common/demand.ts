@@ -18,14 +18,10 @@ import ChainNode from '../../../lib/chainNode.js'
 import env from '../../../env.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
-import { z } from 'zod'
-
-const MemberResponseSchema = z.object({
-  address: z.string(),
-  alias: z.string(),
-})
-
-type MemberResponse = z.infer<typeof MemberResponseSchema>
+type MemberResponse = {
+  address: string
+  alias: string
+}
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
