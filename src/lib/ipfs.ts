@@ -83,14 +83,10 @@ export default class Ipfs {
 
     // Parse stream of dir data to get the file hash
     const data = (await dirRes.json()) as DirDataSchema
-    // const parsedData = data as DirDataSchema
-    if (!data.success) {
-      throw new Error(`Error parsing directory from IPFS (${dirRes.status}): ${await dirRes.text()}`)
-    }
-    const link = data.Objects?.[0]?.Links?.[0]
+    const link = data?.Objects?.[0]?.Links?.[0]
 
     if (!link) {
-      throw new Error(`Error extracting link from parsed data (${dirRes.status}): ${await dirRes.text()}`)
+      throw new Error(`Error parsing directory from IPFS (${dirRes.status}): ${await dirRes.text()}`)
     }
     const fileHash = link.Hash
     const filename = link.Name
