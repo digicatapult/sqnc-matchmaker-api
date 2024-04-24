@@ -20,7 +20,7 @@ import { Readable } from 'node:stream'
 
 import { logger } from '../../../lib/logger.js'
 import Database from '../../../lib/db/index.js'
-import { Attachment } from '../../../models/index.js'
+import type { Attachment } from '../../../models/attachment.js'
 import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
 import type { UUID, DATE } from '../../../models/strings.js'
 import Ipfs from '../../../lib/ipfs.js'
