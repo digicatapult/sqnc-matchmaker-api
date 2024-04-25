@@ -1,28 +1,36 @@
-import { singleton } from 'tsyringe'
+import { injectable, singleton } from 'tsyringe'
+import { z } from 'zod'
 
 import { NotFound, HttpResponse } from '../error-handler/index.js'
 import env from '../../env.js'
 import { Status, serviceState } from '../service-watcher/statusPoll.js'
 
-const URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`
-type HealthResponse = {
-  version: string
-}
-type MemberResponse = {
-  address: string
-  alias: string
-}
+const identityResponseValidator = z.object({
+  address: z.string(),
+  alias: z.string(),
+})
+type IdentityResponse = z.infer<typeof identityResponseValidator>
+
+const identityHealthValidator = z.object({
+  version: z.string(),
+  status: z.literal('ok'),
+})
+type IdentityHealthResponse = z.infer<typeof identityHealthValidator>
 
 @singleton()
+@injectable()
 export default class Identity {
-  constructor() {}
+  private URL_PREFIX: string
+
+  constructor() {
+    this.URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`
+  }
 
   getStatus = async (): Promise<Status> => {
     try {
       const res = await this.getHealth()
       if (res) {
-        const healthData: HealthResponse = res as HealthResponse
-        if (!healthData.version.match(/\d+.\d+.\d+/)) {
+        if (!res.version.match(/\d+.\d+.\d+/)) {
           return {
             status: serviceState.DOWN,
             detail: {
@@ -33,7 +41,7 @@ export default class Identity {
         return {
           status: serviceState.UP,
           detail: {
-            version: healthData.version,
+            version: res.version,
           },
         }
       }
@@ -47,11 +55,11 @@ export default class Identity {
       }
     }
   }
-  getMemberByAlias = async (alias: string) => {
-    const res = await fetch(`${URL_PREFIX}/v1/members/${encodeURIComponent(alias)}`)
+  getMemberByAlias = async (alias: string): Promise<IdentityResponse> => {
+    const res = await fetch(`${this.URL_PREFIX}/v1/members/${encodeURIComponent(alias)}`)
 
     if (res.ok) {
-      return await res.json()
+      return identityResponseValidator.parse(await res.json())
     }
 
     if (res.status === 404) {
@@ -61,21 +69,21 @@ export default class Identity {
     throw new HttpResponse({})
   }
 
-  getHealth = async () => {
-    const res = await fetch(`${URL_PREFIX}/health`)
+  getHealth = async (): Promise<IdentityHealthResponse> => {
+    const res = await fetch(`${this.URL_PREFIX}/health`)
 
     if (res.ok) {
-      return await res.json()
+      return identityHealthValidator.parse(await res.json())
     }
 
     throw new HttpResponse({})
   }
 
-  getMemberBySelf = async (): Promise<MemberResponse> => {
-    const res = await fetch(`${URL_PREFIX}/v1/self`)
+  getMemberBySelf = async (): Promise<IdentityResponse> => {
+    const res = await fetch(`${this.URL_PREFIX}/v1/self`)
 
     if (res.ok) {
-      return (await res.json()) as MemberResponse
+      return identityResponseValidator.parse(await res.json())
     }
 
     throw new HttpResponse({})
