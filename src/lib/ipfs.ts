@@ -15,14 +15,10 @@ interface FilestoreResponse {
 const dirListValidator = z.object({
   Objects: z.array(
     z.object({
-      Hash: z.string(),
       Links: z.array(
         z.object({
           Hash: z.string(),
           Name: z.string(),
-          Size: z.number(),
-          Target: z.string(),
-          Type: z.number(),
         })
       ),
     })
@@ -30,10 +26,6 @@ const dirListValidator = z.object({
 })
 
 const versionValidator = z.object({
-  Commit: z.string(),
-  Golang: z.string(),
-  Repo: z.string(),
-  System: z.string(),
   Version: z.string(),
 })
 
@@ -140,7 +132,7 @@ export default class Ipfs {
         versionValidator.parse(versionResultJson),
         peersValidator.parse(peersResultJson),
       ]
-      const peers: { Peer: unknown }[] = peersResult.Peers || []
+      const peers = peersResult.Peers || []
       const peerCount = new Set(peers.map((peer) => peer.Peer)).size
       return {
         status: serviceState.UP,
