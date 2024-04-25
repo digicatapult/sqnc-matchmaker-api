@@ -1,4 +1,4 @@
-import pino, { Logger } from 'pino'
+import { pino, Logger } from 'pino'
 
 import env from '../env.js'
 

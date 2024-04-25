@@ -24,7 +24,7 @@ export async function withOkMock() {
         method: 'POST',
       })
       .reply(200, {
-        Peers: [{ Peer: '1' }],
+        Peers: [{ Peer: '1', Addr: '2' }],
       })
       .persist()
   })

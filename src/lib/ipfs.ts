@@ -1,4 +1,6 @@
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
+import { singleton } from 'tsyringe'
+import { z } from 'zod'
 
 import { serviceState } from './service-watcher/statusPoll.js'
 import type { MetadataFile } from './payload.js'
@@ -10,6 +12,33 @@ interface FilestoreResponse {
   Size: string
 }
 
+const dirListValidator = z.object({
+  Objects: z.array(
+    z.object({
+      Links: z.array(
+        z.object({
+          Hash: z.string(),
+          Name: z.string(),
+        })
+      ),
+    })
+  ),
+})
+
+const versionValidator = z.object({
+  Version: z.string(),
+})
+
+const peersValidator = z.object({
+  Peers: z.array(
+    z.object({
+      Addr: z.string(),
+      Peer: z.string(),
+    })
+  ),
+})
+
+@singleton()
 export default class Ipfs {
   private addUrl: string
   private dirUrl: (dirHash: string) => string
@@ -22,6 +51,7 @@ export default class Ipfs {
     this.addUrl = `http://${host}:${port}/api/v0/add?cid-version=0&wrap-with-directory=true`
     this.dirUrl = (dirHash) => `http://${host}:${port}/api/v0/ls?arg=${dirHash}`
     this.fileUrl = (fileHash) => `http://${host}:${port}/api/v0/cat?arg=${fileHash}`
+
     this.logger = logger.child({ module: 'ipfs' })
     this.versionURL = `http://${host}:${port}/api/v0/version`
     this.peersURL = `http://${host}:${port}/api/v0/swarm/peers`
@@ -61,7 +91,7 @@ export default class Ipfs {
     }
 
     // Parse stream of dir data to get the file hash
-    const data = await dirRes.json()
+    const data = dirListValidator.parse(await dirRes.json())
     const link = data?.Objects?.[0]?.Links?.[0]
 
     if (!link) {
@@ -85,6 +115,10 @@ export default class Ipfs {
         fetch(this.peersURL, { method: 'POST' }),
       ])
       if (results.some((result) => !result.ok)) {
+        logStatusError(this.logger, {
+          versionCheckResult: results[0].statusText,
+          peersCheckResult: results[1].statusText,
+        })
         return {
           status: serviceState.DOWN,
           detail: {
@@ -93,8 +127,12 @@ export default class Ipfs {
         }
       }
 
-      const [versionResult, peersResult] = await Promise.all(results.map((r) => r.json()))
-      const peers: { Peer: unknown }[] = peersResult.Peers || []
+      const [versionResultJson, peersResultJson] = await Promise.all(results.map((r) => r.json()))
+      const [versionResult, peersResult] = [
+        versionValidator.parse(versionResultJson),
+        peersValidator.parse(peersResultJson),
+      ]
+      const peers = peersResult.Peers || []
       const peerCount = new Set(peers.map((peer) => peer.Peer)).size
       return {
         status: serviceState.UP,
@@ -104,6 +142,7 @@ export default class Ipfs {
         },
       }
     } catch (err) {
+      logStatusError(this.logger, err)
       return {
         status: serviceState.DOWN,
         detail: {
@@ -111,6 +150,15 @@ export default class Ipfs {
         },
       }
     }
+  }
+}
+
+const logStatusError = (logger: Logger, details: unknown) => {
+  if (details instanceof Error) {
+    logger.error('Error getting status from IPFS node. Message: %s', details.message)
+    logger.debug('Error getting status from IPFS node. Stack: %j', details.stack)
+  } else {
+    logger.error('Error getting status from IPFS node: %s', JSON.stringify(details))
   }
 }
 
