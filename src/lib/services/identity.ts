@@ -1,4 +1,4 @@
-import { injectable, singleton } from 'tsyringe'
+import { singleton } from 'tsyringe'
 import { z } from 'zod'
 
 import { NotFound, HttpResponse } from '../error-handler/index.js'
@@ -18,7 +18,6 @@ const identityHealthValidator = z.object({
 type IdentityHealthResponse = z.infer<typeof identityHealthValidator>
 
 @singleton()
-@injectable()
 export default class Identity {
   private URL_PREFIX: string
 

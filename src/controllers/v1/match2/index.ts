@@ -41,11 +41,6 @@ import ChainNode from '../../../lib/chainNode.js'
 import env from '../../../env.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 
-type MemberResponse = {
-  address: string
-  alias: string
-}
-
 @Route('v1/match2')
 @injectable()
 @Tags('match2')
@@ -596,7 +591,6 @@ const validatePreOnChain = <
   }
 }
 
-const getAlias = (response: unknown): string => {
-  const res = response as MemberResponse
+const getAlias = (res: { alias: string }): string => {
   return res.alias
 }
