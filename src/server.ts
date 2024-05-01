@@ -9,7 +9,6 @@ import bodyParser from 'body-parser'
 
 import { errorHandler } from './lib/error-handler/index.js'
 import { RegisterRoutes } from './routes.js'
-import { checkJwks } from './lib/authentication.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
