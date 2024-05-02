@@ -58,7 +58,7 @@ export class BadRequest extends HttpResponse implements IBadRequest {
 }
 
 /**
- * resource at the endpoint is forbiden 
+ * resource at the endpoint is forbiden
  * */
 export class Forbiden extends HttpResponse implements IAuth {
   constructor(reason?: string) {
