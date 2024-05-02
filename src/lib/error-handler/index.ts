@@ -18,6 +18,11 @@ interface IBadRequest {
   name: string
 }
 
+interface IAuth {
+  reason?: string
+  name: string
+}
+
 export class HttpResponse extends Error {
   public code: number
   public message: string
@@ -49,6 +54,24 @@ export class NotFound extends HttpResponse implements INotFound {
 export class BadRequest extends HttpResponse implements IBadRequest {
   constructor(message = 'bad request') {
     super({ code: 400, message })
+  }
+}
+
+/**
+ * resource at the endpoint is forbiden 
+ * */
+export class Forbiden extends HttpResponse implements IAuth {
+  constructor(reason?: string) {
+    super({ code: 403, message: `resource is forbiden ${reason}` })
+  }
+}
+
+/**
+ * indicates that request is not authorized
+ * */
+export class Unauthorized extends HttpResponse implements IAuth {
+  constructor(reason?: string) {
+    super({ code: 401, message: `authentication failed, reason - ${reason}` })
   }
 }
 
