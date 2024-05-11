@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/sqnc-matchmaker-api",
-  "version": "2.3.15",
+  "version": "2.3.16",
   "description": "An OpenAPI Matchmaking API service for SQNC",
   "main": "src/index.ts",
   "type": "module",
@@ -38,12 +38,12 @@
   },
   "homepage": "https://github.com/digicatapult/sqnc-matchmaker-api#readme",
   "devDependencies": {
-    "@polkadot/types": "^11.0.2",
+    "@polkadot/types": "^11.0.3",
     "@types/chai": "^4.3.16",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.12.10",
+    "@types/node": "^20.12.11",
     "@types/sinon": "^17.0.3",
     "@types/supertest": "^6.0.2",
     "@types/swagger-ui-express": "^4.1.6",
@@ -69,7 +69,7 @@
     "undici": "^6.16.0"
   },
   "dependencies": {
-    "@polkadot/api": "^11.0.2",
+    "@polkadot/api": "^11.0.3",
     "@polkadot/util-crypto": "^12.6.2",
     "@tsoa/runtime": "^6.2.1",
     "base-x": "^4.0.0",
