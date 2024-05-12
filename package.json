@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/sqnc-matchmaker-api",
-  "version": "2.3.17",
+  "version": "2.3.18",
   "description": "An OpenAPI Matchmaking API service for SQNC",
   "main": "src/index.ts",
   "type": "module",
@@ -51,7 +51,7 @@
     "@typescript-eslint/eslint-plugin": "^7.8.0",
     "@typescript-eslint/parser": "^7.8.0",
     "c8": "^9.1.0",
-    "chai": "^5.1.0",
+    "chai": "^5.1.1",
     "concurrently": "^8.2.2",
     "depcheck": "^1.4.7",
     "eslint": "^8.57.0",
