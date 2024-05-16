@@ -1,5 +1,3 @@
-version: '3'
-
 networks:
   chain:
     ipam:
@@ -50,8 +48,8 @@ services:
     container_name: member-a-identity
     command: /bin/sh -c "
       sleep 10 &&
-      npx knex migrate:latest &&
-      node app/index.js"
+      npm run db:migrate &&
+      npm start"
     ports:
       - 9000:9000
     depends_on:
@@ -67,7 +65,9 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-      - AUTH_TYPE=${AUTH_TYPE:-NONE}
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-a/protocol/openid-connect
+      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-a/protocol/openid-connect
     networks: ['member-a']
 
   member-a-node:
@@ -109,6 +109,9 @@ services:
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
       - USER_URI=//Alice
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-a/protocol/openid-connect
+      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-a/protocol/openid-connect
     ports:
       - 8000:8000
     depends_on:
@@ -151,8 +154,8 @@ services:
     container_name: member-b-identity
     command: /bin/sh -c "
       sleep 10 &&
-      npx knex migrate:latest &&
-      node app/index.js"
+      npm run db:migrate &&
+      npm start"
     ports:
       - 9010:9010
     depends_on:
@@ -168,7 +171,9 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - SELF_ADDRESS=5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
-      - AUTH_TYPE=${AUTH_TYPE:-NONE}
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-b/protocol/openid-connect
+      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-b/protocol/openid-connect
     networks: ['member-b']
 
   member-b-node:
@@ -210,6 +215,9 @@ services:
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
       - USER_URI=//Bob
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-b/protocol/openid-connect
+      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-b/protocol/openid-connect
     ports:
       - 8010:8010
     depends_on:
@@ -253,8 +261,8 @@ services:
     container_name: optimiser-identity
     command: /bin/sh -c "
       sleep 10 &&
-      npx knex migrate:latest &&
-      node app/index.js"
+      npm run db:migrate &&
+      npm start"
     ports:
       - 9020:9020
     depends_on:
@@ -270,7 +278,9 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - SELF_ADDRESS=5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y
-      - AUTH_TYPE=${AUTH_TYPE:-NONE}
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/optimiser/protocol/openid-connect
+      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/optimiser/protocol/openid-connect
     networks: ['optimiser']
   optimiser-node:
     image: digicatapult/sqnc-node:latest
@@ -311,6 +321,9 @@ services:
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
       - USER_URI=//Charlie
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/optimiser/protocol/openid-connect
+      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/optimiser/protocol/openid-connect
     ports:
       - 8020:8020
     depends_on:
@@ -337,6 +350,20 @@ services:
     networks: ['ipfs']
     volumes:
       - ipfs:/data/ipfs
+
+  # ------------------------------------------------------------------------ keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.4
+    container_name: keycloak
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - 3080:8080
+    volumes:
+      - ./docker/keycloak:/opt/keycloak/data/import
+    command: start-dev --import-realm
+    networks: ['member-a', 'member-b', 'optimiser']
 
 volumes:
   member-a-matchmaker-api-storage:

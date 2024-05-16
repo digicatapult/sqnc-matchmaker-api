@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   postgres-matchmaker-api:
     image: postgres:16.3-alpine
@@ -30,12 +28,11 @@ services:
     container_name: identity-service
     command: /bin/sh -c "
       sleep 30 &&
-      npx knex migrate:latest &&
-      node app/index.js"
+      npm run db:migrate &&
+      npm start"
     ports:
-      - 3002:3002
+      - 3002:3000
     environment:
-      - PORT=3002
       - API_HOST=sqnc-node
       - DB_HOST=postgres-identity-service
       - DB_PORT=5432
@@ -43,7 +40,9 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-      - AUTH_TYPE=${AUTH_TYPE:-NONE}
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-a/protocol/openid-connect
+      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-a/protocol/openid-connect
 
   sqnc-node:
     image: digicatapult/sqnc-node:latest
@@ -72,6 +71,19 @@ services:
       - 4001:4001
       - 8080:8080
       - 5001:5001
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.4
+    container_name: keycloak
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - 3080:8080
+    volumes:
+      - ./docker/keycloak:/opt/keycloak/data/import
+    command: start-dev --import-realm
+
 volumes:
   matchmaker-api-storage:
   identity-storage:

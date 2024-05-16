@@ -1,4 +1,19 @@
-import { ValidateError, Get, Post, Route, Path, Response, Body, SuccessResponse, Tags, Security, Query } from 'tsoa'
+import type express from 'express'
+
+import {
+  ValidateError,
+  Get,
+  Post,
+  Route,
+  Path,
+  Response,
+  Body,
+  SuccessResponse,
+  Tags,
+  Security,
+  Query,
+  Request,
+} from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import type {
@@ -30,8 +45,8 @@ export class DemandBController extends DemandController {
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
-  public async createDemandB(@Body() body: DemandRequest): Promise<DemandResponse> {
-    return super.createDemand(body)
+  public async createDemandB(@Request() req: express.Request, @Body() body: DemandRequest): Promise<DemandResponse> {
+    return super.createDemand(req, body)
   }
 
   /**
@@ -39,8 +54,8 @@ export class DemandBController extends DemandController {
    * @summary List demandBs
    */
   @Get('/')
-  public async getAll(@Query() updated_since?: DATE): Promise<DemandResponse[]> {
-    return super.getAll(updated_since)
+  public async getAll(@Request() req: express.Request, @Query() updated_since?: DATE): Promise<DemandResponse[]> {
+    return super.getAll(req, updated_since)
   }
 
   /**
@@ -49,8 +64,11 @@ export class DemandBController extends DemandController {
    */
   @Response<NotFound>(404, 'Item not found')
   @Get('{demandBId}')
-  public async getDemandB(@Path() demandBId: UUID): Promise<DemandWithCommentsResponse> {
-    return super.getDemand(demandBId)
+  public async getDemandB(
+    @Request() req: express.Request,
+    @Path() demandBId: UUID
+  ): Promise<DemandWithCommentsResponse> {
+    return super.getDemand(req, demandBId)
   }
 
   /**
@@ -101,10 +119,11 @@ export class DemandBController extends DemandController {
   @Response<NotFound>(400, 'Attachment not found')
   @SuccessResponse('201')
   public async createDemandBCommentOnChain(
+    @Request() req: express.Request,
     @Path() demandBId: UUID,
     @Body() body: DemandCommentRequest
   ): Promise<TransactionResponse> {
-    return super.createDemandCommentOnChain(demandBId, body)
+    return super.createDemandCommentOnChain(req, demandBId, body)
   }
 
   /**

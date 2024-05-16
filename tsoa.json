@@ -15,7 +15,11 @@
     "securityDefinitions": {
       "oauth2": {
         "type": "oauth2",
-        "flows": {}
+        "flows": {
+          "clientCredentials": {
+            "scopes": []
+          }
+        }
       }
     },
     "specMerging": "recursive",
@@ -104,7 +108,7 @@
   },
   "routes": {
     "routesDir": "src",
-    "authenticationModule": "./src/lib/authentication.ts",
+    "authenticationModule": "./src/authentication.ts",
     "iocModule": "src/ioc",
     "esm": true
   }

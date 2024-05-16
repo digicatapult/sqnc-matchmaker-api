@@ -8,26 +8,34 @@ An API facilitating a distributed heterogeneous pairwise matchmaking service uti
 
 Use a `.env` at root of the repository to set values for the environment variables defined in `.env` file.
 
-| variable               | required |        default         | description                                                                                  |
-| :--------------------- | :------: | :--------------------: | :------------------------------------------------------------------------------------------- |
-| PORT                   |    N     |         `3000`         | The port for the API to listen on                                                            |
-| LOG_LEVEL              |    N     |        `debug`         | Logging level. Valid values are [`trace`, `debug`, `info`, `warn`, `error`, `fatal`]         |
-| ENVIRONMENT_VAR        |    N     |       `example`        | An environment specific variable                                                             |
-| DB_PORT                |    N     |         `5432`         | The port for the database                                                                    |
-| DB_HOST                |    Y     |           -            | The database hostname / host                                                                 |
-| DB_NAME                |    N     | `sqnc-matchmaker-api ` | The database name                                                                            |
-| DB_USERNAME            |    Y     |           -            | The database username                                                                        |
-| DB_PASSWORD            |    Y     |           -            | The database password                                                                        |
-| IDENTITY_SERVICE_HOST  |    Y     |           -            | Hostname of the `sqnc-identity-service`                                                      |
-| IDENTITY_SERVICE_PORT  |    N     |         `3000`         | Port of the `sqnc-identity-service`                                                          |
-| NODE_HOST              |    Y     |           -            | The hostname of the `sqnc-node` the API should connect to                                    |
-| NODE_PORT              |    N     |         `9944`         | The port of the `sqnc-node` the API should connect to                                        |
-| LOG_LEVEL              |    N     |         `info`         | Logging level. Valid values are [`trace`, `debug`, `info`, `warn`, `error`, `fatal`]         |
-| USER_URI               |    Y     |           -            | The Substrate `URI` representing the private key to use when making `sqnc-node` transactions |
-| IPFS_HOST              |    Y     |           -            | Hostname of the `IPFS` node to use for metadata storage                                      |
-| IPFS_PORT              |    N     |         `5001`         | Port of the `IPFS` node to use for metadata storage                                          |
-| WATCHER_POLL_PERIOD_MS |    N     |        `10000`         | Number of ms between polling of service state                                                |
-| WATCHER_TIMEOUT_MS     |    N     |         `2000`         | Timeout period in ms for service state                                                       |
+| variable                | required |        default         | description                                                                                                                                           |
+| :---------------------- | :------: | :--------------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PORT                    |    N     |         `3000`         | The port for the API to listen on                                                                                                                     |
+| LOG_LEVEL               |    N     |        `debug`         | Logging level. Valid values are [`trace`, `debug`, `info`, `warn`, `error`, `fatal`]                                                                  |
+| ENVIRONMENT_VAR         |    N     |       `example`        | An environment specific variable                                                                                                                      |
+| DB_PORT                 |    N     |         `5432`         | The port for the database                                                                                                                             |
+| DB_HOST                 |    Y     |           -            | The database hostname / host                                                                                                                          |
+| DB_NAME                 |    N     | `sqnc-matchmaker-api ` | The database name                                                                                                                                     |
+| DB_USERNAME             |    Y     |           -            | The database username                                                                                                                                 |
+| DB_PASSWORD             |    Y     |           -            | The database password                                                                                                                                 |
+| IDENTITY_SERVICE_HOST   |    Y     |           -            | Hostname of the `sqnc-identity-service`                                                                                                               |
+| IDENTITY_SERVICE_PORT   |    N     |         `3000`         | Port of the `sqnc-identity-service`                                                                                                                   |
+| NODE_HOST               |    Y     |           -            | The hostname of the `sqnc-node` the API should connect to                                                                                             |
+| NODE_PORT               |    N     |         `9944`         | The port of the `sqnc-node` the API should connect to                                                                                                 |
+| LOG_LEVEL               |    N     |         `info`         | Logging level. Valid values are [`trace`, `debug`, `info`, `warn`, `error`, `fatal`]                                                                  |
+| USER_URI                |    Y     |           -            | The Substrate `URI` representing the private key to use when making `sqnc-node` transactions                                                          |
+| IPFS_HOST               |    Y     |           -            | Hostname of the `IPFS` node to use for metadata storage                                                                                               |
+| IPFS_PORT               |    N     |         `5001`         | Port of the `IPFS` node to use for metadata storage                                                                                                   |
+| WATCHER_POLL_PERIOD_MS  |    N     |        `10000`         | Number of ms between polling of service state                                                                                                         |
+| WATCHER_TIMEOUT_MS      |    N     |         `2000`         | Timeout period in ms for service state                                                                                                                |
+| API_SWAGGER_BG_COLOR    |    N     |       `#fafafa`        | CSS \_color\* val for UI bg ( try: [e4f2f3](https://coolors.co/e4f2f3) , [e7f6e6](https://coolors.co/e7f6e6) or [f8dddd](https://coolors.co/f8dddd) ) |
+| API_SWAGGER_TITLE       |    N     |     `IdentityAPI`      | String used to customise the title of the html page                                                                                                   |
+| API_SWAGGER_HEADING     |    N     |   `IdentityService`    | String used to customise the H2 heading                                                                                                               |
+| IDP_CLIENT_ID           |    Y     |           -            | OAuth2 client-id to use when validating authentication headers                                                                                        |
+| IDP_PUBLIC_URL_PREFIX   |    Y     |           -            | URL prefix to apply to access the IDP endpoints from the public internet                                                                              |
+| IDP_INTERNAL_URL_PREFIX |    Y     |           -            | URL prefix to apply to access the IDP endpoints from within the Sequence deployment's network                                                         |
+| IDP_TOKEN_PATH          |    N     |        `/token`        | Path to append to the appropriate prefix to determine the OAuth2 token endpoint                                                                       |
+| IDP_JWKS_PATH           |    N     |        `/certs`        | Path to append to the appropriate prefix to determine the OAuth2 JWKS endpoint                                                                        |
 
 ## Getting started
 
@@ -119,6 +127,10 @@ npm run flows
 4. Abstraction of the underlying DLT components. This means no token Ids, no block numbers etc.
 5. Conflict free identifiers. All identifiers must be conflict free as updates can come from third party organisations.
 
+### Authentication
+
+The API is authenticated and should be accessed with an OAuth2 JWT Bearer token obtained following the OAuth2 client-credentials flow against the deployment's identity-provider.
+
 ### Fundamental entities
 
 These are the top level physical concepts in the system. They are the top level RESTful path segments. Note that different states of an entity will **NOT** be represented as different top level entities.
@@ -174,7 +186,7 @@ The demo involves three personas: `MemberA`, `MemberB` and an `Optimiser`. Each 
 - sqnc-identity-service (+ PostgreSQL)
 - sqnc-node
 
-There is also a single `ipfs` node for file storage.
+There is also a single `ipfs` node for file storage and `keycloak` instance used as the identity provider with a realm (`member-a`, `member-b`, `optimiser`) configured for each persona.
 
 Container names are prefixed with the persona e.g. `member-a-node`. Services are networked so that only the `sqnc-node` instances communicate cross-persona. Each persona uses a `substrate` well-known identity for their `sqnc-node`:
 
@@ -186,15 +198,31 @@ Container names are prefixed with the persona e.g. `member-a-node`. Services are
 
 The `docker compose` automatically adds process flows using `MemberA`. Process flows validate transactions that affect the chain.
 
+### Authentication
+
+To generate an authentication token for a given persona we will need to perform the client credentials flow against the correct `keycloak` realm. If using the `swagger` interface for each API this can be done by clicking `Authorize` and passing the `client_id` `sequence` and the `client_secret` `secret`. All other API calls through the swagger will now pass with the correct authorization header. If you would prefer to interact with the API from the command line you can generate an authentication token, for example with MemberA, with:
+
+```
+curl -X POST \
+  'http://localhost:3080/realms/member-a/protocol/openid-connect/token' \
+  -H 'content-type: application/x-www-form-urlencoded' \
+  -d grant_type=client_credentials \
+  -d client_id=sequence \
+  -d client_secret=secret
+```
+
+This will return a JSON response with the property `access_token` containing the JWT access token which will look something like `eyJhbGci...iPeDl3Fg`. API calls can then be conducted by passing this as a bearer token in an `authorization` header. For curl this is done with an argument like `-H 'authorization: bearer eyJhbGci...iPeDl3Fg'`.
+
 ### Identities
 
-Before transacting, aliases (a human-friendly names) can be set for the pre-configured node addresses using each persona's `sqnc-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. For example, to set the self address for `MemberA`, you can either use the [identity service swagger](http://localhost:8001/v1/swagger/#/members/put_members__address_) or run:
+Before transacting, aliases (a human-friendly names) can be set for the pre-configured node addresses using each persona's `sqnc-identity-service`. The value for alias doesn't matter, it just needs some value e.g. `self`. For example, to set the self address for `MemberA`, you can either use the [identity service swagger](http://localhost:8001/swagger/#/members/put_members__address_) or run (remembering to put in a valid authorisation token):
 
 ```
 curl -X 'PUT' \
   'http://localhost:8001/v1/members/5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
+  -H 'authorization: bearer eyJhbGci...iPeDl3Fg' \
   -d '{
   "alias": "self"
 }'
@@ -202,9 +230,9 @@ curl -X 'PUT' \
 
 Each persona's identity service:
 
-- [MemberA](http://localhost:9000/v1/swagger/)
-- [MemberB](http://localhost:9010/v1/swagger/)
-- [Optimiser](http://localhost:9020/v1/swagger/)
+- [MemberA](http://localhost:9000/swagger/)
+- [MemberB](http://localhost:9010/swagger/)
+- [Optimiser](http://localhost:9020/swagger/)
 
 By default, if no alias is set, the alias is the same as the node address.
 
