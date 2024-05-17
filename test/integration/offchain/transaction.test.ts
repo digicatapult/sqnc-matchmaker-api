@@ -175,6 +175,18 @@ describe('transaction', () => {
     ])
   })
 
+  it('should return 401 listing transactions when unauthenticated', async () => {
+    const { status } = await get(app, `/v1/transaction`, { authorization: 'bearer invalid' })
+    expect(status).to.equal(401)
+  })
+
+  it('should return 401 get transaction when unauthenticated', async () => {
+    const { status } = await get(app, `/v1/transaction/${seededDemandACommentTransactionId}`, {
+      authorization: 'bearer invalid',
+    })
+    expect(status).to.equal(401)
+  })
+
   it('should filter transactions based on updated date', async () => {
     const { status, body } = await get(app, `/v1/transaction?updated_since=2023-01-01T00:00:00.000Z`)
     expect(status).to.equal(200)

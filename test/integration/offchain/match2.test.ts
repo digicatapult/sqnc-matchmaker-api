@@ -292,6 +292,22 @@ describe('match2', () => {
       })
     })
 
+    it('unauthenticated create match2', async () => {
+      const response = await post(
+        app,
+        '/v1/match2',
+        {
+          demandA: seededDemandAWithTokenId,
+          demandB: seededDemandBWithTokenId,
+        },
+        {
+          authorization: 'bearer invalid',
+        }
+      )
+      expect(response.status).to.equal(401)
+      expect(response.body.message).to.equal('Forbidden')
+    })
+
     it('non-existent demandA - 400', async () => {
       const response = await post(app, '/v1/match2', { demandA: nonExistentId, demandB: seededDemandBId })
       expect(response.status).to.equal(400)
@@ -345,6 +361,11 @@ describe('match2', () => {
       expect(response.status).to.equal(404)
     })
 
+    it('unauthenticated get match2 - 401', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2Id}`, { authorization: 'bearer invalid' })
+      expect(response.status).to.equal(401)
+    })
+
     it('incorrect state when creating on-chain - 400', async () => {
       const response = await post(app, `/v1/match2/${seededMatch2AcceptedA}/proposal`, {})
       expect(response.status).to.equal(400)
@@ -383,9 +404,23 @@ describe('match2', () => {
       expect(response.status).to.equal(404)
     })
 
+    it('unauthenticated get match2 proposals - 401', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2Id}/proposal/${seededProposalTransactionId}`, {
+        authorization: 'bearer invalid',
+      })
+      expect(response.status).to.equal(401)
+    })
+
     it('non-existent match2 when listing proposals - 404', async () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/proposal`)
       expect(response.status).to.equal(404)
+    })
+
+    it('unauthenticated list match2 proposals - 401', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2Id}/proposal`, {
+        authorization: 'bearer invalid',
+      })
+      expect(response.status).to.equal(401)
     })
 
     it('list proposals with invalid updatedSince - 422', async () => {
@@ -395,6 +430,19 @@ describe('match2', () => {
         name: 'ValidateError',
         message: 'Validation failed',
       })
+    })
+
+    it('unauthenticated accept match2 - 401', async () => {
+      const { status } = await post(
+        app,
+        `/v1/match2/${seededMatch2Id}/accept`,
+        {},
+        {
+          authorization: 'bearer invalid',
+        }
+      )
+
+      expect(status).to.equal(401)
     })
 
     it('match2 at acceptA and DemandB not owned - 400', async () => {
@@ -433,6 +481,13 @@ describe('match2', () => {
       expect(response.body).to.equal('match2 not found')
     })
 
+    it('unauthenticated list match2 proposals - 401', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2AcceptedA}/accept`, {
+        authorization: 'bearer invalid',
+      })
+      expect(response.status).to.equal(401)
+    })
+
     it('list accepts with invalid updatedSince - 422', async () => {
       const { status, body } = await get(app, `/v1/match2/${seededMatch2AcceptedA}/accept?updated_since=foo`)
       expect(status).to.equal(422)
@@ -448,10 +503,29 @@ describe('match2', () => {
       expect(response.body).to.equal('match2 not found')
     })
 
+    it('unauthenticated get match2 accept - 401', async () => {
+      const { status } = await get(app, `/v1/match2/${seededMatch2AcceptedA}/accept/${seededAcceptTransactionId}`, {
+        authorization: 'bearer invalid',
+      })
+      expect(status).to.equal(401)
+    })
+
     it('non-existent transaction when getting an accept - 404', async () => {
       const response = await get(app, `/v1/match2/${seededMatch2Id}/accept/${nonExistentId}`)
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('accept not found')
+    })
+
+    it('unauthenticated match2 reject - 401', async () => {
+      const { status } = await post(
+        app,
+        `/v1/match2/${seededMatch2AcceptedA}/rejection`,
+        {},
+        {
+          authorization: 'bearer invalid',
+        }
+      )
+      expect(status).to.equal(401)
     })
 
     it('rejection of match2 at incorrect state - 400', async () => {
@@ -464,6 +538,13 @@ describe('match2', () => {
       const response = await post(app, `/v1/match2/${seededMatch2NotInRoles}/rejection`, {})
       expect(response.status).to.equal(400)
       expect(response.body).to.equal(`You do not have a role on the match2`)
+    })
+
+    it('unauthenticated list match2 rejections - 401', async () => {
+      const { status } = await get(app, `/v1/match2/${seededMatch2AcceptedA}/rejection`, {
+        authorization: 'bearer invalid',
+      })
+      expect(status).to.equal(401)
     })
 
     it('non-existent match2 id when rejection - 404', async () => {
@@ -487,6 +568,17 @@ describe('match2', () => {
       })
     })
 
+    it('unauthenticated get match2 rejection - 401', async () => {
+      const { status } = await get(
+        app,
+        `/v1/match2/${seededMatch2AcceptedA}/rejection/${seededRejectionTransactionId}`,
+        {
+          authorization: 'bearer invalid',
+        }
+      )
+      expect(status).to.equal(401)
+    })
+
     it('non-existent match2 when getting a rejection - 404', async () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/rejection/${seededRejectionTransactionId}`)
       expect(response.status).to.equal(404)
@@ -497,6 +589,18 @@ describe('match2', () => {
       const response = await get(app, `/v1/match2/${seededMatch2Id}/rejection/${nonExistentId}`)
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('rejection not found')
+    })
+
+    it('unauthenticated match2 cancel - 401', async () => {
+      const { status } = await post(
+        app,
+        `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`,
+        {},
+        {
+          authorization: 'bearer invalid',
+        }
+      )
+      expect(status).to.equal(401)
     })
 
     it('non-existent match2 when cancelling - 404', async () => {
@@ -523,6 +627,17 @@ describe('match2', () => {
       expect(response.body).to.equal('Match2 state must be acceptedFinal')
     })
 
+    it('unauthenticated get match2 cancellation - 401', async () => {
+      const { status } = await get(
+        app,
+        `/v1/match2/${seededMatch2AcceptedFinal}/cancellation/${seededMatch2CancellationId}`,
+        {
+          authorization: 'bearer invalid',
+        }
+      )
+      expect(status).to.equal(401)
+    })
+
     it('non-existent match2 when getting a cancellation - 404', async () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/cancellation/${seededMatch2CancellationId}`)
       expect(response.status).to.equal(404)
@@ -533,6 +648,13 @@ describe('match2', () => {
       const response = await get(app, `/v1/match2/${seededMatch2Id}/cancellation/${nonExistentId}`)
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('cancellation not found')
+    })
+
+    it('unauthenticated list match2 cancellations - 401', async () => {
+      const { status } = await get(app, `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`, {
+        authorization: 'bearer invalid',
+      })
+      expect(status).to.equal(401)
     })
 
     it('non-existent match2 when listing cancellations - 404', async () => {
