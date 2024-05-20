@@ -35,10 +35,10 @@ export default envalid.cleanEnv(process.env, {
   IDP_INTERNAL_URL_PREFIX: envalid.url({
     devDefault: 'http://localhost:3080/realms/member-a/protocol/openid-connect',
   }),
-  IDP_TOKEN_PATH: envalid.url({
+  IDP_TOKEN_PATH: envalid.str({
     default: '/token',
   }),
-  IDP_JWKS_PATH: envalid.url({
+  IDP_JWKS_PATH: envalid.str({
     default: '/certs',
   }),
 })
