@@ -1,3 +1,5 @@
+import type express from 'express'
+
 import {
   ValidateError,
   Controller,
@@ -11,6 +13,7 @@ import {
   Security,
   Path,
   Query,
+  Request,
 } from 'tsoa'
 import type { Logger } from 'pino'
 import { injectable } from 'tsyringe'
@@ -27,6 +30,7 @@ import {
 } from '../../../models/match2.js'
 
 import type { DATE, UUID } from '../../../models/strings.js'
+
 import { TransactionResponse, type TransactionType } from '../../../models/transaction.js'
 import {
   match2AcceptFinal,
@@ -40,6 +44,7 @@ import {
 import ChainNode from '../../../lib/chainNode.js'
 import env from '../../../env.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
+import { getAuthorization } from '../../../lib/utils/shared.js'
 
 @Route('v1/match2')
 @injectable()
@@ -71,7 +76,10 @@ export class Match2Controller extends Controller {
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
-  public async proposeMatch2(@Body() body: Match2Request): Promise<Match2Response | null> {
+  public async proposeMatch2(
+    @Request() req: express.Request,
+    @Body() body: Match2Request
+  ): Promise<Match2Response | null> {
     const { demandA: demandAId, demandB: demandBId, replaces } = body
     const [demandA]: DemandRow[] = await this.db.getDemand(demandAId)
     validatePreLocal(demandA, 'DemandA', {
@@ -85,7 +93,7 @@ export class Match2Controller extends Controller {
       state: 'created',
     })
 
-    const res = await this.identity.getMemberBySelf()
+    const res = await this.identity.getMemberBySelf(getAuthorization(req))
     const { address: selfAddress } = res
 
     if (replaces) {
@@ -106,7 +114,7 @@ export class Match2Controller extends Controller {
       replaces_id: replaces,
     })
 
-    return await responseWithAliases(match2, this.identity)
+    return await responseWithAliases(req, match2, this.identity)
   }
 
   /**
@@ -114,14 +122,14 @@ export class Match2Controller extends Controller {
    * @summary List match2s
    */
   @Get('/')
-  public async getAll(@Query() updated_since?: DATE): Promise<Match2Response[]> {
+  public async getAll(@Request() req: express.Request, @Query() updated_since?: DATE): Promise<Match2Response[]> {
     const query: { updatedSince?: Date } = {}
     if (updated_since) {
       query.updatedSince = parseDateParam(updated_since)
     }
 
     const match2s = await this.db.getMatch2s(query)
-    const result = await Promise.all(match2s.map(async (match2) => responseWithAliases(match2, this.identity)))
+    const result = await Promise.all(match2s.map(async (match2) => responseWithAliases(req, match2, this.identity)))
     return result
   }
 
@@ -132,11 +140,11 @@ export class Match2Controller extends Controller {
   @Response<ValidateError>(422, 'Validation Failed')
   @Response<NotFound>(404, 'Item not found')
   @Get('{match2Id}')
-  public async getMatch2(@Path() match2Id: UUID): Promise<Match2Response> {
+  public async getMatch2(@Request() req: express.Request, @Path() match2Id: UUID): Promise<Match2Response> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
 
-    return responseWithAliases(match2, this.identity)
+    return responseWithAliases(req, match2, this.identity)
   }
 
   /**
@@ -241,7 +249,10 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
-  public async acceptMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+  public async acceptMatch2OnChain(
+    @Request() req: express.Request,
+    @Path() match2Id: UUID
+  ): Promise<TransactionResponse> {
     const [match2]: Match2Row[] = await this.db.getMatch2(match2Id)
     validatePreOnChain(match2, 'Match2', {})
 
@@ -259,7 +270,7 @@ export class Match2Controller extends Controller {
     validatePreOnChain(demandB, 'DemandB', { subtype: 'demand_b', state: 'created' })
     const [oldMatch2]: Match2Row[] = match2.replaces ? await this.db.getMatch2(match2.replaces) : []
 
-    const res = await this.identity.getMemberBySelf()
+    const res = await this.identity.getMemberBySelf(getAuthorization(req))
     const { address: selfAddress } = res
     const ownsDemandA = demandA.owner === selfAddress
     const ownsDemandB = demandB.owner === selfAddress
@@ -387,6 +398,7 @@ export class Match2Controller extends Controller {
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('200')
   public async cancelMatch2OnChain(
+    @Request() req: express.Request,
     @Path() match2Id: UUID,
     @Body() body: Match2CancelRequest
   ): Promise<TransactionResponse> {
@@ -402,7 +414,7 @@ export class Match2Controller extends Controller {
     if (!attachment) throw new BadRequest(`${attachmentId} not found`)
 
     const roles = [match2.memberA, match2.memberB]
-    const res = await this.identity.getMemberBySelf()
+    const res = await this.identity.getMemberBySelf(getAuthorization(req))
     const { address: selfAddress } = res
 
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
@@ -475,12 +487,15 @@ export class Match2Controller extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('200')
-  public async rejectMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
+  public async rejectMatch2OnChain(
+    @Request() req: express.Request,
+    @Path() match2Id: UUID
+  ): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
     if (!match2) throw new NotFound('match2')
 
     const roles = [match2.memberA, match2.memberB, match2.optimiser]
-    const res = await this.identity.getMemberBySelf()
+    const res = await this.identity.getMemberBySelf(getAuthorization(req))
     const { address: selfAddress } = res
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
 
@@ -547,14 +562,19 @@ export class Match2Controller extends Controller {
   }
 }
 
-const responseWithAliases = async (match2: Match2Row, identity: Identity): Promise<Match2Response> => {
+const responseWithAliases = async (
+  req: express.Request,
+  match2: Match2Row,
+  identity: Identity
+): Promise<Match2Response> => {
   const { originalTokenId, latestTokenId, ...rest } = match2
+  const authorization = getAuthorization(req)
 
   return {
     ...rest,
-    optimiser: await identity.getMemberByAddress(match2.optimiser).then(getAlias),
-    memberA: await identity.getMemberByAddress(match2.memberA).then(getAlias),
-    memberB: await identity.getMemberByAddress(match2.memberB).then(getAlias),
+    optimiser: await identity.getMemberByAddress(match2.optimiser, authorization).then(getAlias),
+    memberA: await identity.getMemberByAddress(match2.memberA, authorization).then(getAlias),
+    memberB: await identity.getMemberByAddress(match2.memberB, authorization).then(getAlias),
     createdAt: match2.createdAt.toISOString(),
     updatedAt: match2.updatedAt.toISOString(),
     replaces: match2.replaces ? match2.replaces : undefined,

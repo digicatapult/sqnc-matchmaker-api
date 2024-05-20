@@ -227,6 +227,17 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(response.body.message).to.equal('Validation failed')
       })
 
+      it('unauthenticated create demand - 401', async () => {
+        const response = await post(
+          app,
+          `/v1/${demandType}`,
+          { parametersAttachmentId },
+          { authorization: 'bearer invalid' }
+        )
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.equal('Forbidden')
+      })
+
       it('non-existent attachment - 400', async () => {
         const response = await post(app, `/v1/${demandType}`, { parametersAttachmentId: nonExistentId })
         expect(response.status).to.equal(400)
@@ -238,6 +249,12 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(response.status).to.equal(404)
       })
 
+      it('unauthenticated get demand - 401', async () => {
+        const response = await get(app, `/v1/${demandType}/${seededDemandId}`, { authorization: 'bearer invalid' })
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.equal('Forbidden')
+      })
+
       it(`non-existent ${demandType} id when creating on-chain - 404`, async () => {
         const response = await post(app, `/v1/${demandType}/${nonExistentId}/creation`, {})
         expect(response.status).to.equal(404)
@@ -246,6 +263,14 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
       it(`non-existent ${demandType} id when getting creation tx - 404`, async () => {
         const response = await get(app, `/v1/${demandType}/${nonExistentId}/creation`, {})
         expect(response.status).to.equal(404)
+      })
+
+      it('unauthenticated get demand creation - 401', async () => {
+        const response = await get(app, `/v1/${demandType}/${seededDemandId}/creation`, {
+          authorization: 'bearer invalid',
+        })
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.equal('Forbidden')
       })
 
       it(`non-existent ${demandType} id when commenting on-chain - 404`, async () => {
@@ -260,9 +285,29 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(response.status).to.equal(404)
       })
 
+      it('unauthenticated list demand comment - 401', async () => {
+        const response = await get(app, `/v1/${demandType}/${seededDemandId}/comment`, {
+          authorization: 'bearer invalid',
+        })
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.equal('Forbidden')
+      })
+
       it('non-existent comment id when getting comment tx - 404', async () => {
         const response = await get(app, `/v1/${demandType}/${seededDemandId}/comment/${nonExistentId}`, {})
         expect(response.status).to.equal(404)
+      })
+
+      it('unauthenticated get demand comment - 401', async () => {
+        const response = await get(
+          app,
+          `/v1/${demandType}/${seededDemandId}/comment/${seededDemandBCommentTransactionId}`,
+          {
+            authorization: 'bearer invalid',
+          }
+        )
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.equal('Forbidden')
       })
 
       it(`${demandType} creations with invalid updatedSince - 422`, async () => {
@@ -278,6 +323,17 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         const response = await post(app, `/v1/${demandType}/${seededDemandAlreadyAllocated}/creation`, {})
         expect(response.status).to.equal(400)
         expect(response.body).to.equal(`Demand must have state: 'pending'`)
+      })
+
+      it('unauthenticated create demand creation - 401', async () => {
+        const response = await post(
+          app,
+          `/v1/${demandType}/${seededDemandId}/creation`,
+          {},
+          { authorization: 'bearer invalid' }
+        )
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.equal('Forbidden')
       })
 
       it('non-existent Creation ID - 404', async () => {

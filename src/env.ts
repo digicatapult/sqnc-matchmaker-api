@@ -25,4 +25,20 @@ export default envalid.cleanEnv(process.env, {
   IPFS_PORT: envalid.port({ default: 5001 }),
   WATCHER_POLL_PERIOD_MS: envalid.num({ default: 10 * 1000 }),
   WATCHER_TIMEOUT_MS: envalid.num({ default: 2 * 1000 }),
+  API_SWAGGER_BG_COLOR: envalid.str({ default: '#fafafa' }),
+  API_SWAGGER_TITLE: envalid.str({ default: 'MatchmakerAPI' }),
+  API_SWAGGER_HEADING: envalid.str({ default: 'MatchmakerAPI' }),
+  IDP_CLIENT_ID: envalid.str({ devDefault: 'sequence' }),
+  IDP_PUBLIC_URL_PREFIX: envalid.url({
+    devDefault: 'http://localhost:3080/realms/member-a/protocol/openid-connect',
+  }),
+  IDP_INTERNAL_URL_PREFIX: envalid.url({
+    devDefault: 'http://localhost:3080/realms/member-a/protocol/openid-connect',
+  }),
+  IDP_TOKEN_PATH: envalid.url({
+    default: '/token',
+  }),
+  IDP_JWKS_PATH: envalid.url({
+    default: '/certs',
+  }),
 })

@@ -54,8 +54,12 @@ export default class Identity {
       }
     }
   }
-  getMemberByAlias = async (alias: string): Promise<IdentityResponse> => {
-    const res = await fetch(`${this.URL_PREFIX}/v1/members/${encodeURIComponent(alias)}`)
+  getMemberByAlias = async (alias: string, authorization: string): Promise<IdentityResponse> => {
+    const res = await fetch(`${this.URL_PREFIX}/v1/members/${encodeURIComponent(alias)}`, {
+      headers: {
+        authorization,
+      },
+    })
 
     if (res.ok) {
       return identityResponseValidator.parse(await res.json())
@@ -78,8 +82,12 @@ export default class Identity {
     throw new HttpResponse({})
   }
 
-  getMemberBySelf = async (): Promise<IdentityResponse> => {
-    const res = await fetch(`${this.URL_PREFIX}/v1/self`)
+  getMemberBySelf = async (authorization: string): Promise<IdentityResponse> => {
+    const res = await fetch(`${this.URL_PREFIX}/v1/self`, {
+      headers: {
+        authorization,
+      },
+    })
 
     if (res.ok) {
       return identityResponseValidator.parse(await res.json())
@@ -88,5 +96,5 @@ export default class Identity {
     throw new HttpResponse({})
   }
 
-  getMemberByAddress = (alias: string) => this.getMemberByAlias(alias)
+  getMemberByAddress = (alias: string, authorization: string) => this.getMemberByAlias(alias, authorization)
 }

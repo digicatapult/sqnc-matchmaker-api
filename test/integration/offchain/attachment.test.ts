@@ -6,7 +6,7 @@ import createHttpServer from '../../../src/server.js'
 import { get, post, postFile } from '../../helper/routeHelper.js'
 
 import { withIpfsMockError, withIpfsMock } from '../../helper/mock.js'
-import { cleanup, attachmentSeed } from '../../seeds/offchainSeeds/attachment.seed.js'
+import { cleanup, attachmentSeed, parametersAttachmentId } from '../../seeds/offchainSeeds/attachment.seed.js'
 
 describe('attachment', () => {
   const size = 100
@@ -52,6 +52,16 @@ describe('attachment', () => {
         message: 'Validation failed',
       })
     })
+
+    it('returns 401 with invalid token', async () => {
+      const { status, body } = await get(app, `/v1/attachment/${parametersAttachmentId}`, {
+        authorization: 'bearer invalid',
+      })
+      expect(status).to.equal(401)
+      expect(body).to.contain({
+        message: 'Forbidden',
+      })
+    })
   })
 
   describe('list attachments', () => {
@@ -74,6 +84,16 @@ describe('attachment', () => {
       const { status, body } = await get(app, `/v1/attachment?updated_since=2023-01-01T00:00:00.000Z`)
       expect(status).to.equal(200)
       expect(body).to.deep.equal([])
+    })
+
+    it('returns 401 with invalid token', async () => {
+      const { status, body } = await get(app, `/v1/attachment`, {
+        authorization: 'bearer invalid',
+      })
+      expect(status).to.equal(401)
+      expect(body).to.contain({
+        message: 'Forbidden',
+      })
     })
   })
 
@@ -166,12 +186,25 @@ describe('attachment', () => {
     })
   })
 
-  it('Doesn`t upload files if more than 100mb', async () => {
-    const uploadRes = await postFile(app, '/v1/attachment', Buffer.from(overSizeBlobData), 'json')
-    const { status, body } = await get(app, `/v1/attachment/${uploadRes.body.id}`)
+  describe('uploads errors', () => {
+    it('returns 401 with invalid token', async () => {
+      const { status, body } = await postFile(app, '/v1/attachment', Buffer.from(blobData), filename, {
+        authorization: 'bearer invalid',
+      })
 
-    expect(status).to.equal(422)
-    expect(body.toString()).to.deep.contain({ message: 'Validation failed' })
+      expect(status).to.equal(401)
+      expect(body).to.contain({
+        message: 'Forbidden',
+      })
+    })
+
+    it('Doesn`t upload files if more than 100mb', async () => {
+      const uploadRes = await postFile(app, '/v1/attachment', Buffer.from(overSizeBlobData), 'json')
+      const { status, body } = await get(app, `/v1/attachment/${uploadRes.body.id}`)
+
+      expect(status).to.equal(422)
+      expect(body.toString()).to.deep.contain({ message: 'Validation failed' })
+    })
   })
 
   describe('IPFS errors', function () {

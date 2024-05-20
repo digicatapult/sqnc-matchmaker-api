@@ -1,5 +1,6 @@
 import { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 import { ValidateError } from 'tsoa'
+import { OauthError } from '@digicatapult/tsoa-oauth-express'
 
 import { Health } from '../../models/health.js'
 import { logger } from '../logger.js'
@@ -26,6 +27,12 @@ export class HttpResponse extends Error {
     super(message)
     this.code = code
     this.message = message
+  }
+}
+
+export class UnknownError extends HttpResponse {
+  constructor() {
+    super({ code: 500, message: 'Internal server error' })
   }
 }
 
@@ -69,6 +76,11 @@ export const errorHandler = function errorHandler(
   res: ExResponse,
   next: NextFunction
 ): ExResponse | void {
+  if (err instanceof OauthError) {
+    return res.status(401).send({
+      message: 'Forbidden',
+    })
+  }
   if (err instanceof ValidateError) {
     logger.warn(`Handled Validation Error for ${req.path}: %s`, JSON.stringify(err.fields))
 
