@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/sqnc-matchmaker-api",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "An OpenAPI Matchmaking API service for SQNC",
   "main": "src/index.ts",
   "type": "module",
@@ -67,7 +67,7 @@
     "ts-node": "^10.9.2",
     "tsimp": "^2.0.11",
     "typescript": "^5.4.5",
-    "undici": "^6.18.0"
+    "undici": "^6.18.1"
   },
   "dependencies": {
     "@digicatapult/tsoa-oauth-express": "^0.1.2",
