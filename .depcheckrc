@@ -1,1 +1,11 @@
-ignores: ['concurrently', 'pino-colada', 'nodemon', 'multer', 'pg', 'tsimp', 'ts-node']
+ignores: [
+  'concurrently',
+  'pino-colada',
+  'nodemon',
+  'multer',
+  'pg',
+  'tsimp',
+  'ts-node',
+  '@polkadot/util-crypto',
+  '@polkadot/types',
+]
