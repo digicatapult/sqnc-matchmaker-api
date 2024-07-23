@@ -54,6 +54,7 @@ export default class ChainNode {
   private keyring: Keyring
   private logger: Logger
   private userUri: string
+  private lastSubmittedNonce: number
 
   constructor({ host, port, logger, userUri }: NodeCtorConfig) {
     this.logger = logger.child({ module: 'ChainNode' })
@@ -61,6 +62,7 @@ export default class ChainNode {
     this.userUri = userUri
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
+    this.lastSubmittedNonce = -1
 
     this.api.isReadyOrError.catch(() => {
       // prevent unhandled promise rejection errors
@@ -133,7 +135,10 @@ export default class ChainNode {
     await this.api.isReady
     const extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
     const account = this.keyring.addFromUri(this.userUri)
-    const signed = await extrinsic.signAsync(account, { nonce: -1 })
+    const nextTxPoolNonce = (await this.api.rpc.system.accountNextIndex(account.publicKey)).toNumber()
+    const nonce = Math.max(nextTxPoolNonce, this.lastSubmittedNonce + 1)
+    this.lastSubmittedNonce = nonce
+    const signed = await extrinsic.signAsync(account, { nonce })
     return signed
   }
 
