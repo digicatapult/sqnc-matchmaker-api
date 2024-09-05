@@ -66,7 +66,8 @@ describe('transaction', () => {
     const { status, body } = await get(app, '/v1/transaction')
 
     expect(status).to.equal(200)
-    expect(body).to.be.an('array').that.is.empty
+    expect(body).to.be.an('array')
+    expect(body.length).to.equal(0)
   })
 
   it('also returns an empty array if 0 transactions found by type', async () => {
@@ -74,7 +75,8 @@ describe('transaction', () => {
     const { status, body } = await get(app, '/v1/transaction?apiType=demand_a')
 
     expect(status).to.equal(200)
-    expect(body).to.be.an('array').that.is.empty
+    expect(body).to.be.an('array')
+    expect(body.length).to.equal(0)
   })
 
   it('returns transaction by id', async () => {
