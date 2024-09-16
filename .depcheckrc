@@ -4,7 +4,7 @@ ignores: [
   'nodemon',
   'multer',
   'pg',
-  'tsimp',
+  '@digicatapult/tsimp',
   'ts-node',
   '@polkadot/util-crypto',
   '@polkadot/types',
