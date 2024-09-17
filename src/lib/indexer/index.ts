@@ -158,7 +158,13 @@ export default class Indexer {
     const newHashes = [lastFinalisedHash]
     for (let i = lastFinalisedIndex; i > lastKnownIndex + 1; i--) {
       const lastChild = await this.node.getHeader(newHashes.at(-1) as HEX)
+      this.logger.trace('Found block %s at height %d', lastChild.parent, lastChild.height)
       newHashes.push(lastChild.parent)
+
+      if (newHashes.length > 200000) {
+        this.logger.debug('Detected greater more than 200,000 blocks to process. Truncating to 100,000')
+        newHashes.splice(0, 100000)
+      }
     }
 
     // sanity check that the parent of lastKnown index is indeed what we expect. If not we have a major problem
