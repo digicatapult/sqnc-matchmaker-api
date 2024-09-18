@@ -92,6 +92,7 @@ export default class Indexer {
 
         // if the finalised block is the same as the last processed block noop
         if (lastProcessedBlock?.hash === lastKnownFinalised) {
+          this.logger.debug('Last processed block is last finalised. Database is up to date')
           return null
         }
 
