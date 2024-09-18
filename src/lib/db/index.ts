@@ -12,6 +12,7 @@ const tablesList = [
   'transaction',
   'match2',
   'processed_blocks',
+  'unprocessed_blocks',
   'demand_comment',
   'match2_comment',
 ] as const
@@ -24,8 +25,8 @@ export type Models<V> = {
 
 export type QueryBuilder = Knex.QueryBuilder
 
-export type ProcessedBlock = { hash: HEX; parent: HEX; height: number }
-export type ProcessedBlockTrimmed = { hash: string; parent: string; height: number }
+export type DbBlock = { hash: HEX; parent: HEX; height: number }
+export type DbBlockTrimmed = { hash: string; parent: string; height: number }
 
 const attachmentColumns = ['id', 'filename', 'size', 'ipfs_hash as ipfsHash', 'created_at AS createdAt']
 
@@ -133,9 +134,9 @@ export interface Transaction {
   updatedAt: Date
 }
 
-const processBlocksColumns = ['hash', 'height', 'parent']
+const dbBlocksColumns = ['hash', 'height', 'parent']
 
-function trim0x(input: ProcessedBlock): ProcessedBlockTrimmed {
+function trim0x(input: DbBlock): DbBlockTrimmed {
   return {
     hash: input.hash.startsWith('0x') ? input.hash.slice(2) : input.hash,
     height: input.height,
@@ -143,7 +144,7 @@ function trim0x(input: ProcessedBlock): ProcessedBlockTrimmed {
   }
 }
 
-function restore0x(input: ProcessedBlockTrimmed): ProcessedBlock {
+function restore0x(input: DbBlockTrimmed): DbBlock {
   return {
     hash: input.hash.startsWith('0x') ? (input.hash as HEX) : `0x${input.hash}`,
     height: input.height,
@@ -400,11 +401,21 @@ export default class Database {
     return this.db().match2().select(match2Columns).where({ id: match2Id })
   }
 
-  getLastProcessedBlock = async (): Promise<ProcessedBlock | null> => {
+  getLastProcessedBlock = async (): Promise<DbBlock | null> => {
+    const blockRecords = await this.db().processed_blocks().select(dbBlocksColumns).orderBy('height', 'desc').limit(1)
+    return blockRecords.length !== 0 ? restore0x(blockRecords[0]) : null
+  }
+
+  getNextUnprocessedBlockAtHeight = async (height: number): Promise<DbBlock | null> => {
+    const blockRecords = await this.db().unprocessed_blocks().select(dbBlocksColumns).where({ height }).limit(1)
+    return blockRecords.length !== 0 ? restore0x(blockRecords[0]) : null
+  }
+
+  getNextUnprocessedBlockAboveHeight = async (height: number): Promise<DbBlock | null> => {
     const blockRecords = await this.db()
-      .processed_blocks()
-      .select(processBlocksColumns)
-      .orderBy('height', 'desc')
+      .unprocessed_blocks()
+      .select(dbBlocksColumns)
+      .where('height', '>', height)
       .limit(1)
     return blockRecords.length !== 0 ? restore0x(blockRecords[0]) : null
   }
@@ -418,8 +429,12 @@ export default class Database {
     return flatten[0]?.id || null
   }
 
-  insertProcessedBlock = async (block: ProcessedBlock): Promise<void> => {
+  insertProcessedBlock = async (block: DbBlock): Promise<void> => {
     await this.db().processed_blocks().insert(trim0x(block))
+  }
+
+  tryInsertUnprocessedBlock = async (block: DbBlock): Promise<void> => {
+    await this.db().unprocessed_blocks().insert(trim0x(block)).onConflict().ignore()
   }
 
   withTransaction = (update: (db: Database) => Promise<void>) => {
