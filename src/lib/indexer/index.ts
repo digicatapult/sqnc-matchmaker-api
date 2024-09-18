@@ -88,7 +88,7 @@ export default class Indexer {
     const loopFn = async (lastKnownFinalised: HEX): Promise<HEX | null> => {
       try {
         const lastProcessedBlock = await this.db.getLastProcessedBlock()
-        this.logger.debug('Last processed block: %s', lastProcessedBlock?.hash)
+        this.logger.debug('Last processed block: %s at height %s', lastProcessedBlock?.hash, lastProcessedBlock?.height)
 
         // if the finalised block is the same as the last processed block noop
         if (lastProcessedBlock?.hash === lastKnownFinalised) {
@@ -126,7 +126,8 @@ export default class Indexer {
 
   private async getNextUnprocessedBlockHash(lastProcessedBlock: DbBlock | null): Promise<HEX | null> {
     // get unprocessed block from db with height equal to the lastProcessedBlock height plus 1
-    const nextUnprocessedBlockHeight = (lastProcessedBlock?.height || 0) + 1
+    const lastProcessedHeight = lastProcessedBlock ? parseInt(lastProcessedBlock.height, 10) : 0
+    const nextUnprocessedBlockHeight = lastProcessedHeight + 1
     const nextUnprocesedBlock = await this.db.getNextUnprocessedBlockAtHeight(nextUnprocessedBlockHeight)
     return nextUnprocesedBlock?.hash || null
   }
@@ -136,7 +137,7 @@ export default class Indexer {
 
     // ensure the finalised block is recorded in the db as this will be the latest known unprocessed block in most cases
     // this will mean we have a potential gap between the last finalised block and the last processed block in the db
-    const lastProcessedHeight = lastProcessedBlock?.height || 0
+    const lastProcessedHeight = lastProcessedBlock ? parseInt(lastProcessedBlock.height) : 0
     const lastFinalisedBlock = await this.node.getHeader(lastFinalisedHash)
     if (lastFinalisedBlock.height > lastProcessedHeight) {
       this.logger.trace(
@@ -144,7 +145,11 @@ export default class Indexer {
         lastFinalisedBlock.hash,
         lastFinalisedBlock.height
       )
-      await this.db.tryInsertUnprocessedBlock(lastFinalisedBlock)
+      await this.db.tryInsertUnprocessedBlock({
+        hash: lastFinalisedBlock.hash,
+        parent: lastFinalisedBlock.parent,
+        height: `${lastFinalisedBlock.height}`,
+      })
     }
 
     // ensure we do still have an unprocessed block above the last processed. This will definitely be the
@@ -155,11 +160,16 @@ export default class Indexer {
     }
 
     // start looping from the beginning of the gap in known unprocessed blocks until the last processed height
-    let parentHash = nextRecordedUnprocessedBlock.hash
-    for (let height = nextRecordedUnprocessedBlock.height - 1; height > lastProcessedHeight; height--) {
+    let parentHash = nextRecordedUnprocessedBlock.parent
+    const nextRecordedUnprocessedBlockHeight = parseInt(nextRecordedUnprocessedBlock.height, 10)
+    for (let height = nextRecordedUnprocessedBlockHeight - 1; height > lastProcessedHeight; height--) {
       const unprocessedBlock = await this.node.getHeader(parentHash)
       this.logger.trace('Asserting unprocessed block %s at height %d', unprocessedBlock.hash, unprocessedBlock.height)
-      await this.db.tryInsertUnprocessedBlock(unprocessedBlock)
+      await this.db.tryInsertUnprocessedBlock({
+        hash: unprocessedBlock.hash,
+        parent: unprocessedBlock.parent,
+        height: `${unprocessedBlock.height}`,
+      })
       parentHash = unprocessedBlock.parent
     }
   }
@@ -171,11 +181,14 @@ export default class Indexer {
       if (header.height === 1) {
         await db.insertProcessedBlock({
           hash: header.parent,
-          height: 0,
+          height: '0',
           parent: header.parent,
         })
       }
-      await db.insertProcessedBlock(header)
+      await db.insertProcessedBlock({
+        ...header,
+        height: `${header.height}`,
+      })
 
       if (changeSet.attachments) {
         for (const [, demand] of changeSet.attachments) {

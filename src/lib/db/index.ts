@@ -25,8 +25,8 @@ export type Models<V> = {
 
 export type QueryBuilder = Knex.QueryBuilder
 
-export type DbBlock = { hash: HEX; parent: HEX; height: number }
-export type DbBlockTrimmed = { hash: string; parent: string; height: number }
+export type DbBlock = { hash: HEX; parent: HEX; height: string }
+export type DbBlockTrimmed = { hash: string; parent: string; height: string }
 
 const attachmentColumns = ['id', 'filename', 'size', 'ipfs_hash as ipfsHash', 'created_at AS createdAt']
 
