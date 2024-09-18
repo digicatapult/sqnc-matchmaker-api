@@ -416,6 +416,7 @@ export default class Database {
       .unprocessed_blocks()
       .select(dbBlocksColumns)
       .where('height', '>', height)
+      .orderBy('height', 'asc')
       .limit(1)
     return blockRecords.length !== 0 ? restore0x(blockRecords[0]) : null
   }

@@ -8,6 +8,7 @@ export async function up(knex: Knex): Promise<void> {
     def.datetime('created_at').notNullable().defaultTo(knex.fn.now())
 
     def.primary(['hash'])
+    def.index('height')
   })
 }
 
