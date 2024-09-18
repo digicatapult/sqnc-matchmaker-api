@@ -5,6 +5,7 @@ import ChainNode from '../chainNode.js'
 import DefaultBlockHandler from './handleBlock.js'
 import { ChangeSet } from './changeSet.js'
 import { HEX } from '../../models/strings.js'
+import { DbBlock } from '../db/index.js'
 
 export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 
@@ -22,7 +23,6 @@ export default class Indexer {
   private node: ChainNode
   private gen: AsyncGenerator<string | null, void, string>
   private handleBlock: BlockHandler
-  private unprocessedBlocks: HEX[]
   private retryDelay: number
 
   constructor({ db, logger, node, handleBlock, retryDelay }: IndexerCtorArgs) {
@@ -30,7 +30,6 @@ export default class Indexer {
     this.db = db
     this.node = node
     this.gen = this.nextBlockProcessor()
-    this.unprocessedBlocks = []
     this.retryDelay = retryDelay || 1000
     if (handleBlock) {
       this.handleBlock = handleBlock
@@ -86,20 +85,27 @@ export default class Indexer {
   // main benefit of using a generator is it funnels all triggers from any source into a single
   // serialised async flow
   private async *nextBlockProcessor(): AsyncGenerator<string | null, void, HEX> {
-    const lastProcessedBlock = await this.db.getLastProcessedBlock()
-    this.unprocessedBlocks = [lastProcessedBlock?.hash].filter((x): x is HEX => !!x)
-
-    const loopFn = async (lastKnownFinalised: HEX): Promise<void> => {
+    const loopFn = async (lastKnownFinalised: HEX): Promise<HEX | null> => {
       try {
         const lastProcessedBlock = await this.db.getLastProcessedBlock()
-        this.logger.debug('Last processed block: %s', lastProcessedBlock?.hash)
+        this.logger.debug('Last processed block: %s at height %s', lastProcessedBlock?.hash, lastProcessedBlock?.height)
 
-        await this.updateUnprocessedBlocks(lastProcessedBlock?.hash || null, lastKnownFinalised)
-
-        if (this.unprocessedBlocks.length !== 0) {
-          const changeSet = await this.handleBlock(this.unprocessedBlocks[0])
-          await this.updateDbWithNewBlock(this.unprocessedBlocks[0], changeSet)
+        // if the finalised block is the same as the last processed block noop
+        if (lastProcessedBlock?.hash === lastKnownFinalised) {
+          this.logger.debug('Last processed block is last finalised. Database is up to date')
+          return null
         }
+
+        await this.updateUnprocessedBlocks(lastProcessedBlock, lastKnownFinalised)
+
+        const nextUnprocessedBlockHash = await this.getNextUnprocessedBlockHash(lastProcessedBlock)
+        if (nextUnprocessedBlockHash) {
+          const changeSet = await this.handleBlock(nextUnprocessedBlockHash)
+          await this.updateDbWithNewBlock(nextUnprocessedBlockHash, changeSet)
+          return nextUnprocessedBlockHash
+        }
+
+        return null
       } catch (err) {
         const asError = err as Error | null
         this.logger.warn('Unexpected error indexing blocks. Error was %s. Retrying...', asError?.message)
@@ -111,72 +117,62 @@ export default class Indexer {
       }
     }
 
+    const lastProcessedBlock = await this.db.getLastProcessedBlock()
+    let processedBlockHash: HEX | null = lastProcessedBlock?.hash || null
     while (true) {
-      const lastKnownFinalised = yield this.unprocessedBlocks.shift() || null
-      await loopFn(lastKnownFinalised)
+      const lastKnownFinalised = yield processedBlockHash
+      processedBlockHash = await loopFn(lastKnownFinalised)
     }
   }
 
-  private async updateUnprocessedBlocks(lastProcessedHash: HEX | null, lastFinalisedHash: HEX): Promise<void> {
+  private async getNextUnprocessedBlockHash(lastProcessedBlock: DbBlock | null): Promise<HEX | null> {
+    // get unprocessed block from db with height equal to the lastProcessedBlock height plus 1
+    const lastProcessedHeight = lastProcessedBlock ? parseInt(lastProcessedBlock.height, 10) : 0
+    const nextUnprocessedBlockHeight = lastProcessedHeight + 1
+    const nextUnprocesedBlock = await this.db.getNextUnprocessedBlockAtHeight(nextUnprocessedBlockHeight)
+    return nextUnprocesedBlock?.hash || null
+  }
+
+  private async updateUnprocessedBlocks(lastProcessedBlock: DbBlock | null, lastFinalisedHash: HEX): Promise<void> {
     this.logger.debug('Updating list of finalised blocks to be processed')
 
-    const unprocessedBlocks = [...this.unprocessedBlocks]
-
-    // remove elements up to and including out lastProcessedHash if it's in the unprocessedBlocks array
-    // this can happen if another instance is also processing blocks
-    if (lastProcessedHash !== null) {
-      const lastProcessedHashIndex = unprocessedBlocks.indexOf(lastProcessedHash)
-      if (lastProcessedHashIndex !== -1) {
-        unprocessedBlocks.splice(0, lastProcessedHashIndex + 1)
-      }
-
-      if (unprocessedBlocks.length !== 0) {
-        const nextHeader = await this.node.getHeader(unprocessedBlocks[0])
-        if (lastProcessedHash !== nextHeader.parent) {
-          unprocessedBlocks.splice(0, unprocessedBlocks.length)
-        }
-      }
+    // ensure the finalised block is recorded in the db as this will be the latest known unprocessed block in most cases
+    // this will mean we have a potential gap between the last finalised block and the last processed block in the db
+    const lastProcessedHeight = lastProcessedBlock ? parseInt(lastProcessedBlock.height) : 0
+    const lastFinalisedBlock = await this.node.getHeader(lastFinalisedHash)
+    if (lastFinalisedBlock.height > lastProcessedHeight) {
+      this.logger.trace(
+        'Asserting unprocessed block %s at height %d',
+        lastFinalisedBlock.hash,
+        lastFinalisedBlock.height
+      )
+      await this.db.tryInsertUnprocessedBlock({
+        hash: lastFinalisedBlock.hash,
+        parent: lastFinalisedBlock.parent,
+        height: `${lastFinalisedBlock.height}`,
+      })
     }
 
-    // find the earliest hash we know about. This is either the last process hash or the last element in the unprocessedBlocks array
-    // if we have lots of blocks to process still
-    const lastKnownHash = unprocessedBlocks.at(-1) || lastProcessedHash
-    const [{ height: lastKnownIndex }, { height: lastFinalisedIndex }] = await Promise.all([
-      lastKnownHash !== null ? this.node.getHeader(lastKnownHash) : Promise.resolve({ height: 0 }),
-      this.node.getHeader(lastFinalisedHash),
-    ])
-
-    // if we know about all the blocks then noop
-    // note we allow the finalised block to go backwards so if the node we're talking to isn't up to date
-    // things still proceed
-    if (lastFinalisedIndex <= lastKnownIndex) {
-      this.unprocessedBlocks = unprocessedBlocks
+    // ensure we do still have an unprocessed block above the last processed. This will definitely be the
+    // case if we just inserted a latest finalised and we're up to date. If not though we're likely behind so exit
+    const nextRecordedUnprocessedBlock = await this.db.getNextUnprocessedBlockAboveHeight(lastProcessedHeight)
+    if (!nextRecordedUnprocessedBlock) {
       return
     }
 
-    // get the new hashes based on the difference in block height
-    const newHashes = [lastFinalisedHash]
-    for (let i = lastFinalisedIndex; i > lastKnownIndex + 1; i--) {
-      const lastChild = await this.node.getHeader(newHashes.at(-1) as HEX)
-      this.logger.trace('Found block %s at height %d', lastChild.parent, lastChild.height)
-      newHashes.push(lastChild.parent)
-
-      if (newHashes.length > 200000) {
-        this.logger.debug('Detected greater more than 200,000 blocks to process. Truncating to 100,000')
-        newHashes.splice(0, 100000)
-      }
+    // start looping from the beginning of the gap in known unprocessed blocks until the last processed height
+    let parentHash = nextRecordedUnprocessedBlock.parent
+    const nextRecordedUnprocessedBlockHeight = parseInt(nextRecordedUnprocessedBlock.height, 10)
+    for (let height = nextRecordedUnprocessedBlockHeight - 1; height > lastProcessedHeight; height--) {
+      const unprocessedBlock = await this.node.getHeader(parentHash)
+      this.logger.trace('Asserting unprocessed block %s at height %d', unprocessedBlock.hash, unprocessedBlock.height)
+      await this.db.tryInsertUnprocessedBlock({
+        hash: unprocessedBlock.hash,
+        parent: unprocessedBlock.parent,
+        height: `${unprocessedBlock.height}`,
+      })
+      parentHash = unprocessedBlock.parent
     }
-
-    // sanity check that the parent of lastKnown index is indeed what we expect. If not we have a major problem
-    if (lastKnownHash !== null && (await this.node.getHeader(newHashes.at(-1) as HEX)).parent !== lastKnownHash) {
-      this.unprocessedBlocks = []
-      throw new Error('Unexpected error synchronising blocks to be processed')
-    }
-
-    this.unprocessedBlocks = unprocessedBlocks.concat(newHashes.reverse())
-
-    this.logger.debug(`Found ${this.unprocessedBlocks.length} blocks to be processed`)
-    this.logger.trace('Blocks to be processed: %j', this.unprocessedBlocks)
   }
 
   private async updateDbWithNewBlock(blockHash: HEX, changeSet: ChangeSet): Promise<void> {
@@ -186,11 +182,14 @@ export default class Indexer {
       if (header.height === 1) {
         await db.insertProcessedBlock({
           hash: header.parent,
-          height: 0,
+          height: '0',
           parent: header.parent,
         })
       }
-      await db.insertProcessedBlock(header)
+      await db.insertProcessedBlock({
+        ...header,
+        height: `${header.height}`,
+      })
 
       if (changeSet.attachments) {
         for (const [, demand] of changeSet.attachments) {
