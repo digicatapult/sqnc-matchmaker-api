@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/sqnc-matchmaker-api",
-  "version": "3.0.85",
+  "version": "3.0.86",
   "description": "An OpenAPI Matchmaking API service for SQNC",
   "main": "src/index.ts",
   "type": "module",
@@ -58,7 +58,7 @@
     "eslint-plugin-prettier": "^5.2.1",
     "jsonwebtoken": "^9.0.2",
     "mocha": "^10.7.3",
-    "nodemon": "^3.1.5",
+    "nodemon": "^3.1.6",
     "pino-colada": "^2.2.2",
     "prettier": "^3.3.3",
     "sinon": "^19.0.2",
