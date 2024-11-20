@@ -7,4 +7,5 @@ export interface Health {
       detail: Record<string, unknown> | null
     }
   }
+  lastProcessedBlockMoreThan30sAgo: boolean
 }

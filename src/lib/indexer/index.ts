@@ -6,6 +6,7 @@ import DefaultBlockHandler from './handleBlock.js'
 import { ChangeSet } from './changeSet.js'
 import { HEX } from '../../models/strings.js'
 import { DbBlock } from '../db/index.js'
+import { injectable } from 'tsyringe'
 
 export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 
@@ -13,10 +14,17 @@ export interface IndexerCtorArgs {
   db: Database
   logger: Logger
   node: ChainNode
+  startupTime: Date
   handleBlock?: BlockHandler
   retryDelay?: number
 }
 
+export interface BlockProcessingTimes {
+  startupTime: Date
+  lastProcessedBlockTime: Date | null
+  lastUnprocessedBlockTime: Date | null
+}
+@injectable()
 export default class Indexer {
   private logger: Logger
   private db: Database
@@ -24,13 +32,19 @@ export default class Indexer {
   private gen: AsyncGenerator<string | null, void, string>
   private handleBlock: BlockHandler
   private retryDelay: number
+  private startupTime: Date
+  private lastProcessedBlockTime: Date | null // while we are running and up to date
+  private lastUnprocessedBlockTime: Date | null // only for when we are catching up on unprocessed blocks
 
-  constructor({ db, logger, node, handleBlock, retryDelay }: IndexerCtorArgs) {
+  constructor({ db, logger, node, handleBlock, retryDelay, startupTime }: IndexerCtorArgs) {
     this.logger = logger.child({ module: 'indexer' })
     this.db = db
     this.node = node
     this.gen = this.nextBlockProcessor()
     this.retryDelay = retryDelay || 1000
+    this.lastProcessedBlockTime = null
+    this.lastUnprocessedBlockTime = null
+    this.startupTime = startupTime
     if (handleBlock) {
       this.handleBlock = handleBlock
       return
@@ -102,6 +116,7 @@ export default class Indexer {
         if (nextUnprocessedBlockHash) {
           const changeSet = await this.handleBlock(nextUnprocessedBlockHash)
           await this.updateDbWithNewBlock(nextUnprocessedBlockHash, changeSet)
+          this.lastProcessedBlockTime = new Date()
           return nextUnprocessedBlockHash
         }
 
@@ -171,6 +186,7 @@ export default class Indexer {
         parent: unprocessedBlock.parent,
         height: `${unprocessedBlock.height}`,
       })
+      this.lastUnprocessedBlockTime = new Date() // time for when we have last leaned about a block
       parentHash = unprocessedBlock.parent
     }
   }
@@ -253,5 +269,12 @@ export default class Indexer {
         }
       }
     })
+  }
+  public async retrieveBlockProcessingTimes(): Promise<BlockProcessingTimes> {
+    return {
+      startupTime: this.startupTime,
+      lastProcessedBlockTime: this.lastProcessedBlockTime,
+      lastUnprocessedBlockTime: this.lastUnprocessedBlockTime,
+    }
   }
 }
