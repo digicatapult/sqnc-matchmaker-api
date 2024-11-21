@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { describe, beforeEach, afterEach, it } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'

@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import { describe } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
@@ -51,7 +49,7 @@ describe('on-chain', function () {
       await node.sealBlock()
       await pollTransactionState(db, transaction.id, 'failed')
       const [failedTransaction] = await db.getTransaction(transaction.id)
-      expect(failedTransaction.state).to.equal('failed')
+      expect(failedTransaction?.state).to.equal('failed')
     })
   })
 })
