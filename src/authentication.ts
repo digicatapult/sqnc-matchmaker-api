@@ -14,7 +14,7 @@ const exampleOptions: AuthOptions = {
     const scopes = ((decoded as jwt.JwtPayload).scopes as string) || ''
     return scopes.split(' ')
   },
-  tryRefreshTokens: (_req: express.Request) => Promise.resolve(false),
+  tryRefreshTokens: () => Promise.resolve(false),
 }
 
 export const expressAuthentication = mkExpressAuthentication(exampleOptions)

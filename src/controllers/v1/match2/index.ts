@@ -42,7 +42,6 @@ import {
   rematch2AcceptFinal,
 } from '../../../lib/payload.js'
 import ChainNode from '../../../lib/chainNode.js'
-import env from '../../../env.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
 
@@ -53,19 +52,14 @@ import { getAuthorization } from '../../../lib/utils/shared.js'
 export class Match2Controller extends Controller {
   log: Logger
   db: Database
-  node: ChainNode
 
-  constructor(private identity: Identity) {
+  constructor(
+    private identity: Identity,
+    private node: ChainNode
+  ) {
     super()
     this.log = logger.child({ controller: '/match2' })
     this.db = new Database()
-    this.node = new ChainNode({
-      host: env.NODE_HOST,
-      port: env.NODE_PORT,
-      logger,
-      userUri: env.USER_URI,
-    })
-    this.identity = identity
   }
 
   /**

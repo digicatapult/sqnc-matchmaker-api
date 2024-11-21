@@ -7,26 +7,21 @@ import Indexer from '../../src/lib/indexer/index.js'
 import Database from '../../src/lib/db/index.js'
 import ChainNode from '../../src/lib/chainNode.js'
 import { logger } from '../../src/lib/logger.js'
-import env from '../../src/env.js'
+import { container } from 'tsyringe'
 
 const db = new Database()
 
 export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) => {
   before(async function () {
     context.app = await createHttpServer()
-    const node = new ChainNode({
-      host: env.NODE_HOST,
-      port: env.NODE_PORT,
-      logger,
-      userUri: env.USER_URI,
-    })
+    const node = container.resolve(ChainNode)
 
     const blockHash = await node.getLastFinalisedBlockHash()
     const blockHeader = await node.getHeader(blockHash)
     await db
       .insertProcessedBlock({
         hash: blockHash,
-        height: blockHeader.height,
+        height: blockHeader.height.toString(10),
         parent: blockHash,
       })
       .catch(() => {

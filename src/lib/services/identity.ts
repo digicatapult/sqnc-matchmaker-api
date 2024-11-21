@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { NotFound, HttpResponse } from '../error-handler/index.js'
 import env from '../../env.js'
 import { Status, serviceState } from '../service-watcher/statusPoll.js'
+import { logger } from '../logger.js'
 
 const identityResponseValidator = z.object({
   address: z.string(),
@@ -46,6 +47,7 @@ export default class Identity {
       }
       throw new Error()
     } catch (err) {
+      logger.debug('Identity service status error: %s', err instanceof Error ? err.message : 'unknown')
       return {
         status: serviceState.DOWN,
         detail: {

@@ -287,7 +287,7 @@ export default class Database {
       .returning(transactionColumns)
   }
 
-  getTransaction = async (id: UUID) => {
+  getTransaction = async (id: UUID): Promise<[Transaction] | []> => {
     return this.db().transaction().select(transactionColumns).where({ id })
   }
 

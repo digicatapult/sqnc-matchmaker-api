@@ -7,21 +7,15 @@ import { cleanup, seededDemandBId } from '../../seeds/onchainSeeds/transaction.s
 import { withIdentitySelfMock } from '../../helper/mock.js'
 import Database from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
-import { logger } from '../../../src/lib/logger.js'
-import env from '../../../src/env.js'
 import { pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
+import { container } from 'tsyringe'
 
 describe('on-chain', function () {
   this.timeout(60000)
 
   const db = new Database()
-  const node = new ChainNode({
-    host: env.NODE_HOST,
-    port: env.NODE_PORT,
-    logger,
-    userUri: env.USER_URI,
-  })
+  const node = container.resolve(ChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)
@@ -53,8 +47,9 @@ describe('on-chain', function () {
 
       // wait for dispatch error
       await node.sealBlock()
-      const failedTransaction = await pollTransactionState(db, transaction.id, 'failed')
-      expect(failedTransaction.state).to.equal('failed')
+      await pollTransactionState(db, transaction.id, 'failed')
+      const [failedTransaction] = await db.getTransaction(transaction.id)
+      expect(failedTransaction?.state).to.equal('failed')
     })
   })
 })

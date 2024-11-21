@@ -161,7 +161,8 @@ export class attachment extends Controller {
             const json = JSON.parse(blobBuffer.toString())
             return json
           } catch (err) {
-            this.log.warn(`Unable to parse json file for attachment ${id}`)
+            this.log.warn('Unable to parse json file for attachment %s', id)
+            this.log.debug('Parse error: %s', err instanceof Error ? err.message : 'unknown')
             return this.octetResponse(blobBuffer, filename)
           }
         }

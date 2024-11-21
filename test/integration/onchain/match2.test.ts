@@ -8,21 +8,15 @@ import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/
 import { withIdentitySelfMock } from '../../helper/mock.js'
 import Database, { DemandRow, Match2Row, Transaction } from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
-import { logger } from '../../../src/lib/logger.js'
-import env from '../../../src/env.js'
-import { pollTransactionState } from '../../helper/poll.js'
+import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { UUID } from '../../../src/models/strings.js'
+import { container } from 'tsyringe'
 
 describe('on-chain', function () {
   this.timeout(180000)
   const db = new Database()
-  const node = new ChainNode({
-    host: env.NODE_HOST,
-    port: env.NODE_PORT,
-    logger,
-    userUri: env.USER_URI,
-  })
+  const node = container.resolve(ChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)
@@ -58,11 +52,13 @@ describe('on-chain', function () {
 
       await node.sealBlock()
       await pollTransactionState(db, demandATransactionId, 'finalised')
+      await pollDemandState(db, demandAId, 'created')
 
       const [demandA]: DemandRow[] = await db.getDemand(demandAId)
 
       await node.sealBlock()
       await pollTransactionState(db, demandBTransactionId, 'finalised')
+      await pollDemandState(db, demandBId, 'created')
 
       const [demandB]: DemandRow[] = await db.getDemand(demandBId)
 
@@ -76,6 +72,7 @@ describe('on-chain', function () {
 
       await node.sealBlock()
       await pollTransactionState(db, newDemandBTransactionId, 'finalised')
+      await pollDemandState(db, newDemandBId, 'created')
 
       const {
         body: { id: match2Id },
@@ -107,6 +104,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, transactionId, 'finalised')
+      await pollMatch2State(db, ids.match2, 'proposed')
 
       // check local entities update with token id
       const [maybeDemandA] = await db.getDemand(ids.demandA)
@@ -133,6 +131,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'proposed')
 
       // submit accept to chain
       const responseAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
@@ -140,6 +139,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedA')
 
       // submit 2nd accept to chain
       const responseAcceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
@@ -147,6 +147,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedFinal')
 
       const lastTokenId = await node.getLastTokenId()
 
@@ -171,6 +172,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, transactionId, 'finalised')
+      await pollMatch2State(db, ids.rematch2, 'proposed')
 
       // check local entities update with token id
       const [maybeDemandA] = await db.getDemand(ids.demandA)
@@ -202,16 +204,19 @@ describe('on-chain', function () {
       const proposal = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {})
       await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'proposed')
 
       const resAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
 
       await node.sealBlock()
       await pollTransactionState(db, resAcceptA.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedA')
 
       const resAcceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
 
       await node.sealBlock()
       await pollTransactionState(db, resAcceptFinal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedFinal')
 
       const reMatch = await post(context.app, '/v1/match2', {
         demandA: ids.demandA,
@@ -224,17 +229,20 @@ describe('on-chain', function () {
 
       await node.sealBlock()
       await pollTransactionState(db, resProposal.body.id, 'finalised')
+      await pollMatch2State(db, ids.rematch2, 'proposed')
 
       const resRematchAccept = await post(context.app, `/v1/match2/${ids.rematch2}/accept`, {})
 
       await node.sealBlock()
       await pollTransactionState(db, resRematchAccept.body.id, 'finalised')
+      await pollMatch2State(db, ids.rematch2, 'acceptedA')
 
       const lastTokenId = await node.getLastTokenId()
       const resFinal = await post(context.app, `/v1/match2/${ids.rematch2}/accept`, {})
 
       await node.sealBlock()
       await pollTransactionState(db, resFinal.body.id, 'finalised')
+      await pollMatch2State(db, ids.rematch2, 'acceptedFinal')
 
       // output
       const [match2]: Match2Row[] = await db.getMatch2(ids.match2)
@@ -266,12 +274,14 @@ describe('on-chain', function () {
 
         await node.sealBlock()
         await pollTransactionState(db, proposal.body.id, 'finalised')
+        await pollMatch2State(db, ids.match2, 'proposed')
 
         const acceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
         await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
 
         await node.sealBlock()
         await pollTransactionState(db, acceptA.body.id, 'finalised')
+        await pollMatch2State(db, ids.match2, 'acceptedA')
 
         const { body: transactions } = await get(context.app, `/v1/match2/${ids.match2}/accept`)
         const failed = transactions.filter((el: Transaction) => el.state === 'failed')
@@ -300,6 +310,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'proposed')
 
       const [maybeMatch2] = await db.getMatch2(ids.match2)
       const match2 = maybeMatch2 as Match2Row
@@ -313,6 +324,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedA')
 
       // check local entities update with token id
       const [maybeMatch2AcceptA] = await db.getMatch2(ids.match2)
@@ -328,6 +340,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedFinal')
 
       // check local entities update with token id
       const [maybeDemandA] = await db.getDemand(ids.demandA)
@@ -357,6 +370,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'proposed')
 
       const [maybeMatch2] = await db.getMatch2(ids.match2)
       const match2 = maybeMatch2 as Match2Row
@@ -369,6 +383,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, rejection.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'rejected')
 
       // check local entities update with token id
       const [maybeMatch2Rejected] = await db.getMatch2(ids.match2)
@@ -387,6 +402,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'proposed')
 
       // acceptA
       const acceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
@@ -395,6 +411,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, acceptA.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedA')
 
       const [maybeMatch2] = await db.getMatch2(ids.match2)
       const match2 = maybeMatch2 as Match2Row
@@ -407,6 +424,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, rejection.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'rejected')
 
       // check local entities update with token id
       const [maybeMatch2Rejected] = await db.getMatch2(ids.match2)
@@ -422,6 +440,7 @@ describe('on-chain', function () {
 
       await node.sealBlock()
       await pollTransactionState(db, proposal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'proposed')
 
       const { originalTokenId } = await db.getMatch2(ids.match2).then((el: Match2Row[]) => el[0])
 
@@ -429,11 +448,13 @@ describe('on-chain', function () {
 
       await node.sealBlock()
       await pollTransactionState(db, acceptA.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedA')
 
       const acceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {})
 
       await node.sealBlock()
       await pollTransactionState(db, acceptFinal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedFinal')
 
       const lastTokenId = await node.getLastTokenId()
 
@@ -443,6 +464,7 @@ describe('on-chain', function () {
 
       await node.sealBlock()
       await pollTransactionState(db, cancel.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'cancelled')
 
       const demandA: DemandRow = await db.getDemand(ids.demandA).then((rows: DemandRow[]) => rows[0])
       const demandB: DemandRow = await db.getDemand(ids.demandB).then((rows: DemandRow[]) => rows[0])

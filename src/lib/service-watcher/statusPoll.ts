@@ -1,3 +1,5 @@
+import { logger } from '../logger.js'
+
 export const serviceState = {
   UP: 'up',
   DOWN: 'down',
@@ -51,6 +53,7 @@ const mkStatusGenerator = async function* ({
       }
       throw new Error('Status is not a valid value')
     } catch (err) {
+      logger.debug('Status generator error: %s', err instanceof Error ? err.message : 'unknown')
       yield {
         status: serviceState.ERROR,
         detail: null,

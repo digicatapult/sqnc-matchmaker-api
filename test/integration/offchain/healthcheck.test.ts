@@ -8,6 +8,7 @@ import createHttpServer from '../../../src/server.js'
 import { get } from '../../helper/routeHelper.js'
 import { responses as healthResponses } from '../../helper/healthHelper.js'
 import { withOkMock, withIpfsMockError } from '../../helper/mockHealth.js'
+import { resetContainer } from '../../../src/ioc.js'
 
 const getSpecVersion = (actualResult: any) => {
   return actualResult?._body?.details?.api?.detail?.runtime?.versions?.spec
@@ -32,7 +33,7 @@ describe('health check', () => {
     after(async function () {
       const serviceWatcher = container.resolve<ServiceWatcher>(ServiceWatcher)
       await serviceWatcher.close()
-      container.reset()
+      resetContainer()
     })
 
     it('health check', async function () {
@@ -57,7 +58,7 @@ describe('health check', () => {
     after(async function () {
       const serviceWatcher = container.resolve<ServiceWatcher>(ServiceWatcher)
       await serviceWatcher.close()
-      container.reset()
+      resetContainer()
     })
 
     withIpfsMockError()

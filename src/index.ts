@@ -1,4 +1,7 @@
+import 'reflect-metadata'
+
 import { Express } from 'express'
+import { container } from 'tsyringe'
 
 import Indexer from './lib/indexer/index.js'
 import ChainNode from './lib/chainNode.js'
@@ -10,12 +13,7 @@ import { logger } from './lib/logger.js'
   const app: Express = await Server()
 
   if (env.ENABLE_INDEXER) {
-    const node = new ChainNode({
-      host: env.NODE_HOST,
-      port: env.NODE_PORT,
-      logger,
-      userUri: env.USER_URI,
-    })
+    const node = container.resolve(ChainNode)
 
     const indexer = new Indexer({ db: new Database(), logger, node })
     await indexer.start()

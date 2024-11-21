@@ -17,32 +17,27 @@ import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
 import { TransactionResponse, TransactionType } from '../../../models/transaction.js'
 import { demandCommentCreate, demandCreate } from '../../../lib/payload.js'
 import ChainNode from '../../../lib/chainNode.js'
-import env from '../../../env.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
 
+let self: { address: string; alias: string } | null = null
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
   dbDemandSubtype: 'demand_a' | 'demand_b'
   log: Logger
   db: Database
-  node: ChainNode
-  private identity: Identity
 
-  constructor(demandType: 'demandA' | 'demandB', identity: Identity) {
+  constructor(
+    demandType: 'demandA' | 'demandB',
+    private identity: Identity,
+    private node: ChainNode
+  ) {
     super()
     this.demandType = demandType
     this.dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'
     this.log = logger.child({ controller: `/${this.demandType}` })
     this.db = new Database()
-    this.node = new ChainNode({
-      host: env.NODE_HOST,
-      port: env.NODE_PORT,
-      logger,
-      userUri: env.USER_URI,
-    })
-    this.identity = identity
   }
 
   public async createDemand(req: express.Request, { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
@@ -52,7 +47,8 @@ export class DemandController extends Controller {
       throw new BadRequest('Attachment not found')
     }
 
-    const res = await this.identity.getMemberBySelf(getAuthorization(req))
+    const res = self || (await this.identity.getMemberBySelf(getAuthorization(req)))
+    self = res
     const selfAddress = res.address
     const selfAlias = res.alias
 
