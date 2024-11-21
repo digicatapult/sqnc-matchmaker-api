@@ -1,4 +1,4 @@
-import { inject, injectable } from 'tsyringe'
+import { injectable } from 'tsyringe'
 import { Controller, Get, Response, Route, SuccessResponse, Hidden } from 'tsoa'
 
 import type { Health } from '../../models/health.js'
@@ -6,7 +6,6 @@ import { logger } from '../../lib/logger.js'
 import { serviceState } from '../../lib/service-watcher/statusPoll.js'
 import { ServiceUnavailable } from '../../lib/error-handler/index.js'
 import { ServiceWatcher } from '../../lib/service-watcher/index.js'
-import Indexer from '../../lib/indexer/index.js'
 
 const packageVersion = process.env.npm_package_version ? process.env.npm_package_version : 'unknown'
 
