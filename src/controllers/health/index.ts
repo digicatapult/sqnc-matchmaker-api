@@ -19,10 +19,7 @@ const serviceStatusStrings = {
 @Route('health')
 @injectable()
 export class HealthController extends Controller {
-  constructor(
-    private serviceWatcher: ServiceWatcher,
-    @inject('Indexer') private indexer: Indexer
-  ) {
+  constructor(private serviceWatcher: ServiceWatcher) {
     super()
   }
 
