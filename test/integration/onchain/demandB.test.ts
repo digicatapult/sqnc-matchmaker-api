@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import { describe, beforeEach, afterEach, it } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
@@ -8,20 +10,14 @@ import { seed, cleanup, seededDemandBId, parametersAttachmentId } from '../../se
 import { selfAddress, withIdentitySelfMock } from '../../helper/mock.js'
 import Database, { DemandRow } from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
-import { logger } from '../../../src/lib/logger.js'
-import env from '../../../src/env.js'
-import { pollTransactionState } from '../../helper/poll.js'
+import { pollDemandCommentState, pollDemandState, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
+import { container } from 'tsyringe'
 
 describe('on-chain', function () {
   this.timeout(60000)
   const db = new Database()
-  const node = new ChainNode({
-    host: env.NODE_HOST,
-    port: env.NODE_PORT,
-    logger,
-    userUri: env.USER_URI,
-  })
+  const node = container.resolve(ChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)
@@ -53,6 +49,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, transactionId, 'finalised')
+      await pollDemandState(db, seededDemandBId, 'created')
 
       // check local demandB updates with token id
       const [maybeDemandB] = await db.getDemand(seededDemandBId)
@@ -70,6 +67,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, creationResponse.body.id, 'finalised')
+      await pollDemandState(db, seededDemandBId, 'created')
 
       // submit to chain
       const commentResponse = await post(context.app, `/v1/demandB/${seededDemandBId}/comment`, {
@@ -79,6 +77,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, commentResponse.body.id, 'finalised')
+      await pollDemandCommentState(db, commentResponse.body.id, 'created')
 
       // check local demandB updates with token id
       const [maybeDemandB] = await db.getDemand(seededDemandBId)

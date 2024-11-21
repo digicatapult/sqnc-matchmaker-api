@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import { describe, beforeEach, afterEach, it } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
@@ -9,20 +11,14 @@ import { seed, cleanup, parametersAttachmentId, seededDemandAId } from '../../se
 import { selfAddress, withIdentitySelfMock } from '../../helper/mock.js'
 import Database, { DemandRow } from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
-import { logger } from '../../../src/lib/logger.js'
-import env from '../../../src/env.js'
-import { pollTransactionState } from '../../helper/poll.js'
+import { pollTransactionState, pollDemandState, pollDemandCommentState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
+import { container } from 'tsyringe'
 
 describe('on-chain', function () {
   this.timeout(60000)
   const db = new Database()
-  const node = new ChainNode({
-    host: env.NODE_HOST,
-    port: env.NODE_PORT,
-    logger,
-    userUri: env.USER_URI,
-  })
+  const node = container.resolve(ChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)
@@ -56,6 +52,7 @@ describe('on-chain', function () {
 
       await node.sealBlock()
       await pollTransactionState(db, transactionId, 'finalised')
+      await pollDemandState(db, demandAId, 'created')
 
       const [demandA] = await db.getDemand(demandAId)
       expect(demandA).to.contain({
@@ -68,6 +65,60 @@ describe('on-chain', function () {
       })
     })
 
+    it('creates many demandAs on chain in parallel', async function () {
+      const numberDemands = 500
+
+      const demandIds = await Promise.all(
+        Array(numberDemands)
+          .fill(null)
+          .map(async () => {
+            const {
+              status,
+              body: { id: demandAId },
+            } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
+            expect(status).to.equal(201)
+            return demandAId as string
+          })
+      )
+
+      const transactionIds = await Promise.all(
+        demandIds.map(async (demandAId) => {
+          const response = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
+          expect(response.status).to.equal(201)
+
+          const { id: transactionId, state } = response.body
+          expect(transactionId).to.match(
+            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
+          )
+          expect(state).to.equal('submitted')
+
+          return transactionId as string
+        })
+      )
+
+      await node.sealBlock()
+
+      await Promise.all(
+        transactionIds.map(async (tx) => {
+          await pollTransactionState(db, tx, 'finalised')
+        })
+      )
+
+      await Promise.all(
+        demandIds.map(async (demand) => {
+          await pollDemandState(db, demand, 'created', 500, 100)
+
+          const [demandA] = await db.getDemand(demand)
+          expect(demandA).to.contain({
+            id: demand,
+            state: 'created',
+            subtype: 'demand_a',
+            parametersAttachmentId,
+          })
+        })
+      )
+    })
+
     it('should comment on a demandA on-chain', async () => {
       const lastTokenId = await node.getLastTokenId()
 
@@ -77,6 +128,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, creationResponse.body.id, 'finalised')
+      await pollDemandState(db, seededDemandAId, 'created')
 
       // submit to chain
       const commentResponse = await post(context.app, `/v1/demandA/${seededDemandAId}/comment`, {
@@ -86,6 +138,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, commentResponse.body.id, 'finalised')
+      await pollDemandCommentState(db, commentResponse.body.id, 'created')
 
       // check local demandA updates with token id
       const [maybeDemandB] = await db.getDemand(seededDemandAId)

@@ -1,8 +1,10 @@
-import { Logger } from 'pino'
+import { type Logger } from 'pino'
 import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/api'
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
+import { inject, singleton } from 'tsyringe'
+import { Mutex } from 'async-mutex'
 
 import { serviceState } from './service-watcher/statusPoll.js'
 import { TransactionState } from '../models/transaction.js'
@@ -10,6 +12,8 @@ import type { Payload, Output, Metadata } from './payload.js'
 import { HEX } from '../models/strings.js'
 import { hexToBs58 } from '../utils/hex.js'
 import { trim0x } from './utils/shared.js'
+import { LoggerToken } from './logger.js'
+import { type Env, EnvToken } from '../env.js'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
@@ -48,6 +52,7 @@ type EventData =
     }
   | undefined
 
+@singleton()
 export default class ChainNode {
   private provider: WsProvider
   private api: ApiPromise
@@ -55,11 +60,12 @@ export default class ChainNode {
   private logger: Logger
   private userUri: string
   private lastSubmittedNonce: number
+  private mutex = new Mutex()
 
-  constructor({ host, port, logger, userUri }: NodeCtorConfig) {
+  constructor(@inject(LoggerToken) logger: Logger, @inject(EnvToken) env: Env) {
     this.logger = logger.child({ module: 'ChainNode' })
-    this.provider = new WsProvider(`ws://${host}:${port}`)
-    this.userUri = userUri
+    this.provider = new WsProvider(`ws://${env.NODE_HOST}:${env.NODE_PORT}`)
+    this.userUri = env.USER_URI
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.lastSubmittedNonce = -1
@@ -69,11 +75,11 @@ export default class ChainNode {
     })
 
     this.api.on('disconnected', () => {
-      this.logger.warn(`Disconnected from substrate node at ${host}:${port}`)
+      this.logger.warn(`Disconnected from substrate node at ${env.NODE_HOST}:${env.NODE_PORT}`)
     })
 
     this.api.on('connected', () => {
-      this.logger.info(`Connected to substrate node at ${host}:${port}`)
+      this.logger.info(`Connected to substrate node at ${env.NODE_HOST}:${env.NODE_PORT}`)
     })
 
     this.api.on('error', (err) => {
@@ -135,9 +141,14 @@ export default class ChainNode {
     await this.api.isReady
     const extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
     const account = this.keyring.addFromUri(this.userUri)
-    const nextTxPoolNonce = (await this.api.rpc.system.accountNextIndex(account.publicKey)).toNumber()
-    const nonce = Math.max(nextTxPoolNonce, this.lastSubmittedNonce + 1)
-    this.lastSubmittedNonce = nonce
+
+    const nonce = await this.mutex.runExclusive(async () => {
+      const nextTxPoolNonce = (await this.api.rpc.system.accountNextIndex(account.publicKey)).toNumber()
+      const nonce = Math.max(nextTxPoolNonce, this.lastSubmittedNonce + 1)
+      this.lastSubmittedNonce = nonce
+      return nonce
+    })
+
     const signed = await extrinsic.signAsync(account, { nonce })
     return signed
   }
