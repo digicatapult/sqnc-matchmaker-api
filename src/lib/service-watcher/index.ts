@@ -4,6 +4,7 @@ import startApiStatus from './apiStatus.js'
 import startIpfsStatus from './ipfsStatus.js'
 import startIdentityStatus from './identityStatus.js'
 import { buildCombinedHandler, SERVICE_STATE, Status } from './statusPoll.js'
+import startIndexerStatus from './indexerStatus.js'
 
 @singleton()
 export class ServiceWatcher {
@@ -27,14 +28,16 @@ export class ServiceWatcher {
     close: () => void
   }> => {
     const handlers = new Map()
-    const [apiStatus, ipfsStatus, identityStatus] = await Promise.all([
+    const [apiStatus, ipfsStatus, identityStatus, indexerStatus] = await Promise.all([
       startApiStatus(),
       startIpfsStatus(),
       startIdentityStatus(),
+      startIndexerStatus(),
     ])
     handlers.set('api', apiStatus)
     handlers.set('ipfs', ipfsStatus)
     handlers.set('identity', identityStatus)
+    handlers.set('indexer', indexerStatus)
 
     return buildCombinedHandler(handlers)
   }

@@ -6,7 +6,8 @@ import DefaultBlockHandler from './handleBlock.js'
 import { ChangeSet } from './changeSet.js'
 import { HEX } from '../../models/strings.js'
 import { DbBlock } from '../db/index.js'
-import { injectable } from 'tsyringe'
+import { injectable, singleton } from 'tsyringe'
+import { serviceState, Status } from '../service-watcher/statusPoll.js'
 
 export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 
@@ -24,6 +25,8 @@ export interface BlockProcessingTimes {
   lastProcessedBlockTime: Date | null
   lastUnprocessedBlockTime: Date | null
 }
+
+@singleton()
 @injectable()
 export default class Indexer {
   private logger: Logger
@@ -270,11 +273,41 @@ export default class Indexer {
       }
     })
   }
-  public async retrieveBlockProcessingTimes(): Promise<BlockProcessingTimes> {
+  getStatus = async (): Promise<Status> => {
+    const currentDate = new Date()
+    if (currentDate.getTime() - this.startupTime.getTime() < 30 * 1000) {
+      // if we started less than 30s ago -> PASS
+      return {
+        status: serviceState.UP,
+        detail: { message: 'Service healthy.' },
+      }
+    } else {
+      // we started more than 30s ago
+      if (this.lastProcessedBlockTime !== null) {
+        // if we have already started processing blocks check if the last was within 30s
+        const differenceInMilliseconds = currentDate.getTime() - this.lastProcessedBlockTime.getTime()
+        // if isMoreThan30Seconds is true -> will be unhealthy
+        if (differenceInMilliseconds > 30 * 1000) {
+          return {
+            status: serviceState.DOWN,
+            detail: { message: 'Last processed block was more than 30s ago.' },
+          }
+        }
+      } else if (this.lastUnprocessedBlockTime !== null) {
+        // if we are still catching up on old blocks check if last was within 30s
+        const differenceInMilliseconds = currentDate.getTime() - this.lastUnprocessedBlockTime.getTime()
+        // if isMoreThan30Seconds is true -> will be unhealthy
+        if (differenceInMilliseconds > 30 * 1000) {
+          return {
+            status: serviceState.DOWN,
+            detail: { message: 'Started more than 30s ago and no blocks have been processed or registered.' },
+          }
+        }
+      }
+    }
     return {
-      startupTime: this.startupTime,
-      lastProcessedBlockTime: this.lastProcessedBlockTime,
-      lastUnprocessedBlockTime: this.lastUnprocessedBlockTime,
+      status: serviceState.UP,
+      detail: { message: 'Service healthy.' },
     }
   }
 }
