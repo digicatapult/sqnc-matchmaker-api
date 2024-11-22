@@ -340,7 +340,8 @@ describe('Indexer', function () {
       await delay(3000) // delay 3s
       const result = await indexer.getStatus()
       expect(result).to.have.property('status', 'up')
-      expect(result.detail?.latestActivityTime).to.not.be.null
+      const latestActivityTime = result.detail?.latestActivityTime
+      expect(latestActivityTime).to.be.instanceOf(Date)
     })
   })
 })
