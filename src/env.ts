@@ -1,5 +1,6 @@
 import * as envalid from 'envalid'
 import dotenv from 'dotenv'
+import { container } from 'tsyringe'
 
 if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: 'test/test.env' })
@@ -7,7 +8,7 @@ if (process.env.NODE_ENV === 'test') {
   dotenv.config()
 }
 
-export default envalid.cleanEnv(process.env, {
+const env = envalid.cleanEnv(process.env, {
   PORT: envalid.port({ default: 3000 }),
   LOG_LEVEL: envalid.str({ default: 'info', devDefault: 'debug' }),
   DB_HOST: envalid.str({ devDefault: 'localhost' }),
@@ -41,4 +42,13 @@ export default envalid.cleanEnv(process.env, {
   IDP_JWKS_PATH: envalid.str({
     default: '/certs',
   }),
+})
+
+export default env
+
+export const EnvToken = Symbol('Env')
+export type Env = typeof env
+
+container.register<Env>(EnvToken, {
+  useValue: env,
 })

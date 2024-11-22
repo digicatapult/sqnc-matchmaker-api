@@ -18,3 +18,4 @@ knexfile.js
 *.pid
 *.seed
 *.pid.lock
+*.DS_Store

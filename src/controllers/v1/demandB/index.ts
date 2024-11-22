@@ -27,14 +27,15 @@ import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
 import { TransactionResponse } from '../../../models/transaction.js'
 import { DemandController } from '../_common/demand.js'
 import Identity from '../../../lib/services/identity.js'
+import ChainNode from '../../../lib/chainNode.js'
 
 @Route('v1/demandB')
 @injectable()
 @Tags('demandB')
 @Security('oauth2')
 export class DemandBController extends DemandController {
-  constructor(identity: Identity) {
-    super('demandB', identity)
+  constructor(identity: Identity, node: ChainNode) {
+    super('demandB', identity, node)
   }
 
   /**
