@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import { describe, it, afterEach, beforeEach } from 'mocha'
 import sinon from 'sinon'
 import { expect } from 'chai'
@@ -6,8 +7,10 @@ import { withMockLogger } from './fixtures/logger.js'
 import { withLastProcessedBlocksByCall, withInitialLastProcessedBlock } from './fixtures/db.js'
 import { withHappyChainNode, withGetHeaderBoom } from './fixtures/chainNode.js'
 import Indexer from '../index.js'
+import { delay } from './utils/helpers.js'
 
 describe('Indexer', function () {
+  const startupTime = new Date()
   let indexer: Indexer
   const logger = withMockLogger()
 
@@ -21,7 +24,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       const result = await indexer.start()
       expect(result).to.equal(null)
     })
@@ -31,7 +34,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       const result = await indexer.start()
       expect(result).to.equal('1-hash')
     })
@@ -41,7 +44,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       expect(handleBlock.called).to.equal(false)
     })
@@ -53,7 +56,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       const result = await indexer.processNextBlock('1-hash')
 
@@ -66,7 +69,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       const result = await indexer.processNextBlock('2-hash')
 
@@ -80,7 +83,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       const result = await indexer.processNextBlock('3-hash')
 
@@ -94,7 +97,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       await indexer.processNextBlock('3-hash')
       const result = await indexer.processNextBlock('3-hash')
@@ -110,7 +113,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       await indexer.processNextBlock('2-hash')
       const result = await indexer.processNextBlock('2-hash')
@@ -129,7 +132,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       await indexer.processNextBlock('5-hash')
       const result = await indexer.processNextBlock('5-hash')
@@ -145,7 +148,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       await indexer.processNextBlock('3-hash')
       const result = await indexer.processNextBlock('2-hash')
@@ -174,7 +177,7 @@ describe('Indexer', function () {
         ]),
       })
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       await indexer.processNextBlock('2-hash')
 
@@ -209,7 +212,7 @@ describe('Indexer', function () {
         ]),
       })
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       await indexer.processNextBlock('2-hash')
 
@@ -241,7 +244,7 @@ describe('Indexer', function () {
         const node = withGetHeaderBoom(1)
         const handleBlock = sinon.stub().resolves({})
 
-        indexer = new Indexer({ db, node, logger, handleBlock })
+        indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
         await indexer.start()
         const p = indexer.processNextBlock('2-hash').then((s) => s)
         clock.tickAsync(1000)
@@ -258,7 +261,7 @@ describe('Indexer', function () {
         const node = withHappyChainNode()
         const handleBlock = sinon.stub().resolves({}).onCall(0).rejects(new Error('BOOM'))
 
-        indexer = new Indexer({ db, node, logger, handleBlock })
+        indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
         await indexer.start()
         const p = indexer.processNextBlock('2-hash').then((s) => s)
         clock.tickAsync(1000)
@@ -278,7 +281,7 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       const result = await indexer.processAllBlocks('3-hash')
 
@@ -293,12 +296,51 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock })
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
       await indexer.start()
       const result = await indexer.processAllBlocks('1-hash')
 
       expect(result).to.equal(null)
       expect(handleBlock.called).to.equal(false)
+    })
+  })
+  describe('getStatus tests', function () {
+    it('should return service UP if within 30s of starting up', async function () {
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const node = withHappyChainNode()
+      const handleBlock = sinon.stub().resolves({})
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
+      await indexer.start()
+      const result = await indexer.getStatus()
+      expect(result).to.have.property('status', 'up')
+      expect(result.detail).to.have.property('message', 'Service healthy. Starting up.')
+    })
+    it('should return service DOWN if it has started up a while back', async function () {
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const node = withHappyChainNode()
+      const handleBlock = sinon.stub().resolves({})
+
+      const fortyFiveSecondsAgo = new Date(startupTime.getTime() - 1 * 60 * 60 * 1000)
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime: fortyFiveSecondsAgo })
+      await indexer.start()
+      const result = await indexer.getStatus()
+      expect(result).to.have.property('status', 'down')
+      expect(result.detail).to.have.property(
+        'message',
+        'Last activity was more than 30s ago, no blocks were processed.'
+      )
+      expect(result.detail).to.have.property('latestActivityTime', null)
+    })
+    it('should return service UP if within 30s of starting up', async function () {
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const node = withHappyChainNode()
+      const handleBlock = sinon.stub().resolves({})
+      indexer = new Indexer({ db, node, logger, handleBlock, startupTime })
+      await indexer.start()
+      await delay(3000) // delay 3s
+      const result = await indexer.getStatus()
+      expect(result).to.have.property('status', 'up')
+      expect(result.detail?.latestActivityTime).to.not.be.null
     })
   })
 })
