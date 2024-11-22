@@ -1,5 +1,12 @@
 export const responses = {
-  ok: (sqncRuntimeVersion: number, ipfsVersion: string, identityVersion: string) => ({
+  ok: (
+    sqncRuntimeVersion: number,
+    ipfsVersion: string,
+    identityVersion: string,
+    indexerStatus: string,
+    startupTime: Date,
+    latestActivityTime: Date
+  ) => ({
     code: 200,
     body: {
       status: 'ok',
@@ -33,10 +40,25 @@ export const responses = {
             version: identityVersion,
           },
         },
+        indexer: {
+          status: indexerStatus,
+          detail: {
+            message: 'Service healthy. Starting up.',
+            latestActivityTime: latestActivityTime,
+            startupTime: startupTime,
+          },
+        },
       },
     },
   }),
-  ipfsDown: (sqncRuntimeVersion: number, identityVersion: string) => ({
+
+  ipfsDown: (
+    sqncRuntimeVersion: number,
+    identityVersion: string,
+    indexerStatus: string,
+    startupTime: Date,
+    latestActivityTime: Date
+  ) => ({
     code: 503,
     body: {
       status: 'down',
@@ -67,6 +89,14 @@ export const responses = {
           status: 'ok',
           detail: {
             version: identityVersion,
+          },
+        },
+        indexer: {
+          status: indexerStatus,
+          detail: {
+            message: 'Service healthy. Starting up.',
+            latestActivityTime: latestActivityTime,
+            startupTime: startupTime,
           },
         },
       },

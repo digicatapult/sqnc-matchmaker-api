@@ -18,7 +18,15 @@ const getIpfsVersion = (actualResult: any) => {
 const getIdentityVersion = (actualResult: any) => {
   return actualResult?._body?.details?.identity?.detail?.version
 }
-
+const getIndexerStatus = (actualResult: any) => {
+  return actualResult?._body?.details?.indexer?.status
+}
+const getIndexerStartupTime = (actualResult: any) => {
+  return actualResult?._body?.details?.indexer?.detail?.startupTime
+}
+const getIndexerLatestActivityTime = (actualResult: any) => {
+  return actualResult?._body?.details?.indexer?.detail?.latestActivityTime
+}
 describe('health check', () => {
   describe('happy path', function () {
     let app: Express
@@ -40,7 +48,10 @@ describe('health check', () => {
       const response = healthResponses.ok(
         getSpecVersion(actualResult),
         getIpfsVersion(actualResult),
-        getIdentityVersion(actualResult)
+        getIdentityVersion(actualResult),
+        getIndexerStatus(actualResult),
+        getIndexerStartupTime(actualResult),
+        getIndexerLatestActivityTime(actualResult)
       )
       expect(actualResult.status).to.equal(response.code)
       expect(actualResult.body).to.deep.equal(response.body)
@@ -64,7 +75,13 @@ describe('health check', () => {
 
     it('service down', async function () {
       const actualResult = await get(app, '/health')
-      const response = healthResponses.ipfsDown(getSpecVersion(actualResult), getIdentityVersion(actualResult))
+      const response = healthResponses.ipfsDown(
+        getSpecVersion(actualResult),
+        getIdentityVersion(actualResult),
+        getIndexerStatus(actualResult),
+        getIndexerStartupTime(actualResult),
+        getIndexerLatestActivityTime(actualResult)
+      )
       expect(actualResult.status).to.equal(response.code)
       expect(actualResult.body).to.deep.equal(response.body)
     })

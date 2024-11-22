@@ -279,35 +279,52 @@ export default class Indexer {
       // if we started less than 30s ago -> PASS
       return {
         status: serviceState.UP,
-        detail: { message: 'Service healthy.' },
+        detail: {
+          message: 'Service healthy. Starting up.',
+          startupTime: this.startupTime,
+          latestActivityTime: currentDate,
+        },
       }
-    } else {
-      // we started more than 30s ago
-      if (this.lastProcessedBlockTime !== null) {
-        // if we have already started processing blocks check if the last was within 30s
-        const differenceInMilliseconds = currentDate.getTime() - this.lastProcessedBlockTime.getTime()
-        // if isMoreThan30Seconds is true -> will be unhealthy
-        if (differenceInMilliseconds > 30 * 1000) {
-          return {
-            status: serviceState.DOWN,
-            detail: { message: 'Last processed block was more than 30s ago.' },
-          }
-        }
-      } else if (this.lastUnprocessedBlockTime !== null) {
-        // if we are still catching up on old blocks check if last was within 30s
-        const differenceInMilliseconds = currentDate.getTime() - this.lastUnprocessedBlockTime.getTime()
-        // if isMoreThan30Seconds is true -> will be unhealthy
-        if (differenceInMilliseconds > 30 * 1000) {
-          return {
-            status: serviceState.DOWN,
-            detail: { message: 'Started more than 30s ago and no blocks have been processed or registered.' },
-          }
-        }
+    }
+    if (this.lastProcessedBlockTime === null && this.lastUnprocessedBlockTime === null) {
+      return {
+        status: serviceState.DOWN,
+        detail: {
+          message: 'Last activity was more than 30s ago, no blocks were processed.',
+          startupTime: this.startupTime,
+          latestActivityTime: null,
+        },
+      }
+    }
+    const latestActivityTime = this.lastProcessedBlockTime || this.lastUnprocessedBlockTime
+    if (latestActivityTime === null) throw new Error('sth')
+    if (currentDate.getTime() - latestActivityTime.getTime() < 30 * 1000) {
+      return {
+        status: serviceState.UP,
+        detail: {
+          message: 'Service healthy. Running.',
+          startupTime: this.startupTime,
+          latestActivityTime: latestActivityTime,
+        },
+      }
+    }
+    if (this.lastProcessedBlockTime) {
+      return {
+        status: serviceState.DOWN,
+        detail: {
+          message: `Last activity was more than 30s ago. Last processed block at : ${this.lastProcessedBlockTime}`,
+          startupTime: this.startupTime,
+          latestActivityTime: latestActivityTime,
+        },
       }
     }
     return {
-      status: serviceState.UP,
-      detail: { message: 'Service healthy.' },
+      status: serviceState.DOWN,
+      detail: {
+        message: `Last activity was more than 30s ago. Last learned of block: ${this.lastUnprocessedBlockTime}`,
+        startupTime: this.startupTime,
+        latestActivityTime: latestActivityTime,
+      },
     }
   }
 }
