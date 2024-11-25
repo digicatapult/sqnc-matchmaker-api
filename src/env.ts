@@ -26,6 +26,7 @@ const env = envalid.cleanEnv(process.env, {
   IPFS_PORT: envalid.port({ default: 5001 }),
   WATCHER_POLL_PERIOD_MS: envalid.num({ default: 10 * 1000 }),
   WATCHER_TIMEOUT_MS: envalid.num({ default: 2 * 1000 }),
+  INDEXER_TIMEOUT_MS: envalid.num({ default: 30 * 1000 }),
   API_SWAGGER_BG_COLOR: envalid.str({ default: '#fafafa' }),
   API_SWAGGER_TITLE: envalid.str({ default: 'MatchmakerAPI' }),
   API_SWAGGER_HEADING: envalid.str({ default: 'MatchmakerAPI' }),

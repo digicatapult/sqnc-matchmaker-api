@@ -8,6 +8,7 @@ import { HEX } from '../../models/strings.js'
 import { DbBlock } from '../db/index.js'
 import { injectable, singleton } from 'tsyringe'
 import { serviceState, Status } from '../service-watcher/statusPoll.js'
+import { Env } from '../../env.js'
 
 export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 
@@ -16,6 +17,7 @@ export interface IndexerCtorArgs {
   logger: Logger
   node: ChainNode
   startupTime: Date
+  env: Env
   handleBlock?: BlockHandler
   retryDelay?: number
 }
@@ -30,6 +32,7 @@ export interface BlockProcessingTimes {
 @injectable()
 export default class Indexer {
   private logger: Logger
+  private env: Env
   private db: Database
   private node: ChainNode
   private gen: AsyncGenerator<string | null, void, string>
@@ -39,8 +42,9 @@ export default class Indexer {
   private lastProcessedBlockTime: Date | null // while we are running and up to date
   private lastUnprocessedBlockTime: Date | null // only for when we are catching up on unprocessed blocks
 
-  constructor({ db, logger, node, handleBlock, retryDelay, startupTime }: IndexerCtorArgs) {
+  constructor({ db, logger, node, handleBlock, retryDelay, startupTime, env }: IndexerCtorArgs) {
     this.logger = logger.child({ module: 'indexer' })
+    this.env = env
     this.db = db
     this.node = node
     this.gen = this.nextBlockProcessor()
@@ -274,8 +278,9 @@ export default class Indexer {
     })
   }
   getStatus = async (): Promise<Status> => {
+    const indexerTimeout = this.env.INDEXER_TIMEOUT_MS
     const currentDate = new Date()
-    if (currentDate.getTime() - this.startupTime.getTime() < 30 * 1000) {
+    if (currentDate.getTime() - this.startupTime.getTime() < indexerTimeout) {
       // if we started less than 30s ago -> PASS
       return {
         status: serviceState.UP,
@@ -298,7 +303,7 @@ export default class Indexer {
     }
     const latestActivityTime = this.lastProcessedBlockTime || this.lastUnprocessedBlockTime
     if (latestActivityTime === null) throw new Error('sth')
-    if (currentDate.getTime() - latestActivityTime.getTime() < 30 * 1000) {
+    if (currentDate.getTime() - latestActivityTime.getTime() < indexerTimeout) {
       return {
         status: serviceState.UP,
         detail: {

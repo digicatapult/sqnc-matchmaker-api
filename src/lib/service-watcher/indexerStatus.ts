@@ -7,7 +7,7 @@ import { logger } from '../logger.js'
 
 const { WATCHER_POLL_PERIOD_MS, WATCHER_TIMEOUT_MS } = env
 const node = new ChainNode(logger, env)
-const indexer = new Indexer({ db: new Database(), logger, node, startupTime: new Date() })
+const indexer = new Indexer({ db: new Database(), logger, node, startupTime: new Date(), env })
 
 const startIndexerStatus = () =>
   startStatusHandler({

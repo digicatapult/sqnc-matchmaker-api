@@ -20,10 +20,10 @@ import { logger } from './lib/logger.js'
           logger,
           node,
           startupTime: new Date(),
+          env: env,
         }),
     })
     const indexer = container.resolve<Indexer>('Indexer')
-    // const indexer = new Indexer({ db: new Database(), logger, node, startupTime: new Date() })
 
     await indexer.start()
     indexer.processAllBlocks(await node.getLastFinalisedBlockHash()).then(() =>
