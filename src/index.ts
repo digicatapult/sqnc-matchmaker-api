@@ -1,5 +1,4 @@
 import 'reflect-metadata'
-
 import { Express } from 'express'
 import { container } from 'tsyringe'
 
@@ -14,8 +13,18 @@ import { logger } from './lib/logger.js'
 
   if (env.ENABLE_INDEXER) {
     const node = container.resolve(ChainNode)
+    container.register<Indexer>('Indexer', {
+      useFactory: () =>
+        new Indexer({
+          db: new Database(),
+          logger,
+          node,
+          startupTime: new Date(),
+          env: env,
+        }),
+    })
+    const indexer = container.resolve<Indexer>('Indexer')
 
-    const indexer = new Indexer({ db: new Database(), logger, node })
     await indexer.start()
     indexer.processAllBlocks(await node.getLastFinalisedBlockHash()).then(() =>
       node.watchFinalisedBlocks(async (hash) => {

@@ -6,6 +6,9 @@ import DefaultBlockHandler from './handleBlock.js'
 import { ChangeSet } from './changeSet.js'
 import { HEX } from '../../models/strings.js'
 import { DbBlock } from '../db/index.js'
+import { injectable, singleton } from 'tsyringe'
+import { serviceState, Status } from '../service-watcher/statusPoll.js'
+import { Env } from '../../env.js'
 
 export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 
@@ -13,24 +16,42 @@ export interface IndexerCtorArgs {
   db: Database
   logger: Logger
   node: ChainNode
+  startupTime: Date
+  env: Env
   handleBlock?: BlockHandler
   retryDelay?: number
 }
 
+export interface BlockProcessingTimes {
+  startupTime: Date
+  lastProcessedBlockTime: Date | null
+  lastUnprocessedBlockTime: Date | null
+}
+
+@singleton()
+@injectable()
 export default class Indexer {
   private logger: Logger
+  private env: Env
   private db: Database
   private node: ChainNode
   private gen: AsyncGenerator<string | null, void, string>
   private handleBlock: BlockHandler
   private retryDelay: number
+  private startupTime: Date
+  private lastProcessedBlockTime: Date | null // while we are running and up to date
+  private lastUnprocessedBlockTime: Date | null // only for when we are catching up on unprocessed blocks
 
-  constructor({ db, logger, node, handleBlock, retryDelay }: IndexerCtorArgs) {
+  constructor({ db, logger, node, handleBlock, retryDelay, startupTime, env }: IndexerCtorArgs) {
     this.logger = logger.child({ module: 'indexer' })
+    this.env = env
     this.db = db
     this.node = node
     this.gen = this.nextBlockProcessor()
     this.retryDelay = retryDelay || 1000
+    this.lastProcessedBlockTime = null
+    this.lastUnprocessedBlockTime = null
+    this.startupTime = startupTime
     if (handleBlock) {
       this.handleBlock = handleBlock
       return
@@ -97,11 +118,13 @@ export default class Indexer {
         }
 
         await this.updateUnprocessedBlocks(lastProcessedBlock, lastKnownFinalised)
+        if (this.lastProcessedBlockTime === null) this.lastProcessedBlockTime = new Date() //once the above method has finished successfully we want to assign a value to lastProcessedBlockTime
 
         const nextUnprocessedBlockHash = await this.getNextUnprocessedBlockHash(lastProcessedBlock)
         if (nextUnprocessedBlockHash) {
           const changeSet = await this.handleBlock(nextUnprocessedBlockHash)
           await this.updateDbWithNewBlock(nextUnprocessedBlockHash, changeSet)
+          this.lastProcessedBlockTime = new Date()
           return nextUnprocessedBlockHash
         }
 
@@ -171,6 +194,7 @@ export default class Indexer {
         parent: unprocessedBlock.parent,
         height: `${unprocessedBlock.height}`,
       })
+      this.lastUnprocessedBlockTime = new Date() // time for when we have last leaned about a block
       parentHash = unprocessedBlock.parent
     }
   }
@@ -253,5 +277,66 @@ export default class Indexer {
         }
       }
     })
+  }
+
+  async getStatus() {
+    return await getStatus(
+      this.env.INDEXER_TIMEOUT_MS,
+      this.startupTime,
+      this.lastProcessedBlockTime,
+      this.lastUnprocessedBlockTime
+    )
+  }
+}
+
+export const getStatus = async (
+  indexerTimeout: number,
+  startupTime: Date,
+  lastProcessedBlockTime: Date | null,
+  lastUnprocessedBlockTime: Date | null
+): Promise<Status> => {
+  const currentDate = new Date()
+  if (currentDate.getTime() - startupTime.getTime() < indexerTimeout) {
+    // if we started less than 30s ago -> PASS
+    return {
+      status: serviceState.UP,
+      detail: {
+        message: 'Service healthy. Starting up.',
+        startupTime: startupTime,
+        latestActivityTime: currentDate,
+      },
+    }
+  }
+  const latestActivityTime = lastProcessedBlockTime || lastUnprocessedBlockTime
+  if (latestActivityTime === null) {
+    return {
+      status: serviceState.DOWN,
+      detail: {
+        message: 'Last activity was more than 30s ago, no blocks were processed.',
+        startupTime: startupTime,
+        latestActivityTime: null,
+      },
+    }
+  }
+  if (currentDate.getTime() - latestActivityTime.getTime() < indexerTimeout) {
+    return {
+      status: serviceState.UP,
+      detail: {
+        message: 'Service healthy. Running.',
+        startupTime: startupTime,
+        latestActivityTime: latestActivityTime,
+      },
+    }
+  }
+  const errMessage = lastProcessedBlockTime
+    ? `Last activity was more than 30s ago. Last processed block at : ${lastProcessedBlockTime}`
+    : `Last activity was more than 30s ago. Last learned of block: ${lastUnprocessedBlockTime}`
+  return {
+    status: serviceState.DOWN,
+    detail: {
+      message: errMessage,
+      startupTime: startupTime,
+      latestActivityTime: latestActivityTime,
+    },
   }
 }
