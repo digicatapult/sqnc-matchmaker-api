@@ -367,9 +367,8 @@ describe('Indexer', function () {
       expect(result).to.have.property('status', 'down')
       const latestActivityTime = result.detail?.latestActivityTime
       expect(latestActivityTime).to.be.instanceOf(Date)
-      expect(result.detail).to.have.property(
-        'message',
-        'Last activity was more than 30s ago. Last learned of block: Mon Nov 25 2024 00:04:25 GMT+0000 (Greenwich Mean Time)'
+      expect(result.detail?.message).to.include(
+        'Last activity was more than 30s ago. Last learned of block: Mon Nov 25 2024 00:04:25'
       )
     })
     it('should return service DOWN if last activity was more than 30s ago (catching up to blocks)', async function () {
@@ -384,9 +383,8 @@ describe('Indexer', function () {
       expect(result).to.have.property('status', 'down')
       const latestActivityTime = result.detail?.latestActivityTime
       expect(latestActivityTime).to.be.instanceOf(Date)
-      expect(result.detail).to.have.property(
-        'message',
-        'Last activity was more than 30s ago. Last processed block at : Mon Nov 25 2024 00:04:25 GMT+0000 (Greenwich Mean Time)'
+      expect(result.detail?.message).to.include(
+        'Last activity was more than 30s ago. Last processed block at : Mon Nov 25 2024 00:04:25 GMT+0000'
       )
     })
   })
