@@ -118,6 +118,7 @@ export default class Indexer {
         }
 
         await this.updateUnprocessedBlocks(lastProcessedBlock, lastKnownFinalised)
+        if (this.lastProcessedBlockTime === null) this.lastProcessedBlockTime = new Date()
 
         const nextUnprocessedBlockHash = await this.getNextUnprocessedBlockHash(lastProcessedBlock)
         if (nextUnprocessedBlockHash) {
@@ -291,6 +292,7 @@ export default class Indexer {
         },
       }
     }
+    const latestActivityTime = this.lastProcessedBlockTime || this.lastUnprocessedBlockTime
     if (this.lastProcessedBlockTime === null && this.lastUnprocessedBlockTime === null) {
       return {
         status: serviceState.DOWN,
@@ -301,7 +303,6 @@ export default class Indexer {
         },
       }
     }
-    const latestActivityTime = this.lastProcessedBlockTime || this.lastUnprocessedBlockTime
     if (latestActivityTime === null) throw new Error('sth')
     if (currentDate.getTime() - latestActivityTime.getTime() < indexerTimeout) {
       return {
@@ -313,20 +314,13 @@ export default class Indexer {
         },
       }
     }
-    if (this.lastProcessedBlockTime) {
-      return {
-        status: serviceState.DOWN,
-        detail: {
-          message: `Last activity was more than 30s ago. Last processed block at : ${this.lastProcessedBlockTime}`,
-          startupTime: this.startupTime,
-          latestActivityTime: latestActivityTime,
-        },
-      }
-    }
+    const errMessage = this.lastProcessedBlockTime
+      ? `Last activity was more than 30s ago. Last processed block at : ${this.lastProcessedBlockTime}`
+      : `Last activity was more than 30s ago. Last learned of block: ${this.lastUnprocessedBlockTime}`
     return {
       status: serviceState.DOWN,
       detail: {
-        message: `Last activity was more than 30s ago. Last learned of block: ${this.lastUnprocessedBlockTime}`,
+        message: errMessage,
         startupTime: this.startupTime,
         latestActivityTime: latestActivityTime,
       },
