@@ -18,7 +18,7 @@
     "db:migrate": "npm run db:cmd -- migrate:latest --knexfile src/lib/db/knexfile.ts",
     "db:rollback": "npm run db:cmd -- migrate:rollback --knexfile src/lib/db/knexfile.ts",
     "coverage": "c8 npm run test",
-    "flows": "npx @digicatapult/sqnc-process-management@latest create -h localhost -p 9944 -u //Alice -f processFlows.json"
+    "flows": "npx @digicatapult/sqnc-process-management@2.2.131 create -h localhost -p 9944 -u //Alice -f processFlows.json"
   },
   "repository": {
     "type": "git",
