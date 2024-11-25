@@ -118,7 +118,7 @@ export default class Indexer {
         }
 
         await this.updateUnprocessedBlocks(lastProcessedBlock, lastKnownFinalised)
-        if (this.lastProcessedBlockTime === null) this.lastProcessedBlockTime = new Date()
+        if (this.lastProcessedBlockTime === null) this.lastProcessedBlockTime = new Date() //once the above method has finished successfully we want to assign a value to lastProcessedBlockTime
 
         const nextUnprocessedBlockHash = await this.getNextUnprocessedBlockHash(lastProcessedBlock)
         if (nextUnprocessedBlockHash) {
@@ -278,52 +278,65 @@ export default class Indexer {
       }
     })
   }
-  getStatus = async (): Promise<Status> => {
-    const indexerTimeout = this.env.INDEXER_TIMEOUT_MS
-    const currentDate = new Date()
-    if (currentDate.getTime() - this.startupTime.getTime() < indexerTimeout) {
-      // if we started less than 30s ago -> PASS
-      return {
-        status: serviceState.UP,
-        detail: {
-          message: 'Service healthy. Starting up.',
-          startupTime: this.startupTime,
-          latestActivityTime: currentDate,
-        },
-      }
+
+  async getStatus() {
+    return await getStatus(
+      this.env.INDEXER_TIMEOUT_MS,
+      this.startupTime,
+      this.lastProcessedBlockTime,
+      this.lastUnprocessedBlockTime
+    )
+  }
+}
+
+export const getStatus = async (
+  indexerTimeout: number,
+  startupTime: Date,
+  lastProcessedBlockTime: Date | null,
+  lastUnprocessedBlockTime: Date | null
+): Promise<Status> => {
+  const currentDate = new Date()
+  if (currentDate.getTime() - startupTime.getTime() < indexerTimeout) {
+    // if we started less than 30s ago -> PASS
+    return {
+      status: serviceState.UP,
+      detail: {
+        message: 'Service healthy. Starting up.',
+        startupTime: startupTime,
+        latestActivityTime: currentDate,
+      },
     }
-    const latestActivityTime = this.lastProcessedBlockTime || this.lastUnprocessedBlockTime
-    if (this.lastProcessedBlockTime === null && this.lastUnprocessedBlockTime === null) {
-      return {
-        status: serviceState.DOWN,
-        detail: {
-          message: 'Last activity was more than 30s ago, no blocks were processed.',
-          startupTime: this.startupTime,
-          latestActivityTime: null,
-        },
-      }
-    }
-    if (latestActivityTime === null) throw new Error('sth')
-    if (currentDate.getTime() - latestActivityTime.getTime() < indexerTimeout) {
-      return {
-        status: serviceState.UP,
-        detail: {
-          message: 'Service healthy. Running.',
-          startupTime: this.startupTime,
-          latestActivityTime: latestActivityTime,
-        },
-      }
-    }
-    const errMessage = this.lastProcessedBlockTime
-      ? `Last activity was more than 30s ago. Last processed block at : ${this.lastProcessedBlockTime}`
-      : `Last activity was more than 30s ago. Last learned of block: ${this.lastUnprocessedBlockTime}`
+  }
+  const latestActivityTime = lastProcessedBlockTime || lastUnprocessedBlockTime
+  if (latestActivityTime === null) {
     return {
       status: serviceState.DOWN,
       detail: {
-        message: errMessage,
-        startupTime: this.startupTime,
+        message: 'Last activity was more than 30s ago, no blocks were processed.',
+        startupTime: startupTime,
+        latestActivityTime: null,
+      },
+    }
+  }
+  if (currentDate.getTime() - latestActivityTime.getTime() < indexerTimeout) {
+    return {
+      status: serviceState.UP,
+      detail: {
+        message: 'Service healthy. Running.',
+        startupTime: startupTime,
         latestActivityTime: latestActivityTime,
       },
     }
+  }
+  const errMessage = lastProcessedBlockTime
+    ? `Last activity was more than 30s ago. Last processed block at : ${lastProcessedBlockTime}`
+    : `Last activity was more than 30s ago. Last learned of block: ${lastUnprocessedBlockTime}`
+  return {
+    status: serviceState.DOWN,
+    detail: {
+      message: errMessage,
+      startupTime: startupTime,
+      latestActivityTime: latestActivityTime,
+    },
   }
 }

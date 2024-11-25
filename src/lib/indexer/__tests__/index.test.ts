@@ -6,8 +6,7 @@ import { expect } from 'chai'
 import { withMockLogger } from './fixtures/logger.js'
 import { withLastProcessedBlocksByCall, withInitialLastProcessedBlock } from './fixtures/db.js'
 import { withHappyChainNode, withGetHeaderBoom } from './fixtures/chainNode.js'
-import Indexer from '../index.js'
-import { delay } from './utils/helpers.js'
+import Indexer, { getStatus } from '../index.js'
 import env from '../../../env.js'
 
 describe('Indexer', function () {
@@ -306,25 +305,25 @@ describe('Indexer', function () {
     })
   })
   describe('getStatus tests', function () {
+    let clock: sinon.SinonFakeTimers
+    beforeEach(function () {
+      clock = sinon.useFakeTimers()
+    })
+
+    afterEach(function () {
+      clock.restore()
+    })
     it('should return service UP if within 30s of starting up', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
-      const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
-      await indexer.start()
-      const result = await indexer.getStatus()
+      const startupTime = new Date('2024-11-25T00:00:00.000Z')
+      clock.setSystemTime(new Date('2024-11-25T00:00:25.000Z'))
+      const result = await getStatus(30000, startupTime, null, null)
       expect(result).to.have.property('status', 'up')
       expect(result.detail).to.have.property('message', 'Service healthy. Starting up.')
     })
     it('should return service DOWN if it has started up a while back', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
-      const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
-
-      const fortyFiveSecondsAgo = new Date(startupTime.getTime() - 1 * 60 * 60 * 1000)
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime: fortyFiveSecondsAgo, env })
-      await indexer.start()
-      const result = await indexer.getStatus()
+      const startupTime = new Date('2024-11-25T00:00:15.000Z')
+      clock.setSystemTime(new Date('2024-11-25T00:01:00.000Z'))
+      const result = await getStatus(30000, startupTime, null, null)
       expect(result).to.have.property('status', 'down')
       expect(result.detail).to.have.property(
         'message',
@@ -332,17 +331,63 @@ describe('Indexer', function () {
       )
       expect(result.detail).to.have.property('latestActivityTime', null)
     })
-    it('should return service UP if within 30s of starting up', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
-      const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
-      await indexer.start()
-      await delay(3000) // delay 3s
-      const result = await indexer.getStatus()
+    it('should return service UP because we are "catching up" on old blocks', async function () {
+      const currentTime = new Date('2024-11-25T00:01:00.000Z')
+      clock.setSystemTime(currentTime)
+      const startupTime = new Date(currentTime.getTime() - 30 * 1000)
+      // lastUnprocessedBlockTime: 2 seconds after current time
+      const lastUnprocessedBlockTime = new Date(currentTime.getTime() + 2 * 1000)
+      const result = await getStatus(30000, startupTime, null, lastUnprocessedBlockTime)
       expect(result).to.have.property('status', 'up')
       const latestActivityTime = result.detail?.latestActivityTime
       expect(latestActivityTime).to.be.instanceOf(Date)
+      expect(result.detail).to.have.property('message', 'Service healthy. Running.')
+    })
+    it('should return service UP because we are processing blocks', async function () {
+      const currentTime = new Date('2024-11-25T00:01:00.000Z')
+      clock.setSystemTime(currentTime)
+      const startupTime = new Date(currentTime.getTime() - 30 * 1000)
+      // lastProcessedBlockTime: 4 seconds after current time
+      const lastUnprocessedBlockTime = new Date(currentTime.getTime() + 2 * 1000)
+      const lastProcessedBlockTime = new Date(currentTime.getTime() + 4 * 1000)
+      const result = await getStatus(30000, startupTime, lastProcessedBlockTime, lastUnprocessedBlockTime)
+      expect(result).to.have.property('status', 'up')
+      const latestActivityTime = result.detail?.latestActivityTime
+      expect(latestActivityTime).to.be.instanceOf(Date)
+      expect(result.detail).to.have.property('message', 'Service healthy. Running.')
+    })
+    it('should return service DOWN if last activity was more than 30s ago (catching up to blocks)', async function () {
+      const currentTime = new Date('2024-11-25T00:05:00.000Z')
+      clock.setSystemTime(currentTime)
+      // Startup time: 2 minutes before current time
+      const startupTime = new Date(currentTime.getTime() - 2 * 60 * 1000)
+      // lastProcessedBlockTime: 35 seconds before current time
+      const lastUnprocessedBlockTime = new Date(currentTime.getTime() - 35 * 1000)
+      const result = await getStatus(30000, startupTime, null, lastUnprocessedBlockTime)
+      expect(result).to.have.property('status', 'down')
+      const latestActivityTime = result.detail?.latestActivityTime
+      expect(latestActivityTime).to.be.instanceOf(Date)
+      expect(result.detail).to.have.property(
+        'message',
+        'Last activity was more than 30s ago. Last learned of block: Mon Nov 25 2024 00:04:25 GMT+0000 (Greenwich Mean Time)'
+      )
+    })
+    it('should return service DOWN if last activity was more than 30s ago (catching up to blocks)', async function () {
+      const currentTime = new Date('2024-11-25T00:05:00.000Z')
+      clock.setSystemTime(currentTime)
+      // Startup time: 2 minutes before current time
+      const startupTime = new Date(currentTime.getTime() - 2 * 60 * 1000)
+      // lastProcessedBlockTime: 35 seconds before current time
+      const lastUnprocessedBlockTime = new Date(currentTime.getTime() - 35 * 1000)
+      const lastProcessedBlockTime = new Date(currentTime.getTime() - 35 * 1000)
+      const result = await getStatus(30000, startupTime, lastProcessedBlockTime, lastUnprocessedBlockTime)
+      expect(result).to.have.property('status', 'down')
+      const latestActivityTime = result.detail?.latestActivityTime
+      expect(latestActivityTime).to.be.instanceOf(Date)
+      expect(result.detail).to.have.property(
+        'message',
+        'Last activity was more than 30s ago. Last processed block at : Mon Nov 25 2024 00:04:25 GMT+0000 (Greenwich Mean Time)'
+      )
     })
   })
 })
