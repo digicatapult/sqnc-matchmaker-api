@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.11
+# syntax=docker/dockerfile:1.12
 FROM node:lts-alpine as builder
 
 WORKDIR /sqnc-matchmaker-api
