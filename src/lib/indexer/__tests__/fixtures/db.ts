@@ -11,11 +11,20 @@ export const withLastProcessedBlocksByCall = (calls: LastProcessBlockResult[]) =
   }
 
   const insertProcessedBlock = sinon.stub().resolves()
+  const getNextUnprocessedBlockAboveHeight = sinon.stub().resolves({ hash: '5-hash' })
+  const tryInsertUnprocessedBlock = sinon.stub().resolves()
+  const getNextUnprocessedBlockAtHeight = sinon.stub().resolves()
 
   const self = {
-    getLastProcessedBlock: getMock,
+    tryInsertUnprocessedBlock,
+    getNextUnprocessedBlockAtHeight,
+    getNextUnprocessedBlockAboveHeight,
+    getLastProcessedBlock: sinon.stub().resolves(calls[2]),
     withTransaction: sinon.spy(async function (fn: (db: Database) => Promise<void>) {
       await fn({
+        tryInsertUnprocessedBlock,
+        getNextUnprocessedBlockAtHeight,
+        getNextUnprocessedBlockAboveHeight,
         insertProcessedBlock,
       } as unknown as Database)
     }),
@@ -37,8 +46,14 @@ export const withInitialLastProcessedBlock = (initial: LastProcessBlockResult) =
   const insertDemand = sinon.stub().resolves()
   const insertMatch2 = sinon.stub().resolves()
   const insertAttachment = sinon.stub().resolves()
+  const getNextUnprocessedBlockAboveHeight = sinon.stub()
+  const tryInsertUnprocessedBlock = sinon.stub().resolves()
+  const getNextUnprocessedBlockAtHeight = sinon.stub()
 
   return {
+    tryInsertUnprocessedBlock,
+    getNextUnprocessedBlockAtHeight,
+    getNextUnprocessedBlockAboveHeight,
     getLastProcessedBlock: getMock,
     updateDemand,
     updateMatch2,
@@ -48,12 +63,15 @@ export const withInitialLastProcessedBlock = (initial: LastProcessBlockResult) =
     insertProcessedBlock,
     withTransaction: sinon.spy(async function (fn: (db: Database) => Promise<void>) {
       await fn({
+        getNextUnprocessedBlockAboveHeight,
+        getNextUnprocessedBlockAtHeight,
         insertProcessedBlock,
         updateDemand,
         updateMatch2,
         insertDemand,
         insertMatch2,
         insertAttachment,
+        tryInsertUnprocessedBlock,
       } as unknown as Database)
     }),
   } as unknown as Database

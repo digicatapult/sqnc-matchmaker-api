@@ -120,6 +120,7 @@ export default class Indexer {
         await this.updateUnprocessedBlocks(lastProcessedBlock, lastKnownFinalised)
         if (this.lastProcessedBlockTime === null) this.lastProcessedBlockTime = new Date() //once the above method has finished successfully we want to assign a value to lastProcessedBlockTime
 
+        this.logger.error({ lastProcessedBlock, a: this.lastProcessedBlockTime })
         const nextUnprocessedBlockHash = await this.getNextUnprocessedBlockHash(lastProcessedBlock)
         if (nextUnprocessedBlockHash) {
           const changeSet = await this.handleBlock(nextUnprocessedBlockHash)
