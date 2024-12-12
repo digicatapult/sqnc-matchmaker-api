@@ -6,8 +6,8 @@ import env, { type Env, EnvToken } from './env.js'
 import { logger, LoggerToken } from './lib/logger.js'
 
 export const iocContainer: IocContainer = {
-  get: <T>(controller: { prototype: T }): T => {
-    return container.resolve<T>(controller as never)
+  get: (controller) => {
+    return container.resolve(controller as never)
   },
 }
 
