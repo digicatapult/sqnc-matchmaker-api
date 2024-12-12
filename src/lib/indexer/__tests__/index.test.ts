@@ -93,15 +93,14 @@ describe('Indexer', function () {
     })
 
     it("should process successive blocks on each call if there's two block to process", async function () {
-      const nextBlock = '3-hash'
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
       indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
-      await indexer.processNextBlock(nextBlock)
-      const result = await indexer.processNextBlock(nextBlock)
+      await indexer.processNextBlock('3-hash')
+      const result = await indexer.processNextBlock('3-hash')
 
       expect(result).to.equal('3-hash')
       expect(handleBlock.calledTwice).to.equal(true)

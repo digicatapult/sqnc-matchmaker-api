@@ -11,7 +11,9 @@ export const withLastProcessedBlocksByCall = (calls: LastProcessBlockResult[]) =
   }
 
   const insertProcessedBlock = sinon.stub().resolves()
-  const getNextUnprocessedBlockAboveHeight = sinon.stub().resolves({ hash: '5-hash' })
+  const getNextUnprocessedBlockAboveHeight = sinon
+    .stub()
+    .callsFake((height) => Promise.resolve({ hash: `${height}-hash` }))
   const tryInsertUnprocessedBlock = sinon.stub().resolves()
   const getNextUnprocessedBlockAtHeight = sinon.stub().resolves()
 
