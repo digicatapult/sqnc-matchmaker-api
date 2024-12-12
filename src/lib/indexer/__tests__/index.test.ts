@@ -43,7 +43,6 @@ describe('Indexer', function () {
       const db = withInitialLastProcessedBlock(null)
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
-      db.tryInsertUnprocessedBlock = sinon.stub().resolves()
 
       indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
@@ -69,7 +68,6 @@ describe('Indexer', function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
-      db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '2-hash' })
 
       indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
@@ -84,7 +82,6 @@ describe('Indexer', function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
-      db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '2-hash' })
 
       indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
@@ -100,12 +97,10 @@ describe('Indexer', function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
-      db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '2-hash' })
 
       indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
       await indexer.processNextBlock(nextBlock)
-      db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '3-hash' })
       const result = await indexer.processNextBlock(nextBlock)
 
       expect(result).to.equal('3-hash')
@@ -118,7 +113,6 @@ describe('Indexer', function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
-      db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '2-hash' })
 
       indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
@@ -157,9 +151,9 @@ describe('Indexer', function () {
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
-      db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '3-hash' })
       indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
+      db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '3-hash' })
       await indexer.processNextBlock('3-hash')
       db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '2-hash' })
       const result = await indexer.processNextBlock('2-hash')
@@ -224,7 +218,6 @@ describe('Indexer', function () {
         ]),
       })
 
-      db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '2-hash' })
       indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
       await indexer.processNextBlock('2-hash')
@@ -262,7 +255,6 @@ describe('Indexer', function () {
         const p = indexer.processNextBlock('2-hash').then((s) => s)
         clock.tickAsync(1000)
 
-        db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '2-hash' })
         const result = await p
 
         expect(result).to.equal('2-hash')
@@ -275,7 +267,6 @@ describe('Indexer', function () {
         const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
         const node = withHappyChainNode()
         const handleBlock = sinon.stub().resolves({}).onCall(0).rejects(new Error('BOOM'))
-        db.getNextUnprocessedBlockAtHeight = sinon.stub().resolves({ hash: '2-hash' })
 
         indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
         await indexer.start()
@@ -291,7 +282,7 @@ describe('Indexer', function () {
     })
   })
 
-  describe.skip('processAllBlocks', function () {
+  describe('processAllBlocks', function () {
     it('should process all pending blocks', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
