@@ -56,8 +56,6 @@ export default async (): Promise<Express> => {
     next()
   })
 
-
-
   const apiSpec = await loadApiSpec()
   app.get('/api-docs', (_req, res) => res.json(apiSpec))
   app.use('/swagger', serve, setup(undefined, options))
