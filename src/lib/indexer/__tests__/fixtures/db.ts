@@ -11,11 +11,24 @@ export const withLastProcessedBlocksByCall = (calls: LastProcessBlockResult[]) =
   }
 
   const insertProcessedBlock = sinon.stub().resolves()
+  const getNextUnprocessedBlockAboveHeight = sinon
+    .stub()
+    .callsFake((height) => Promise.resolve({ hash: `${height}-hash` }))
+  const tryInsertUnprocessedBlock = sinon.stub().resolves()
+  const getNextUnprocessedBlockAtHeight = sinon
+    .stub()
+    .callsFake((height) => Promise.resolve({ hash: `${height}-hash` }))
 
   const self = {
-    getLastProcessedBlock: getMock,
+    tryInsertUnprocessedBlock,
+    getNextUnprocessedBlockAtHeight,
+    getNextUnprocessedBlockAboveHeight,
+    getLastProcessedBlock: sinon.stub().resolves(calls[2]),
     withTransaction: sinon.spy(async function (fn: (db: Database) => Promise<void>) {
       await fn({
+        tryInsertUnprocessedBlock,
+        getNextUnprocessedBlockAtHeight,
+        getNextUnprocessedBlockAboveHeight,
         insertProcessedBlock,
       } as unknown as Database)
     }),
@@ -37,8 +50,16 @@ export const withInitialLastProcessedBlock = (initial: LastProcessBlockResult) =
   const insertDemand = sinon.stub().resolves()
   const insertMatch2 = sinon.stub().resolves()
   const insertAttachment = sinon.stub().resolves()
+  const getNextUnprocessedBlockAboveHeight = sinon.stub().callsFake((height) => ({ hash: `${height}-hash` }))
+  const tryInsertUnprocessedBlock = sinon.stub().resolves()
+  const getNextUnprocessedBlockAtHeight = sinon
+    .stub()
+    .callsFake((height) => Promise.resolve({ hash: `${height}-hash` }))
 
   return {
+    tryInsertUnprocessedBlock,
+    getNextUnprocessedBlockAtHeight,
+    getNextUnprocessedBlockAboveHeight,
     getLastProcessedBlock: getMock,
     updateDemand,
     updateMatch2,
@@ -48,12 +69,15 @@ export const withInitialLastProcessedBlock = (initial: LastProcessBlockResult) =
     insertProcessedBlock,
     withTransaction: sinon.spy(async function (fn: (db: Database) => Promise<void>) {
       await fn({
+        getNextUnprocessedBlockAboveHeight,
+        getNextUnprocessedBlockAtHeight,
         insertProcessedBlock,
         updateDemand,
         updateMatch2,
         insertDemand,
         insertMatch2,
         insertAttachment,
+        tryInsertUnprocessedBlock,
       } as unknown as Database)
     }),
   } as unknown as Database

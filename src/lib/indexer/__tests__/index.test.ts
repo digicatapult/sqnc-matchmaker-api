@@ -50,7 +50,7 @@ describe('Indexer', function () {
     })
   })
 
-  describe.skip('processNextBlock', function () {
+  describe('processNextBlock', function () {
     it('should do nothing and return null if there are no blocks to process', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
@@ -127,7 +127,7 @@ describe('Indexer', function () {
       const db = withLastProcessedBlocksByCall([
         { hash: '1-hash', parent: '0-hash', height: 1 },
         { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '4-hash', parent: '1-hash', height: 2 },
+        { hash: '4-hash', parent: '1-hash', height: 4 },
       ])
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
@@ -139,12 +139,12 @@ describe('Indexer', function () {
 
       expect(result).to.equal('5-hash')
       expect(handleBlock.calledTwice).to.equal(true)
-      expect(handleBlock.firstCall.args[0]).to.equal('2-hash')
+      expect(handleBlock.firstCall.args[0]).to.equal('5-hash')
       expect(handleBlock.secondCall.args[0]).to.equal('5-hash')
     })
 
     it('should continue to process blocks if last finalised block goes backwards', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 0 })
       const node = withHappyChainNode()
       const handleBlock = sinon.stub().resolves({})
 
@@ -153,10 +153,10 @@ describe('Indexer', function () {
       await indexer.processNextBlock('3-hash')
       const result = await indexer.processNextBlock('2-hash')
 
-      expect(result).to.equal('3-hash')
+      expect(result).to.equal('2-hash')
       expect(handleBlock.calledTwice).to.equal(true)
-      expect(handleBlock.firstCall.args[0]).to.equal('2-hash')
-      expect(handleBlock.secondCall.args[0]).to.equal('3-hash')
+      expect(handleBlock.firstCall.args[0]).to.equal('1-hash')
+      expect(handleBlock.secondCall.args[0]).to.equal('2-hash')
     })
 
     it('should upsert demands and match2 entries from changeset', async function () {
@@ -252,8 +252,9 @@ describe('Indexer', function () {
         const result = await p
 
         expect(result).to.equal('2-hash')
-        expect(handleBlock.calledOnce).to.equal(true)
+        expect(handleBlock.calledTwice).to.equal(true)
         expect(handleBlock.firstCall.args[0]).to.equal('2-hash')
+        expect(handleBlock.secondCall.args[0]).to.equal('2-hash')
       })
 
       it('should retry if handler goes boom', async function () {
@@ -275,7 +276,7 @@ describe('Indexer', function () {
     })
   })
 
-  describe.skip('processAllBlocks', function () {
+  describe('processAllBlocks', function () {
     it('should process all pending blocks', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
