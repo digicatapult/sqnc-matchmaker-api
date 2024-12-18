@@ -2,6 +2,7 @@ import express, { Express } from 'express'
 import { setup, serve, SwaggerUiOptions } from 'swagger-ui-express'
 import cors from 'cors'
 import bodyParser from 'body-parser'
+import promBundle from 'express-prom-bundle'
 
 import { errorHandler } from './lib/error-handler/index.js'
 import { RegisterRoutes } from './routes.js'
@@ -24,6 +25,14 @@ const customCssToInject: string = `
   .swagger-ui section.models { background-color: #f7f7f7; }
 
 `
+const promClient = promBundle({
+  includePath: true,
+  promClient: {
+    collectDefaultMetrics: {
+      prefix: 'sqnc_matchmaker_api_',
+    },
+  },
+})
 
 export default async (): Promise<Express> => {
   const app: Express = express()
@@ -37,6 +46,8 @@ export default async (): Promise<Express> => {
   app.use(bodyParser.urlencoded({ extended: true }))
   app.use(bodyParser.json())
   app.use(cors())
+  app.use(promClient)
+
   app.use((req, _, next) => {
     // make sure we always have a file object on req even if this is not a multipart
     // body this is so that the attachment route can handle both JSON and multipart bodies
