@@ -38,17 +38,17 @@ export default async (): Promise<Express> => {
   app.use(bodyParser.urlencoded({ extended: true }))
   app.use(bodyParser.json())
   app.use(cors())
-  app.use((_req, _res, next) => {
+  app.use(
     promBundle({
       includePath: true,
       promClient: {
         collectDefaultMetrics: {
-          prefix: 'sqnc_matchmaker_api_',
+          prefix: 'sqnc_matchmaker_',
         },
       },
     })
-    next()
-  })
+  )
+
   app.use((req, _, next) => {
     // make sure we always have a file object on req even if this is not a multipart
     // body this is so that the attachment route can handle both JSON and multipart bodies
