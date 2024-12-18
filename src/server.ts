@@ -25,6 +25,14 @@ const customCssToInject: string = `
   .swagger-ui section.models { background-color: #f7f7f7; }
 
 `
+const promClient = promBundle({
+  includePath: true,
+  promClient: {
+    collectDefaultMetrics: {
+      prefix: 'sqnc_matchmaker_api_',
+    },
+  },
+})
 
 export default async (): Promise<Express> => {
   const app: Express = express()
@@ -38,16 +46,7 @@ export default async (): Promise<Express> => {
   app.use(bodyParser.urlencoded({ extended: true }))
   app.use(bodyParser.json())
   app.use(cors())
-  app.use(
-    promBundle({
-      includePath: true,
-      promClient: {
-        collectDefaultMetrics: {
-          prefix: 'sqnc_matchmaker_',
-        },
-      },
-    })
-  )
+  app.use(promClient)
 
   app.use((req, _, next) => {
     // make sure we always have a file object on req even if this is not a multipart
