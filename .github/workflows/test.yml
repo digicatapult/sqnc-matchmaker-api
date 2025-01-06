@@ -11,20 +11,20 @@ jobs:
     uses: digicatapult/shared-workflows/.github/workflows/tests-npm.yml@main
     with:
       docker_compose_file: ''
-      npm_build_command: 'npm run tsoa:build'
+      npm_build_command: 'npm run build:tsoa'
       tests: '["test:unit"]'
   tests-offchain:
     uses: digicatapult/shared-workflows/.github/workflows/tests-npm.yml@main
     with:
       docker_compose_file: './docker-compose-test.yml'
-      npm_build_command: 'npm run tsoa:build'
+      npm_build_command: 'npm run build:tsoa'
       pre_test_command: 'npm run db:migrate'
       tests: '["test:offchain"]'
   tests-onchain:
     uses: digicatapult/shared-workflows/.github/workflows/tests-npm.yml@main
     with:
       docker_compose_file: './docker-compose-test.yml'
-      npm_build_command: 'npm run tsoa:build'
+      npm_build_command: 'npm run build:tsoa'
       pre_test_command: 'npm run db:migrate && npm run flows'
       tests: '["test:onchain"]'
   build-docker:
