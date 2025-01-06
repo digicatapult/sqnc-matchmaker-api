@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "check": "tsc --noEmit",
+    "check": "npm run build:tsoa && tsc --noEmit",
     "depcheck": "depcheck",
     "build:tsoa": "tsoa spec-and-routes",
     "build": "tsoa spec-and-routes && swc ./src -d ./build --strip-leading-paths --copy-files",
