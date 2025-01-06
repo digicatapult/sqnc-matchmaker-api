@@ -27,7 +27,7 @@ services:
     image: digicatapult/sqnc-identity-service:latest
     container_name: identity-service
     command: /bin/sh -c "
-      sleep 30 &&
+      sleep 20 &&
       npm run db:migrate &&
       npm start"
     ports:

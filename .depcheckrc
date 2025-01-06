@@ -1,10 +1,10 @@
 ignores: [
+  '@swc/cli',
   'concurrently',
   'pino-colada',
   'nodemon',
   'multer',
   'pg',
-  '@digicatapult/tsimp',
   'ts-node',
   '@polkadot/util-crypto',
   '@polkadot/types',
