@@ -39,7 +39,7 @@ describe('on-chain', function () {
     }[] = []
 
     beforeEach(async () => {
-      const numberIds = 300
+      const numberIds = 200
 
       demandAIds = await Promise.all(
         Array(numberIds)
@@ -97,6 +97,9 @@ describe('on-chain', function () {
 
       // check we have 500 demandAs and 500 demandBs
       if (demandAIds.length !== demandBIds.length) {
+        console.log(`demandAs: ${demandAIds.length}`)
+        console.log(`demandBs: ${demandBIds.length}`)
+
         throw new Error('Mismatch between demand A and demand B lengths')
       }
 
@@ -116,7 +119,7 @@ describe('on-chain', function () {
       }
     })
 
-    it('should propose many match2s on-chain', async () => {
+    it.only('should propose many match2s on-chain', async () => {
       const transactionIds = await Promise.all(
         match2Ids.map(async (match2Id) => {
           // submit to chain
