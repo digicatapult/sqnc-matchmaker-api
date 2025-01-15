@@ -6,12 +6,12 @@ import Indexer from '../../../src/lib/indexer/index.js'
 import { post, get } from '../../helper/routeHelper.js'
 import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
 import { withIdentitySelfMock } from '../../helper/mock.js'
-import Database, { DemandRow, Match2Row, Transaction } from '../../../src/lib/db/index.js'
+import Database, { DemandRow, Match2Row } from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { UUID } from '../../../src/models/strings.js'
-import { container, delay } from 'tsyringe'
+import { container } from 'tsyringe'
 
 describe('on-chain', function () {
   this.timeout(180000)
@@ -39,7 +39,7 @@ describe('on-chain', function () {
     }[] = []
 
     beforeEach(async () => {
-      const numberIds = 10
+      const numberIds = 300
 
       demandAIds = await Promise.all(
         Array(numberIds)
@@ -110,6 +110,10 @@ describe('on-chain', function () {
         })
       )
       await node.sealBlock()
+      // check we have 500 match2s
+      if (match2Ids.length === 500) {
+        throw new Error('Mismatch between demand A and demand B lengths')
+      }
     })
 
     it('should propose many match2s on-chain', async () => {
@@ -142,7 +146,7 @@ describe('on-chain', function () {
         match2Ids.map(async (match2Id) => {
           const [maybeMatch2] = await db.getMatch2(match2Id)
           const match2 = maybeMatch2 as Match2Row
-          // maybe check state?
+          expect(match2.state).to.equal('proposed')
         })
       )
     })
@@ -232,7 +236,7 @@ describe('on-chain', function () {
           await pollMatch2State(db, match2Id, 'acceptedFinal')
         })
       )
-      // check demandAs
+      // check demans and match2 states
       await Promise.all(
         demandAIds.map(async (demand) => {
           const [maybeDemandA] = await db.getDemand(demand.demandA)
@@ -712,7 +716,7 @@ describe('on-chain', function () {
         match2Ids.map(async (match2Id) => {
           const [maybeMatch2] = await db.getMatch2(match2Id)
           const match2 = maybeMatch2 as Match2Row
-          // assert status??
+          expect(match2.state).to.equal('proposed')
         })
       )
       const responsesAcceptAIds = await Promise.all(
