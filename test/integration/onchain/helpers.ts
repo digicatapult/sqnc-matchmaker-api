@@ -101,20 +101,47 @@ export async function processMatches2InChunks(
   context: {
     app: Express
     indexer: Indexer
-  }
+  },
+  match2sToReplace: string[] = []
 ) {
   let res: string[] = []
   // Split demandAIds and demandBIds into chunks of 100
   const demandAChunks = chunkArray(demandAs, numberIdsPerBlock)
   const demandBChunks = chunkArray(demandBs, numberIdsPerBlock)
-
   if (demandAChunks.length !== demandBChunks.length) {
     throw new Error('Mismatch between demand A and demand B chunk lengths')
   }
+  if (match2sToReplace.length === 0) {
+    for (let i = 0; i < demandAChunks.length; i++) {
+      const demandAChunk = demandAChunks[i]
+      const demandBChunk = demandBChunks[i]
+
+      const match2IdsChunk = await Promise.all(
+        demandAChunk.map(async (demandA, index) => {
+          const demandB = demandBChunk[index]
+          const {
+            body: { id: match2Id },
+          } = await post(context.app, '/v1/match2', {
+            demandA: demandA.demandA,
+            demandB: demandB.demandB,
+          })
+          return match2Id as UUID
+        })
+      )
+
+      await node.sealBlock()
+      console.log('concatenating matches2')
+      res = res.concat(match2IdsChunk)
+    }
+    console.log('number of matches2 created:', res.length)
+    return res
+  }
+  const match2sChunks = chunkArray(match2sToReplace, numberIdsPerBlock)
 
   for (let i = 0; i < demandAChunks.length; i++) {
     const demandAChunk = demandAChunks[i]
     const demandBChunk = demandBChunks[i]
+    const match2Chunk = match2sChunks[i]
 
     const match2IdsChunk = await Promise.all(
       demandAChunk.map(async (demandA, index) => {
@@ -124,6 +151,7 @@ export async function processMatches2InChunks(
         } = await post(context.app, '/v1/match2', {
           demandA: demandA.demandA,
           demandB: demandB.demandB,
+          replaces: match2Chunk,
         })
         return match2Id as UUID
       })
@@ -133,7 +161,6 @@ export async function processMatches2InChunks(
     console.log('concatenating matches2')
     res = res.concat(match2IdsChunk)
   }
-
   console.log('number of matches2 created:', res.length)
   return res
 }

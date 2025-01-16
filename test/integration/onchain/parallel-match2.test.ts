@@ -26,6 +26,10 @@ describe('on-chain', function () {
   const db = new Database()
   const node = container.resolve(ChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
+  // how many ids we create before sealing a block * number of repeats => num of records we create
+  // example: numberIdsPerBlock = 100 * numberOfRepeats = 5 => gives us 500 ids
+  const numberIdsPerBlock = 100
+  const numberOfRepeats = 5
 
   withAppAndIndexer(context)
   withIdentitySelfMock()
@@ -33,11 +37,7 @@ describe('on-chain', function () {
   beforeEach(async () => await seed())
   afterEach(async () => await cleanup())
 
-  describe.only('match2 - parallel', async () => {
-    // how many ids we create before sealing a block * number of repeats => num of records we create
-    // example: numberIdsPerBlock = 100 * numberOfRepeats = 5 => gives us 500 ids
-    const numberIdsPerBlock = 100
-    const numberOfRepeats = 5
+  describe('match2 - parallel', async () => {
     let match2Ids: string[] = []
     let demandAIds: demandAId[] = []
     let demandBIds: demandBId[] = []
@@ -448,76 +448,24 @@ describe('on-chain', function () {
       )
     })
   })
-  describe('re-match2', async () => {
+  describe.only('re-match2', async () => {
     let match2Ids: string[] = []
+    let demandAIds: demandAId[] = []
+    let demandBIds: demandBId[] = []
     let rematch2Ids: string[] = []
-    let demandAIds: {
-      originalDemandA: number
-      demandA: string
-      transactionId: any
-    }[] = []
-    let demandBIds: {
-      originalDemandB: number
-      demandB: string
-      transactionId: any
-    }[] = []
-    let newDemandBIds: {
-      originalDemandB: number
-      demandB: string
-      transactionId: any
-    }[] = []
+    let newDemandBIds: demandBId[] = []
+
     beforeEach(async () => {
-      const numberIdsPerBlock = 10
+      demandAIds = await processDemandAIds(numberOfRepeats, numberIdsPerBlock, context, node, db)
 
-      demandAIds = await Promise.all(
-        Array(numberIdsPerBlock)
-          .fill(null)
-          .map(async () => {
-            const {
-              body: { id: demandAId },
-            } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
-            const {
-              body: { id: demandATransactionId },
-            } = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
-
-            const [demandA]: DemandRow[] = await db.getDemand(demandAId)
-
-            return {
-              originalDemandA: demandA.originalTokenId as number,
-              demandA: demandAId as string,
-              transactionId: demandATransactionId,
-            }
-          })
-      )
-
-      await node.sealBlock()
       //check demand and transaction state
+      console.log(`demandA ids length : ${demandAIds.length}`)
       for (const demandA of demandAIds) {
         await pollTransactionState(db, demandA.transactionId, 'finalised')
         await pollDemandState(db, demandA.demandA, 'created')
       }
 
-      demandBIds = await Promise.all(
-        Array(numberIdsPerBlock)
-          .fill(null)
-          .map(async () => {
-            const {
-              body: { id: demandBId },
-            } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
-            const {
-              body: { id: demandBTransactionId },
-            } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {})
-            const [demandB]: DemandRow[] = await db.getDemand(demandBId)
-
-            return {
-              originalDemandB: demandB.originalTokenId as number,
-              demandB: demandBId as string,
-              transactionId: demandBTransactionId,
-            }
-          })
-      )
-      await node.sealBlock()
-
+      demandBIds = await processDemandBIds(numberOfRepeats, numberIdsPerBlock, context, node, db)
       //check demand and transaction state
       for (const demandB of demandBIds) {
         await pollTransactionState(db, demandB.transactionId, 'finalised')
@@ -526,38 +474,15 @@ describe('on-chain', function () {
 
       // check we have 500 demandAs and 500 demandBs
       if (demandAIds.length !== demandBIds.length) {
+        console.log(`demandAs: ${demandAIds.length}`)
+        console.log(`demandBs: ${demandBIds.length}`)
+
         throw new Error('Mismatch between demand A and demand B lengths')
       }
+      match2Ids = await processMatches2InChunks(demandAIds, demandBIds, numberIdsPerBlock, node, context)
 
-      match2Ids = await Promise.all(
-        demandAIds.map(async (demandA, index) => {
-          const demandB = demandBIds[index]
-          const {
-            body: { id: match2Id },
-          } = await post(context.app, '/v1/match2', { demandA: demandA.demandA, demandB: demandB.demandB })
-          return match2Id as UUID
-        })
-      )
-      await node.sealBlock()
-      newDemandBIds = await Promise.all(
-        Array(numberIdsPerBlock)
-          .fill(null)
-          .map(async () => {
-            const {
-              body: { id: demandBId },
-            } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
-            const {
-              body: { id: demandBTransactionId },
-            } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {})
-            const [demandB]: DemandRow[] = await db.getDemand(demandBId)
+      newDemandBIds = await processDemandBIds(numberOfRepeats, numberIdsPerBlock, context, node, db)
 
-            return {
-              originalDemandB: demandB.originalTokenId as number,
-              demandB: demandBId as string,
-              transactionId: demandBTransactionId,
-            }
-          })
-      )
       await node.sealBlock()
       // check demand and transaction state for new demands
       for (const demandB of newDemandBIds) {
@@ -570,21 +495,16 @@ describe('on-chain', function () {
         throw new Error('Mismatch between demand A and new demand B lengths')
       }
     })
-    it('should propose a rematch2 on-chain', async () => {
-      const transactionIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+    it.only('should propose a rematch2 on-chain', async () => {
+      console.log('here')
+      const transactionIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'proposal',
+        node
       )
+
       await node.sealBlock()
       await Promise.all(
         transactionIds.map(async (tx) => {
@@ -593,7 +513,7 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'proposed')
+          await pollMatch2State(db, match2Id, 'proposed', 500)
         })
       )
       await Promise.all(
@@ -603,19 +523,12 @@ describe('on-chain', function () {
           expect(match2.state).to.equal('proposed')
         })
       )
-      const responsesAcceptAIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const responsesAcceptAIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'accept',
+        node
       )
 
       // wait for block to finalise
@@ -627,24 +540,17 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedA')
+          await pollMatch2State(db, match2Id, 'acceptedA', 500)
         })
       )
 
       // submit 2nd accept to chain
-      const responsesAcceptFinalIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const responsesAcceptFinalIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'accept',
+        node
       )
 
       // wait for block to finalise
@@ -656,7 +562,7 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedFinal')
+          await pollMatch2State(db, match2Id, 'acceptedFinal', 500)
         })
       )
       // check demandAs
@@ -683,36 +589,32 @@ describe('on-chain', function () {
       )
 
       //prepare rematches
-      rematch2Ids = await Promise.all(
-        demandAIds.map(async (demandA, index) => {
-          const demandB = newDemandBIds[index]
-          const replacingMatch2 = match2Ids[index]
-          const {
-            body: { id: rematch2Id },
-          } = await post(context.app, '/v1/match2', {
-            demandA: demandA.demandA,
-            demandB: demandB.demandB,
-            replaces: replacingMatch2,
-          })
-          return rematch2Id as UUID
-        })
-      )
+      rematch2Ids = await processMatches2InChunks(demandAIds, demandBIds, numberIdsPerBlock, node, context, match2Ids)
+
+      // rematch2Ids = await Promise.all(
+      //   demandAIds.map(async (demandA, index) => {
+      //     const demandB = newDemandBIds[index]
+      //     const replacingMatch2 = match2Ids[index]
+      //     const {
+      //       body: { id: rematch2Id },
+      //     } = await post(context.app, '/v1/match2', {
+      //       demandA: demandA.demandA,
+      //       demandB: demandB.demandB,
+      //       replaces: replacingMatch2,
+      //     })
+      //     return rematch2Id as UUID
+      //   })
+      // )
       await node.sealBlock()
       //submit rematches to chain
-      const proposedRematch2Ids = await Promise.all(
-        rematch2Ids.map(async (rematch2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${rematch2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const proposedRematch2Ids = await processMatch2TransactionsInChunks(
+        rematch2Ids,
+        numberIdsPerBlock,
+        context,
+        'proposal',
+        node
       )
+
       // wait for block to finalise
       await node.sealBlock()
       await Promise.all(
@@ -722,7 +624,7 @@ describe('on-chain', function () {
       )
       await Promise.all(
         rematch2Ids.map(async (rematch2Id) => {
-          await pollMatch2State(db, rematch2Id, 'proposed')
+          await pollMatch2State(db, rematch2Id, 'proposed', 500)
         })
       )
       //check status of demands and matches
