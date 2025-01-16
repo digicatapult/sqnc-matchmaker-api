@@ -12,6 +12,14 @@ import { pollDemandState, pollMatch2State, pollTransactionState } from '../../he
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { UUID } from '../../../src/models/strings.js'
 import { container } from 'tsyringe'
+import {
+  demandAId,
+  demandBId,
+  processDemandAIds,
+  processDemandBIds,
+  processMatch2TransactionsInChunks,
+  processMatches2InChunks,
+} from './helpers.js'
 
 describe('on-chain', function () {
   this.timeout(180000)
@@ -25,70 +33,26 @@ describe('on-chain', function () {
   beforeEach(async () => await seed())
   afterEach(async () => await cleanup())
 
-  describe('match2', async () => {
+  describe.only('match2 - parallel', async () => {
+    // how many ids we create before sealing a block * number of repeats => num of records we create
+    // example: numberIdsPerBlock = 100 * numberOfRepeats = 5 => gives us 500 ids
+    const numberIdsPerBlock = 100
+    const numberOfRepeats = 5
     let match2Ids: string[] = []
-    let demandAIds: {
-      originalDemandA: number
-      demandA: string
-      transactionId: any
-    }[] = []
-    let demandBIds: {
-      originalDemandB: number
-      demandB: string
-      transactionId: any
-    }[] = []
+    let demandAIds: demandAId[] = []
+    let demandBIds: demandBId[] = []
 
     beforeEach(async () => {
-      const numberIds = 200
+      demandAIds = await processDemandAIds(numberOfRepeats, numberIdsPerBlock, context, node, db)
 
-      demandAIds = await Promise.all(
-        Array(numberIds)
-          .fill(null)
-          .map(async () => {
-            const {
-              body: { id: demandAId },
-            } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
-            const {
-              body: { id: demandATransactionId },
-            } = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
-            const [demandA]: DemandRow[] = await db.getDemand(demandAId)
-
-            return {
-              originalDemandA: demandA.originalTokenId as number,
-              demandA: demandAId as string,
-              transactionId: demandATransactionId,
-            }
-          })
-      )
-
-      await node.sealBlock()
       //check demand and transaction state
+      console.log(`demandA ids length : ${demandAIds.length}`)
       for (const demandA of demandAIds) {
         await pollTransactionState(db, demandA.transactionId, 'finalised')
         await pollDemandState(db, demandA.demandA, 'created')
       }
 
-      demandBIds = await Promise.all(
-        Array(numberIds)
-          .fill(null)
-          .map(async () => {
-            const {
-              body: { id: demandBId },
-            } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
-            const {
-              body: { id: demandBTransactionId },
-            } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {})
-
-            const [demandB]: DemandRow[] = await db.getDemand(demandBId)
-
-            return {
-              originalDemandB: demandB.originalTokenId as number,
-              demandB: demandBId as string,
-              transactionId: demandBTransactionId,
-            }
-          })
-      )
-      await node.sealBlock()
+      demandBIds = await processDemandBIds(numberOfRepeats, numberIdsPerBlock, context, node, db)
       //check demand and transaction state
       for (const demandB of demandBIds) {
         await pollTransactionState(db, demandB.transactionId, 'finalised')
@@ -103,46 +67,38 @@ describe('on-chain', function () {
         throw new Error('Mismatch between demand A and demand B lengths')
       }
 
-      match2Ids = await Promise.all(
-        demandAIds.map(async (demandA, index) => {
-          const demandB = demandBIds[index]
-          const {
-            body: { id: match2Id },
-          } = await post(context.app, '/v1/match2', { demandA: demandA.demandA, demandB: demandB.demandB })
-          return match2Id as UUID
-        })
-      )
+      match2Ids = await processMatches2InChunks(demandAIds, demandBIds, numberIdsPerBlock, node, context)
+
       await node.sealBlock()
       // check we have 500 match2s
-      if (match2Ids.length === 500) {
-        throw new Error('Mismatch between demand A and demand B lengths')
+      if (match2Ids.length !== 500) {
+        throw new Error('We do not have enough match2s')
       }
     })
+    afterEach(() => {
+      match2Ids = []
+      demandAIds = []
+      demandBIds = []
+    })
 
-    it.only('should propose many match2s on-chain', async () => {
-      const transactionIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+    it('should propose many match2s on-chain', async () => {
+      const proposalIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'proposal',
+        node
       )
-      await node.sealBlock()
+      console.log('here')
+
       await Promise.all(
-        transactionIds.map(async (tx) => {
+        proposalIds.map(async (tx) => {
           await pollTransactionState(db, tx, 'finalised')
         })
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'proposed')
+          await pollMatch2State(db, match2Id, 'proposed', 500)
         })
       )
       await Promise.all(
@@ -152,23 +108,18 @@ describe('on-chain', function () {
           expect(match2.state).to.equal('proposed')
         })
       )
+      console.log('here')
     })
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
+      console.log('start')
       // propose
-      const proposalIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const proposalIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'proposal',
+        node
       )
 
       await node.sealBlock()
@@ -179,27 +130,19 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'proposed')
+          await pollMatch2State(db, match2Id, 'proposed', 500)
         })
       )
       // submit accept to chain
-      const responsesAcceptAIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const responsesAcceptAIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'accept',
+        node
       )
 
       // wait for block to finalise
-      await node.sealBlock()
       await Promise.all(
         responsesAcceptAIds.map(async (responseAcceptA) => {
           await pollTransactionState(db, responseAcceptA, 'finalised')
@@ -207,26 +150,20 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedA')
+          await pollMatch2State(db, match2Id, 'acceptedA', 500)
         })
       )
 
       // submit 2nd accept to chain
-      const responsesAcceptFinalIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const responsesAcceptFinalIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'accept',
+        node
       )
 
+      console.log('here')
       // wait for block to finalise
       await node.sealBlock()
       await Promise.all(
@@ -236,7 +173,7 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedFinal')
+          await pollMatch2State(db, match2Id, 'acceptedFinal', 500)
         })
       )
       // check demans and match2 states
@@ -262,21 +199,14 @@ describe('on-chain', function () {
         })
       )
     })
-    it('should reject a proposed match2 on-chain', async () => {
+    it('should reject many proposed match2s on-chain', async () => {
       // propose
-      const proposalIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const proposalIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'proposal',
+        node
       )
 
       await node.sealBlock()
@@ -287,24 +217,18 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'proposed')
+          await pollMatch2State(db, match2Id, 'proposed', 500)
         })
       )
 
       // reject match2
-      const rejectionIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/rejection`, {})
-          expect(response.status).to.equal(200)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const rejectionIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'rejection',
+        node,
+        200
       )
 
       // wait for block to finalise
@@ -316,7 +240,7 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match) => {
-          await pollMatch2State(db, match, 'rejected')
+          await pollMatch2State(db, match, 'rejected', 500)
           const [maybeMatch2Rejected] = await db.getMatch2(match)
           const match2Rejected = maybeMatch2Rejected as Match2Row
           expect(match2Rejected.state).to.equal('rejected')
@@ -325,19 +249,12 @@ describe('on-chain', function () {
     })
     it('should reject many acceptedA match2s on-chain', async () => {
       // propose
-      const proposalIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const proposalIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'proposal',
+        node
       )
 
       await node.sealBlock()
@@ -348,23 +265,16 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'proposed')
+          await pollMatch2State(db, match2Id, 'proposed', 500)
         })
       )
       // submit accept to chain
-      const responsesAcceptAIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const responsesAcceptAIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'accept',
+        node
       )
 
       // wait for block to finalise
@@ -376,23 +286,19 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedA')
+          await pollMatch2State(db, match2Id, 'acceptedA', 500)
         })
       )
-      const rejectionIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/rejection`, {})
-          expect(response.status).to.equal(200)
 
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const rejectionIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'rejection',
+        node,
+        200
       )
+
       await node.sealBlock()
       await Promise.all(
         rejectionIds.map(async (reject) => {
@@ -406,21 +312,14 @@ describe('on-chain', function () {
       )
     })
 
-    it('should cancel an acceptedFinal match2 on-chain', async () => {
+    it('should cancel many acceptedFinal match2s on-chain', async () => {
       // propose
-      const proposalIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const proposalIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'proposal',
+        node
       )
 
       await node.sealBlock()
@@ -431,23 +330,16 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'proposed')
+          await pollMatch2State(db, match2Id, 'proposed', 500)
         })
       )
       // submit accept to chain
-      const responsesAcceptAIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const responsesAcceptAIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'accept',
+        node
       )
 
       // wait for block to finalise
@@ -459,24 +351,17 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedA')
+          await pollMatch2State(db, match2Id, 'acceptedA', 500)
         })
       )
 
       // submit 2nd accept to chain
-      const responsesAcceptFinalIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const responsesAcceptFinalIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'accept',
+        node
       )
 
       // wait for block to finalise
@@ -488,7 +373,7 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedFinal')
+          await pollMatch2State(db, match2Id, 'acceptedFinal', 500)
         })
       )
       // check demandAs
@@ -514,21 +399,17 @@ describe('on-chain', function () {
         })
       )
       // submit a cancellation request
-      const cancelledIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const data = { attachmentId: parametersAttachmentId }
-          const response = await post(context.app, `/v1/match2/${match2Id}/cancellation`, data)
-          expect(response.status).to.equal(200)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const data = { attachmentId: parametersAttachmentId }
+      const cancelledIds = await processMatch2TransactionsInChunks(
+        match2Ids,
+        numberIdsPerBlock,
+        context,
+        'cancellation',
+        node,
+        200,
+        data
       )
+
       // wait for block to finalise
       await node.sealBlock()
       await Promise.all(
@@ -538,7 +419,7 @@ describe('on-chain', function () {
       )
       await Promise.all(
         match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'cancelled')
+          await pollMatch2State(db, match2Id, 'cancelled', 500)
         })
       )
       await Promise.all(
@@ -586,10 +467,10 @@ describe('on-chain', function () {
       transactionId: any
     }[] = []
     beforeEach(async () => {
-      const numberIds = 10
+      const numberIdsPerBlock = 10
 
       demandAIds = await Promise.all(
-        Array(numberIds)
+        Array(numberIdsPerBlock)
           .fill(null)
           .map(async () => {
             const {
@@ -617,7 +498,7 @@ describe('on-chain', function () {
       }
 
       demandBIds = await Promise.all(
-        Array(numberIds)
+        Array(numberIdsPerBlock)
           .fill(null)
           .map(async () => {
             const {
@@ -659,7 +540,7 @@ describe('on-chain', function () {
       )
       await node.sealBlock()
       newDemandBIds = await Promise.all(
-        Array(numberIds)
+        Array(numberIdsPerBlock)
           .fill(null)
           .map(async () => {
             const {
