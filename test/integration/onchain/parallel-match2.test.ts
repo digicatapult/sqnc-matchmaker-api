@@ -481,6 +481,13 @@ describe('on-chain', function () {
         throw new Error('Mismatch between demand A and new demand B lengths')
       }
     })
+    afterEach(() => {
+      match2Ids = []
+      demandAIds = []
+      demandBIds = []
+      rematch2Ids = []
+      newDemandBIds = []
+    })
     it('should propose a rematch2 on-chain', async () => {
       const transactionIds = await processMatch2TransactionsInChunks(
         match2Ids,
@@ -756,7 +763,7 @@ describe('on-chain', function () {
       )
       await Promise.all(
         rematch2Ids.map(async (rematch2Id) => {
-          await pollMatch2State(db, rematch2Id, 'proposed')
+          await pollMatch2State(db, rematch2Id, 'proposed', 500)
         })
       )
       const acceptedRematch2Ids = await processMatch2TransactionsInChunks(
