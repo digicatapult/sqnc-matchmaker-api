@@ -49,7 +49,6 @@ export async function processDemandAIds(
     )
 
     await node.sealBlock()
-    console.log('concatenating A')
     res = res.concat(demandAIdsRes)
   }
   return res
@@ -87,7 +86,6 @@ export async function processDemandBIds(
         })
     )
     await node.sealBlock()
-    console.log('concatenating B')
     res = res.concat(demandBIdsRes)
   }
   return res
@@ -130,10 +128,8 @@ export async function processMatches2InChunks(
       )
 
       await node.sealBlock()
-      console.log('concatenating matches2')
       res = res.concat(match2IdsChunk)
     }
-    console.log('number of matches2 created:', res.length)
     return res
   }
   const match2sChunks = chunkArray(match2sToReplace, numberIdsPerBlock)
@@ -159,10 +155,8 @@ export async function processMatches2InChunks(
     )
 
     await node.sealBlock()
-    console.log('concatenating matches2')
     res = res.concat(match2IdsChunk)
   }
-  console.log('number of matches2 created:', res.length)
   return res
 }
 
@@ -179,11 +173,9 @@ export async function processMatch2TransactionsInChunks(
   data = {}
 ): Promise<string[]> {
   const match2Chunks = chunkArray(match2Ids, chunkSize * 0.5)
-  console.log(`match2chunks num of arrays  ${match2Chunks.length}`)
   let transactionIds: string[] = []
 
   for (const chunk of match2Chunks) {
-    console.log(`processing chunk ${chunk.length}`)
     const transactionIdsChunk = await Promise.all(
       chunk.map(async (match2Id) => {
         // Submit to chain
