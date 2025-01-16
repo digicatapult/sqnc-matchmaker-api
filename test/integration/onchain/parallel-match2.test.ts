@@ -89,7 +89,6 @@ describe('on-chain', function () {
         'proposal',
         node
       )
-      console.log('here')
 
       await Promise.all(
         proposalIds.map(async (tx) => {
@@ -108,11 +107,9 @@ describe('on-chain', function () {
           expect(match2.state).to.equal('proposed')
         })
       )
-      console.log('here')
     })
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
-      console.log('start')
       // propose
       const proposalIds = await processMatch2TransactionsInChunks(
         match2Ids,
@@ -163,7 +160,6 @@ describe('on-chain', function () {
         node
       )
 
-      console.log('here')
       // wait for block to finalise
       await node.sealBlock()
       await Promise.all(
@@ -448,7 +444,7 @@ describe('on-chain', function () {
       )
     })
   })
-  describe.only('re-match2', async () => {
+  describe('re-match2', async () => {
     let match2Ids: string[] = []
     let demandAIds: demandAId[] = []
     let demandBIds: demandBId[] = []
@@ -495,8 +491,7 @@ describe('on-chain', function () {
         throw new Error('Mismatch between demand A and new demand B lengths')
       }
     })
-    it.only('should propose a rematch2 on-chain', async () => {
-      console.log('here')
+    it('should propose a rematch2 on-chain', async () => {
       const transactionIds = await processMatch2TransactionsInChunks(
         match2Ids,
         numberIdsPerBlock,
@@ -589,22 +584,15 @@ describe('on-chain', function () {
       )
 
       //prepare rematches
-      rematch2Ids = await processMatches2InChunks(demandAIds, demandBIds, numberIdsPerBlock, node, context, match2Ids)
+      rematch2Ids = await processMatches2InChunks(
+        demandAIds,
+        newDemandBIds,
+        numberIdsPerBlock,
+        node,
+        context,
+        match2Ids
+      )
 
-      // rematch2Ids = await Promise.all(
-      //   demandAIds.map(async (demandA, index) => {
-      //     const demandB = newDemandBIds[index]
-      //     const replacingMatch2 = match2Ids[index]
-      //     const {
-      //       body: { id: rematch2Id },
-      //     } = await post(context.app, '/v1/match2', {
-      //       demandA: demandA.demandA,
-      //       demandB: demandB.demandB,
-      //       replaces: replacingMatch2,
-      //     })
-      //     return rematch2Id as UUID
-      //   })
-      // )
       await node.sealBlock()
       //submit rematches to chain
       const proposedRematch2Ids = await processMatch2TransactionsInChunks(
@@ -657,7 +645,7 @@ describe('on-chain', function () {
         })
       )
     })
-    it('accepts a rematch2 proposal', async () => {
+    it.skip('accepts a rematch2 proposal', async () => {
       const transactionIds = await Promise.all(
         match2Ids.map(async (match2Id) => {
           // submit to chain

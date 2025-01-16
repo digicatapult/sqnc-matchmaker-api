@@ -146,14 +146,15 @@ export async function processMatches2InChunks(
     const match2IdsChunk = await Promise.all(
       demandAChunk.map(async (demandA, index) => {
         const demandB = demandBChunk[index]
+        const match2ToReplace = match2Chunk[index]
         const {
-          body: { id: match2Id },
+          body: { id: rematch2Id },
         } = await post(context.app, '/v1/match2', {
           demandA: demandA.demandA,
           demandB: demandB.demandB,
-          replaces: match2Chunk,
+          replaces: match2ToReplace,
         })
-        return match2Id as UUID
+        return rematch2Id as UUID
       })
     )
 
