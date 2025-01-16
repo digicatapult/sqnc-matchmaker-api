@@ -3,14 +3,12 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
-import { post, get } from '../../helper/routeHelper.js'
 import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
 import { withIdentitySelfMock } from '../../helper/mock.js'
 import Database, { DemandRow, Match2Row } from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
-import { UUID } from '../../../src/models/strings.js'
 import { container } from 'tsyringe'
 import {
   demandAId,
