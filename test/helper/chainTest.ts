@@ -8,11 +8,12 @@ import Database from '../../src/lib/db/index.js'
 import ChainNode from '../../src/lib/chainNode.js'
 import { logger } from '../../src/lib/logger.js'
 import { container } from 'tsyringe'
+import env from '../../src/env.js'
 
 const db = new Database()
 
 export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) => {
-  before(async function () {
+  beforeEach(async function () {
     context.app = await createHttpServer()
     const node = container.resolve(ChainNode)
 
@@ -24,11 +25,15 @@ export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) =
         height: blockHeader.height.toString(10),
         parent: blockHash,
       })
-      .catch(() => {
+      .catch((err: any) => {
         // intentional ignorance of errors
+        if (err.constraint !== 'processed_blocks_pkey') {
+          console.log(err)
+          throw err
+        }
       })
 
-    context.indexer = new Indexer({ db: new Database(), logger, node })
+    context.indexer = new Indexer({ db: new Database(), logger, node, startupTime: new Date(), env })
     await context.indexer.start()
     context.indexer.processAllBlocks(await node.getLastFinalisedBlockHash()).then(() =>
       node.watchFinalisedBlocks(async (hash) => {
@@ -37,7 +42,7 @@ export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) =
     )
   })
 
-  after(async function () {
+  afterEach(async function () {
     await context.indexer.close()
   })
 }

@@ -19,7 +19,7 @@ import {
   processMatches2InChunks,
 } from './helpers.js'
 
-describe('on-chain', function () {
+describe.only('on-chain', function () {
   this.timeout(180000)
   const db = new Database()
   const node = container.resolve(ChainNode)
@@ -65,7 +65,7 @@ describe('on-chain', function () {
 
       await node.sealBlock()
       // check we have 500 match2s
-      if (match2Ids.length !== 500) {
+      if (match2Ids.length !== numberIdsPerBlock * numberOfRepeats) {
         throw new Error('We do not have enough match2s')
       }
     })

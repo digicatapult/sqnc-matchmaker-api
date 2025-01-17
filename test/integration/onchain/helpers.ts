@@ -32,9 +32,14 @@ export async function processDemandAIds(
       Array(numberIdsPerBlock)
         .fill(null)
         .map(async () => {
+          const res = await post(context.app, '/v1/demandA', { parametersAttachmentId })
+          if (typeof res?.body?.id === 'undefined') {
+            throw new Error('undefined Id Error <3')
+          }
           const {
             body: { id: demandAId },
-          } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
+          } = res
+          // add checks of what came back in the body
           const {
             body: { id: demandATransactionId },
           } = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
@@ -69,9 +74,13 @@ export async function processDemandBIds(
       Array(numberIdsPerBlock)
         .fill(null)
         .map(async () => {
+          const res = await post(context.app, '/v1/demandB', { parametersAttachmentId })
+          if (typeof res?.body?.id === 'undefined') {
+            throw new Error('undefined Id Error <3')
+          }
           const {
             body: { id: demandBId },
-          } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
+          } = res
           const {
             body: { id: demandBTransactionId },
           } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {})
