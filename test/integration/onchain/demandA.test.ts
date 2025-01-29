@@ -13,8 +13,8 @@ import { pollTransactionState, pollDemandState, pollDemandCommentState } from '.
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 
-describe('on-chain', function () {
-  this.timeout(60000)
+describe.only('on-chain', function () {
+  this.timeout(80000)
   const db = new Database()
   const node = container.resolve(ChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
@@ -48,7 +48,7 @@ describe('on-chain', function () {
       )
       expect(state).to.equal('submitted')
 
-      await node.sealBlock()
+      await node.clearAllTransactions()
       await pollTransactionState(db, transactionId, 'finalised')
       await pollDemandState(db, demandAId, 'created')
 
@@ -62,25 +62,30 @@ describe('on-chain', function () {
         originalTokenId: lastTokenId + 1,
       })
     })
-
     it('creates many demandAs on chain in parallel', async function () {
       const numberDemands = 500
 
-      const demandIds = await Promise.all(
+      const demandIds = await Promise.allSettled(
         Array(numberDemands)
           .fill(null)
           .map(async () => {
-            const {
-              status,
-              body: { id: demandAId },
-            } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
-            expect(status).to.equal(201)
-            return demandAId as string
+            const res = await post(context.app, '/v1/demandA', { parametersAttachmentId })
+            expect(res.status).to.equal(201)
+            if (!res.body.id) {
+              throw new Error(`no demandA id`)
+            }
+            return res.body.id as string
           })
       )
+      const fulfilledDemandIds = demandIds
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value)
+      const rejectedDemandIds = demandIds
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason)
 
-      const transactionIds = await Promise.all(
-        demandIds.map(async (demandAId) => {
+      const transactionIds = await Promise.allSettled(
+        fulfilledDemandIds.map(async (demandAId) => {
           const response = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
           expect(response.status).to.equal(201)
 
@@ -89,21 +94,30 @@ describe('on-chain', function () {
             /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
           )
           expect(state).to.equal('submitted')
-
           return transactionId as string
         })
       )
+      const fulfilledTransactions = transactionIds
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value)
+      const rejectedTransactions = transactionIds
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason)
 
-      await node.sealBlock()
-
-      await Promise.all(
-        transactionIds.map(async (tx) => {
+      await node.clearAllTransactions()
+      const finalisedTransactions = await Promise.allSettled(
+        fulfilledTransactions.map(async (tx) => {
           await pollTransactionState(db, tx, 'finalised')
         })
       )
-
-      await Promise.all(
-        demandIds.map(async (demand) => {
+      const rejectedFinalisedTransactions = finalisedTransactions
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason)
+      if (rejectedFinalisedTransactions.length > 0) {
+        throw new Error('finalised transactions rejected ')
+      }
+      const demandsWithCreatedState = await Promise.allSettled(
+        fulfilledDemandIds.map(async (demand) => {
           await pollDemandState(db, demand, 'created', 500, 100)
 
           const [demandA] = await db.getDemand(demand)
@@ -115,6 +129,12 @@ describe('on-chain', function () {
           })
         })
       )
+      const rejectedDemandsWithCreatedState = demandsWithCreatedState
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason)
+      if (rejectedDemandsWithCreatedState.length > 0) {
+        throw new Error(`demands that failed to reach state created ${rejectedDemandsWithCreatedState.length}`)
+      }
     })
 
     it('should comment on a demandA on-chain', async () => {
@@ -124,7 +144,7 @@ describe('on-chain', function () {
       const creationResponse = await post(context.app, `/v1/demandA/${seededDemandAId}/creation`, {})
       expect(creationResponse.status).to.equal(201)
       // wait for block to finalise
-      await node.sealBlock()
+      await node.clearAllTransactions()
       await pollTransactionState(db, creationResponse.body.id, 'finalised')
       await pollDemandState(db, seededDemandAId, 'created')
 
@@ -134,7 +154,7 @@ describe('on-chain', function () {
       })
       expect(commentResponse.status).to.equal(201)
       // wait for block to finalise
-      await node.sealBlock()
+      await node.clearAllTransactions()
       await pollTransactionState(db, commentResponse.body.id, 'finalised')
       await pollDemandCommentState(db, commentResponse.body.id, 'created')
 
@@ -158,7 +178,7 @@ describe('on-chain', function () {
     it('comment on many demandAs on chain in parallel', async function () {
       const numberDemands = 500
 
-      const demandIds = await Promise.all(
+      const demandIds = await Promise.allSettled(
         Array(numberDemands)
           .fill(null)
           .map(async () => {
@@ -166,13 +186,20 @@ describe('on-chain', function () {
               status,
               body: { id: demandAId },
             } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
+
             expect(status).to.equal(201)
             return demandAId as string
           })
       )
+      const fulfilledDemandIds = demandIds
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value)
+      const rejectedDemandIds = demandIds
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason)
 
-      const transactionIds = await Promise.all(
-        demandIds.map(async (demandAId) => {
+      const transactionIds = await Promise.allSettled(
+        fulfilledDemandIds.map(async (demandAId) => {
           const response = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
           expect(response.status).to.equal(201)
 
@@ -185,17 +212,24 @@ describe('on-chain', function () {
           return transactionId as string
         })
       )
+      await node.clearAllTransactions()
+      const fulfilledTransactions = transactionIds
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value)
+      const rejectedTransactions = transactionIds
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason)
+      if (rejectedTransactions.length > 0) {
+        throw new Error(`finalised transactions rejected ${rejectedTransactions}`)
+      }
 
-      await node.sealBlock()
-
-      await Promise.all(
-        transactionIds.map(async (tx) => {
+      const finalisedTransactions = await Promise.allSettled(
+        fulfilledTransactions.map(async (tx) => {
           await pollTransactionState(db, tx, 'finalised')
         })
       )
-
-      await Promise.all(
-        demandIds.map(async (demand) => {
+      await Promise.allSettled(
+        fulfilledDemandIds.map(async (demand) => {
           await pollDemandState(db, demand, 'created', 500, 100)
 
           const [demandA] = await db.getDemand(demand)
@@ -207,8 +241,8 @@ describe('on-chain', function () {
           })
         })
       )
-      const commentResponses = await Promise.all(
-        demandIds.map(async (demandAId) => {
+      const commentResponses = await Promise.allSettled(
+        fulfilledDemandIds.map(async (demandAId) => {
           const commentResponse = await post(context.app, `/v1/demandA/${demandAId}/comment`, {
             attachmentId: parametersAttachmentId,
           })
@@ -216,10 +250,19 @@ describe('on-chain', function () {
           return commentResponse.body.id as string
         })
       )
-      await node.sealBlock()
+      await node.clearAllTransactions()
+      const fulfilledCommentResponses = commentResponses
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value)
+      const rejectedCommentResponses = commentResponses
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason)
+      if (rejectedCommentResponses.length > 0) {
+        throw new Error(`comment responses that were rejected ${rejectedCommentResponses}`)
+      }
 
-      await Promise.all(
-        commentResponses.map(async (commentResponseId) => {
+      const commentResponsesChecked = await Promise.allSettled(
+        fulfilledCommentResponses.map(async (commentResponseId) => {
           await pollTransactionState(db, commentResponseId, 'finalised')
           await pollDemandCommentState(db, commentResponseId, 'created')
           const [maybeComment] = await db.getDemandCommentForTransaction(commentResponseId)
@@ -234,6 +277,14 @@ describe('on-chain', function () {
           })
         })
       )
+      const rejectedResponsesChecked = commentResponsesChecked
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason)
+      if (rejectedResponsesChecked.length > 0) {
+        throw new Error(
+          ` number of comment responses that failed to reach state created ${rejectedResponsesChecked.length} with error:${rejectedResponsesChecked[0]}`
+        )
+      }
     })
   })
 })

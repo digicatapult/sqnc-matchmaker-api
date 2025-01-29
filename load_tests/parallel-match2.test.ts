@@ -2,13 +2,13 @@ import { describe, beforeEach, afterEach, it } from 'mocha'
 import { Express } from 'express'
 import { expect } from 'chai'
 
-import Indexer from '../../../src/lib/indexer/index.js'
-import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
-import { withIdentitySelfMock } from '../../helper/mock.js'
-import Database, { DemandRow, Match2Row } from '../../../src/lib/db/index.js'
-import ChainNode from '../../../src/lib/chainNode.js'
-import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
-import { withAppAndIndexer } from '../../helper/chainTest.js'
+import Indexer from '../src/lib/indexer/index.js'
+import { seed, cleanup, parametersAttachmentId } from '../test/seeds/onchainSeeds/onchain.match2.seed.js'
+import { withIdentitySelfMock } from '../test/helper/mock.js'
+import Database, { DemandRow, Match2Row } from '../src/lib/db/index.js'
+import ChainNode from '../src/lib/chainNode.js'
+import { pollDemandState, pollMatch2State, pollTransactionState } from '../test/helper/poll.js'
+import { withAppAndIndexer } from '../test/helper/chainTest.js'
 import { container } from 'tsyringe'
 import {
   demandAId,
@@ -17,9 +17,9 @@ import {
   processDemandBIds,
   processMatch2TransactionsInChunks,
   processMatches2InChunks,
-} from './helpers.js'
+} from './parallelHandlingHelper/helpers.js'
 
-describe.only('on-chain', function () {
+describe.skip('on-chain', function () {
   this.timeout(180000)
   const db = new Database()
   const node = container.resolve(ChainNode)

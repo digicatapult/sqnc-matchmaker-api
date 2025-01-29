@@ -17,7 +17,11 @@ export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) =
     context.app = await createHttpServer()
     const node = container.resolve(ChainNode)
 
+    // await node.sealBlock()
+    await node.clearAllTransactions()
+
     const blockHash = await node.getLastFinalisedBlockHash()
+    console.log('last finalised block got back ')
     const blockHeader = await node.getHeader(blockHash)
     await db
       .insertProcessedBlock({
@@ -32,6 +36,7 @@ export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) =
           throw err
         }
       })
+    console.log('after inserting processed block')
 
     context.indexer = new Indexer({ db: new Database(), logger, node, startupTime: new Date(), env })
     await context.indexer.start()

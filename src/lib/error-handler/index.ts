@@ -77,6 +77,9 @@ export const errorHandler = function errorHandler(
   next: NextFunction
 ): ExResponse | void {
   if (err instanceof OauthError) {
+    logger.trace('Error: %s', err.message)
+    logger.trace('Request Headers: %o', req.headers)
+
     return res.status(401).send({
       message: 'Forbidden',
     })

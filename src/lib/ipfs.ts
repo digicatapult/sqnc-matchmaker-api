@@ -30,12 +30,19 @@ const versionValidator = z.object({
 })
 
 const peersValidator = z.object({
-  Peers: z.array(
-    z.object({
-      Addr: z.string(),
-      Peer: z.string(),
-    })
-  ),
+  Peers: z
+    .array(
+      z.object({
+        Addr: z.string(),
+        Peer: z.string(),
+      })
+    )
+    .nullable(),
+  // nullable, because I have been getting this response when hitting the service
+  //   {
+  //     "Peers": null
+  //    }
+  // is there meant to be no peers?
 })
 
 @singleton()
@@ -132,8 +139,8 @@ export default class Ipfs {
         versionValidator.parse(versionResultJson),
         peersValidator.parse(peersResultJson),
       ]
-      const peers = peersResult.Peers || []
-      const peerCount = new Set(peers.map((peer) => peer.Peer)).size
+      const peers = peersResult.Peers || null
+      const peerCount = peers === null ? 0 : new Set(peers.map((peer) => peer.Peer)).size
       return {
         status: serviceState.UP,
         detail: {

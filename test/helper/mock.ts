@@ -10,6 +10,8 @@ export function withIdentitySelfMock() {
   let originalDispatcher: Dispatcher
   let mockAgent: MockAgent
   beforeEach(function () {
+    console.log(` identity mock: http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`)
+
     originalDispatcher = getGlobalDispatcher()
     mockAgent = new MockAgent()
     setGlobalDispatcher(mockAgent)

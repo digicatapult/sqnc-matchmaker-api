@@ -1,0 +1,3 @@
+services:
+  sqnc-matchmaker-api:
+    scale: 1

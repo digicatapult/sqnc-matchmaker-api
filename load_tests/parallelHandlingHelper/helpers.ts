@@ -1,11 +1,12 @@
-import ChainNode from '../../../src/lib/chainNode.js'
-import Indexer from '../../../src/lib/indexer/index.js'
-import { UUID } from '../../../src/models/strings.js'
 import { Express } from 'express'
-import { post } from '../../helper/routeHelper.js'
-import Database, { DemandRow } from '../../../src/lib/db/index.js'
-import { parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
+import { post } from '../../test/helper/routeHelper.js'
+import { parametersAttachmentId } from '../../test/seeds/onchainSeeds/onchain.match2.seed.js'
+
 import { expect } from 'chai'
+import ChainNode from '../../src/lib/chainNode.js'
+import { UUID } from 'crypto'
+import Database, { DemandRow } from '../../src/lib/db/index.js'
+import Indexer from '../../src/lib/indexer/index.js'
 export type demandAId = {
   originalDemandA: number
   demandA: string
@@ -22,6 +23,7 @@ export async function processDemandAIds(
   context: {
     app: Express
     indexer: Indexer
+    endpoint: string
   },
   node: ChainNode,
   db: Database
@@ -32,7 +34,7 @@ export async function processDemandAIds(
       Array(numberIdsPerBlock)
         .fill(null)
         .map(async () => {
-          const res = await post(context.app, '/v1/demandA', { parametersAttachmentId })
+          const res = await post(context.app, `${context.endpoint}/v1/demandA`, { parametersAttachmentId })
           if (typeof res?.body?.id === 'undefined') {
             throw new Error('undefined Id Error <3')
           }
@@ -42,7 +44,7 @@ export async function processDemandAIds(
           // add checks of what came back in the body
           const {
             body: { id: demandATransactionId },
-          } = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
+          } = await post(context.app, `${context.endpoint}/v1/demandA/${demandAId}/creation`, {})
           const [demandA]: DemandRow[] = await db.getDemand(demandAId)
 
           return {
@@ -64,6 +66,7 @@ export async function processDemandBIds(
   context: {
     app: Express
     indexer: Indexer
+    endpoint: string
   },
   node: ChainNode,
   db: Database
@@ -74,7 +77,7 @@ export async function processDemandBIds(
       Array(numberIdsPerBlock)
         .fill(null)
         .map(async () => {
-          const res = await post(context.app, '/v1/demandB', { parametersAttachmentId })
+          const res = await post(context.app, `${context.endpoint}/v1/demandB`, { parametersAttachmentId })
           if (typeof res?.body?.id === 'undefined') {
             throw new Error('undefined Id Error <3')
           }
@@ -83,7 +86,7 @@ export async function processDemandBIds(
           } = res
           const {
             body: { id: demandBTransactionId },
-          } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {})
+          } = await post(context.app, `${context.endpoint}/v1/demandB/${demandBId}/creation`, {})
 
           const [demandB]: DemandRow[] = await db.getDemand(demandBId)
 
@@ -108,6 +111,7 @@ export async function processMatches2InChunks(
   context: {
     app: Express
     indexer: Indexer
+    endpoint: string
   },
   match2sToReplace: string[] = []
 ) {
@@ -128,7 +132,7 @@ export async function processMatches2InChunks(
           const demandB = demandBChunk[index]
           const {
             body: { id: match2Id },
-          } = await post(context.app, '/v1/match2', {
+          } = await post(context.app, `${context.endpoint}/v1/match2`, {
             demandA: demandA.demandA,
             demandB: demandB.demandB,
           })
@@ -154,7 +158,7 @@ export async function processMatches2InChunks(
         const match2ToReplace = match2Chunk[index]
         const {
           body: { id: rematch2Id },
-        } = await post(context.app, '/v1/match2', {
+        } = await post(context.app, `${context.endpoint}/v1/match2`, {
           demandA: demandA.demandA,
           demandB: demandB.demandB,
           replaces: match2ToReplace,
@@ -175,6 +179,7 @@ export async function processMatch2TransactionsInChunks(
   context: {
     app: Express
     indexer: Indexer
+    endpoint: string
   },
   endpoint: string,
   node: ChainNode,
@@ -188,7 +193,7 @@ export async function processMatch2TransactionsInChunks(
     const transactionIdsChunk = await Promise.all(
       chunk.map(async (match2Id) => {
         // Submit to chain
-        const response = await post(context.app, `/v1/match2/${match2Id}/${endpoint}`, data)
+        const response = await post(context.app, `${context.endpoint}/v1/match2/${match2Id}/${endpoint}`, data)
         expect(response.status).to.equal(status)
 
         const { id: transactionId, state } = response.body

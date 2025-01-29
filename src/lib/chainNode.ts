@@ -64,8 +64,10 @@ export default class ChainNode {
 
   constructor(@inject(LoggerToken) logger: Logger, @inject(EnvToken) env: Env) {
     this.logger = logger.child({ module: 'ChainNode' })
+    this.logger.info(`starting WsProvider ws://${env.NODE_HOST}:${env.NODE_PORT}`)
     this.provider = new WsProvider(`ws://${env.NODE_HOST}:${env.NODE_PORT}`)
     this.userUri = env.USER_URI
+    this.logger.info(`user URI: ${env.USER_URI}`)
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.lastSubmittedNonce = -1
@@ -132,14 +134,23 @@ export default class ChainNode {
   }
 
   async prepareRunProcess({ process, inputs, outputs }: Payload) {
-    const outputsAsMaps = await Promise.all(
+    const outputsAsMaps = await Promise.allSettled(
       outputs.map(async (output: Output) => [output.roles, this.processMetadata(output.metadata)])
     )
+    const fulfilledOutputs = outputsAsMaps
+      .filter((result) => result.status === 'fulfilled')
+      .map((result) => result.value)
+    const rejectedOutputs = outputsAsMaps
+      .filter((result) => result.status === 'rejected')
+      .map((result) => result.reason)
+    if (rejectedOutputs.length > 0) {
+      throw new Error(`${rejectedOutputs.length} rejected outputs as maps with Error: ${rejectedOutputs[0]}`)
+    }
 
-    this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, outputsAsMaps)
+    this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, fulfilledOutputs)
 
     await this.api.isReady
-    const extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, outputsAsMaps)
+    const extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
     const account = this.keyring.addFromUri(this.userUri)
 
     const nonce = await this.mutex.runExclusive(async () => {
@@ -305,5 +316,16 @@ export default class ChainNode {
 
   async sealBlock(createEmpty: boolean = true, finalise: boolean = true) {
     return await this.api.rpc.engine.createBlock(createEmpty, finalise)
+  }
+
+  // continue sealing blocks if there are transactions
+  async clearAllTransactions(createEmpty: boolean = true, finalise: boolean = true) {
+    while (true) {
+      const pending = await this.api.rpc.author.pendingExtrinsics()
+      if (pending.length === 0) {
+        return
+      }
+      await this.api.rpc.engine.createBlock(createEmpty, finalise)
+    }
   }
 }
