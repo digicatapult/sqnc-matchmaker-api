@@ -13,7 +13,7 @@ import { get, post } from '../test/helper/routeHelper'
 import { seed, cleanup, parametersAttachmentId } from '../test/seeds/onchainSeeds/onchain.match2.seed'
 import { getToken } from './parallelHandlingHelper/routeHelper.js'
 
-describe.only('on-chain', function () {
+describe('on-chain', function () {
   let token: string = ''
   this.timeout(60000)
   const db = new Database()
@@ -42,7 +42,7 @@ describe.only('on-chain', function () {
   })
 
   describe('parallel demandAs', () => {
-    it.only('creates many demandAs on chain in parallel', async function () {
+    it('creates many demandAs on chain in parallel', async function () {
       const numberDemands = 500
 
       const demandIds = await Promise.allSettled(

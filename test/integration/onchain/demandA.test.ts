@@ -12,6 +12,7 @@ import ChainNode from '../../../src/lib/chainNode.js'
 import { pollTransactionState, pollDemandState, pollDemandCommentState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
+import { filterRejectedAndAcceptedPromises } from '../../helper/parallelTests.js'
 
 describe.only('on-chain', function () {
   this.timeout(80000)
@@ -63,7 +64,7 @@ describe.only('on-chain', function () {
       })
     })
     it('creates many demandAs on chain in parallel', async function () {
-      const numberDemands = 500
+      const numberDemands = 50
 
       const demandIds = await Promise.allSettled(
         Array(numberDemands)
@@ -77,12 +78,10 @@ describe.only('on-chain', function () {
             return res.body.id as string
           })
       )
-      const fulfilledDemandIds = demandIds
-        .filter((result) => result.status === 'fulfilled')
-        .map((result) => result.value)
-      const rejectedDemandIds = demandIds
-        .filter((result) => result.status === 'rejected')
-        .map((result) => result.reason)
+      const [fulfilledDemandIds, rejectedDemandIds] = await filterRejectedAndAcceptedPromises(demandIds)
+      if (rejectedDemandIds.length > 0) {
+        throw new Error(`${rejectedDemandIds.length} remand As were rejected with Error: ${rejectedDemandIds[0]}`)
+      }
 
       const transactionIds = await Promise.allSettled(
         fulfilledDemandIds.map(async (demandAId) => {
@@ -97,12 +96,12 @@ describe.only('on-chain', function () {
           return transactionId as string
         })
       )
-      const fulfilledTransactions = transactionIds
-        .filter((result) => result.status === 'fulfilled')
-        .map((result) => result.value)
-      const rejectedTransactions = transactionIds
-        .filter((result) => result.status === 'rejected')
-        .map((result) => result.reason)
+      const [fulfilledTransactions, rejectedTransactions] = await filterRejectedAndAcceptedPromises(transactionIds)
+      if (rejectedTransactions.length > 0) {
+        throw new Error(
+          `${rejectedTransactions.length} remand A creations were rejected with Error: ${rejectedTransactions[0]}`
+        )
+      }
 
       await node.clearAllTransactions()
       const finalisedTransactions = await Promise.allSettled(
@@ -176,7 +175,7 @@ describe.only('on-chain', function () {
       })
     })
     it('comment on many demandAs on chain in parallel', async function () {
-      const numberDemands = 500
+      const numberDemands = 50
 
       const demandIds = await Promise.allSettled(
         Array(numberDemands)
@@ -191,12 +190,10 @@ describe.only('on-chain', function () {
             return demandAId as string
           })
       )
-      const fulfilledDemandIds = demandIds
-        .filter((result) => result.status === 'fulfilled')
-        .map((result) => result.value)
-      const rejectedDemandIds = demandIds
-        .filter((result) => result.status === 'rejected')
-        .map((result) => result.reason)
+      const [fulfilledDemandIds, rejectedDemandIds] = await filterRejectedAndAcceptedPromises(demandIds)
+      if (rejectedDemandIds.length > 0) {
+        throw new Error(`${rejectedDemandIds.length} remand As were rejected with Error: ${rejectedDemandIds[0]}`)
+      }
 
       const transactionIds = await Promise.allSettled(
         fulfilledDemandIds.map(async (demandAId) => {
@@ -213,14 +210,9 @@ describe.only('on-chain', function () {
         })
       )
       await node.clearAllTransactions()
-      const fulfilledTransactions = transactionIds
-        .filter((result) => result.status === 'fulfilled')
-        .map((result) => result.value)
-      const rejectedTransactions = transactionIds
-        .filter((result) => result.status === 'rejected')
-        .map((result) => result.reason)
+      const [fulfilledTransactions, rejectedTransactions] = await filterRejectedAndAcceptedPromises(transactionIds)
       if (rejectedTransactions.length > 0) {
-        throw new Error(`finalised transactions rejected ${rejectedTransactions}`)
+        throw new Error(`${rejectedTransactions.length} finalised transactions rejected ${rejectedTransactions}`)
       }
 
       const finalisedTransactions = await Promise.allSettled(
@@ -228,6 +220,14 @@ describe.only('on-chain', function () {
           await pollTransactionState(db, tx, 'finalised')
         })
       )
+      const rejectedFinalisedTransactions = finalisedTransactions
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason)
+      if (rejectedFinalisedTransactions.length > 0) {
+        throw new Error(
+          `${rejectedFinalisedTransactions.length} finalised transactions rejected with error: ${rejectedFinalisedTransactions[0]}`
+        )
+      }
       await Promise.allSettled(
         fulfilledDemandIds.map(async (demand) => {
           await pollDemandState(db, demand, 'created', 500, 100)
@@ -251,14 +251,12 @@ describe.only('on-chain', function () {
         })
       )
       await node.clearAllTransactions()
-      const fulfilledCommentResponses = commentResponses
-        .filter((result) => result.status === 'fulfilled')
-        .map((result) => result.value)
-      const rejectedCommentResponses = commentResponses
-        .filter((result) => result.status === 'rejected')
-        .map((result) => result.reason)
+      const [fulfilledCommentResponses, rejectedCommentResponses] =
+        await filterRejectedAndAcceptedPromises(commentResponses)
       if (rejectedCommentResponses.length > 0) {
-        throw new Error(`comment responses that were rejected ${rejectedCommentResponses}`)
+        throw new Error(
+          `${rejectedCommentResponses.length} comment responses that were rejected ${rejectedCommentResponses}`
+        )
       }
 
       const commentResponsesChecked = await Promise.allSettled(
@@ -282,7 +280,7 @@ describe.only('on-chain', function () {
         .map((result) => result.reason)
       if (rejectedResponsesChecked.length > 0) {
         throw new Error(
-          ` number of comment responses that failed to reach state created ${rejectedResponsesChecked.length} with error:${rejectedResponsesChecked[0]}`
+          `${rejectedResponsesChecked.length} number of comment responses that failed to reach state created ${rejectedResponsesChecked.length} with error:${rejectedResponsesChecked[0]}`
         )
       }
     })
