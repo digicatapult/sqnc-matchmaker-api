@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/sqnc-matchmaker-api",
-  "version": "4.0.16",
+  "version": "4.0.17",
   "description": "An OpenAPI Matchmaking API service for SQNC",
   "main": "src/index.ts",
   "type": "module",
@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/digicatapult/sqnc-matchmaker-api#readme",
   "devDependencies": {
-    "@digicatapult/sqnc-process-management": "^3.0.11",
+    "@digicatapult/sqnc-process-management": "^3.0.12",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.19.0",
     "@swc-node/register": "^1.10.9",
