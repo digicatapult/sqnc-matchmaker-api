@@ -1,9 +1,26 @@
 import { Express } from 'express'
-import Database, { DemandRow } from '../../src/lib/db/index.js'
+import Database, { DemandRow, Match2Row } from '../../src/lib/db/index.js'
 import { parametersAttachmentId } from '../seeds/onchainSeeds/onchain.match2.seed.js'
 import { post } from './routeHelper.js'
-import { pollDemandState, pollTransactionState } from './poll.js'
+import { pollDemandState, pollMatch2State, pollTransactionState } from './poll.js'
 import { expect } from 'chai'
+import ChainNode from '../../src/lib/chainNode'
+
+type DemandAResult = {
+  originalDemandA: number
+  demandA: string
+  transactionId: any
+}
+
+type DemandBResult = {
+  originalDemandB: number
+  demandB: string
+  transactionId: any
+}
+
+type ResultType = DemandAResult | DemandBResult
+
+export type DemandType = { originalTokenId: number; demandId: string; transactionId: any }
 
 export const filterRejectedAndAcceptedPromises = async (promiseResult: PromiseSettledResult<string>[]) => {
   const fulfilledPromises = promiseResult
@@ -33,7 +50,11 @@ export const filterRejectedAndAcceptedPromisesForMatch2 = async (
   return [fulfilledPromises, rejectedPromises]
 }
 
-async function createDemand(context: { app: Express }, db: Database, demandType: 'demandA' | 'demandB') {
+async function createDemand(
+  context: { app: Express },
+  db: Database,
+  demandType: 'demandA' | 'demandB'
+): Promise<DemandType> {
   const {
     body: { id: demandId },
   } = await post(context.app, `/v1/${demandType}`, { parametersAttachmentId })
@@ -51,19 +72,22 @@ async function createDemand(context: { app: Express }, db: Database, demandType:
   }
 }
 
-async function createMultipleDemands(
+export async function createMultipleDemands(
   context: { app: Express },
   db: Database,
   demandType: 'demandA' | 'demandB',
-  count: number
+  count: number,
+  node: ChainNode
 ) {
   const results = await Promise.allSettled(
     Array(count)
       .fill(null)
       .map(() => createDemand(context, db, demandType))
   )
-
-  const fulfilled = results.filter((r) => r.status === 'fulfilled').map((r) => (r as PromiseFulfilledResult<any>).value)
+  await node.clearAllTransactions()
+  const fulfilled = results
+    .filter((r) => r.status === 'fulfilled')
+    .map((r) => (r as PromiseFulfilledResult<DemandType>).value)
   const rejected = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
 
   if (rejected.length > 0) {
@@ -79,7 +103,12 @@ async function createMultipleDemands(
   return fulfilled
 }
 
-async function createMatch2s(context: { app: Express }, fulfilledDemandA: any[], fulfilledDemandB: any[], node: any) {
+export async function createMatch2s(
+  context: { app: Express },
+  fulfilledDemandA: any[],
+  fulfilledDemandB: any[],
+  node: ChainNode
+) {
   const match2Results = await Promise.allSettled(
     fulfilledDemandA.map(async (demandA, index) => {
       const demandB = fulfilledDemandB[index]
@@ -103,18 +132,27 @@ async function createMatch2s(context: { app: Express }, fulfilledDemandA: any[],
   return fulfilled
 }
 
-async function submitAndVerifyTransactions(
+export async function submitAndVerifyTransactions(
   context: { app: Express },
   db: Database,
-  node: any,
+  node: ChainNode,
   items: string[],
   endpoint: string,
-  expectedState: string
+  expectedState: string,
+  additionalPath: string = '',
+  attachmentId: string = '',
+  status: number = 201
 ) {
+  const data = attachmentId !== '' ? { attachmentId: parametersAttachmentId } : null
+  let response // better type?
   const transactionResults = await Promise.allSettled(
     items.map(async (itemId) => {
-      const response = await post(context.app, `/v1/${endpoint}/${itemId}`, {})
-      expect(response.status).to.equal(201)
+      if (data !== null) {
+        response = await post(context.app, `/v1/${endpoint}/${itemId}/${additionalPath}`, data)
+      } else {
+        response = await post(context.app, `/v1/${endpoint}/${itemId}/${additionalPath}`, {})
+      }
+      expect(response.status).to.equal(status)
 
       const { id: transactionId, state } = response.body
       expect(transactionId).to.match(
@@ -145,4 +183,45 @@ async function submitAndVerifyTransactions(
   }
 
   return fulfilled
+}
+
+export async function verifyMatch2State(match2Ids: string[], expectedState: string, db: Database) {
+  const results = await Promise.allSettled(match2Ids.map((match2Id) => pollMatch2State(db, match2Id, expectedState)))
+
+  const rejected = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
+  if (rejected.length > 0) {
+    throw new Error(`${rejected.length} match2s failed to reach state ${expectedState} with error: ${rejected[0]}`)
+  }
+}
+
+export async function verifyDemandState(demandIds: { demandId: string }[], expectedState: string, db: Database) {
+  const results = await Promise.allSettled(
+    demandIds.map(async ({ demandId }) => {
+      const [maybeDemand] = await db.getDemand(demandId)
+      const demand = maybeDemand as DemandRow
+      expect(demand.state).to.equal(expectedState)
+    })
+  )
+
+  const rejected = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
+  if (rejected.length > 0) {
+    throw new Error(`${rejected.length} demands failed to reach state ${expectedState} with error: ${rejected[0]}`)
+  }
+}
+
+export async function verifyMatch2DatabaseState(match2Ids: string[], expectedState: string, db: Database) {
+  const results = await Promise.allSettled(
+    match2Ids.map(async (match2Id) => {
+      const [maybeMatch2] = await db.getMatch2(match2Id)
+      const match2 = maybeMatch2 as Match2Row
+      expect(match2.state).to.equal(expectedState)
+    })
+  )
+
+  const rejected = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
+  if (rejected.length > 0) {
+    throw new Error(
+      `${rejected.length} match2s in the database failed to reach state ${expectedState} with error: ${rejected[0]}`
+    )
+  }
 }

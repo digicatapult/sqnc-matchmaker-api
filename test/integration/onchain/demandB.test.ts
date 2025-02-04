@@ -13,7 +13,7 @@ import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import { filterRejectedAndAcceptedPromises } from '../../helper/parallelTests.js'
 
-describe.only('on-chain', function () {
+describe('on-chain', function () {
   this.timeout(60000)
   const db = new Database()
   const node = container.resolve(ChainNode)
