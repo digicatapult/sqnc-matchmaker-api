@@ -226,14 +226,49 @@ export async function verifyMatch2DatabaseState(match2Ids: string[], expectedSta
     )
   }
 }
-
 export async function createRematch2(context: { app: Express }, demandA: any, demandB: any, replacingMatch2: string) {
-  const {
-    body: { id: rematch2Id },
-  } = await post(context.app, '/v1/match2', {
-    demandA: demandA.demandId,
-    demandB: demandB.demandId,
-    replaces: replacingMatch2,
-  })
-  return rematch2Id
+  try {
+    const {
+      body: { id: rematch2Id },
+    } = await post(context.app, '/v1/match2', {
+      demandA: demandA.demandId,
+      demandB: demandB.demandId,
+      replaces: replacingMatch2,
+    })
+    return rematch2Id
+  } catch (error) {
+    return Promise.reject(error) // Reject the promise if something goes wrong
+  }
+}
+
+export async function createMultipleRematches(
+  context: { app: Express },
+  fulfilledDemandAIds: any[],
+  fulfilledNewDemandBIds: any[],
+  fulfilledMatch2s: any[],
+  node: ChainNode
+) {
+  const rematch2Results = await Promise.allSettled(
+    fulfilledDemandAIds.map(async (demandA, index) => {
+      const demandB = fulfilledNewDemandBIds[index]
+      const replacingMatch2 = fulfilledMatch2s[index]
+
+      try {
+        const rematch2Id = await createRematch2(context, demandA, demandB, replacingMatch2)
+        return rematch2Id
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    })
+  )
+
+  // Filter out fulfilled results and rejected ones
+  const [rematch2Ids, rejectedRematches] = await filterRejectedAndAcceptedPromises(rematch2Results)
+
+  if (rejectedRematches.length > 0) {
+    throw new Error(`${rejectedRematches.length} rematches were rejected`)
+  }
+
+  await node.clearAllTransactions()
+  return rematch2Ids
 }

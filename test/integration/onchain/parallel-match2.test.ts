@@ -15,6 +15,7 @@ import { container } from 'tsyringe'
 import {
   createMatch2s,
   createMultipleDemands,
+  createMultipleRematches,
   createRematch2,
   DemandType,
   filterRejectedAndAcceptedPromises,
@@ -25,7 +26,7 @@ import {
   verifyMatch2State,
 } from '../../helper/parallelTests.js'
 
-describe('on-chain', function () {
+describe('on-chain parallel', function () {
   this.timeout(180000)
   const db = new Database()
   const node = container.resolve(ChainNode)
@@ -37,7 +38,7 @@ describe('on-chain', function () {
   beforeEach(async () => await seed())
   afterEach(async () => await cleanup())
 
-  describe('match2', async () => {
+  describe('match2 parallel', async () => {
     let fulfilledMatch2s: string[] = []
     let fulfilledDemandAIds: DemandType[] = []
     let fulfilledDemandBIds: DemandType[] = []
@@ -309,7 +310,7 @@ describe('on-chain', function () {
       await verifyDemandState(fulfilledDemandBIds, 'cancelled', db)
     })
   })
-  describe('re-match2', async () => {
+  describe('re-match2 parallel ', async () => {
     let fulfilledMatch2s: string[] = []
     let fulfilledDemandAIds: DemandType[] = []
     let fulfilledDemandBIds: DemandType[] = []
@@ -387,19 +388,12 @@ describe('on-chain', function () {
       await verifyMatch2DatabaseState(fulfilledMatch2s, 'acceptedFinal', db)
 
       // Step 5: Prepare rematches
-      rematch2Ids = await Promise.all(
-        fulfilledDemandAIds.map(async (demandA, index) => {
-          const demandB = fulfilledNewDemandBIds[index]
-          const replacingMatch2 = fulfilledMatch2s[index]
-          const {
-            body: { id: rematch2Id },
-          } = await post(context.app, '/v1/match2', {
-            demandA: demandA.demandId,
-            demandB: demandB.demandId,
-            replaces: replacingMatch2,
-          })
-          return rematch2Id
-        })
+      const rematch2Ids = await createMultipleRematches(
+        context,
+        fulfilledDemandAIds,
+        fulfilledNewDemandBIds,
+        fulfilledMatch2s,
+        node
       )
       await node.clearAllTransactions()
 
@@ -423,62 +417,66 @@ describe('on-chain', function () {
       await verifyMatch2DatabaseState(rematch2Ids, 'proposed', db)
     })
     it('accepts a rematch2 proposal', async () => {
+      // Step 1: Propose match2s
       const transactionIds = await submitAndVerifyTransactions(
         context,
         db,
         node,
         fulfilledMatch2s,
         'match2',
-        'submitted',
+        'finalised',
         'proposal'
       )
 
+      // Step 2: Verify match2s are proposed
       await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
+      await verifyMatch2DatabaseState(fulfilledMatch2s, 'proposed', db)
 
+      // Step 3: First acceptance of match2s
       const responsesAcceptAIds = await submitAndVerifyTransactions(
         context,
         db,
         node,
         fulfilledMatch2s,
         'match2',
-        'submitted',
+        'finalised',
         'accept'
       )
-
-      await verifyMatch2State(fulfilledMatch2s, 'acceptedA', db)
-
+      // Step 4: Final acceptance of match2s
       const responsesAcceptFinalIds = await submitAndVerifyTransactions(
         context,
         db,
         node,
         fulfilledMatch2s,
         'match2',
-        'submitted',
+        'finalised',
         'accept'
       )
-
       await verifyMatch2State(fulfilledMatch2s, 'acceptedFinal', db)
+      await verifyDemandState(fulfilledDemandAIds, 'allocated', db)
+      await verifyDemandState(fulfilledDemandBIds, 'allocated', db)
+      await verifyMatch2DatabaseState(fulfilledMatch2s, 'acceptedFinal', db)
 
-      // Prepare rematches
-      rematch2Ids = await Promise.all(
-        fulfilledMatch2s.map(async (match2Id, index) => {
-          const demandA = fulfilledDemandAIds[index]
-          const demandB = fulfilledNewDemandBIds[index]
-          return await createRematch2(context, demandA, demandB, match2Id)
-        })
+      //prepare rematches
+      const rematch2Ids = await createMultipleRematches(
+        context,
+        fulfilledDemandAIds,
+        fulfilledNewDemandBIds,
+        fulfilledMatch2s,
+        node
       )
+      await node.clearAllTransactions()
 
-      // Submit rematches
+      //submit rematches to chain
       const proposedRematch2Ids = await submitAndVerifyTransactions(
         context,
         db,
         node,
         rematch2Ids,
         'match2',
-        'submitted',
+        'finalised',
         'proposal'
       )
-
       await verifyMatch2State(rematch2Ids, 'proposed', db)
 
       const acceptedRematch2Ids = await submitAndVerifyTransactions(
@@ -487,28 +485,24 @@ describe('on-chain', function () {
         node,
         rematch2Ids,
         'match2',
-        'submitted',
+        'finalised',
         'accept'
       )
-
       await verifyMatch2State(rematch2Ids, 'acceptedA', db)
-
       const acceptedFinalRematch2Ids = await submitAndVerifyTransactions(
         context,
         db,
         node,
         rematch2Ids,
         'match2',
-        'submitted',
+        'finalised',
         'accept'
       )
-
       await verifyMatch2State(rematch2Ids, 'acceptedFinal', db)
 
-      // Check final states of demands and matches
+      //check status of demands and matches
       await verifyDemandState(fulfilledDemandAIds, 'allocated', db)
       await verifyDemandState(fulfilledDemandBIds, 'cancelled', db)
-
       await verifyMatch2DatabaseState(fulfilledMatch2s, 'cancelled', db)
       await verifyDemandState(fulfilledNewDemandBIds, 'allocated', db)
       await verifyMatch2DatabaseState(rematch2Ids, 'acceptedFinal', db)
