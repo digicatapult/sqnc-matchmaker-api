@@ -42,7 +42,6 @@ export class DemandController extends Controller {
 
   public async createDemand(req: express.Request, { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
     const [attachment] = await this.db.getAttachment(parametersAttachmentId)
-    this.log.debug('attachemt row %o', attachment)
 
     if (!attachment) {
       throw new BadRequest('Attachment not found')
@@ -52,13 +51,6 @@ export class DemandController extends Controller {
     self = res
     const selfAddress = res.address
     const selfAlias = res.alias
-
-    this.log.debug('demand body row %o', {
-      owner: selfAddress,
-      subtype: this.dbDemandSubtype,
-      state: 'pending',
-      parameters_attachment_id: parametersAttachmentId,
-    })
 
     const [demand] = await this.db.insertDemand({
       owner: selfAddress,
@@ -98,27 +90,23 @@ export class DemandController extends Controller {
   }
 
   public async createDemandOnChain(demandId: UUID): Promise<TransactionResponse> {
-    try {
-      const [demand] = await this.db.getDemandWithAttachment(demandId, this.dbDemandSubtype)
-      if (!demand) throw new NotFound(this.demandType)
-      if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
+    const [demand] = await this.db.getDemandWithAttachment(demandId, this.dbDemandSubtype)
+    if (!demand) throw new NotFound(this.demandType)
+    if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
 
-      const extrinsic = await this.node.prepareRunProcess(demandCreate(demand))
+    const extrinsic = await this.node.prepareRunProcess(demandCreate(demand))
 
-      const [transaction] = await this.db.insertTransaction({
-        api_type: this.dbDemandSubtype,
-        transaction_type: 'creation',
-        local_id: demandId,
-        state: 'submitted',
-        hash: extrinsic.hash.toHex(),
-      })
+    const [transaction] = await this.db.insertTransaction({
+      api_type: this.dbDemandSubtype,
+      transaction_type: 'creation',
+      local_id: demandId,
+      state: 'submitted',
+      hash: extrinsic.hash.toHex(),
+    })
 
-      this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
 
-      return transaction
-    } catch (e) {
-      throw new Error(`Error: ${e}`)
-    }
+    return transaction
   }
 
   public async getDemandCreation(demandId: UUID, creationId: UUID): Promise<TransactionResponse> {

@@ -4,7 +4,6 @@ services:
     container_name: postgres-matchmaker-api
     ports:
       - 5432:5432
-    command: ['postgres', '-c', 'log_statement=all']
     volumes:
       - matchmaker-api-storage:/var/lib/postgresql/data
     environment:
@@ -24,7 +23,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-identity-service
 
-  identity-service:
+  sqnc-identity-service:
     image: digicatapult/sqnc-identity-service:latest
     container_name: identity-service
     command: /bin/sh -c "
@@ -34,7 +33,6 @@ services:
     ports:
       - 3002:3000
     environment:
-      - LOG_LEVEL=debug
       - API_HOST=sqnc-node
       - DB_HOST=postgres-identity-service
       - DB_PORT=5432
@@ -60,8 +58,6 @@ services:
       - 9944:9944
       - 9933:9933
     restart: on-failure
-    environment:
-      - RUST_LOG=runtime=debug
 
   ipfs:
     image: ipfs/go-ipfs:v0.33.0
@@ -87,56 +83,6 @@ services:
     volumes:
       - ./docker/keycloak:/opt/keycloak/data/import
     command: start-dev --import-realm
-
-  sqnc-matchmaker-api:
-    container_name: sqnc-matchmaker-api
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: always
-    depends_on:
-      postgres-matchmaker-api:
-        condition: service_started
-      # sqnc-identity-service:
-      #   condition: service_healthy
-      # sqnc-node:??
-      # keycloak:??
-    scale: 0
-    ports:
-      - 3000:3000
-    command: >
-      sh -c "
-      npm ci &&
-      npx knex migrate:latest --knexfile build/lib/db/knexfile.js &&
-      npx @digicatapult/sqnc-process-management create -h node -p 9944 -u //Alice -f processFlows.json &&
-      npm run start
-      "
-    environment:
-      - LOG_LEVEL=debug
-      - DB_HOST=postgres-matchmaker-api
-      - DB_PORT=5432
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=sqnc-matchmaker-api
-      - IDENTITY_SERVICE_HOST=identity-service
-      - IDENTITY_SERVICE_PORT=3000
-      - NODE_HOST=node
-      - NODE_PORT=9944
-      - ENABLE_INDEXER=true
-      - USER_URI=//Alice
-      - IPFS_HOST=ipfs
-      - IPFS_PORT=5001
-      - WATCHER_POLL_PERIOD_MS=10000
-      - WATCHER_TIMEOUT_MS=2000
-      - INDEXER_TIMEOUT_MS=3000000
-      - API_SWAGGER_BG_COLOR=#fafafa
-      - API_SWAGGER_TITLE=MatchmakerAPI
-      - API_SWAGGER_HEADING=MatchmakerAPI
-      - IDP_CLIENT_ID=sequence
-      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-a/protocol/openid-connect
-      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-a/protocol/openid-connect
-      - IDP_TOKEN_PATH=/token
-      - IDP_JWKS_PATH=/certs
 
 volumes:
   matchmaker-api-storage:
