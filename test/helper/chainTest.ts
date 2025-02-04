@@ -30,7 +30,6 @@ export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) =
       .catch((err: any) => {
         // intentional ignorance of errors
         if (err.constraint !== 'processed_blocks_pkey') {
-          console.log(err)
           throw err
         }
       })

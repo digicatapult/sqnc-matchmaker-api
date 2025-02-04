@@ -155,6 +155,7 @@ export async function submitAndVerifyTransactions(
       expect(response.status).to.equal(status)
 
       const { id: transactionId, state } = response.body
+
       expect(transactionId).to.match(
         /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
       )
@@ -224,4 +225,15 @@ export async function verifyMatch2DatabaseState(match2Ids: string[], expectedSta
       `${rejected.length} match2s in the database failed to reach state ${expectedState} with error: ${rejected[0]}`
     )
   }
+}
+
+export async function createRematch2(context: { app: Express }, demandA: any, demandB: any, replacingMatch2: string) {
+  const {
+    body: { id: rematch2Id },
+  } = await post(context.app, '/v1/match2', {
+    demandA: demandA.demandId,
+    demandB: demandB.demandId,
+    replaces: replacingMatch2,
+  })
+  return rematch2Id
 }

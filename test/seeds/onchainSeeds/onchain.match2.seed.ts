@@ -3,12 +3,10 @@ import Database from '../../../src/lib/db/index.js'
 const db = new Database().db()
 
 export const cleanup = async () => {
-  console.log('before the delete')
   await db.attachment().del()
   await db.demand().del()
   await db.transaction().del()
   await db.match2().del()
-  console.log('after the delete')
 }
 
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'

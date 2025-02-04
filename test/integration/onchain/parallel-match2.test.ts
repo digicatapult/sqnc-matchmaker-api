@@ -15,6 +15,7 @@ import { container } from 'tsyringe'
 import {
   createMatch2s,
   createMultipleDemands,
+  createRematch2,
   DemandType,
   filterRejectedAndAcceptedPromises,
   filterRejectedAndAcceptedPromisesForMatch2,
@@ -36,7 +37,7 @@ describe('on-chain', function () {
   beforeEach(async () => await seed())
   afterEach(async () => await cleanup())
 
-  describe.only('match2', async () => {
+  describe('match2', async () => {
     let fulfilledMatch2s: string[] = []
     let fulfilledDemandAIds: DemandType[] = []
     let fulfilledDemandBIds: DemandType[] = []
@@ -309,572 +310,208 @@ describe('on-chain', function () {
     })
   })
   describe('re-match2', async () => {
-    let match2Ids: PromiseSettledResult<string>[] = []
-    let rematch2Ids: PromiseSettledResult<string>[] = []
-    let demandAIds: PromiseSettledResult<{
-      originalDemandA: number
-      demandA: string
-      transactionId: any
-    }>[] = []
-    let demandBIds: PromiseSettledResult<{
-      originalDemandB: number
-      demandB: string
-      transactionId: any
-    }>[] = []
-    let newDemandBIds: PromiseSettledResult<{
-      originalDemandB: number
-      demandB: string
-      transactionId: any
-    }>[] = []
     let fulfilledMatch2s: string[] = []
-    let rejectedMatch2s: any[] = []
-    let fulfilledDemandAIds: {
-      originalDemandA: number
-      demandA: string
-      transactionId: any
-    }[] = []
-    let rejectedDemandAIds: any[] = []
-    let fulfilledDemandBIds: {
-      originalDemandB: number
-      demandB: string
-      transactionId: any
-    }[] = []
-    let rejectedDemandBIds: any[] = []
-    let fulfilledNewDemandBIds: {
-      originalDemandB: number
-      demandB: string
-      transactionId: any
-    }[] = []
-    let rejectedNewDemandBIds: any[] = []
+    let fulfilledDemandAIds: DemandType[] = []
+    let fulfilledDemandBIds: DemandType[] = []
+    let fulfilledNewDemandBIds: DemandType[] = []
+
+    let rematch2Ids: string[] = []
     beforeEach(async () => {
-      const numberIds = 10
+      const numberOfDemands = 10
 
-      demandAIds = await Promise.allSettled(
-        Array(numberIds)
-          .fill(null)
-          .map(async () => {
-            const {
-              body: { id: demandAId },
-            } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
-            const {
-              body: { id: demandATransactionId },
-            } = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
+      // Create and finalize demandA
+      fulfilledDemandAIds = await createMultipleDemands(context, db, 'demandA', numberOfDemands, node)
 
-            const [demandA]: DemandRow[] = await db.getDemand(demandAId)
+      // Create and finalize demandB
+      fulfilledDemandBIds = await createMultipleDemands(context, db, 'demandB', numberOfDemands, node)
 
-            return {
-              originalDemandA: demandA.originalTokenId as number,
-              demandA: demandAId as string,
-              transactionId: demandATransactionId,
-            }
-          })
-      )
-
-      await node.clearAllTransactions()
-      const filteredDemandAIds = await filterRejectedAndAcceptedPromisesForMatch2(demandAIds)
-      fulfilledDemandAIds = filteredDemandAIds[0]
-      rejectedDemandAIds = filteredDemandAIds[1]
-      if (rejectedDemandAIds.length > 0) {
-        throw new Error(`${rejectedDemandAIds.length} demand As were rejected with Error: ${rejectedDemandAIds[0]}`)
-      }
-      //check demand and transaction state
-      for (const demandA of fulfilledDemandAIds) {
-        await pollTransactionState(db, demandA.transactionId, 'finalised')
-        await pollDemandState(db, demandA.demandA, 'created')
-      }
-
-      demandBIds = await Promise.allSettled(
-        Array(numberIds)
-          .fill(null)
-          .map(async () => {
-            const {
-              body: { id: demandBId },
-            } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
-            const {
-              body: { id: demandBTransactionId },
-            } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {})
-            const [demandB]: DemandRow[] = await db.getDemand(demandBId)
-
-            return {
-              originalDemandB: demandB.originalTokenId as number,
-              demandB: demandBId as string,
-              transactionId: demandBTransactionId,
-            }
-          })
-      )
-      await node.clearAllTransactions()
-      const filteredDemandBIds = await filterRejectedAndAcceptedPromisesForMatch2(demandBIds)
-      fulfilledDemandBIds = filteredDemandBIds[0]
-      rejectedDemandBIds = filteredDemandBIds[1]
-      if (rejectedDemandBIds.length > 0) {
-        throw new Error(`${rejectedDemandBIds.length} demand Bs were rejected with Error: ${rejectedDemandBIds[0]}`)
-      }
-
-      //check demand and transaction state
-      for (const demandB of fulfilledDemandBIds) {
-        await pollTransactionState(db, demandB.transactionId, 'finalised')
-        await pollDemandState(db, demandB.demandB, 'created')
-      }
-
-      // check we have 500 demandAs and 500 demandBs
-      if (demandAIds.length !== demandBIds.length) {
+      // Ensure demand counts match
+      if (fulfilledDemandAIds.length !== fulfilledDemandBIds.length) {
         throw new Error('Mismatch between demand A and demand B lengths')
       }
 
-      match2Ids = await Promise.allSettled(
-        fulfilledDemandAIds.map(async (demandA, index) => {
-          const demandB = fulfilledDemandBIds[index]
-          const {
-            body: { id: match2Id },
-          } = await post(context.app, '/v1/match2', { demandA: demandA.demandA, demandB: demandB.demandB })
-          return match2Id as UUID
-        })
-      )
-      await node.clearAllTransactions()
-      const match2sFilteredRes = await filterRejectedAndAcceptedPromises(match2Ids)
-      fulfilledMatch2s = match2sFilteredRes[0]
-      rejectedMatch2s = match2sFilteredRes[1]
+      // Create match2 transactions
+      fulfilledMatch2s = await createMatch2s(context, fulfilledDemandAIds, fulfilledDemandBIds, node)
 
-      if (rejectedMatch2s.length > 0) {
-        throw new Error(`${rejectedMatch2s.length} prepared match2s rejected ${rejectedMatch2s}`)
-      }
-      // check we have correct number of match2s
-      if (fulfilledMatch2s.length !== numberIds) {
-        throw new Error(`We do not have correct number of match2s, length: ${fulfilledMatch2s.length}`)
-      }
-      newDemandBIds = await Promise.allSettled(
-        Array(numberIds)
-          .fill(null)
-          .map(async () => {
-            const {
-              body: { id: demandBId },
-            } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
-            const {
-              body: { id: demandBTransactionId },
-            } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {})
-            const [demandB]: DemandRow[] = await db.getDemand(demandBId)
+      // Create and finalize new demandB for re-matching
+      fulfilledNewDemandBIds = await createMultipleDemands(context, db, 'demandB', numberOfDemands, node)
 
-            return {
-              originalDemandB: demandB.originalTokenId as number,
-              demandB: demandBId as string,
-              transactionId: demandBTransactionId,
-            }
-          })
-      )
-      await node.clearAllTransactions()
-      const filteredNewDemandBIds = await filterRejectedAndAcceptedPromisesForMatch2(newDemandBIds)
-      fulfilledNewDemandBIds = filteredNewDemandBIds[0]
-      rejectedNewDemandBIds = filteredNewDemandBIds[1]
-      if (rejectedDemandBIds.length > 0) {
-        throw new Error(`${rejectedDemandBIds.length} demand Bs were rejected with Error: ${rejectedDemandBIds[0]}`)
-      }
-      // check demand and transaction state for new demands
-      for (const demandB of fulfilledNewDemandBIds) {
-        await pollTransactionState(db, demandB.transactionId, 'finalised')
-        await pollDemandState(db, demandB.demandB, 'created')
-      }
-
-      // check that we have same amount of demandAs and new demandBs
+      // Ensure demandA and new demandB counts match
       if (fulfilledDemandAIds.length !== fulfilledNewDemandBIds.length) {
         throw new Error('Mismatch between demand A and new demand B lengths')
       }
     })
     it('should propose a rematch2 on-chain', async () => {
-      const transactionIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
-      )
-      await node.sealBlock()
-      await Promise.all(
-        transactionIds.map(async (tx) => {
-          await pollTransactionState(db, tx, 'finalised')
-        })
-      )
-      await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'proposed')
-        })
-      )
-      await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          const [maybeMatch2] = await db.getMatch2(match2Id)
-          const match2 = maybeMatch2 as Match2Row
-          expect(match2.state).to.equal('proposed')
-        })
-      )
-      const responsesAcceptAIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      // Step 1: Propose match2s
+      const transactionIds = await submitAndVerifyTransactions(
+        context,
+        db,
+        node,
+        fulfilledMatch2s,
+        'match2',
+        'finalised',
+        'proposal'
       )
 
-      // wait for block to finalise
-      await node.sealBlock()
-      await Promise.all(
-        responsesAcceptAIds.map(async (responseAcceptA) => {
-          await pollTransactionState(db, responseAcceptA, 'finalised')
-        })
-      )
-      await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedA')
-        })
+      // Step 2: Verify match2s are proposed
+      await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
+      await verifyMatch2DatabaseState(fulfilledMatch2s, 'proposed', db)
+
+      // Step 3: First acceptance of match2s
+      const responsesAcceptAIds = await submitAndVerifyTransactions(
+        context,
+        db,
+        node,
+        fulfilledMatch2s,
+        'match2',
+        'finalised',
+        'accept'
       )
 
-      // submit 2nd accept to chain
-      const responsesAcceptFinalIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
+      await verifyMatch2State(fulfilledMatch2s, 'acceptedA', db)
 
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      // Step 4: Final acceptance of match2s
+      const responsesAcceptFinalIds = await submitAndVerifyTransactions(
+        context,
+        db,
+        node,
+        fulfilledMatch2s,
+        'match2',
+        'finalised',
+        'accept'
       )
 
-      // wait for block to finalise
-      await node.sealBlock()
-      await Promise.all(
-        responsesAcceptFinalIds.map(async (responseAcceptFinal) => {
-          await pollTransactionState(db, responseAcceptFinal, 'finalised')
-        })
-      )
-      await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedFinal')
-        })
-      )
-      // check demandAs
-      await Promise.all(
-        demandAIds.map(async (demand) => {
-          const [maybeDemandA] = await db.getDemand(demand.demandA)
-          const demandA = maybeDemandA as DemandRow
-          expect(demandA.state).to.equal('allocated')
-        })
-      )
-      await Promise.all(
-        demandBIds.map(async (demand) => {
-          const [maybeDemandB] = await db.getDemand(demand.demandB)
-          const demandB = maybeDemandB as DemandRow
-          expect(demandB.state).to.equal('allocated')
-        })
-      )
-      await Promise.all(
-        match2Ids.map(async (match) => {
-          const [maybeMatch2AcceptFinal] = await db.getMatch2(match)
-          const match2AcceptFinal = maybeMatch2AcceptFinal as Match2Row
-          expect(match2AcceptFinal.state).to.equal('acceptedFinal')
-        })
-      )
+      await verifyMatch2State(fulfilledMatch2s, 'acceptedFinal', db)
+      await verifyDemandState(fulfilledDemandAIds, 'allocated', db)
+      await verifyDemandState(fulfilledDemandBIds, 'allocated', db)
+      await verifyMatch2DatabaseState(fulfilledMatch2s, 'acceptedFinal', db)
 
-      //prepare rematches
+      // Step 5: Prepare rematches
       rematch2Ids = await Promise.all(
-        demandAIds.map(async (demandA, index) => {
-          const demandB = newDemandBIds[index]
-          const replacingMatch2 = match2Ids[index]
+        fulfilledDemandAIds.map(async (demandA, index) => {
+          const demandB = fulfilledNewDemandBIds[index]
+          const replacingMatch2 = fulfilledMatch2s[index]
           const {
             body: { id: rematch2Id },
           } = await post(context.app, '/v1/match2', {
-            demandA: demandA.demandA,
-            demandB: demandB.demandB,
+            demandA: demandA.demandId,
+            demandB: demandB.demandId,
             replaces: replacingMatch2,
           })
-          return rematch2Id as UUID
+          return rematch2Id
         })
       )
-      await node.sealBlock()
-      //submit rematches to chain
-      const proposedRematch2Ids = await Promise.all(
-        rematch2Ids.map(async (rematch2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${rematch2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
+      await node.clearAllTransactions()
 
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      // Step 6: Propose rematch2s
+      const proposedRematch2Ids = await submitAndVerifyTransactions(
+        context,
+        db,
+        node,
+        rematch2Ids,
+        'match2',
+        'finalised',
+        'proposal'
       )
-      // wait for block to finalise
-      await node.sealBlock()
-      await Promise.all(
-        responsesAcceptFinalIds.map(async (responseAcceptFinal) => {
-          await pollTransactionState(db, responseAcceptFinal, 'finalised')
-        })
-      )
-      await Promise.all(
-        rematch2Ids.map(async (rematch2Id) => {
-          await pollMatch2State(db, rematch2Id, 'proposed')
-        })
-      )
-      //check status of demands and matches
-      await Promise.all(
-        demandAIds.map(async (demand) => {
-          const [maybeDemandA] = await db.getDemand(demand.demandA)
-          const demandA = maybeDemandA as DemandRow
-          expect(demandA.state).to.equal('allocated')
-        })
-      )
-      await Promise.all(
-        match2Ids.map(async (match) => {
-          const [maybeOldMatch2] = await db.getMatch2(match)
-          const oldMatch2 = maybeOldMatch2 as Match2Row
-          expect(oldMatch2.state).to.equal('acceptedFinal')
-        })
-      )
-      await Promise.all(
-        newDemandBIds.map(async (demand) => {
-          const [maybeNewDemandB] = await db.getDemand(demand.demandB)
-          const demandB = maybeNewDemandB as DemandRow
-          expect(demandB.state).to.equal('created')
-        })
-      )
-      await Promise.all(
-        rematch2Ids.map(async (rematch) => {
-          const [maybereMatch2] = await db.getMatch2(rematch)
-          const rematch2 = maybereMatch2 as Match2Row
-          expect(rematch2.state).to.equal('proposed')
-        })
-      )
+
+      await verifyMatch2State(rematch2Ids, 'proposed', db)
+
+      // Step 7: Verify final states
+      await verifyDemandState(fulfilledDemandAIds, 'allocated', db)
+      await verifyMatch2DatabaseState(fulfilledMatch2s, 'acceptedFinal', db)
+      await verifyDemandState(fulfilledNewDemandBIds, 'created', db)
+      await verifyMatch2DatabaseState(rematch2Ids, 'proposed', db)
     })
     it('accepts a rematch2 proposal', async () => {
-      const transactionIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
-
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
-      )
-      await node.sealBlock()
-      await Promise.all(
-        transactionIds.map(async (tx) => {
-          await pollTransactionState(db, tx, 'finalised')
-        })
-      )
-      await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'proposed')
-        })
+      const transactionIds = await submitAndVerifyTransactions(
+        context,
+        db,
+        node,
+        fulfilledMatch2s,
+        'match2',
+        'submitted',
+        'proposal'
       )
 
-      const responsesAcceptAIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
+      await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
 
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const responsesAcceptAIds = await submitAndVerifyTransactions(
+        context,
+        db,
+        node,
+        fulfilledMatch2s,
+        'match2',
+        'submitted',
+        'accept'
       )
 
-      // wait for block to finalise
-      await node.sealBlock()
-      await Promise.all(
-        responsesAcceptAIds.map(async (responseAcceptA) => {
-          await pollTransactionState(db, responseAcceptA, 'finalised')
-        })
-      )
-      await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedA')
-        })
-      )
-      // submit 2nd accept to chain
-      const responsesAcceptFinalIds = await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${match2Id}/accept`, {})
-          expect(response.status).to.equal(201)
+      await verifyMatch2State(fulfilledMatch2s, 'acceptedA', db)
 
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const responsesAcceptFinalIds = await submitAndVerifyTransactions(
+        context,
+        db,
+        node,
+        fulfilledMatch2s,
+        'match2',
+        'submitted',
+        'accept'
       )
 
-      // wait for block to finalise
-      await node.sealBlock()
-      await Promise.all(
-        responsesAcceptFinalIds.map(async (responseAcceptFinal) => {
-          await pollTransactionState(db, responseAcceptFinal, 'finalised')
-        })
-      )
-      await Promise.all(
-        match2Ids.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'acceptedFinal')
-        })
-      )
-      //prepare rematches
+      await verifyMatch2State(fulfilledMatch2s, 'acceptedFinal', db)
+
+      // Prepare rematches
       rematch2Ids = await Promise.all(
-        demandAIds.map(async (demandA, index) => {
-          const demandB = newDemandBIds[index]
-          const replacingMatch2 = match2Ids[index]
-          const {
-            body: { id: rematch2Id },
-          } = await post(context.app, '/v1/match2', {
-            demandA: demandA.demandA,
-            demandB: demandB.demandB,
-            replaces: replacingMatch2,
-          })
-          return rematch2Id as UUID
+        fulfilledMatch2s.map(async (match2Id, index) => {
+          const demandA = fulfilledDemandAIds[index]
+          const demandB = fulfilledNewDemandBIds[index]
+          return await createRematch2(context, demandA, demandB, match2Id)
         })
       )
-      await node.sealBlock()
-      //submit rematches to chain
-      const proposedRematch2Ids = await Promise.all(
-        rematch2Ids.map(async (rematch2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${rematch2Id}/proposal`, {})
-          expect(response.status).to.equal(201)
 
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      // Submit rematches
+      const proposedRematch2Ids = await submitAndVerifyTransactions(
+        context,
+        db,
+        node,
+        rematch2Ids,
+        'match2',
+        'submitted',
+        'proposal'
       )
-      // wait for block to finalise
-      await node.sealBlock()
-      await Promise.all(
-        responsesAcceptFinalIds.map(async (responseAcceptFinal) => {
-          await pollTransactionState(db, responseAcceptFinal, 'finalised')
-        })
-      )
-      await Promise.all(
-        rematch2Ids.map(async (rematch2Id) => {
-          await pollMatch2State(db, rematch2Id, 'proposed')
-        })
-      )
-      const acceptedRematch2Ids = await Promise.all(
-        rematch2Ids.map(async (rematch2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${rematch2Id}/accept`, {})
-          expect(response.status).to.equal(201)
 
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
-      )
-      await node.sealBlock()
-      await Promise.all(
-        responsesAcceptFinalIds.map(async (responseAcceptFinal) => {
-          await pollTransactionState(db, responseAcceptFinal, 'finalised')
-        })
-      )
-      await Promise.all(
-        rematch2Ids.map(async (rematch2Id) => {
-          await pollMatch2State(db, rematch2Id, 'acceptedA')
-        })
-      )
-      const acceptedFinalRematch2Ids = await Promise.all(
-        rematch2Ids.map(async (rematch2Id) => {
-          // submit to chain
-          const response = await post(context.app, `/v1/match2/${rematch2Id}/accept`, {})
-          expect(response.status).to.equal(201)
+      await verifyMatch2State(rematch2Ids, 'proposed', db)
 
-          const { id: transactionId, state } = response.body
-          expect(transactionId).to.match(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89ABab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-          )
-          expect(state).to.equal('submitted')
-          return transactionId as string
-        })
+      const acceptedRematch2Ids = await submitAndVerifyTransactions(
+        context,
+        db,
+        node,
+        rematch2Ids,
+        'match2',
+        'submitted',
+        'accept'
       )
-      await node.sealBlock()
-      await Promise.all(
-        responsesAcceptFinalIds.map(async (responseAcceptFinal) => {
-          await pollTransactionState(db, responseAcceptFinal, 'finalised')
-        })
+
+      await verifyMatch2State(rematch2Ids, 'acceptedA', db)
+
+      const acceptedFinalRematch2Ids = await submitAndVerifyTransactions(
+        context,
+        db,
+        node,
+        rematch2Ids,
+        'match2',
+        'submitted',
+        'accept'
       )
-      await Promise.all(
-        rematch2Ids.map(async (rematch2Id) => {
-          await pollMatch2State(db, rematch2Id, 'acceptedFinal')
-        })
-      )
-      //check status of demands and matches
-      await Promise.all(
-        demandAIds.map(async (demand) => {
-          const [maybeDemandA] = await db.getDemand(demand.demandA)
-          const demandA = maybeDemandA as DemandRow
-          expect(demandA.state).to.equal('allocated')
-        })
-      )
-      await Promise.all(
-        demandBIds.map(async (demand) => {
-          const [maybeDemandB] = await db.getDemand(demand.demandB)
-          const demandB = maybeDemandB as DemandRow
-          expect(demandB.state).to.equal('cancelled')
-        })
-      )
-      await Promise.all(
-        match2Ids.map(async (match) => {
-          const [maybeOldMatch2] = await db.getMatch2(match)
-          const oldMatch2 = maybeOldMatch2 as Match2Row
-          expect(oldMatch2.state).to.equal('cancelled')
-        })
-      )
-      await Promise.all(
-        newDemandBIds.map(async (demand) => {
-          const [maybeNewDemandB] = await db.getDemand(demand.demandB)
-          const demandB = maybeNewDemandB as DemandRow
-          expect(demandB.state).to.equal('allocated')
-        })
-      )
-      await Promise.all(
-        rematch2Ids.map(async (rematch) => {
-          const [maybereMatch2] = await db.getMatch2(rematch)
-          const rematch2 = maybereMatch2 as Match2Row
-          expect(rematch2.state).to.equal('acceptedFinal')
-        })
-      )
+
+      await verifyMatch2State(rematch2Ids, 'acceptedFinal', db)
+
+      // Check final states of demands and matches
+      await verifyDemandState(fulfilledDemandAIds, 'allocated', db)
+      await verifyDemandState(fulfilledDemandBIds, 'cancelled', db)
+
+      await verifyMatch2DatabaseState(fulfilledMatch2s, 'cancelled', db)
+      await verifyDemandState(fulfilledNewDemandBIds, 'allocated', db)
+      await verifyMatch2DatabaseState(rematch2Ids, 'acceptedFinal', db)
     })
   })
 })
