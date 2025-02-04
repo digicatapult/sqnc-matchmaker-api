@@ -316,7 +316,6 @@ describe('on-chain parallel', function () {
     let fulfilledDemandBIds: DemandType[] = []
     let fulfilledNewDemandBIds: DemandType[] = []
 
-    let rematch2Ids: string[] = []
     beforeEach(async () => {
       const numberOfDemands = 10
 
