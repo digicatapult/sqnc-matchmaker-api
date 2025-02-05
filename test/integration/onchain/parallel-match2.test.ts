@@ -1,13 +1,10 @@
 import { describe, beforeEach, afterEach, it } from 'mocha'
 import { Express } from 'express'
-import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
 import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
 import { withIdentitySelfMock } from '../../helper/mock.js'
-import Database, { Match2Row } from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
-import { pollMatch2State } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import {
