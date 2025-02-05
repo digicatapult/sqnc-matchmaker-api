@@ -88,12 +88,6 @@ export async function createMatch2s(
   )
   await node.clearAllTransactions()
   const [fulfilled, rejected] = await filterRejectedAndAcceptedPromises(match2Results)
-
-  // const fulfilled = match2Results
-  //   .filter((r) => r.status === 'fulfilled')
-  //   .map((r) => (r as PromiseFulfilledResult<string>).value)
-  // const rejected = match2Results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
-
   if (rejected.length > 0) {
     throw new Error(`${rejected.length} prepared match2s rejected with error: ${rejected[0]}`)
   }
