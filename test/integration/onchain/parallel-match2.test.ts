@@ -17,6 +17,7 @@ import {
   verifyMatch2DatabaseState,
   verifyMatch2State,
 } from '../../helper/parallelTests.js'
+import Database from '../../../src/lib/db/index.js'
 
 describe('on-chain parallel', function () {
   this.timeout(180000)
@@ -60,43 +61,8 @@ describe('on-chain parallel', function () {
       )
 
       await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
-
-      // const proposedMatch2sResults = await Promise.allSettled(
-      //   fulfilledMatch2s.map(async (match2Id) => {
-      //     await pollMatch2State(db, match2Id, 'proposed')
-      //   })
-      // )
-
-      // const rejectedProposedMatch2s = proposedMatch2sResults
-      //   .filter((result) => result.status === 'rejected')
-      //   .map((result) => result.reason)
-
-      // if (rejectedProposedMatch2s.length > 0) {
-      //   throw new Error(
-      //     `${rejectedProposedMatch2s.length} proposed match2s rejected with error: ${rejectedProposedMatch2s[0]}`
-      //   )
-      // }
-
       // Verify local database reflects the 'proposed' state for match2s
       await verifyMatch2DatabaseState(fulfilledMatch2s, 'proposed', db)
-
-      // const proposedLocalMatch2sResults = await Promise.allSettled(
-      //   fulfilledMatch2s.map(async (match2Id) => {
-      //     const [maybeMatch2] = await db.getMatch2(match2Id)
-      //     const match2 = maybeMatch2 as Match2Row
-      //     expect(match2.state).to.equal('proposed')
-      //   })
-      // )
-
-      // const rejectedProposedLocalMatch2s = proposedLocalMatch2sResults
-      //   .filter((result) => result.status === 'rejected')
-      //   .map((result) => result.reason)
-
-      // if (rejectedProposedLocalMatch2s.length > 0) {
-      //   throw new Error(
-      //     `${rejectedProposedLocalMatch2s.length} local match2s from database rejected with error: ${rejectedProposedLocalMatch2s[0]}`
-      //   )
-      // }
     })
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
