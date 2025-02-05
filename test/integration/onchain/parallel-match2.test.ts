@@ -3,23 +3,18 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
-import { post, get } from '../../helper/routeHelper.js'
 import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
 import { withIdentitySelfMock } from '../../helper/mock.js'
-import Database, { DemandRow, Match2Row } from '../../../src/lib/db/index.js'
+import Database, { Match2Row } from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
-import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
+import { pollMatch2State } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
-import { UUID } from '../../../src/models/strings.js'
 import { container } from 'tsyringe'
 import {
   createMatch2s,
   createMultipleDemands,
   createMultipleRematches,
-  createRematch2,
   DemandType,
-  filterRejectedAndAcceptedPromises,
-  filterRejectedAndAcceptedPromisesForMatch2,
   submitAndVerifyTransactions,
   verifyDemandState,
   verifyMatch2DatabaseState,
@@ -67,40 +62,44 @@ describe('on-chain parallel', function () {
         'proposal'
       )
 
-      const proposedMatch2sResults = await Promise.allSettled(
-        fulfilledMatch2s.map(async (match2Id) => {
-          await pollMatch2State(db, match2Id, 'proposed')
-        })
-      )
+      await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
 
-      const rejectedProposedMatch2s = proposedMatch2sResults
-        .filter((result) => result.status === 'rejected')
-        .map((result) => result.reason)
+      // const proposedMatch2sResults = await Promise.allSettled(
+      //   fulfilledMatch2s.map(async (match2Id) => {
+      //     await pollMatch2State(db, match2Id, 'proposed')
+      //   })
+      // )
 
-      if (rejectedProposedMatch2s.length > 0) {
-        throw new Error(
-          `${rejectedProposedMatch2s.length} proposed match2s rejected with error: ${rejectedProposedMatch2s[0]}`
-        )
-      }
+      // const rejectedProposedMatch2s = proposedMatch2sResults
+      //   .filter((result) => result.status === 'rejected')
+      //   .map((result) => result.reason)
+
+      // if (rejectedProposedMatch2s.length > 0) {
+      //   throw new Error(
+      //     `${rejectedProposedMatch2s.length} proposed match2s rejected with error: ${rejectedProposedMatch2s[0]}`
+      //   )
+      // }
 
       // Verify local database reflects the 'proposed' state for match2s
-      const proposedLocalMatch2sResults = await Promise.allSettled(
-        fulfilledMatch2s.map(async (match2Id) => {
-          const [maybeMatch2] = await db.getMatch2(match2Id)
-          const match2 = maybeMatch2 as Match2Row
-          expect(match2.state).to.equal('proposed')
-        })
-      )
+      await verifyMatch2DatabaseState(fulfilledMatch2s, 'proposed', db)
 
-      const rejectedProposedLocalMatch2s = proposedLocalMatch2sResults
-        .filter((result) => result.status === 'rejected')
-        .map((result) => result.reason)
+      // const proposedLocalMatch2sResults = await Promise.allSettled(
+      //   fulfilledMatch2s.map(async (match2Id) => {
+      //     const [maybeMatch2] = await db.getMatch2(match2Id)
+      //     const match2 = maybeMatch2 as Match2Row
+      //     expect(match2.state).to.equal('proposed')
+      //   })
+      // )
 
-      if (rejectedProposedLocalMatch2s.length > 0) {
-        throw new Error(
-          `${rejectedProposedLocalMatch2s.length} local match2s from database rejected with error: ${rejectedProposedLocalMatch2s[0]}`
-        )
-      }
+      // const rejectedProposedLocalMatch2s = proposedLocalMatch2sResults
+      //   .filter((result) => result.status === 'rejected')
+      //   .map((result) => result.reason)
+
+      // if (rejectedProposedLocalMatch2s.length > 0) {
+      //   throw new Error(
+      //     `${rejectedProposedLocalMatch2s.length} local match2s from database rejected with error: ${rejectedProposedLocalMatch2s[0]}`
+      //   )
+      // }
     })
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {

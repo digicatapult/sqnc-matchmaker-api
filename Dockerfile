@@ -13,27 +13,6 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# test
-FROM node:lts-alpine AS test
-
-WORKDIR /sqnc-matchmaker-api
-
-RUN apk add --update coreutils
-RUN npm install -g npm@10.x.x
-
-COPY package*.json ./
-COPY tsconfig.json ./
-
-RUN npm ci
-COPY import/ ./import/
-COPY . .
-RUN npm run build
-
-ARG NODE_ENV=test
-ENV NODE_ENV=${NODE_ENV}
-
-CMD ["npm", "run", "test:onchain:parallel"]
-
 # service
 FROM node:lts-alpine as service
 

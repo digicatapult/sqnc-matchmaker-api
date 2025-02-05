@@ -16,7 +16,6 @@ export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) =
     context.app = await createHttpServer()
     const node = container.resolve(ChainNode)
 
-    // await node.sealBlock()
     await node.clearAllTransactions()
 
     const blockHash = await node.getLastFinalisedBlockHash()

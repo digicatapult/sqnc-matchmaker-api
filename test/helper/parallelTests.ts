@@ -5,44 +5,11 @@ import { post } from './routeHelper.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from './poll.js'
 import { expect } from 'chai'
 import ChainNode from '../../src/lib/chainNode'
-
-type DemandAResult = {
-  originalDemandA: number
-  demandA: string
-  transactionId: any
-}
-
-type DemandBResult = {
-  originalDemandB: number
-  demandB: string
-  transactionId: any
-}
-
-type ResultType = DemandAResult | DemandBResult
+import { Response } from 'supertest'
 
 export type DemandType = { originalTokenId: number; demandId: string; transactionId: any }
 
 export const filterRejectedAndAcceptedPromises = async (promiseResult: PromiseSettledResult<string>[]) => {
-  const fulfilledPromises = promiseResult
-    .filter((result) => result.status === 'fulfilled')
-    .map((result) => result.value)
-  const rejectedPromises = promiseResult.filter((result) => result.status === 'rejected').map((result) => result.reason)
-  return [fulfilledPromises, rejectedPromises]
-}
-
-export const filterRejectedAndAcceptedPromisesForMatch2 = async (
-  promiseResult:
-    | PromiseSettledResult<{
-        originalDemandA: number
-        demandA: string
-        transactionId: any
-      }>[]
-    | PromiseSettledResult<{
-        originalDemandB: number
-        demandB: string
-        transactionId: any
-      }>[]
-) => {
   const fulfilledPromises = promiseResult
     .filter((result) => result.status === 'fulfilled')
     .map((result) => result.value)
@@ -144,7 +111,7 @@ export async function submitAndVerifyTransactions(
   status: number = 201
 ) {
   const data = attachmentId !== '' ? { attachmentId: parametersAttachmentId } : null
-  let response // better type?
+  let response: Response
   const transactionResults = await Promise.allSettled(
     items.map(async (itemId) => {
       if (data !== null) {
