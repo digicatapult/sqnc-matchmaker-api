@@ -336,7 +336,7 @@ services:
 
   # ------------------------------------------------------------------------ ipfs
   ipfs:
-    image: ipfs/go-ipfs:v0.33.0
+    image: ipfs/go-ipfs:v0.33.1
     container_name: ipfs
     environment:
       - |
@@ -353,7 +353,7 @@ services:
 
   # ------------------------------------------------------------------------ keycloak
   keycloak:
-    image: quay.io/keycloak/keycloak:26.1.0
+    image: quay.io/keycloak/keycloak:26.1.1
     container_name: keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
