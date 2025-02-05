@@ -52,6 +52,7 @@ export async function createMultipleDemands(
       .map(() => createDemand(context, db, demandType))
   )
   await node.clearAllTransactions()
+
   const fulfilled = results
     .filter((r) => r.status === 'fulfilled')
     .map((r) => (r as PromiseFulfilledResult<DemandType>).value)
@@ -86,11 +87,12 @@ export async function createMatch2s(
     })
   )
   await node.clearAllTransactions()
+  const [fulfilled, rejected] = await filterRejectedAndAcceptedPromises(match2Results)
 
-  const fulfilled = match2Results
-    .filter((r) => r.status === 'fulfilled')
-    .map((r) => (r as PromiseFulfilledResult<string>).value)
-  const rejected = match2Results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
+  // const fulfilled = match2Results
+  //   .filter((r) => r.status === 'fulfilled')
+  //   .map((r) => (r as PromiseFulfilledResult<string>).value)
+  // const rejected = match2Results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
 
   if (rejected.length > 0) {
     throw new Error(`${rejected.length} prepared match2s rejected with error: ${rejected[0]}`)
@@ -134,12 +136,7 @@ export async function submitAndVerifyTransactions(
 
   await node.clearAllTransactions()
 
-  const fulfilled = transactionResults
-    .filter((r) => r.status === 'fulfilled')
-    .map((r) => (r as PromiseFulfilledResult<string>).value)
-  const rejected = transactionResults
-    .filter((r) => r.status === 'rejected')
-    .map((r) => (r as PromiseRejectedResult).reason)
+  const [fulfilled, rejected] = await filterRejectedAndAcceptedPromises(transactionResults)
 
   if (rejected.length > 0) {
     throw new Error(`${rejected.length} transactions rejected with error: ${rejected[0]}`)
@@ -156,7 +153,7 @@ export async function submitAndVerifyTransactions(
 export async function verifyMatch2State(match2Ids: string[], expectedState: string, db: Database) {
   const results = await Promise.allSettled(match2Ids.map((match2Id) => pollMatch2State(db, match2Id, expectedState)))
 
-  const rejected = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
+  const rejected = await rejectedPromises(results)
   if (rejected.length > 0) {
     throw new Error(`${rejected.length} match2s failed to reach state ${expectedState} with error: ${rejected[0]}`)
   }
@@ -171,7 +168,7 @@ export async function verifyDemandState(demandIds: { demandId: string }[], expec
     })
   )
 
-  const rejected = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
+  const rejected = await rejectedPromises(results)
   if (rejected.length > 0) {
     throw new Error(`${rejected.length} demands failed to reach state ${expectedState} with error: ${rejected[0]}`)
   }
@@ -186,7 +183,7 @@ export async function verifyMatch2DatabaseState(match2Ids: string[], expectedSta
     })
   )
 
-  const rejected = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
+  const rejected = await rejectedPromises(results)
   if (rejected.length > 0) {
     throw new Error(
       `${rejected.length} match2s in the database failed to reach state ${expectedState} with error: ${rejected[0]}`
@@ -238,4 +235,9 @@ export async function createMultipleRematches(
 
   await node.clearAllTransactions()
   return rematch2Ids
+}
+
+async function rejectedPromises(results: PromiseSettledResult<void>[]) {
+  const rejected = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
+  return rejected
 }
