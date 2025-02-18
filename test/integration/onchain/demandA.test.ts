@@ -13,6 +13,7 @@ import { pollTransactionState, pollDemandState, pollDemandCommentState } from '.
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import { filterRejectedAndAcceptedPromises } from '../../helper/parallelTests.js'
+import { setupProxy } from '../../helper/proxy.js'
 
 describe('on-chain', function () {
   this.timeout(80000)

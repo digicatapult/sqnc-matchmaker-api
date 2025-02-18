@@ -1,5 +1,5 @@
 import Database from '../../../src/lib/db/index.js'
-import { notSelfAddress, selfAddress } from '../../helper/mock.js'
+import { notSelfAddress, proxyAddress, selfAddress } from '../../helper/mock.js'
 
 const db = new Database().db()
 
@@ -53,7 +53,7 @@ export const demandSeed = async () => {
   await db.demand().insert([
     {
       id: seededDemandBId,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
@@ -114,7 +114,7 @@ export const demandSeed = async () => {
   await db.demand_comment().insert([
     {
       id: seededDemandBCommentTransactionId,
-      owner: selfAddress,
+      owner: proxyAddress,
       state: 'pending',
       demand: seededDemandBId,
       attachment: parametersAttachmentId,
@@ -123,7 +123,7 @@ export const demandSeed = async () => {
     },
     {
       id: seededDemandBCommentTransactionId2,
-      owner: selfAddress,
+      owner: proxyAddress,
       state: 'created',
       demand: seededDemandBId,
       attachment: parametersAttachmentId,
@@ -135,7 +135,7 @@ export const demandSeed = async () => {
   await db.demand().insert([
     {
       id: seededDemandAId,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_a',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
@@ -196,7 +196,7 @@ export const demandSeed = async () => {
   await db.demand_comment().insert([
     {
       id: seededDemandACommentTransactionId,
-      owner: selfAddress,
+      owner: proxyAddress,
       state: 'pending',
       demand: seededDemandAId,
       attachment: parametersAttachmentId,
@@ -205,7 +205,7 @@ export const demandSeed = async () => {
     },
     {
       id: seededDemandACommentTransactionId2,
-      owner: selfAddress,
+      owner: proxyAddress,
       state: 'created',
       demand: seededDemandAId,
       attachment: parametersAttachmentId,
@@ -245,7 +245,7 @@ export const demandSeed = async () => {
   await db.demand().insert([
     {
       id: seededDemandBMissingTokenId,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,

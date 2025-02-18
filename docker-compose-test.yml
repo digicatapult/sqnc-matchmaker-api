@@ -39,10 +39,11 @@ services:
       - DB_NAME=sqnc-identity-service
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
-      - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+      - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY # do not chnage these, only change the env
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-a/protocol/openid-connect
       - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-a/protocol/openid-connect
+      - PROXY=5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy
 
   sqnc-node:
     image: digicatapult/sqnc-node:latest
@@ -58,6 +59,8 @@ services:
       - 9944:9944
       - 9933:9933
     restart: on-failure
+    environment:
+      - RUST_LOG=runtime=debug
 
   ipfs:
     image: ipfs/go-ipfs:v0.33.1

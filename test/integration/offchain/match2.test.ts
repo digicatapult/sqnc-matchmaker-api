@@ -37,7 +37,7 @@ import {
 } from '../../seeds/offchainSeeds/offchain.match2.seed.js'
 import { parametersAttachmentId } from '../../seeds/offchainSeeds/offchain.match2.seed.js'
 
-import { selfAlias, withIdentitySelfMock } from '../../helper/mock.js'
+import { proxyAlias, withIdentitySelfMock } from '../../helper/mock.js'
 import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
 
 describe('match2', () => {
@@ -71,9 +71,9 @@ describe('match2', () => {
       assertIsoDate(updatedAt)
       expect(responseRest).to.deep.contain({
         state: 'pending',
-        optimiser: selfAlias,
-        memberA: selfAlias,
-        memberB: selfAlias,
+        optimiser: proxyAlias,
+        memberA: proxyAlias,
+        memberB: proxyAlias,
         demandA: seededDemandAWithTokenId,
         demandB: seededDemandBWithTokenId,
       })
@@ -85,9 +85,9 @@ describe('match2', () => {
       expect(response.body).to.deep.contain({
         id: seededMatch2Id,
         state: 'pending',
-        optimiser: selfAlias,
-        memberA: selfAlias,
-        memberB: selfAlias,
+        optimiser: proxyAlias,
+        memberA: proxyAlias,
+        memberB: proxyAlias,
         demandA: seededDemandAId,
         demandB: seededDemandBId,
         createdAt: exampleDate,
@@ -102,9 +102,9 @@ describe('match2', () => {
       expect(body.find(({ id }: { id: string }) => id === seededMatch2Id)).to.deep.contain({
         id: seededMatch2Id,
         state: 'pending',
-        optimiser: selfAlias,
-        memberA: selfAlias,
-        memberB: selfAlias,
+        optimiser: proxyAlias,
+        memberA: proxyAlias,
+        memberB: proxyAlias,
         demandA: seededDemandAId,
         demandB: seededDemandBId,
         createdAt: exampleDate,

@@ -61,6 +61,7 @@ export default class ChainNode {
   private userUri: string
   private lastSubmittedNonce: number
   private mutex = new Mutex()
+  private proxyAddress: string | null = null
 
   constructor(@inject(LoggerToken) logger: Logger, @inject(EnvToken) env: Env) {
     this.logger = logger.child({ module: 'ChainNode' })
@@ -71,6 +72,7 @@ export default class ChainNode {
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.lastSubmittedNonce = -1
+    this.proxyAddress = env.PROXY === null ? null : env.PROXY
 
     this.api.isReadyOrError.catch(() => {
       // prevent unhandled promise rejection errors
@@ -150,7 +152,18 @@ export default class ChainNode {
     this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, fulfilledOutputs)
 
     await this.api.isReady
-    const extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
+    //optionally use proxy here
+
+    let extrinsic
+    if (this.proxyAddress) {
+      extrinsic = this.api.tx.proxy.proxy(
+        { id: this.proxyAddress },
+        null,
+        this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
+      )
+    } else {
+      extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
+    }
     const account = this.keyring.addFromUri(this.userUri)
 
     const nonce = await this.mutex.runExclusive(async () => {
@@ -204,6 +217,46 @@ export default class ChainNode {
       })
     } catch (err) {
       transactionDbUpdate('failed')
+      this.logger.warn(`Error in run process transaction: ${err}`)
+    }
+  }
+
+  async submitRunProcessForProxy(extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>): Promise<void> {
+    try {
+      this.logger.debug('Submitting Transaction %j', extrinsic.hash.toHex())
+      const unsub: () => void = await extrinsic.send((result: SubmittableResult): void => {
+        this.logger.debug('result.status %s', JSON.stringify(result.status))
+
+        const { dispatchError, status } = result
+
+        if (dispatchError) {
+          this.logger.warn('dispatch error %s', dispatchError)
+
+          unsub()
+          if (dispatchError.isModule) {
+            const decoded = this.api.registry.findMetaError(dispatchError.asModule)
+            throw new Error(`Node dispatch error: ${decoded.name}`)
+          }
+
+          throw new Error(`Unknown node dispatch error: ${dispatchError}`)
+        }
+        console.log(status.isFinalized)
+
+        if (status.isFinalized) {
+          const processRanEvent = result.events.find(({ event: { method } }) => method === 'ProcessRan')
+          console.log(processRanEvent)
+          // const data = processRanEvent?.event?.data as EventData
+          // console.log(data)
+          // const tokens = data?.outputs?.map((x) => x.toNumber())
+
+          // if (!tokens) {
+          //   throw new Error('No token IDs returned')
+          // }
+
+          unsub()
+        }
+      })
+    } catch (err) {
       this.logger.warn(`Error in run process transaction: ${err}`)
     }
   }
@@ -327,5 +380,28 @@ export default class ChainNode {
       }
       await this.api.rpc.engine.createBlock(createEmpty, finalise)
     }
+  }
+
+  async addProxy(userUri: string, proxyAddress: string, proxyType: string, delay: number = 0) {
+    // The proxy address (the account you want to set as a proxy)
+    // Proxy type (e.g., Any, Governance,RunProcess)
+    // Delay in blocks (typically 0)
+    await this.api.isReady
+    const result = this.api.tx.proxy.addProxy(proxyAddress, proxyType, delay)
+
+    // Send the transaction and wait for confirmation
+    const account = this.keyring.addFromUri(userUri)
+    const xyz = (await this.api.rpc.system.accountNextIndex(account.publicKey)).toNumber()
+    console.log(xyz)
+
+    const nonce = await this.mutex.runExclusive(async () => {
+      const nextTxPoolNonce = (await this.api.rpc.system.accountNextIndex(account.publicKey)).toNumber()
+      const nonce = Math.max(nextTxPoolNonce, this.lastSubmittedNonce + 1)
+      this.lastSubmittedNonce = nonce
+      return nonce
+    })
+
+    const signed = await result.signAsync(account, { nonce })
+    return signed
   }
 }

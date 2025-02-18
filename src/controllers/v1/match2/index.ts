@@ -44,6 +44,7 @@ import {
 import ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
+import env from '../../../env.js'
 
 @Route('v1/match2')
 @injectable()
@@ -86,8 +87,15 @@ export class Match2Controller extends Controller {
       subtype: 'demand_b',
       state: 'created',
     })
-
-    const res = await this.identity.getMemberBySelf(getAuthorization(req))
+    let res: {
+      address: string
+      alias: string
+    }
+    if (env.PROXY !== null) {
+      res = await this.identity.getMemberByAlias(env.PROXY, getAuthorization(req))
+    } else {
+      res = await this.identity.getMemberBySelf(getAuthorization(req))
+    }
     const { address: selfAddress } = res
 
     if (replaces) {
@@ -263,8 +271,15 @@ export class Match2Controller extends Controller {
     const [demandB]: DemandRow[] = await this.db.getDemand(match2.demandB)
     validatePreOnChain(demandB, 'DemandB', { subtype: 'demand_b', state: 'created' })
     const [oldMatch2]: Match2Row[] = match2.replaces ? await this.db.getMatch2(match2.replaces) : []
-
-    const res = await this.identity.getMemberBySelf(getAuthorization(req))
+    let res: {
+      address: string
+      alias: string
+    }
+    if (env.PROXY !== null) {
+      res = await this.identity.getMemberByAlias(env.PROXY, getAuthorization(req))
+    } else {
+      res = await this.identity.getMemberBySelf(getAuthorization(req))
+    }
     const { address: selfAddress } = res
     const ownsDemandA = demandA.owner === selfAddress
     const ownsDemandB = demandB.owner === selfAddress
@@ -408,7 +423,15 @@ export class Match2Controller extends Controller {
     if (!attachment) throw new BadRequest(`${attachmentId} not found`)
 
     const roles = [match2.memberA, match2.memberB]
-    const res = await this.identity.getMemberBySelf(getAuthorization(req))
+    let res: {
+      address: string
+      alias: string
+    }
+    if (env.PROXY !== null) {
+      res = await this.identity.getMemberByAlias(env.PROXY, getAuthorization(req))
+    } else {
+      res = await this.identity.getMemberBySelf(getAuthorization(req))
+    }
     const { address: selfAddress } = res
 
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
@@ -489,7 +512,15 @@ export class Match2Controller extends Controller {
     if (!match2) throw new NotFound('match2')
 
     const roles = [match2.memberA, match2.memberB, match2.optimiser]
-    const res = await this.identity.getMemberBySelf(getAuthorization(req))
+    let res: {
+      address: string
+      alias: string
+    }
+    if (env.PROXY !== null) {
+      res = await this.identity.getMemberByAlias(env.PROXY, getAuthorization(req))
+    } else {
+      res = await this.identity.getMemberBySelf(getAuthorization(req))
+    }
     const { address: selfAddress } = res
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
 

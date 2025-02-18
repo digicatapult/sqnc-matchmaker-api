@@ -20,6 +20,7 @@ import ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
+import env from '../../../env.js'
 
 let self: { address: string; alias: string } | null = null
 export class DemandController extends Controller {
@@ -47,7 +48,22 @@ export class DemandController extends Controller {
       throw new BadRequest('Attachment not found')
     }
 
-    const res = self || (await this.identity.getMemberBySelf(getAuthorization(req)))
+    // So self should be whoever is actually making this transaction -> which is Bob
+    // so if we have a proxy setup make this Bob so he is also the one who is associated with it in a db
+    let res: {
+      address: string
+      alias: string
+    }
+    if (env.PROXY !== null) {
+      // const sth = await this.identity.getMemberByAddress('//Dave', getAuthorization(req))
+      // console.log(sth)
+      // res = self || (await this.identity.getMemberByAddress(env.PROXY, getAuthorization(req)))
+      // getMemberByAddress(match2.memberB, authorization).then(getAlias)
+      res = { address: env.PROXY, alias: '//Dave' }
+    } else {
+      res = self || (await this.identity.getMemberBySelf(getAuthorization(req)))
+    }
+
     self = res
     const selfAddress = res.address
     const selfAlias = res.alias
@@ -194,6 +210,35 @@ export class DemandController extends Controller {
     if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
 
     return await this.db.getTransactionsByLocalId(query)
+  }
+  public async createProxyOnChain(
+    demandId: UUID,
+    userUri: string,
+    proxyAddress: string,
+    proxyType: string,
+    delay: number = 0
+  ): Promise<TransactionResponse> {
+    const [demand] = await this.db.getDemandWithAttachment(demandId, this.dbDemandSubtype)
+    if (!demand) throw new NotFound(this.demandType)
+    if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
+    const extrinsic = await this.node.addProxy(
+      '//Alice',
+      '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy',
+      'RunProcess',
+      0
+    )
+
+    const [transaction] = await this.db.insertTransaction({
+      api_type: this.dbDemandSubtype,
+      transaction_type: 'creation',
+      local_id: demandId,
+      state: 'submitted',
+      hash: extrinsic.hash.toHex(),
+    })
+
+    await this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+
+    return transaction
   }
 }
 
