@@ -12,6 +12,7 @@ import { pollDemandState, pollMatch2State, pollTransactionState } from '../../he
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { UUID } from '../../../src/models/strings.js'
 import { container } from 'tsyringe'
+import { withProxy } from '../../helper/proxy.js'
 
 describe('on-chain', function () {
   this.timeout(180000)
@@ -21,6 +22,7 @@ describe('on-chain', function () {
 
   withAppAndIndexer(context)
   withIdentitySelfMock()
+  withProxy(node)
 
   beforeEach(async () => await seed())
   afterEach(async () => await cleanup())

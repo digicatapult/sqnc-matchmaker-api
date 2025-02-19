@@ -211,35 +211,6 @@ export class DemandController extends Controller {
 
     return await this.db.getTransactionsByLocalId(query)
   }
-  public async createProxyOnChain(
-    demandId: UUID,
-    userUri: string,
-    proxyAddress: string,
-    proxyType: string,
-    delay: number = 0
-  ): Promise<TransactionResponse> {
-    const [demand] = await this.db.getDemandWithAttachment(demandId, this.dbDemandSubtype)
-    if (!demand) throw new NotFound(this.demandType)
-    if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
-    const extrinsic = await this.node.addProxy(
-      '//Alice',
-      '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy',
-      'RunProcess',
-      0
-    )
-
-    const [transaction] = await this.db.insertTransaction({
-      api_type: this.dbDemandSubtype,
-      transaction_type: 'creation',
-      local_id: demandId,
-      state: 'submitted',
-      hash: extrinsic.hash.toHex(),
-    })
-
-    await this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
-
-    return transaction
-  }
 }
 
 const responseWithAlias = async (

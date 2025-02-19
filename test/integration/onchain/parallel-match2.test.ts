@@ -18,6 +18,7 @@ import {
   verifyMatch2State,
 } from '../../helper/parallelTests.js'
 import Database from '../../../src/lib/db/index.js'
+import { withProxy } from '../../helper/proxy.js'
 
 describe('on-chain parallel', function () {
   this.timeout(180000)
@@ -27,6 +28,7 @@ describe('on-chain parallel', function () {
 
   withAppAndIndexer(context)
   withIdentitySelfMock()
+  withProxy(node)
 
   beforeEach(async () => await seed())
   afterEach(async () => await cleanup())

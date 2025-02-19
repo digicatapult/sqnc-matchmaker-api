@@ -12,8 +12,9 @@ import { pollDemandCommentState, pollDemandState, pollTransactionState } from '.
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import { filterRejectedAndAcceptedPromises } from '../../helper/parallelTests.js'
+import { withProxy } from '../../helper/proxy.js'
 
-describe('on-chain', function () {
+describe.only('on-chain', function () {
   this.timeout(60000)
   const db = new Database()
   const node = container.resolve(ChainNode)
@@ -22,6 +23,7 @@ describe('on-chain', function () {
   withAppAndIndexer(context)
 
   withIdentitySelfMock()
+  withProxy(node)
 
   beforeEach(async function () {
     await seed()
