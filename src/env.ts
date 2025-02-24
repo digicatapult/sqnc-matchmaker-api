@@ -1,12 +1,16 @@
 import * as envalid from 'envalid'
 import dotenv from 'dotenv'
 import { container } from 'tsyringe'
+import { makeValidator } from 'envalid'
 
 if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: 'test/test.env' })
 } else {
   dotenv.config()
 }
+const nullableStr = makeValidator((input: string) => {
+  return input === '' ? null : input
+})
 
 const env = envalid.cleanEnv(process.env, {
   PORT: envalid.port({ default: 3000 }),
@@ -22,7 +26,7 @@ const env = envalid.cleanEnv(process.env, {
   NODE_PORT: envalid.port({ default: 9944 }),
   ENABLE_INDEXER: envalid.bool({ default: true }),
   USER_URI: envalid.str({ devDefault: '//Alice' }),
-  PROXY: envalid.str({ devDefault: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy' }), // needs to be nullable
+  PROXY: nullableStr({ devDefault: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy' }), // needs to be nullable
   IPFS_HOST: envalid.host({ devDefault: 'localhost' }),
   IPFS_PORT: envalid.port({ default: 5001 }),
   WATCHER_POLL_PERIOD_MS: envalid.num({ default: 10 * 1000 }),
