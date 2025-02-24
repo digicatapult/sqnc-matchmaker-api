@@ -7,17 +7,21 @@ import { post, get } from '../../helper/routeHelper.js'
 import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
 import { withIdentitySelfMock } from '../../helper/mock.js'
 import Database, { DemandRow, Match2Row, Transaction } from '../../../src/lib/db/index.js'
-import ChainNode from '../../../src/lib/chainNode.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { UUID } from '../../../src/models/strings.js'
 import { container } from 'tsyringe'
 import { withProxy } from '../../helper/proxy.js'
+import { logger } from '../../../src/lib/logger.js'
+import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
+import env from '../../../src/env.js'
 
 describe('on-chain', function () {
   this.timeout(180000)
   const db = new Database()
-  const node = container.resolve(ChainNode)
+  container.registerInstance(ExtendedChainNode, new ExtendedChainNode(logger, env))
+
+  const node = container.resolve(ExtendedChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)

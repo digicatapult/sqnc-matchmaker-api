@@ -55,15 +55,10 @@ export class DemandController extends Controller {
       alias: string
     }
     if (env.PROXY !== null) {
-      // const sth = await this.identity.getMemberByAddress('//Dave', getAuthorization(req))
-      // console.log(sth)
-      // res = self || (await this.identity.getMemberByAddress(env.PROXY, getAuthorization(req)))
-      // getMemberByAddress(match2.memberB, authorization).then(getAlias)
-      res = { address: env.PROXY, alias: '//Dave' }
+      res = self || (await this.identity.getMemberByAddress(env.PROXY, getAuthorization(req)))
     } else {
       res = self || (await this.identity.getMemberBySelf(getAuthorization(req)))
     }
-
     self = res
     const selfAddress = res.address
     const selfAlias = res.alias

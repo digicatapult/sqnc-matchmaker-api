@@ -14,7 +14,6 @@ import { hexToBs58 } from '../utils/hex.js'
 import { trim0x } from './utils/shared.js'
 import { LoggerToken } from './logger.js'
 import { type Env, EnvToken } from '../env.js'
-import { ProxyRequest } from '../models/proxy.js'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
@@ -56,12 +55,12 @@ type EventData =
 @singleton()
 export default class ChainNode {
   private provider: WsProvider
-  private api: ApiPromise
-  private keyring: Keyring
+  protected api: ApiPromise
+  protected keyring: Keyring
   private logger: Logger
   private userUri: string
   private lastSubmittedNonce: number
-  private mutex = new Mutex()
+  protected mutex = new Mutex()
   private proxyAddress: string | null = null
 
   constructor(@inject(LoggerToken) logger: Logger, @inject(EnvToken) env: Env) {
@@ -241,23 +240,16 @@ export default class ChainNode {
 
           throw new Error(`Unknown node dispatch error: ${dispatchError}`)
         }
-        console.log(result.toHuman())
-        console.log(result.events[0])
-        if (status.isFinalized) {
-          // is there anything sensible I cna check here?
 
+        if (status.isFinalized) {
           const processRanEvent = result.events.find(
             ({ event: { method } }) => method === 'ProxyAdded' || 'ProxyRemoved'
           )
-          console.log(processRanEvent)
           const data = processRanEvent?.event?.data as EventData
-          console.log(data)
-          // const tokens = data?.outputs?.map((x) => x.toNumber())
-          // console.log(tokens)
-
-          // if (!tokens) {
-          //   throw new Error('No token IDs returned')
-          // }
+          // is there anything sensible I can check here?
+          if (!data) {
+            throw new Error('No data returned')
+          }
 
           unsub()
         }
@@ -386,43 +378,5 @@ export default class ChainNode {
       }
       await this.api.rpc.engine.createBlock(createEmpty, finalise)
     }
-  }
-
-  async addProxy({ delegatingAlias, proxyAddress, proxyType, delay = 0 }: ProxyRequest) {
-    // The proxy address (the account you want to set as a proxy for the delegatingAlias provided)
-    // Proxy type (e.g., Any, Governance,RunProcess)
-    // Delay in blocks (typically 0)
-    await this.api.isReady
-    const result = this.api.tx.proxy.addProxy(proxyAddress, proxyType, delay)
-
-    // Send the transaction and wait for confirmation
-    const account = this.keyring.addFromUri(delegatingAlias)
-
-    const nonce = await this.mutex.runExclusive(async () => {
-      const nextTxPoolNonce = (await this.api.rpc.system.accountNextIndex(account.publicKey)).toNumber()
-      const nonce = Math.max(nextTxPoolNonce, this.lastSubmittedNonce + 1)
-      this.lastSubmittedNonce = nonce
-      return nonce
-    })
-
-    const signed = await result.signAsync(account, { nonce })
-    return signed
-  }
-  async removeProxy({ delegatingAlias, proxyAddress, proxyType, delay = 0 }: ProxyRequest) {
-    await this.api.isReady
-    const result = this.api.tx.proxy.removeProxy(proxyAddress, proxyType, delay)
-
-    // Send the transaction and wait for confirmation
-    const account = this.keyring.addFromUri(delegatingAlias)
-
-    const nonce = await this.mutex.runExclusive(async () => {
-      const nextTxPoolNonce = (await this.api.rpc.system.accountNextIndex(account.publicKey)).toNumber()
-      const nonce = Math.max(nextTxPoolNonce, this.lastSubmittedNonce + 1)
-      this.lastSubmittedNonce = nonce
-      return nonce
-    })
-
-    const signed = await result.signAsync(account, { nonce })
-    return signed
   }
 }

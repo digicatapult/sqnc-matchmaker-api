@@ -39,7 +39,7 @@ services:
       - DB_NAME=sqnc-identity-service
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
-      - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY # do not chnage these, only change the env
+      - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-a/protocol/openid-connect
       - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-a/protocol/openid-connect

@@ -4,7 +4,6 @@ import { Express } from 'express'
 import Indexer from '../../../src/lib/indexer/index.js'
 import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
 import { withIdentitySelfMock } from '../../helper/mock.js'
-import ChainNode from '../../../src/lib/chainNode.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import {
@@ -19,11 +18,16 @@ import {
 } from '../../helper/parallelTests.js'
 import Database from '../../../src/lib/db/index.js'
 import { withProxy } from '../../helper/proxy.js'
+import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
+import { logger } from '../../../src/lib/logger.js'
+import env from '../../../src/env.js'
 
 describe('on-chain parallel', function () {
   this.timeout(180000)
   const db = new Database()
-  const node = container.resolve(ChainNode)
+  container.registerInstance(ExtendedChainNode, new ExtendedChainNode(logger, env))
+
+  const node = container.resolve(ExtendedChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)
