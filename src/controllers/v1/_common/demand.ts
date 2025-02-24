@@ -48,8 +48,8 @@ export class DemandController extends Controller {
       throw new BadRequest('Attachment not found')
     }
 
-    // So self should be whoever is actually making this transaction -> which is Bob
-    // so if we have a proxy setup make this Bob so he is also the one who is associated with it in a db
+    // So self should be whoever is actually making this transaction -> which is Dave if there is a PROXY
+    // He is also the one who is associated with it in a db
     let res: {
       address: string
       alias: string

@@ -46,7 +46,7 @@ interface SubstrateToken {
   }
 }
 
-type EventData =
+export type EventData =
   | {
       outputs: u128[]
     }
@@ -57,7 +57,7 @@ export default class ChainNode {
   private provider: WsProvider
   protected api: ApiPromise
   protected keyring: Keyring
-  private logger: Logger
+  protected logger: Logger
   private userUri: string
   private lastSubmittedNonce: number
   protected mutex = new Mutex()
@@ -217,44 +217,6 @@ export default class ChainNode {
       })
     } catch (err) {
       transactionDbUpdate('failed')
-      this.logger.warn(`Error in run process transaction: ${err}`)
-    }
-  }
-
-  async submitRunProcessForProxy(extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>): Promise<void> {
-    try {
-      this.logger.debug('Submitting Transaction %j', extrinsic.hash.toHex())
-      const unsub: () => void = await extrinsic.send((result: SubmittableResult): void => {
-        this.logger.debug('result.status %s', JSON.stringify(result.status))
-
-        const { dispatchError, status } = result
-
-        if (dispatchError) {
-          this.logger.warn('dispatch error %s', dispatchError)
-
-          unsub()
-          if (dispatchError.isModule) {
-            const decoded = this.api.registry.findMetaError(dispatchError.asModule)
-            throw new Error(`Node dispatch error: ${decoded.name}`)
-          }
-
-          throw new Error(`Unknown node dispatch error: ${dispatchError}`)
-        }
-
-        if (status.isFinalized) {
-          const processRanEvent = result.events.find(
-            ({ event: { method } }) => method === 'ProxyAdded' || 'ProxyRemoved'
-          )
-          const data = processRanEvent?.event?.data as EventData
-          // is there anything sensible I can check here?
-          if (!data) {
-            throw new Error('No data returned')
-          }
-
-          unsub()
-        }
-      })
-    } catch (err) {
       this.logger.warn(`Error in run process transaction: ${err}`)
     }
   }

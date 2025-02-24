@@ -59,8 +59,6 @@ services:
       - 9944:9944
       - 9933:9933
     restart: on-failure
-    environment:
-      - RUST_LOG=runtime=debug
 
   ipfs:
     image: ipfs/go-ipfs:v0.33.2

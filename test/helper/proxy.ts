@@ -1,5 +1,5 @@
-import ChainNode from '../../src/lib/chainNode.js'
 import { type ProxyType } from '../../src/models/proxy.js'
+import ExtendedChainNode from './testInstanceChainNode.js'
 
 const proxyReq = {
   delegatingAlias: '//Dave', // e.g. //Alice
@@ -7,7 +7,7 @@ const proxyReq = {
   proxyType: 'RunProcess' as ProxyType, // better way to do this?
   delay: 0,
 }
-export async function setupProxy(node: ChainNode) {
+export async function setupProxy(node: ExtendedChainNode) {
   // Alice is Proxy for Dave == Dave is delegating to Alice
   const extrinsicDave = await node.addProxy(proxyReq)
   await node.submitRunProcessForProxy(extrinsicDave)
@@ -17,14 +17,14 @@ export async function setupProxy(node: ChainNode) {
   // do we need proxys for other personas?
 }
 
-export async function removeProxy(node: ChainNode) {
+export async function removeProxy(node: ExtendedChainNode) {
   const extrinsicDave = await node.removeProxy(proxyReq)
   await node.submitRunProcessForProxy(extrinsicDave)
 
   await node.clearAllTransactions()
 }
 
-export async function withProxy(node: ChainNode) {
+export async function withProxy(node: ExtendedChainNode) {
   before(async function () {
     await removeProxy(node)
     await setupProxy(node)
