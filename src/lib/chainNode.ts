@@ -14,6 +14,7 @@ import { hexToBs58 } from '../utils/hex.js'
 import { trim0x } from './utils/shared.js'
 import { LoggerToken } from './logger.js'
 import { type Env, EnvToken } from '../env.js'
+import { ISubmittableResult } from '@polkadot/types/types'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
@@ -72,7 +73,7 @@ export default class ChainNode {
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.lastSubmittedNonce = -1
-    this.proxyAddress = env.PROXY === null ? null : env.PROXY
+    this.proxyAddress = env.PROXY_FOR === null ? null : env.PROXY_FOR
 
     this.api.isReadyOrError.catch(() => {
       // prevent unhandled promise rejection errors
@@ -154,15 +155,23 @@ export default class ChainNode {
     await this.api.isReady
     //optionally use proxy here
 
-    let extrinsic
+    // let extrinsic
+    // if (this.proxyAddress) {
+    //   extrinsic = this.api.tx.proxy.proxy(
+    //     { id: this.proxyAddress },
+    //     null,
+    //     this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
+    //   )
+    // } else {
+    //   extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
+    // }
+    let extrinsic: SubmittableExtrinsic<'promise', ISubmittableResult> = this.api.tx.utxoNFT.runProcess(
+      process,
+      inputs,
+      fulfilledOutputs
+    )
     if (this.proxyAddress) {
-      extrinsic = this.api.tx.proxy.proxy(
-        { id: this.proxyAddress },
-        null,
-        this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
-      )
-    } else {
-      extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
+      extrinsic = this.api.tx.proxy.proxy({ id: this.proxyAddress }, null, extrinsic)
     }
     const account = this.keyring.addFromUri(this.userUri)
 

@@ -21,6 +21,7 @@ import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
 import env from '../../../env.js'
+import { determineAddress } from '../../../utils/address.js'
 
 let self: { address: string; alias: string } | null = null
 export class DemandController extends Controller {
@@ -50,15 +51,7 @@ export class DemandController extends Controller {
 
     // So self should be whoever is actually making this transaction -> which is Dave if there is a PROXY
     // He is also the one who is associated with it in a db
-    let res: {
-      address: string
-      alias: string
-    }
-    if (env.PROXY !== null) {
-      res = self || (await this.identity.getMemberByAddress(env.PROXY, getAuthorization(req)))
-    } else {
-      res = self || (await this.identity.getMemberBySelf(getAuthorization(req)))
-    }
+    const res = await determineAddress(this.identity, env, req, self)
     self = res
     const selfAddress = res.address
     const selfAlias = res.alias
