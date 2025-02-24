@@ -1,6 +1,6 @@
 services:
   postgres-matchmaker-api:
-    image: postgres:17.3-alpine
+    image: postgres:17.4-alpine
     container_name: postgres-matchmaker-api
     ports:
       - 5432:5432
@@ -12,7 +12,7 @@ services:
       - POSTGRES_DB=sqnc-matchmaker-api
 
   postgres-identity-service:
-    image: postgres:17.3-alpine
+    image: postgres:17.4-alpine
     container_name: postgres-identity
     ports:
       - 5433:5432
