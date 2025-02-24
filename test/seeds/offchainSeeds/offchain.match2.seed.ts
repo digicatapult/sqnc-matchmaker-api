@@ -1,5 +1,5 @@
 import Database from '../../../src/lib/db/index.js'
-import { notSelfAddress, selfAddress } from '../../helper/mock.js'
+import { notSelfAddress, proxyAddress } from '../../helper/mock.js'
 
 const db = new Database().db()
 
@@ -75,7 +75,7 @@ export const match2Seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandBId,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
@@ -100,7 +100,7 @@ export const match2Seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandAId,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_a',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
@@ -140,7 +140,7 @@ export const match2Seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandBMissingTokenId,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
@@ -152,7 +152,7 @@ export const match2Seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandAMissingTokenId,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_a',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
@@ -164,7 +164,7 @@ export const match2Seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandBWithTokenId,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_b',
       state: 'created',
       parameters_attachment_id: parametersAttachmentId,
@@ -178,7 +178,7 @@ export const match2Seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandAWithTokenId,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_a',
       state: 'created',
       parameters_attachment_id: parametersAttachmentId,
@@ -192,7 +192,7 @@ export const match2Seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandBAlreadyAllocated,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_b',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
@@ -204,7 +204,7 @@ export const match2Seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandAAlreadyAllocated,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_a',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
@@ -217,9 +217,9 @@ export const match2Seed = async () => {
     {
       id: seededMatch2Id,
       state: 'pending',
-      optimiser: selfAddress,
-      member_a: selfAddress,
-      member_b: selfAddress,
+      optimiser: proxyAddress,
+      member_a: proxyAddress,
+      member_b: proxyAddress,
       demand_a_id: seededDemandAId,
       demand_b_id: seededDemandBId,
       created_at: exampleDate,
@@ -270,9 +270,9 @@ export const match2Seed = async () => {
     {
       id: seededMatch2WithAllocatedDemands,
       state: 'pending',
-      optimiser: selfAddress,
-      member_a: selfAddress,
-      member_b: selfAddress,
+      optimiser: proxyAddress,
+      member_a: proxyAddress,
+      member_b: proxyAddress,
       demand_a_id: seededDemandAAlreadyAllocated,
       demand_b_id: seededDemandBAlreadyAllocated,
       created_at: exampleDate,
@@ -284,9 +284,9 @@ export const match2Seed = async () => {
     {
       id: seededMatch2AcceptedA,
       state: 'acceptedA',
-      optimiser: selfAddress,
-      member_a: selfAddress,
-      member_b: selfAddress,
+      optimiser: proxyAddress,
+      member_a: proxyAddress,
+      member_b: proxyAddress,
       demand_a_id: seededDemandAId,
       demand_b_id: seededDemandBId,
       created_at: exampleDate,
@@ -299,9 +299,9 @@ export const match2Seed = async () => {
     {
       id: seededMatch2AcceptedFinal,
       state: 'acceptedFinal',
-      optimiser: selfAddress,
-      member_a: selfAddress,
-      member_b: selfAddress,
+      optimiser: proxyAddress,
+      member_a: proxyAddress,
+      member_b: proxyAddress,
       demand_a_id: seededDemandAId,
       demand_b_id: seededDemandBId,
       latest_token_id: seededMatch2TokenId,
@@ -341,9 +341,9 @@ export const match2Seed = async () => {
     {
       id: seededMatch2NotAcceptableA,
       state: 'acceptedB',
-      optimiser: selfAddress,
+      optimiser: proxyAddress,
       member_a: notSelfAddress,
-      member_b: selfAddress,
+      member_b: proxyAddress,
       demand_a_id: seededDemandANotOwnedId,
       demand_b_id: seededDemandBWithTokenId,
       latest_token_id: seededMatch2TokenId,
@@ -357,8 +357,8 @@ export const match2Seed = async () => {
     {
       id: seededMatch2NotAcceptableB,
       state: 'acceptedA',
-      optimiser: selfAddress,
-      member_a: selfAddress,
+      optimiser: proxyAddress,
+      member_a: proxyAddress,
       member_b: notSelfAddress,
       demand_a_id: seededDemandAWithTokenId,
       demand_b_id: seededDemandBNotOwnedId,
@@ -373,7 +373,7 @@ export const match2Seed = async () => {
     {
       id: seededMatch2NotAcceptableBoth,
       state: 'acceptedB',
-      optimiser: selfAddress,
+      optimiser: proxyAddress,
       member_a: notSelfAddress,
       member_b: notSelfAddress,
       demand_a_id: seededDemandANotOwnedId,
@@ -405,7 +405,7 @@ export const match2Seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandAAllocated,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_a',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
@@ -416,7 +416,7 @@ export const match2Seed = async () => {
     },
     {
       id: seededDemandBCrated,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_b',
       state: 'created',
       parameters_attachment_id: parametersAttachmentId,
@@ -427,7 +427,7 @@ export const match2Seed = async () => {
     },
     {
       id: seededDemandACrated,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_a',
       state: 'created',
       parameters_attachment_id: parametersAttachmentId,
@@ -442,9 +442,9 @@ export const match2Seed = async () => {
     {
       id: seededRematch2DemndACreated,
       state: 'acceptedA',
-      optimiser: selfAddress,
-      member_a: selfAddress,
-      member_b: selfAddress,
+      optimiser: proxyAddress,
+      member_a: proxyAddress,
+      member_b: proxyAddress,
       demand_a_id: seededDemandACrated,
       demand_b_id: seededDemandBCrated,
       latest_token_id: seededMatch2TokenId,
@@ -456,9 +456,9 @@ export const match2Seed = async () => {
     {
       id: seededRematch2DemndBAllocated,
       state: 'acceptedA',
-      optimiser: selfAddress,
-      member_a: selfAddress,
-      member_b: selfAddress,
+      optimiser: proxyAddress,
+      member_a: proxyAddress,
+      member_b: proxyAddress,
       demand_a_id: seededDemandAAllocated,
       demand_b_id: seededDemandBAlreadyAllocated,
       latest_token_id: seededMatch2TokenId,
@@ -470,9 +470,9 @@ export const match2Seed = async () => {
     {
       id: seededMatch2Rematch2Accept,
       state: 'acceptedA',
-      optimiser: selfAddress,
-      member_a: selfAddress,
-      member_b: selfAddress,
+      optimiser: proxyAddress,
+      member_a: proxyAddress,
+      member_b: proxyAddress,
       demand_a_id: seededDemandAAllocated,
       demand_b_id: seededDemandBCrated,
       latest_token_id: seededMatch2TokenId,
@@ -484,9 +484,9 @@ export const match2Seed = async () => {
     {
       id: seededMatch2Rematch2AcceptFinal,
       state: 'acceptedA',
-      optimiser: selfAddress,
-      member_a: selfAddress,
-      member_b: selfAddress,
+      optimiser: proxyAddress,
+      member_a: proxyAddress,
+      member_b: proxyAddress,
       demand_a_id: seededDemandAAllocated,
       demand_b_id: seededDemandBCrated,
       latest_token_id: seededMatch2TokenId,

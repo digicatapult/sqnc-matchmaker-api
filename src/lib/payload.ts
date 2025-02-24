@@ -20,22 +20,24 @@ export interface MetadataFile {
 
 export type Metadata = Record<string, { type: string; value: string | number }>
 
-export const demandCreate = (demand: DemandWithAttachmentRow): Payload => ({
-  process: { id: 'demand_create', version: 1 },
-  inputs: [],
-  outputs: [
-    {
-      roles: { owner: demand.owner },
-      metadata: {
-        '@version': { type: 'LITERAL', value: '1' },
-        '@type': { type: 'LITERAL', value: TokenType.DEMAND },
-        state: { type: 'LITERAL', value: 'created' },
-        subtype: { type: 'LITERAL', value: demand.subtype },
-        parameters: { type: 'FILE', value: bs58ToHex(demand.ipfs_hash) },
+export const demandCreate = (demand: DemandWithAttachmentRow): Payload => {
+  return {
+    process: { id: 'demand_create', version: 1 },
+    inputs: [],
+    outputs: [
+      {
+        roles: { owner: demand.owner },
+        metadata: {
+          '@version': { type: 'LITERAL', value: '1' },
+          '@type': { type: 'LITERAL', value: TokenType.DEMAND },
+          state: { type: 'LITERAL', value: 'created' },
+          subtype: { type: 'LITERAL', value: demand.subtype },
+          parameters: { type: 'FILE', value: bs58ToHex(demand.ipfs_hash) },
+        },
       },
-    },
-  ],
-})
+    ],
+  }
+}
 
 export const demandCommentCreate = (demand: DemandRow, comment: AttachmentRow): Payload => ({
   process: { id: 'demand_comment', version: 1 },
