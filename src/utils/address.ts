@@ -13,7 +13,7 @@ export const determineAddress = async (
     address: string
     alias: string
   }
-  if (env.PROXY_FOR !== null) {
+  if (env.PROXY_FOR !== '') {
     res = self || (await identity.getMemberByAddress(env.PROXY_FOR, getAuthorization(req)))
   } else {
     res = self || (await identity.getMemberBySelf(getAuthorization(req)))

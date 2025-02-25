@@ -17,7 +17,7 @@ import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
 import env from '../../../src/env.js'
 import { logger } from '../../../src/lib/logger.js'
 
-describe('on-chain', function () {
+describe('on-chain via proxy', function () {
   this.timeout(80000)
   const db = new Database()
   container.registerInstance(ExtendedChainNode, new ExtendedChainNode(logger, env))
@@ -45,7 +45,7 @@ describe('on-chain', function () {
       const {
         body: { id: demandAId },
       } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
-
+      console.log(demandAId)
       // submit to chain
       const response = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
       expect(response.status).to.equal(201)

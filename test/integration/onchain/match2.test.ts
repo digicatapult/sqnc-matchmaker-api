@@ -16,7 +16,7 @@ import { logger } from '../../../src/lib/logger.js'
 import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
 import env from '../../../src/env.js'
 
-describe('on-chain', function () {
+describe('on-chain via proxy', function () {
   this.timeout(180000)
   const db = new Database()
   container.registerInstance(ExtendedChainNode, new ExtendedChainNode(logger, env))

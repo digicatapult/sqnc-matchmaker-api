@@ -28,7 +28,7 @@ describe('address determination', function () {
     expect(result).to.deep.equal(proxyMember)
   })
   it('should get member by self because proxy is not provided', async function () {
-    const envNoProxy = { ...env, PROXY_FOR: null }
+    const envNoProxy = { ...env, PROXY_FOR: '' }
     const result = await determineAddress(identity, envNoProxy, req)
     expect(result).to.deep.equal(self)
   })
