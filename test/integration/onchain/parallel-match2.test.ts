@@ -56,15 +56,7 @@ describe('on-chain parallel via proxy', function () {
     })
 
     it('should propose many match2s on-chain', async () => {
-      const transactionIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'proposal'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'proposal')
 
       await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
       // Verify local database reflects the 'proposed' state for match2s
@@ -73,43 +65,19 @@ describe('on-chain parallel via proxy', function () {
 
     it('should acceptA then acceptFinal a match2 on-chain', async () => {
       // Submit proposals for match2s
-      const proposalTransactionIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'proposal'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'proposal')
 
       // Verify match2s are in 'proposed' state
       await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
 
       // Submit first accept (acceptA)
-      const acceptATransactionIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'accept')
 
       // Verify match2s are in 'acceptedA' state
       await verifyMatch2State(fulfilledMatch2s, 'acceptedA', db)
 
       // Submit second accept (acceptFinal)
-      const acceptFinalTransactionIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'accept')
 
       // Verify match2s are in 'acceptedFinal' state
       await verifyMatch2State(fulfilledMatch2s, 'acceptedFinal', db)
@@ -125,21 +93,13 @@ describe('on-chain parallel via proxy', function () {
     })
     it('should reject a proposed match2 on-chain', async () => {
       // Propose match2 transactions
-      const proposalIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'proposal'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'proposal')
 
       // Verify match2 proposed state
       await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
 
       // Reject match2 transactions
-      const rejectionIds = await submitAndVerifyTransactions(
+      await submitAndVerifyTransactions(
         context,
         db,
         node,
@@ -159,35 +119,19 @@ describe('on-chain parallel via proxy', function () {
     })
     it('should reject many acceptedA match2s on-chain', async () => {
       // Propose match2 transactions
-      const proposalIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'proposal'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'proposal')
 
       // Verify match2 proposed state
       await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
 
       // Accept match2 transactions
-      const acceptAIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'accept')
 
       // Verify match2 acceptedA state
       await verifyMatch2State(fulfilledMatch2s, 'acceptedA', db)
 
       // Reject match2 transactions
-      const rejectionIds = await submitAndVerifyTransactions(
+      await submitAndVerifyTransactions(
         context,
         db,
         node,
@@ -208,43 +152,19 @@ describe('on-chain parallel via proxy', function () {
 
     it('should cancel many acceptedFinal match2s on-chain', async () => {
       // Propose match2 transactions
-      const proposalIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'proposal'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'proposal')
 
       // Verify match2 proposed state
       await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
 
       // Accept match2 transactions (first acceptance)
-      const acceptAIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'accept')
 
       // Verify match2 acceptedA state
       await verifyMatch2State(fulfilledMatch2s, 'acceptedA', db)
 
       // Accept match2 transactions (final acceptance)
-      const acceptFinalIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'accept')
 
       // Verify match2 acceptedFinal state
       await verifyMatch2State(fulfilledMatch2s, 'acceptedFinal', db)
@@ -257,7 +177,7 @@ describe('on-chain parallel via proxy', function () {
       await verifyMatch2DatabaseState(fulfilledMatch2s, 'acceptedFinal', db)
 
       // Submit cancellation requests
-      const cancellationIds = await submitAndVerifyTransactions(
+      await submitAndVerifyTransactions(
         context,
         db,
         node,
@@ -311,43 +231,19 @@ describe('on-chain parallel via proxy', function () {
     })
     it('should propose a rematch2 on-chain', async () => {
       // Step 1: Propose match2s
-      const transactionIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'proposal'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'proposal')
 
       // Step 2: Verify match2s are proposed
       await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
       await verifyMatch2DatabaseState(fulfilledMatch2s, 'proposed', db)
 
       // Step 3: First acceptance of match2s
-      const responsesAcceptAIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'accept')
 
       await verifyMatch2State(fulfilledMatch2s, 'acceptedA', db)
 
       // Step 4: Final acceptance of match2s
-      const responsesAcceptFinalIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'accept')
 
       await verifyMatch2State(fulfilledMatch2s, 'acceptedFinal', db)
       await verifyDemandState(fulfilledDemandAIds, 'allocated', db)
@@ -365,15 +261,7 @@ describe('on-chain parallel via proxy', function () {
       await node.clearAllTransactions()
 
       // Step 6: Propose rematch2s
-      const proposedRematch2Ids = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        rematch2Ids,
-        'match2',
-        'finalised',
-        'proposal'
-      )
+      await submitAndVerifyTransactions(context, db, node, rematch2Ids, 'match2', 'finalised', 'proposal')
 
       await verifyMatch2State(rematch2Ids, 'proposed', db)
 
@@ -385,40 +273,16 @@ describe('on-chain parallel via proxy', function () {
     })
     it('accepts a rematch2 proposal', async () => {
       // Step 1: Propose match2s
-      const transactionIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'proposal'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'proposal')
 
       // Step 2: Verify match2s are proposed
       await verifyMatch2State(fulfilledMatch2s, 'proposed', db)
       await verifyMatch2DatabaseState(fulfilledMatch2s, 'proposed', db)
 
       // Step 3: First acceptance of match2s
-      const responsesAcceptAIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'accept')
       // Step 4: Final acceptance of match2s
-      const responsesAcceptFinalIds = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        fulfilledMatch2s,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, fulfilledMatch2s, 'match2', 'finalised', 'accept')
       await verifyMatch2State(fulfilledMatch2s, 'acceptedFinal', db)
       await verifyDemandState(fulfilledDemandAIds, 'allocated', db)
       await verifyDemandState(fulfilledDemandBIds, 'allocated', db)
@@ -435,36 +299,12 @@ describe('on-chain parallel via proxy', function () {
       await node.clearAllTransactions()
 
       //submit rematches to chain
-      const proposedRematch2Ids = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        rematch2Ids,
-        'match2',
-        'finalised',
-        'proposal'
-      )
+      await submitAndVerifyTransactions(context, db, node, rematch2Ids, 'match2', 'finalised', 'proposal')
       await verifyMatch2State(rematch2Ids, 'proposed', db)
 
-      const acceptedRematch2Ids = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        rematch2Ids,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, rematch2Ids, 'match2', 'finalised', 'accept')
       await verifyMatch2State(rematch2Ids, 'acceptedA', db)
-      const acceptedFinalRematch2Ids = await submitAndVerifyTransactions(
-        context,
-        db,
-        node,
-        rematch2Ids,
-        'match2',
-        'finalised',
-        'accept'
-      )
+      await submitAndVerifyTransactions(context, db, node, rematch2Ids, 'match2', 'finalised', 'accept')
       await verifyMatch2State(rematch2Ids, 'acceptedFinal', db)
 
       //check status of demands and matches
