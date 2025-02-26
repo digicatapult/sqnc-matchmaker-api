@@ -204,16 +204,9 @@ export default class Indexer {
     const header = await this.node.getHeader(blockHash)
     await this.db.withTransaction(async (db) => {
       if (header.height === 1) {
-        await db.insertProcessedBlock({
-          hash: header.parent,
-          height: '0',
-          parent: header.parent,
-        })
+        await db.insertProcessedBlock({ hash: header.parent, height: '0', parent: header.parent })
       }
-      await db.insertProcessedBlock({
-        ...header,
-        height: `${header.height}`,
-      })
+      await db.insertProcessedBlock({ ...header, height: `${header.height}` })
 
       if (changeSet.attachments) {
         for (const [, demand] of changeSet.attachments) {
@@ -300,11 +293,7 @@ export const getStatus = async (
     // if we started less than 30s ago -> PASS
     return {
       status: serviceState.UP,
-      detail: {
-        message: 'Service healthy. Starting up.',
-        startupTime: startupTime,
-        latestActivityTime: currentDate,
-      },
+      detail: { message: 'Service healthy. Starting up.', startupTime: startupTime, latestActivityTime: currentDate },
     }
   }
   const latestActivityTime = lastProcessedBlockTime || lastUnprocessedBlockTime
@@ -333,10 +322,6 @@ export const getStatus = async (
     : `Last activity was more than 30s ago. Last learned of block: ${lastUnprocessedBlockTime}`
   return {
     status: serviceState.DOWN,
-    detail: {
-      message: errMessage,
-      startupTime: startupTime,
-      latestActivityTime: latestActivityTime,
-    },
+    detail: { message: errMessage, startupTime: startupTime, latestActivityTime: latestActivityTime },
   }
 }
