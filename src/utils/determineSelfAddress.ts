@@ -4,7 +4,6 @@ import Identity from '../lib/services/identity.js'
 import { getAuthorization } from '../lib/utils/shared.js'
 import { inject, singleton } from 'tsyringe'
 
-// make this a class where self becomes data on the class and make it dependency injectable
 @singleton()
 export class AddressResolver {
   private self: { address: string; alias: string } | null = null
