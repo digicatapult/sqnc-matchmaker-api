@@ -14,14 +14,7 @@ import { logger } from './lib/logger.js'
   if (env.ENABLE_INDEXER) {
     const node = container.resolve(ChainNode)
     container.register<Indexer>('Indexer', {
-      useFactory: () =>
-        new Indexer({
-          db: new Database(),
-          logger,
-          node,
-          startupTime: new Date(),
-          env: env,
-        }),
+      useValue: new Indexer({ db: new Database(), logger, node, startupTime: new Date(), env: env }),
     })
     const indexer = container.resolve<Indexer>('Indexer')
 
