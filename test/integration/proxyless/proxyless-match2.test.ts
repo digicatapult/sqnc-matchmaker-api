@@ -12,8 +12,9 @@ import { pollDemandState, pollMatch2State, pollTransactionState } from '../../he
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { UUID } from '../../../src/models/strings.js'
 import { container } from 'tsyringe'
+import env from '../../../src/env.js'
 
-describe('on-chain', function () {
+describe('on-chain proxyless', function () {
   this.timeout(180000)
   const db = new Database()
   const node = container.resolve(ChainNode)
@@ -86,6 +87,9 @@ describe('on-chain', function () {
         match2: match2Id,
         newDemandB: newDemandBId,
       }
+    })
+    it('ensure we are not using proxy', () => {
+      expect(env.PROXY_FOR).to.equal('')
     })
 
     it('should propose a match2 on-chain', async () => {

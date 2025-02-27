@@ -154,17 +154,6 @@ export default class ChainNode {
 
     await this.api.isReady
     //optionally use proxy here
-
-    // let extrinsic
-    // if (this.proxyAddress) {
-    //   extrinsic = this.api.tx.proxy.proxy(
-    //     { id: this.proxyAddress },
-    //     null,
-    //     this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
-    //   )
-    // } else {
-    //   extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
-    // }
     let extrinsic: SubmittableExtrinsic<'promise', ISubmittableResult> = this.api.tx.utxoNFT.runProcess(
       process,
       inputs,

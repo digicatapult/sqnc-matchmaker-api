@@ -44,8 +44,7 @@ import {
 import ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
-import env from '../../../env.js'
-import { determineAddress } from '../../../utils/address.js'
+import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 
 @Route('v1/match2')
 @injectable()
@@ -57,7 +56,8 @@ export class Match2Controller extends Controller {
 
   constructor(
     private identity: Identity,
-    private node: ChainNode
+    private node: ChainNode,
+    private addressResolver: AddressResolver
   ) {
     super()
     this.log = logger.child({ controller: '/match2' })
@@ -89,7 +89,7 @@ export class Match2Controller extends Controller {
       state: 'created',
     })
 
-    const { address: selfAddress } = await determineAddress(this.identity, env, req)
+    const { address: selfAddress } = await this.addressResolver.determineSelfAddress(req)
 
     if (replaces) {
       const [originalMatch2]: Match2Row[] = await this.db.getMatch2(replaces)
@@ -265,7 +265,7 @@ export class Match2Controller extends Controller {
     validatePreOnChain(demandB, 'DemandB', { subtype: 'demand_b', state: 'created' })
     const [oldMatch2]: Match2Row[] = match2.replaces ? await this.db.getMatch2(match2.replaces) : []
 
-    const { address: selfAddress } = await determineAddress(this.identity, env, req)
+    const { address: selfAddress } = await this.addressResolver.determineSelfAddress(req)
     const ownsDemandA = demandA.owner === selfAddress
     const ownsDemandB = demandB.owner === selfAddress
 
@@ -409,7 +409,7 @@ export class Match2Controller extends Controller {
 
     const roles = [match2.memberA, match2.memberB]
 
-    const { address: selfAddress } = await determineAddress(this.identity, env, req)
+    const { address: selfAddress } = await this.addressResolver.determineSelfAddress(req)
 
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
     if (match2.state !== 'acceptedFinal') throw new BadRequest('Match2 state must be acceptedFinal')
@@ -490,7 +490,7 @@ export class Match2Controller extends Controller {
 
     const roles = [match2.memberA, match2.memberB, match2.optimiser]
 
-    const { address: selfAddress } = await determineAddress(this.identity, env, req)
+    const { address: selfAddress } = await this.addressResolver.determineSelfAddress(req)
     if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
 
     const rejectableStates: Match2State[] = ['proposed', 'acceptedA', 'acceptedB']

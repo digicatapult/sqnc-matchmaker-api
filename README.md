@@ -100,11 +100,17 @@ npm run flows
 Integration tests are then executed by calling:
 
 ```sh
-npm run test
+npm run test:onchain
+```
+
+and
+
+```sh
+npm run test:offchain
 ```
 
 All tests above are run with a proxy.
-If you want to run oncahin tests for proxyless transactions, run:
+If you want to run onchain tests for proxyless transactions, run:
 
 ```sh
 npm run test:proxyless

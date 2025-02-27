@@ -12,8 +12,9 @@ import ChainNode from '../../../src/lib/chainNode.js'
 import { pollTransactionState, pollDemandState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
+import env from '../../../src/env.js'
 
-describe('on-chain', function () {
+describe('on-chain proxyless', function () {
   this.timeout(80000)
   const db = new Database()
   const node = container.resolve(ChainNode)
@@ -33,6 +34,9 @@ describe('on-chain', function () {
   })
 
   describe('demandA', () => {
+    it('ensure we are not using proxy', () => {
+      expect(env.PROXY_FOR).to.equal('')
+    })
     it('creates an demandA on chain', async () => {
       const lastTokenId = await node.getLastTokenId()
       const {
