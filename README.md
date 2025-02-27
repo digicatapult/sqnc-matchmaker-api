@@ -103,6 +103,13 @@ Integration tests are then executed by calling:
 npm run test
 ```
 
+All tests above are run with a proxy.
+If you want to run oncahin tests for proxyless transactions, run:
+
+```sh
+npm run test:proxyless
+```
+
 ## Process Flows
 
 To ensure integrity of data within transactions (and therefore on chain), it's possible to define custom processes that validate transactions. [More info](https://github.com/digicatapult/sqnc-documentation/blob/main/docs/tokenModels/guardRails.md).
