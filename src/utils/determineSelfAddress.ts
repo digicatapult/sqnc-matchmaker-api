@@ -15,7 +15,7 @@ export class AddressResolver {
     this.proxyFor = env.PROXY_FOR
   }
 
-  public async determineSelfAddress(req: express.Request) {
+  async determineSelfAddress(req: express.Request) {
     let res: { address: string; alias: string }
     if (this.proxyFor !== '') {
       res = this.self || (await this.identity.getMemberByAddress(this.proxyFor, getAuthorization(req)))
