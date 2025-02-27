@@ -43,7 +43,6 @@ services:
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-a/protocol/openid-connect
       - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-a/protocol/openid-connect
-      - PROXY_FOR=5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy
 
   sqnc-node:
     image: digicatapult/sqnc-node:latest

@@ -26,7 +26,7 @@ jobs:
       docker_compose_file: './docker-compose-test.yml'
       npm_build_command: 'npm run build:tsoa'
       pre_test_command: 'npm run db:migrate && npm run flows'
-      tests: '["test:onchain"]'
+      tests: '["test:onchain","test:proxyless"]'
   build-docker:
     uses: digicatapult/shared-workflows/.github/workflows/build-docker.yml@main
     permissions:

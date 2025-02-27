@@ -45,7 +45,6 @@ describe('on-chain via proxy', function () {
       const {
         body: { id: demandAId },
       } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
-      console.log(demandAId)
       // submit to chain
       const response = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
       expect(response.status).to.equal(201)

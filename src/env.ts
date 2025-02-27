@@ -4,6 +4,8 @@ import { container } from 'tsyringe'
 
 if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: 'test/test.env' })
+} else if (process.env.NODE_ENV === 'proxyless') {
+  dotenv.config({ path: 'test/proxyless.test.env' })
 } else {
   dotenv.config()
 }
