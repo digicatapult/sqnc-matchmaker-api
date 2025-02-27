@@ -1,5 +1,6 @@
+import env from '../../../src/env.js'
 import Database from '../../../src/lib/db/index.js'
-import { notSelfAddress, selfAddress } from '../../helper/mock.js'
+import { notSelfAddress, proxyAddress, selfAddress } from '../../helper/mock.js'
 
 const db = new Database().db()
 
@@ -66,7 +67,7 @@ export const seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandBId,
-      owner: selfAddress,
+      owner: env.PROXY_FOR === '' ? selfAddress : proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
@@ -92,7 +93,7 @@ export const seed = async () => {
   await db.demand().insert([
     {
       id: seededDemandBWithTokenId,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_b',
       state: 'created',
       parameters_attachment_id: parametersAttachmentId,
@@ -109,7 +110,7 @@ export const seed = async () => {
       state: 'acceptedB',
       optimiser: selfAddress,
       member_a: notSelfAddress,
-      member_b: selfAddress,
+      member_b: proxyAddress,
       demand_a_id: seededDemandANotOwnedId,
       demand_b_id: seededDemandBWithTokenId,
       latest_token_id: seededMatch2TokenId,

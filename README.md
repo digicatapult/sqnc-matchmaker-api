@@ -37,6 +37,7 @@ Use a `.env` at root of the repository to set values for the environment variabl
 | IDP_INTERNAL_URL_PREFIX |    Y     |           -            | URL prefix to apply to access the IDP endpoints from within the Sequence deployment's network                                                         |
 | IDP_TOKEN_PATH          |    N     |        `/token`        | Path to append to the appropriate prefix to determine the OAuth2 token endpoint                                                                       |
 | IDP_JWKS_PATH           |    N     |        `/certs`        | Path to append to the appropriate prefix to determine the OAuth2 JWKS endpoint                                                                        |
+| PROXY_FOR               |    N     |           ''           | This is the ss58 address that transactions will be performed as. (who we are performing the transaction on behalf of)                                 |
 
 ## Getting started
 
@@ -99,7 +100,20 @@ npm run flows
 Integration tests are then executed by calling:
 
 ```sh
-npm run test
+npm run test:onchain
+```
+
+and
+
+```sh
+npm run test:offchain
+```
+
+All tests above are run with a proxy.
+If you want to run onchain tests for proxyless transactions, run:
+
+```sh
+npm run test:proxyless
 ```
 
 ## Process Flows

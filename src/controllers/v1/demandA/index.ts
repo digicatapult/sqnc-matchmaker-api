@@ -28,14 +28,15 @@ import { TransactionResponse } from '../../../models/transaction.js'
 import { DemandController } from '../_common/demand.js'
 import Identity from '../../../lib/services/identity.js'
 import ChainNode from '../../../lib/chainNode.js'
+import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 
 @Route('v1/demandA')
 @injectable()
 @Tags('demandA')
 @Security('oauth2')
 export class DemandAController extends DemandController {
-  constructor(identity: Identity, node: ChainNode) {
-    super('demandA', identity, node)
+  constructor(identity: Identity, node: ChainNode, addressResolver: AddressResolver) {
+    super('demandA', identity, node, addressResolver)
   }
 
   /**

@@ -14,6 +14,7 @@ import { hexToBs58 } from '../utils/hex.js'
 import { trim0x } from './utils/shared.js'
 import { LoggerToken } from './logger.js'
 import { type Env, EnvToken } from '../env.js'
+import { ISubmittableResult } from '@polkadot/types/types'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
@@ -46,7 +47,7 @@ interface SubstrateToken {
   }
 }
 
-type EventData =
+export type EventData =
   | {
       outputs: u128[]
     }
@@ -55,12 +56,13 @@ type EventData =
 @singleton()
 export default class ChainNode {
   private provider: WsProvider
-  private api: ApiPromise
-  private keyring: Keyring
-  private logger: Logger
+  protected api: ApiPromise
+  protected keyring: Keyring
+  protected logger: Logger
   private userUri: string
   private lastSubmittedNonce: number
-  private mutex = new Mutex()
+  protected mutex = new Mutex()
+  private proxyAddress: string | null = null
 
   constructor(@inject(LoggerToken) logger: Logger, @inject(EnvToken) env: Env) {
     this.logger = logger.child({ module: 'ChainNode' })
@@ -71,6 +73,7 @@ export default class ChainNode {
     this.api = new ApiPromise({ provider: this.provider })
     this.keyring = new Keyring({ type: 'sr25519' })
     this.lastSubmittedNonce = -1
+    this.proxyAddress = env.PROXY_FOR === null ? null : env.PROXY_FOR
 
     this.api.isReadyOrError.catch(() => {
       // prevent unhandled promise rejection errors
@@ -150,7 +153,15 @@ export default class ChainNode {
     this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, fulfilledOutputs)
 
     await this.api.isReady
-    const extrinsic = this.api.tx.utxoNFT.runProcess(process, inputs, fulfilledOutputs)
+    //optionally use proxy here
+    let extrinsic: SubmittableExtrinsic<'promise', ISubmittableResult> = this.api.tx.utxoNFT.runProcess(
+      process,
+      inputs,
+      fulfilledOutputs
+    )
+    if (this.proxyAddress) {
+      extrinsic = this.api.tx.proxy.proxy({ id: this.proxyAddress }, null, extrinsic)
+    }
     const account = this.keyring.addFromUri(this.userUri)
 
     const nonce = await this.mutex.runExclusive(async () => {

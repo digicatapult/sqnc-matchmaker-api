@@ -4,6 +4,8 @@ import { container } from 'tsyringe'
 
 if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: 'test/test.env' })
+} else if (process.env.NODE_ENV === 'proxyless') {
+  dotenv.config({ path: 'test/proxyless.test.env' })
 } else {
   dotenv.config()
 }
@@ -22,6 +24,7 @@ const env = envalid.cleanEnv(process.env, {
   NODE_PORT: envalid.port({ default: 9944 }),
   ENABLE_INDEXER: envalid.bool({ default: true }),
   USER_URI: envalid.str({ devDefault: '//Alice' }),
+  PROXY_FOR: envalid.str({ devDefault: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy' }), // Default Dave
   IPFS_HOST: envalid.host({ devDefault: 'localhost' }),
   IPFS_PORT: envalid.port({ default: 5001 }),
   WATCHER_POLL_PERIOD_MS: envalid.num({ default: 10 * 1000 }),

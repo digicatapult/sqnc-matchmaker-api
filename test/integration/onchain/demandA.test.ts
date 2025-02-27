@@ -8,21 +8,28 @@ import { seed, cleanup, parametersAttachmentId, seededDemandAId } from '../../se
 
 import { selfAddress, withIdentitySelfMock } from '../../helper/mock.js'
 import Database, { DemandRow } from '../../../src/lib/db/index.js'
-import ChainNode from '../../../src/lib/chainNode.js'
 import { pollTransactionState, pollDemandState, pollDemandCommentState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import { filterRejectedAndAcceptedPromises } from '../../helper/parallelTests.js'
+import { withProxy } from '../../helper/proxy.js'
+import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
+import env from '../../../src/env.js'
+import { logger } from '../../../src/lib/logger.js'
 
 describe('on-chain', function () {
   this.timeout(80000)
   const db = new Database()
-  const node = container.resolve(ChainNode)
+  container.registerInstance(ExtendedChainNode, new ExtendedChainNode(logger, env))
+
+  const node = container.resolve(ExtendedChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)
 
   withIdentitySelfMock()
+
+  withProxy(node)
 
   beforeEach(async function () {
     await seed()
@@ -38,7 +45,6 @@ describe('on-chain', function () {
       const {
         body: { id: demandAId },
       } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
-
       // submit to chain
       const response = await post(context.app, `/v1/demandA/${demandAId}/creation`, {})
       expect(response.status).to.equal(201)

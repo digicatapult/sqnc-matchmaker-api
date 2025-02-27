@@ -2,7 +2,9 @@ import { MockAgent, setGlobalDispatcher, getGlobalDispatcher, Dispatcher } from 
 import env from '../../src/env.js'
 
 export const selfAlias = 'test-self'
+export const proxyAlias = '//Dave'
 export const selfAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+export const proxyAddress = '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy'
 export const notSelfAlias = 'test-not-self'
 export const notSelfAddress = '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty'
 
@@ -27,12 +29,12 @@ export function withIdentitySelfMock() {
 
     mockIdentity
       .intercept({
-        path: `/v1/members/${selfAddress}`,
+        path: `/v1/members/${proxyAddress}`,
         method: 'GET',
       })
       .reply(200, {
-        alias: selfAlias,
-        address: selfAddress,
+        alias: proxyAlias,
+        address: proxyAddress,
       })
       .persist()
 

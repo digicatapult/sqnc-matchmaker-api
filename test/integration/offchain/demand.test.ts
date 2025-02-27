@@ -24,7 +24,7 @@ import {
   seededDemandBAlreadyAllocated,
 } from '../../seeds/offchainSeeds/demand.seed.js'
 
-import { selfAlias, withIdentitySelfMock } from '../../helper/mock.js'
+import { proxyAlias, withIdentitySelfMock } from '../../helper/mock.js'
 import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
 
 const runDemandTests = (demandType: 'demandA' | 'demandB') => {
@@ -70,7 +70,7 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(responseRest).to.deep.equal({
           parametersAttachmentId,
           state: 'pending',
-          owner: selfAlias,
+          owner: proxyAlias,
         })
       })
 
@@ -79,14 +79,14 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(response.status).to.equal(200)
         expect(response.body).to.deep.equal({
           id: seededDemandId,
-          owner: selfAlias,
+          owner: proxyAlias,
           state: 'pending',
           parametersAttachmentId,
           comments: [
             {
               attachmentId: parametersAttachmentId,
               createdAt: exampleDate,
-              owner: selfAlias,
+              owner: proxyAlias,
             },
           ],
           createdAt: exampleDate,
@@ -101,7 +101,7 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(body.find(({ id }: { id: string }) => id === seededDemandId)).to.deep.equal({
           createdAt: exampleDate,
           id: seededDemandId,
-          owner: selfAlias,
+          owner: proxyAlias,
           parametersAttachmentId: parametersAttachmentId,
           state: 'pending',
           updatedAt: exampleDate,

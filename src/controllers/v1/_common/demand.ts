@@ -20,8 +20,8 @@ import ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
+import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 
-let self: { address: string; alias: string } | null = null
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
   dbDemandSubtype: 'demand_a' | 'demand_b'
@@ -31,7 +31,8 @@ export class DemandController extends Controller {
   constructor(
     demandType: 'demandA' | 'demandB',
     private identity: Identity,
-    private node: ChainNode
+    private node: ChainNode,
+    private addressResolver: AddressResolver
   ) {
     super()
     this.demandType = demandType
@@ -47,8 +48,9 @@ export class DemandController extends Controller {
       throw new BadRequest('Attachment not found')
     }
 
-    const res = self || (await this.identity.getMemberBySelf(getAuthorization(req)))
-    self = res
+    // So self should be whoever is actually making this transaction -> which is Dave if there is a PROXY_FOR env (because then Alice is a proxy for Dave)
+    // He is also the one who is associated with it in a db
+    const res = await this.addressResolver.determineSelfAddress(req)
     const selfAddress = res.address
     const selfAlias = res.alias
 
