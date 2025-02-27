@@ -8,12 +8,11 @@ import { withIdentityMock } from './helpers/mockIdentity.js'
 
 describe('address determination', function () {
   withIdentityMock()
-  //   const identity = new Identity()
   const self = { address: 'self-address', alias: 'self-alias' }
   const proxyMember = { address: 'proxy-address', alias: 'proxy-alias' }
   const identity = {
-    getMemberByAddress: async (address: string, auth: string) => proxyMember,
-    getMemberBySelf: async (auth: string) => self,
+    getMemberByAddress: async () => proxyMember,
+    getMemberBySelf: async () => self,
   } as unknown as Identity
   const req = { headers: { authorization: 'dummy-token' } } as express.Request
 
