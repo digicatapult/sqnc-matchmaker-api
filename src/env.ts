@@ -24,7 +24,7 @@ const env = envalid.cleanEnv(process.env, {
   NODE_PORT: envalid.port({ default: 9944 }),
   ENABLE_INDEXER: envalid.bool({ default: true }),
   USER_URI: envalid.str({ devDefault: '//Alice' }),
-  PROXY_FOR: envalid.str({ devDefault: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy' }), // Default Dave
+  PROXY_FOR: envalid.str({ devDefault: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty' }), // Default Bob (NOTE: you need to manually set up the proxy on chain, if you don't want to use this feature, set to '')
   IPFS_HOST: envalid.host({ devDefault: 'localhost' }),
   IPFS_PORT: envalid.port({ default: 5001 }),
   WATCHER_POLL_PERIOD_MS: envalid.num({ default: 10 * 1000 }),
