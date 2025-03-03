@@ -62,6 +62,13 @@ services:
     image: ipfs/go-ipfs:v0.33.2
     container_name: ipfs
     environment:
+      - IPFS_LOGGING=debug
+      - IPFS_TRACING=true
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_SERVICE_NAME=ipfs
+      - GRPC_INSECURE=true
       - |
         IPFS_SWARM_KEY=/key/swarm/psk/1.0.0/
         /base16/
@@ -70,6 +77,11 @@ services:
       - 4001:4001
       - 8080:8080
       - 5001:5001
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.1.2
@@ -91,11 +103,11 @@ services:
     ports:
       - 4318:4318
       - 4317:4317
-      - 6831:6831/udp # Port for receiving traces over UDP
-      - 16686:16686 # Port for accessing the Jaeger UI
-      - 14250:14250 # Port for gRPC traces
-      - 14268:14268 # Port for HTTP traces
-      - 5778:5778 # Port for configuration service
+      - 6831:6831/udp
+      - 16686:16686
+      - 14250:14250
+      - 14268:14268
+      - 5778:5778
     environment:
       - COLLECTOR_OTLP_ENABLED=true
     scale: 0
