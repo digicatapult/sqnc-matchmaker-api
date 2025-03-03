@@ -54,6 +54,21 @@ npm run flows
 npm run dev
 ```
 
+If you want to see telemetry (this brings up jaeger and exports logs to it)
+
+```sh
+# start dependencies with
+docker compose up -d --build --scale jaeger=1
+# install packages
+npm i
+# run migrations
+npm run db:migrate
+# put process flows on-chain
+npm run flows
+# start service in dev mode. In order to start in full - npm start"
+npm run dev:telemetry
+```
+
 View OpenAPI documentation for all routes with Swagger:
 
 ```
