@@ -54,6 +54,8 @@ npm run flows
 npm run dev
 ```
 
+(Note: If `PROXY_FOR` env is set -> set up proxy manually in chain.)
+
 If you want to see telemetry (this brings up jaeger and exports logs to it)
 
 ```sh
