@@ -115,13 +115,13 @@ npm run flows
 Integration tests are then executed by calling (tests are set up in a way where we are a proxy for Dave by default):
 
 ```sh
-PROXY_FOR=5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy npm run test:onchain
+npm run test:onchain
 ```
 
 and
 
 ```sh
-PROXY_FOR=5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy npm run test:offchain
+npm run test:offchain
 ```
 
 All tests above are run with a proxy.
