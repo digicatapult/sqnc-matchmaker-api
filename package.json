@@ -12,6 +12,7 @@
     "build": "tsoa spec-and-routes && swc ./src -d ./build --strip-leading-paths --copy-files",
     "start": "node build/index.js",
     "dev": "concurrently \"NODE_ENV=dev nodemon | pino-colada\" \"nodemon -x tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json\"",
+    "dev:telemetry": "concurrently -k \"NODE_ENV=dev NODE_OPTIONS='--require @opentelemetry/auto-instrumentations-node/register' GRPC_INSECURE=true OTEL_SERVICE_NAME='sqnc-matchmaker-api' OTEL_EXPORTER_OTLP_TRACES_PROTOCOL='grpc' OTEL_EXPORTER_OTLP_TRACES_ENDPOINT='http://localhost:4317' OTEL_TRACES_EXPORTER='otlp' OTEL_PROPAGATORS='tracecontext,baggage' nodemon | pino-colada\" \"nodemon -x tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json\"",
     "test:offchain": "NODE_ENV=test ./node_modules/.bin/mocha --config ./test/mocharc.json ./test/integration/offchain/*.test.ts",
     "test:onchain": "NODE_ENV=test ./node_modules/.bin/mocha --config ./test/mocharc.json ./test/integration/onchain/*.test.ts",
     "test:proxyless": "NODE_ENV=proxyless ./node_modules/.bin/mocha --config ./test/mocharc.json ./test/integration/proxyless/*.test.ts",
@@ -77,6 +78,8 @@
   },
   "dependencies": {
     "@digicatapult/tsoa-oauth-express": "^0.1.100",
+    "@grpc/grpc-js": "^1.12.6",
+    "@opentelemetry/auto-instrumentations-node": "^0.56.1",
     "@polkadot/api": "^15.6.1",
     "@tsoa/runtime": "^6.6.0",
     "async-mutex": "^0.5.0",
