@@ -10,8 +10,13 @@ services:
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - OTEL_TRACES_EXPORTER=otlp
-      - OTEL_SERVICE_NAME=ipfs
       - GRPC_INSECURE=true
+      - OTEL_PROPAGATORS='tracecontext,baggage'
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
   keycloak:
     extends:
       file: docker-compose.yml
@@ -20,6 +25,18 @@ services:
       - KC_TRACING_ENABLED=true
       - KC_TRACING_ENDPOINT=http://jaeger:4317
       - OTEL_PROPAGATORS=tracecontext,baggage
+  sqnc-identity-service:
+    extends:
+      file: docker-compose.yml
+      service: sqnc-identity-service
+    environment:
+      - NODE_OPTIONS=--require @opentelemetry/auto-instrumentations-node/register
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_SERVICE_NAME=sqnc-identity-service
+      - GRPC_INSECURE=true
+      - OTEL_PROPAGATORS='tracecontext,baggage'
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger

@@ -25,7 +25,7 @@ services:
 
   sqnc-identity-service:
     image: digicatapult/sqnc-identity-service:latest
-    container_name: identity-service
+    container_name: sqnc-identity-service
     command: /bin/sh -c "
       sleep 30 &&
       npm run db:migrate &&
@@ -70,11 +70,6 @@ services:
       - 4001:4001
       - 8080:8080
       - 5001:5001
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.1.2
