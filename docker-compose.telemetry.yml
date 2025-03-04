@@ -5,11 +5,13 @@ services:
       file: docker-compose.yml
       service: ipfs
     environment:
+      - NODE_OPTIONS=--require @opentelemetry/auto-instrumentations-node/register
       - IPFS_LOGGING=info
       - IPFS_TRACING=true
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_SERVICE_NAME=sqnc-ipfs
       - GRPC_INSECURE=true
       - OTEL_PROPAGATORS='tracecontext,baggage'
     logging:
