@@ -56,6 +56,21 @@ npm run dev
 
 (Note: If `PROXY_FOR` env is set -> set up proxy manually in chain.)
 
+If you want to see telemetry (this brings up jaeger and exports logs to it)
+
+```sh
+# start dependencies with
+docker-compose -f ./docker-compose.yml -f ./docker-compose.telemetry.yml up -d
+# install packages
+npm i
+# run migrations
+npm run db:migrate
+# put process flows on-chain
+npm run flows
+# start service in dev mode. In order to start in full - npm start"
+npm run dev:telemetry
+```
+
 View OpenAPI documentation for all routes with Swagger:
 
 ```
