@@ -8,4 +8,6 @@ ignores: [
   'ts-node',
   '@polkadot/util-crypto',
   '@polkadot/types',
+  '@grpc/grpc-js',
+  '@opentelemetry/auto-instrumentations-node',
 ]
