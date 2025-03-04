@@ -58,7 +58,7 @@ If you want to see telemetry (this brings up jaeger and exports logs to it)
 
 ```sh
 # start dependencies with
-docker compose up -d --build --scale jaeger=1
+docker-compose -f ./docker-compose.yml -f ./docker-compose.telemetry.yml up -d
 # install packages
 npm i
 # run migrations

@@ -62,13 +62,6 @@ services:
     image: ipfs/go-ipfs:v0.33.2
     container_name: ipfs
     environment:
-      - IPFS_LOGGING=info
-      - IPFS_TRACING=true
-      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
-      - OTEL_TRACES_EXPORTER=otlp
-      - OTEL_SERVICE_NAME=ipfs
-      - GRPC_INSECURE=true
       - |
         IPFS_SWARM_KEY=/key/swarm/psk/1.0.0/
         /base16/
@@ -89,28 +82,11 @@ services:
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_TRACING_ENABLED=true
-      - KC_TRACING_ENDPOINT=http://jaeger:4317
-      - OTEL_PROPAGATORS=tracecontext,baggage
     ports:
       - 3080:8080
     volumes:
       - ./docker/keycloak:/opt/keycloak/data/import
     command: start-dev --import-realm
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: jaeger
-    ports:
-      - 4318:4318
-      - 4317:4317
-      - 6831:6831/udp
-      - 16686:16686
-      - 14250:14250
-      - 14268:14268
-      - 5778:5778
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
-    scale: 0
 
 volumes:
   matchmaker-api-storage:
