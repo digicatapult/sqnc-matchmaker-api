@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/sqnc-matchmaker-api",
-  "version": "4.0.46",
+  "version": "4.0.47",
   "description": "An OpenAPI Matchmaking API service for SQNC",
   "main": "src/index.ts",
   "type": "module",
@@ -74,7 +74,7 @@
     "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
-    "undici": "^7.4.0"
+    "undici": "^7.5.0"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.13.0",
