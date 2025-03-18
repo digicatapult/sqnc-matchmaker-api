@@ -5,17 +5,19 @@ import { expect } from 'chai'
 import Indexer from '../../../src/lib/indexer/index.js'
 import { cleanup, seededDemandBId } from '../../seeds/onchainSeeds/transaction.seed.js'
 import { withIdentitySelfMock } from '../../helper/mock.js'
-import Database from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
 import { pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
+import Database from '../../../src/lib/db/index.js'
+import { registerContainerInstances } from '../../helper/registerContainerInstances.js'
 
 describe('on-chain', function () {
   this.timeout(60000)
-
-  const db = new Database()
+  registerContainerInstances()
+  const db = container.resolve(Database)
   const node = container.resolve(ChainNode)
+
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)

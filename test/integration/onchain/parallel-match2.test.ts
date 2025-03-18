@@ -16,18 +16,16 @@ import {
   verifyMatch2DatabaseState,
   verifyMatch2State,
 } from '../../helper/parallelTests.js'
-import Database from '../../../src/lib/db/index.js'
 import { withProxy } from '../../helper/proxy.js'
 import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
 import { logger } from '../../../src/lib/logger.js'
 import env from '../../../src/env.js'
+import Database from '../../../src/lib/db/index.js'
 
 describe('on-chain parallel', function () {
   this.timeout(180000)
-  const db = new Database()
-  container.registerInstance(ExtendedChainNode, new ExtendedChainNode(logger, env))
-
-  const node = container.resolve(ExtendedChainNode)
+  const db = container.resolve(Database)
+  const node = new ExtendedChainNode(logger, env)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)

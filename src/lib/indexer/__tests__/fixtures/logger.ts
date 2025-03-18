@@ -8,9 +8,14 @@ export const withMockLogger = () => {
     info: sinon.stub(),
     warn: sinon.stub(),
     error: sinon.stub(),
+    fatal: sinon.stub(),
+    child: sinon.stub(),
   }
 
-  return {
-    child: sinon.stub().returns(inner),
-  } as unknown as Logger
+  // return {
+  //   child: sinon.stub().returns(inner),
+  // } as unknown as Logger
+  inner.child.returns(inner)
+
+  return inner as unknown as Logger
 }

@@ -16,8 +16,10 @@ import {
   seededDemandAId,
   seededDemandACommentTransactionId2,
 } from '../../seeds/offchainSeeds/transaction.seed.js'
+import { registerContainerInstances } from '../../helper/registerContainerInstances.js'
 
 describe('transaction', () => {
+  registerContainerInstances()
   let app: Express
 
   before(async function () {

@@ -1,9 +1,9 @@
-import { type Logger } from 'pino'
+import type { Logger } from 'pino'
 import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/api'
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
-import { inject, singleton } from 'tsyringe'
+import { container, inject, injectable, singleton } from 'tsyringe'
 import { Mutex } from 'async-mutex'
 
 import { serviceState } from './service-watcher/statusPoll.js'
@@ -92,9 +92,10 @@ export default class ChainNode {
     })
   }
 
-  getStatus = async () => {
-    await this.api.isReady
-    if (!this.api.isConnected) {
+  static async getStatus() {
+    const node = container.resolve(ChainNode)
+    await node.api.isReady
+    if (!node.api.isConnected) {
       return {
         status: serviceState.DOWN,
         detail: {
@@ -102,7 +103,7 @@ export default class ChainNode {
         },
       }
     }
-    const [chain, runtime] = await Promise.all([this.api.runtimeChain, this.api.runtimeVersion])
+    const [chain, runtime] = await Promise.all([node.api.runtimeChain, node.api.runtimeVersion])
     return {
       status: serviceState.UP,
       detail: {

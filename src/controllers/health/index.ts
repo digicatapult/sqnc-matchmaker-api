@@ -1,11 +1,12 @@
-import { injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 import { Controller, Get, Response, Route, SuccessResponse, Hidden } from 'tsoa'
 
 import type { Health } from '../../models/health.js'
-import { logger } from '../../lib/logger.js'
+import { LoggerToken } from '../../lib/logger.js'
 import { serviceState } from '../../lib/service-watcher/statusPoll.js'
 import { ServiceUnavailable } from '../../lib/error-handler/index.js'
 import { ServiceWatcher } from '../../lib/service-watcher/index.js'
+import { type Logger } from 'pino'
 
 const packageVersion = process.env.npm_package_version ? process.env.npm_package_version : 'unknown'
 
@@ -18,8 +19,13 @@ const serviceStatusStrings = {
 @Route('health')
 @injectable()
 export class HealthController extends Controller {
-  constructor(private serviceWatcher: ServiceWatcher) {
+  protected logger: Logger
+  constructor(
+    @inject(ServiceWatcher) private serviceWatcher: ServiceWatcher,
+    @inject(LoggerToken) logger: Logger
+  ) {
     super()
+    this.logger = logger.child({ module: 'HealthController' })
   }
 
   @Response<ServiceUnavailable>(503)
@@ -27,7 +33,7 @@ export class HealthController extends Controller {
   @Hidden()
   @Get('/')
   public async get(): Promise<Health> {
-    logger.debug({ msg: 'new request received', controller: '/health' })
+    this.logger.debug({ msg: 'new request received', controller: '/health' })
 
     const status = await this.serviceWatcher.status
     const details = await this.serviceWatcher.detail
@@ -50,7 +56,7 @@ export class HealthController extends Controller {
         ),
     }
     if (status !== serviceState.UP) {
-      logger.debug('Service unavailable: %j', response)
+      this.logger.debug('Service unavailable: %j', response)
       throw new ServiceUnavailable(503, response)
     }
     return response

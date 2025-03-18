@@ -5,13 +5,10 @@ import Indexer from '../../src/lib/indexer/index.js'
 
 import Database from '../../src/lib/db/index.js'
 import ChainNode from '../../src/lib/chainNode.js'
-import { logger } from '../../src/lib/logger.js'
 import { container } from 'tsyringe'
-import env from '../../src/env.js'
-
-const db = new Database()
 
 export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) => {
+  const db = container.resolve(Database)
   beforeEach(async function () {
     context.app = await createHttpServer()
     const node = container.resolve(ChainNode)
@@ -33,7 +30,7 @@ export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) =
         }
       })
 
-    context.indexer = new Indexer({ db: new Database(), logger, node, startupTime: new Date(), env })
+    context.indexer = container.resolve(Indexer)
     await context.indexer.start()
     context.indexer.processAllBlocks(await node.getLastFinalisedBlockHash()).then(() =>
       node.watchFinalisedBlocks(async (hash) => {

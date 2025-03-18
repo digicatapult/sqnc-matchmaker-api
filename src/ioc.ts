@@ -4,6 +4,8 @@ import { Logger } from 'pino'
 
 import env, { type Env, EnvToken } from './env.js'
 import { logger, LoggerToken } from './lib/logger.js'
+import { Knex } from 'knex'
+import { KnexToken, clientSingleton } from './lib/db/knexClient.js'
 
 export const iocContainer: IocContainer = {
   get: (controller) => {
@@ -13,6 +15,7 @@ export const iocContainer: IocContainer = {
 
 export function resetContainer() {
   container.reset()
-  container.register<Env>(EnvToken, { useValue: env })
   container.register<Logger>(LoggerToken, { useValue: logger })
+  container.register<Env>(EnvToken, { useValue: env })
+  container.register<Knex>(KnexToken, { useValue: clientSingleton })
 }

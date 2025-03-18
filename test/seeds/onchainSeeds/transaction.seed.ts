@@ -1,8 +1,8 @@
+import { container } from 'tsyringe'
 import Database from '../../../src/lib/db/index.js'
 
-const db = new Database().db()
-
 export const cleanup = async () => {
+  const db = container.resolve(Database).db()
   await db.transaction().del()
 }
 

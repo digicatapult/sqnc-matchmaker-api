@@ -7,12 +7,20 @@ import { withMockLogger } from './fixtures/logger.js'
 import { withLastProcessedBlocksByCall, withInitialLastProcessedBlock } from './fixtures/db.js'
 import { withHappyChainNode, withGetHeaderBoom } from './fixtures/chainNode.js'
 import Indexer, { getStatus } from '../index.js'
-import env from '../../../env.js'
+import env, { EnvToken } from '../../../env.js'
+import { container } from 'tsyringe'
+import ChainNode from '../../chainNode.js'
+import Database from '../../db/index.js'
+import { LoggerToken } from '../../logger.js'
+import DefaultBlockHandler from '../../../lib/indexer/handleBlock.js'
+import BlockHandler from '../../../lib/indexer/handleBlock.js'
 
 describe('Indexer', function () {
-  const startupTime = new Date()
   let indexer: Indexer
   const logger = withMockLogger()
+  beforeEach(async function () {
+    container.clearInstances()
+  })
 
   describe('start', function () {
     afterEach(async function () {
@@ -22,9 +30,16 @@ describe('Indexer', function () {
     it('should return null if the db has no processed blocks', async function () {
       const db = withInitialLastProcessedBlock(null)
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+
+      // const handleBlock = sinon.stub().resolves({})
+      indexer.setHandleBlock(new DefaultBlockHandler({ db, node, logger }))
       const result = await indexer.start()
       expect(result).to.equal(null)
     })
@@ -32,9 +47,17 @@ describe('Indexer', function () {
     it('should return hash if the db has processed blocks', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
 
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+
+      // const handleBlock = sinon.stub().resolves({})
+      indexer.setHandleBlock(new DefaultBlockHandler({ db, node, logger }))
+
       const result = await indexer.start()
       expect(result).to.equal('1-hash')
     })
@@ -42,85 +65,138 @@ describe('Indexer', function () {
     it('should handle new blocks immediately', async function () {
       const db = withInitialLastProcessedBlock(null)
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
 
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
+      const handleBlockStub = sinon.stub().resolves({})
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
       await indexer.start()
-      expect(handleBlock.called).to.equal(false)
+      expect(handleBlockStub.notCalled).to.be.true
     })
   })
 
   describe('processNextBlock', function () {
+    beforeEach(async function () {
+      container.clearInstances()
+    })
     it('should do nothing and return null if there are no blocks to process', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({})
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
 
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
       const result = await indexer.processNextBlock('1-hash')
 
       expect(result).to.equal(null)
-      expect(handleBlock.called).to.equal(false)
+      expect(handleBlockStub.notCalled).to.be.true
     })
 
     it("should process next block and return it's hash if there's one block to process", async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
-
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({})
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
       await indexer.start()
       const result = await indexer.processNextBlock('2-hash')
 
       expect(result).to.equal('2-hash')
-      expect(handleBlock.calledOnce).to.equal(true)
-      expect(handleBlock.firstCall.args[0]).to.equal('2-hash')
+      expect(handleBlockStub.calledOnce).to.be.true
+      expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
     })
 
     it("should process next block and return it's hash if there's more than one block to process", async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
-
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({})
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
       await indexer.start()
       const result = await indexer.processNextBlock('3-hash')
 
       expect(result).to.equal('2-hash')
-      expect(handleBlock.calledOnce).to.equal(true)
-      expect(handleBlock.firstCall.args[0]).to.equal('2-hash')
+      expect(handleBlockStub.calledOnce).to.be.true
+      expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
     })
 
     it("should process successive blocks on each call if there's two block to process", async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
-
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({})
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
       await indexer.start()
       await indexer.processNextBlock('3-hash')
       const result = await indexer.processNextBlock('3-hash')
 
       expect(result).to.equal('3-hash')
-      expect(handleBlock.calledTwice).to.equal(true)
-      expect(handleBlock.firstCall.args[0]).to.equal('2-hash')
-      expect(handleBlock.secondCall.args[0]).to.equal('3-hash')
+      expect(handleBlockStub.calledTwice).to.be.true
+      expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
+      expect(handleBlockStub.getCall(1).args[0]).to.equal('3-hash')
     })
 
     it("should do nothing if we're up to date after processing blocks", async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
-
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({})
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
       await indexer.start()
       await indexer.processNextBlock('2-hash')
       const result = await indexer.processNextBlock('2-hash')
 
       expect(result).to.equal(null)
-      expect(handleBlock.calledOnce).to.equal(true)
-      expect(handleBlock.firstCall.args[0]).to.equal('2-hash')
+      expect(handleBlockStub.calledOnce).to.be.true
+      expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
     })
 
     it('should skip over blocks if another instance processes them', async function () {
@@ -130,39 +206,61 @@ describe('Indexer', function () {
         { hash: '4-hash', parent: '1-hash', height: 4 },
       ])
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
-
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({})
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
       await indexer.start()
       await indexer.processNextBlock('5-hash')
       const result = await indexer.processNextBlock('5-hash')
 
       expect(result).to.equal('5-hash')
-      expect(handleBlock.calledTwice).to.equal(true)
-      expect(handleBlock.firstCall.args[0]).to.equal('5-hash')
-      expect(handleBlock.secondCall.args[0]).to.equal('5-hash')
+      expect(handleBlockStub.calledTwice).to.be.true
+      expect(handleBlockStub.getCall(0).args[0]).to.equal('5-hash')
+      expect(handleBlockStub.getCall(1).args[0]).to.equal('5-hash')
     })
 
     it('should continue to process blocks if last finalised block goes backwards', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 0 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
-
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({})
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
       await indexer.start()
       await indexer.processNextBlock('3-hash')
       const result = await indexer.processNextBlock('2-hash')
 
       expect(result).to.equal('2-hash')
-      expect(handleBlock.calledTwice).to.equal(true)
-      expect(handleBlock.firstCall.args[0]).to.equal('1-hash')
-      expect(handleBlock.secondCall.args[0]).to.equal('2-hash')
+      expect(handleBlockStub.calledTwice).to.be.true
+      expect(handleBlockStub.getCall(0).args[0]).to.equal('1-hash')
+      expect(handleBlockStub.getCall(1).args[0]).to.equal('2-hash')
     })
 
     it('should upsert demands and match2 entries from changeset', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({
         demands: new Map([
           ['123', { type: 'update', id: '42' }],
           ['456', { type: 'update', id: '43' }],
@@ -176,8 +274,11 @@ describe('Indexer', function () {
           ['121', { type: 'insert', id: '47' }],
         ]),
       })
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
 
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
       await indexer.processNextBlock('2-hash')
 
@@ -197,7 +298,13 @@ describe('Indexer', function () {
     it('should insert demands and match2 entries from changeset', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({
         demands: new Map([
           ['123', { type: 'insert', id: '42' }],
           ['456', { type: 'insert', id: '43' }],
@@ -211,8 +318,11 @@ describe('Indexer', function () {
           ['121', { type: 'insert', id: '47' }],
         ]),
       })
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
 
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
       await indexer.processNextBlock('2-hash')
 
@@ -242,9 +352,18 @@ describe('Indexer', function () {
       it('should retry after configured delay', async function () {
         const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
         const node = withGetHeaderBoom(1)
-        const handleBlock = sinon.stub().resolves({})
+        const env = sinon.stub()
+        container.registerInstance(Database, db)
+        container.registerInstance(ChainNode, node)
+        container.registerInstance(LoggerToken, logger)
+        container.registerInstance(EnvToken, env)
+        indexer = container.resolve(Indexer)
+        const handleBlockStub = sinon.stub().resolves({})
+        const blockHandlerMock = {
+          handleBlock: handleBlockStub,
+        } as unknown as DefaultBlockHandler
+        indexer.setHandleBlock(blockHandlerMock)
 
-        indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
         await indexer.start()
         const p = indexer.processNextBlock('2-hash').then((s) => s)
         clock.tickAsync(1000)
@@ -252,17 +371,26 @@ describe('Indexer', function () {
         const result = await p
 
         expect(result).to.equal('2-hash')
-        expect(handleBlock.calledTwice).to.equal(true)
-        expect(handleBlock.firstCall.args[0]).to.equal('2-hash')
-        expect(handleBlock.secondCall.args[0]).to.equal('2-hash')
+        expect(handleBlockStub.calledTwice).to.be.true
+        expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
+        expect(handleBlockStub.getCall(1).args[0]).to.equal('2-hash')
       })
 
       it('should retry if handler goes boom', async function () {
         const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
         const node = withHappyChainNode()
-        const handleBlock = sinon.stub().resolves({}).onCall(0).rejects(new Error('BOOM'))
+        const env = sinon.stub()
+        container.registerInstance(Database, db)
+        container.registerInstance(ChainNode, node)
+        container.registerInstance(LoggerToken, logger)
+        container.registerInstance(EnvToken, env)
+        indexer = container.resolve(Indexer)
+        const handleBlockStub = sinon.stub().resolves({}).onCall(0).rejects(new Error('BOOM'))
 
-        indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
+        const blockHandlerMock = {
+          handleBlock: handleBlockStub,
+        } as unknown as DefaultBlockHandler
+        indexer.setHandleBlock(blockHandlerMock)
         await indexer.start()
         const p = indexer.processNextBlock('2-hash').then((s) => s)
         clock.tickAsync(1000)
@@ -270,8 +398,8 @@ describe('Indexer', function () {
         const result = await p
 
         expect(result).to.equal('2-hash')
-        expect(handleBlock.calledTwice).to.equal(true)
-        expect(handleBlock.secondCall.args[0]).to.equal('2-hash')
+        expect(handleBlockStub.calledTwice).to.be.true
+        expect(handleBlockStub.getCall(1).args[0]).to.equal('2-hash')
       })
     })
   })
@@ -280,29 +408,47 @@ describe('Indexer', function () {
     it('should process all pending blocks', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({})
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
 
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
       const result = await indexer.processAllBlocks('3-hash')
 
       expect(result).to.equal('3-hash')
-      expect(handleBlock.calledTwice).to.equal(true)
-      expect(handleBlock.firstCall.args[0]).to.equal('2-hash')
-      expect(handleBlock.secondCall.args[0]).to.equal('3-hash')
+      expect(handleBlockStub.calledTwice).to.be.true
+      expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
+      expect(handleBlockStub.getCall(1).args[0]).to.equal('3-hash')
     })
 
     it('should return null if no blocks to process', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      const handleBlock = sinon.stub().resolves({})
+      const env = sinon.stub()
+      container.registerInstance(Database, db)
+      container.registerInstance(ChainNode, node)
+      container.registerInstance(LoggerToken, logger)
+      container.registerInstance(EnvToken, env)
+      indexer = container.resolve(Indexer)
+      const handleBlockStub = sinon.stub().resolves({})
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
 
-      indexer = new Indexer({ db, node, logger, handleBlock, startupTime, env })
       await indexer.start()
       const result = await indexer.processAllBlocks('1-hash')
 
       expect(result).to.equal(null)
-      expect(handleBlock.called).to.equal(false)
+      expect(handleBlockStub.notCalled).to.be.true
     })
   })
   describe('getStatus tests', function () {

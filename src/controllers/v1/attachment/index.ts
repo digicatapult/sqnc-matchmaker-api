@@ -14,11 +14,11 @@ import {
   ValidateError,
   Query,
 } from 'tsoa'
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
 import express from 'express'
 import { Readable } from 'node:stream'
 
-import { logger } from '../../../lib/logger.js'
+import { LoggerToken } from '../../../lib/logger.js'
 import Database from '../../../lib/db/index.js'
 import type { Attachment } from '../../../models/attachment.js'
 import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
@@ -26,6 +26,7 @@ import type { UUID, DATE } from '../../../models/strings.js'
 import Ipfs from '../../../lib/ipfs.js'
 import env from '../../../env.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
+import { inject, injectable } from 'tsyringe'
 
 const parseAccept = (acceptHeader: string) =>
   acceptHeader
@@ -60,18 +61,22 @@ const parseAccept = (acceptHeader: string) =>
 @Route('v1/attachment')
 @Tags('attachment')
 @Security('oauth2')
+@injectable()
 export class attachment extends Controller {
   log: Logger
-  db: Database = new Database()
-  ipfs: Ipfs = new Ipfs({
-    host: env.IPFS_HOST,
-    port: env.IPFS_PORT,
-    logger,
-  })
+  db: Database
+  ipfs: Ipfs
 
-  constructor() {
+  constructor(@inject(Database) db: Database, @inject(LoggerToken) logger: Logger) {
     super()
+    this.db = db
     this.log = logger.child({ controller: '/attachment' })
+
+    this.ipfs = new Ipfs({
+      host: env.IPFS_HOST,
+      port: env.IPFS_PORT,
+      logger,
+    })
   }
 
   octetResponse(buffer: Buffer, name: string): Readable {

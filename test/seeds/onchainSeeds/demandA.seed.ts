@@ -1,10 +1,10 @@
+import { container } from 'tsyringe'
 import env from '../../../src/env.js'
 import Database from '../../../src/lib/db/index.js'
 import { proxyAddress, selfAddress } from '../../helper/mock.js'
 
-const db = new Database().db()
-
 export const cleanup = async () => {
+  const db = container.resolve(Database).db()
   await db.attachment().del()
   await db.demand().del()
   await db.transaction().del()
@@ -47,6 +47,7 @@ export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c947478
 export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
 
 export const seed = async () => {
+  const db = container.resolve(Database).db()
   await cleanup()
 
   await db.attachment().insert([

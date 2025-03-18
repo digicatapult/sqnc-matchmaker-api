@@ -3,7 +3,9 @@ import { ValidateError } from 'tsoa'
 import { OauthError } from '@digicatapult/tsoa-oauth-express'
 
 import { Health } from '../../models/health.js'
-import { logger } from '../logger.js'
+import { LoggerToken } from '../logger.js'
+import { Logger } from 'pino'
+import { container } from 'tsyringe'
 
 /**
  * this should reflect database tables
@@ -76,6 +78,7 @@ export const errorHandler = function errorHandler(
   res: ExResponse,
   next: NextFunction
 ): ExResponse | void {
+  const logger = container.resolve<Logger>(LoggerToken)
   if (err instanceof OauthError) {
     return res.status(401).send({
       message: 'Forbidden',
