@@ -7,13 +7,12 @@ import { withMockLogger } from './fixtures/logger.js'
 import { withLastProcessedBlocksByCall, withInitialLastProcessedBlock } from './fixtures/db.js'
 import { withHappyChainNode, withGetHeaderBoom } from './fixtures/chainNode.js'
 import Indexer, { getStatus } from '../index.js'
-import env, { EnvToken } from '../../../env.js'
+import { EnvToken } from '../../../env.js'
 import { container } from 'tsyringe'
 import ChainNode from '../../chainNode.js'
 import Database from '../../db/index.js'
 import { LoggerToken } from '../../logger.js'
 import DefaultBlockHandler from '../../../lib/indexer/handleBlock.js'
-import BlockHandler from '../../../lib/indexer/handleBlock.js'
 
 describe('Indexer', function () {
   let indexer: Indexer
@@ -78,7 +77,7 @@ describe('Indexer', function () {
       } as unknown as DefaultBlockHandler
       indexer.setHandleBlock(blockHandlerMock)
       await indexer.start()
-      expect(handleBlockStub.notCalled).to.be.true
+      expect(handleBlockStub.notCalled).to.be.equal(true)
     })
   })
 
@@ -105,7 +104,7 @@ describe('Indexer', function () {
       const result = await indexer.processNextBlock('1-hash')
 
       expect(result).to.equal(null)
-      expect(handleBlockStub.notCalled).to.be.true
+      expect(handleBlockStub.notCalled).to.be.equal(true)
     })
 
     it("should process next block and return it's hash if there's one block to process", async function () {
@@ -126,7 +125,7 @@ describe('Indexer', function () {
       const result = await indexer.processNextBlock('2-hash')
 
       expect(result).to.equal('2-hash')
-      expect(handleBlockStub.calledOnce).to.be.true
+      expect(handleBlockStub.calledOnce).to.be.equal(true)
       expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
     })
 
@@ -148,7 +147,7 @@ describe('Indexer', function () {
       const result = await indexer.processNextBlock('3-hash')
 
       expect(result).to.equal('2-hash')
-      expect(handleBlockStub.calledOnce).to.be.true
+      expect(handleBlockStub.calledOnce).to.be.equal(true)
       expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
     })
 
@@ -171,7 +170,7 @@ describe('Indexer', function () {
       const result = await indexer.processNextBlock('3-hash')
 
       expect(result).to.equal('3-hash')
-      expect(handleBlockStub.calledTwice).to.be.true
+      expect(handleBlockStub.calledTwice).to.be.equal(true)
       expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
       expect(handleBlockStub.getCall(1).args[0]).to.equal('3-hash')
     })
@@ -195,7 +194,7 @@ describe('Indexer', function () {
       const result = await indexer.processNextBlock('2-hash')
 
       expect(result).to.equal(null)
-      expect(handleBlockStub.calledOnce).to.be.true
+      expect(handleBlockStub.calledOnce).to.be.equal(true)
       expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
     })
 
@@ -222,7 +221,7 @@ describe('Indexer', function () {
       const result = await indexer.processNextBlock('5-hash')
 
       expect(result).to.equal('5-hash')
-      expect(handleBlockStub.calledTwice).to.be.true
+      expect(handleBlockStub.calledTwice).to.be.equal(true)
       expect(handleBlockStub.getCall(0).args[0]).to.equal('5-hash')
       expect(handleBlockStub.getCall(1).args[0]).to.equal('5-hash')
     })
@@ -246,7 +245,7 @@ describe('Indexer', function () {
       const result = await indexer.processNextBlock('2-hash')
 
       expect(result).to.equal('2-hash')
-      expect(handleBlockStub.calledTwice).to.be.true
+      expect(handleBlockStub.calledTwice).to.be.equal(true)
       expect(handleBlockStub.getCall(0).args[0]).to.equal('1-hash')
       expect(handleBlockStub.getCall(1).args[0]).to.equal('2-hash')
     })
@@ -371,7 +370,7 @@ describe('Indexer', function () {
         const result = await p
 
         expect(result).to.equal('2-hash')
-        expect(handleBlockStub.calledTwice).to.be.true
+        expect(handleBlockStub.calledTwice).to.be.equal(true)
         expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
         expect(handleBlockStub.getCall(1).args[0]).to.equal('2-hash')
       })
@@ -398,7 +397,7 @@ describe('Indexer', function () {
         const result = await p
 
         expect(result).to.equal('2-hash')
-        expect(handleBlockStub.calledTwice).to.be.true
+        expect(handleBlockStub.calledTwice).to.be.equal(true)
         expect(handleBlockStub.getCall(1).args[0]).to.equal('2-hash')
       })
     })
@@ -424,7 +423,7 @@ describe('Indexer', function () {
       const result = await indexer.processAllBlocks('3-hash')
 
       expect(result).to.equal('3-hash')
-      expect(handleBlockStub.calledTwice).to.be.true
+      expect(handleBlockStub.calledTwice).to.be.equal(true)
       expect(handleBlockStub.getCall(0).args[0]).to.equal('2-hash')
       expect(handleBlockStub.getCall(1).args[0]).to.equal('3-hash')
     })
@@ -448,7 +447,7 @@ describe('Indexer', function () {
       const result = await indexer.processAllBlocks('1-hash')
 
       expect(result).to.equal(null)
-      expect(handleBlockStub.notCalled).to.be.true
+      expect(handleBlockStub.notCalled).to.be.equal(true)
     })
   })
   describe('getStatus tests', function () {

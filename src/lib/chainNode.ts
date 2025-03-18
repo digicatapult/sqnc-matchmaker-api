@@ -3,7 +3,7 @@ import { ApiPromise, WsProvider, Keyring, SubmittableResult } from '@polkadot/ap
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { u128 } from '@polkadot/types'
-import { container, inject, injectable, singleton } from 'tsyringe'
+import { container, inject, singleton } from 'tsyringe'
 import { Mutex } from 'async-mutex'
 
 import { serviceState } from './service-watcher/statusPoll.js'

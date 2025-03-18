@@ -4,7 +4,7 @@ import { DemandState, DemandSubtype } from '../../models/demand.js'
 import { HEX, UUID } from '../../models/strings.js'
 import { Match2State } from '../../models/match2.js'
 import { TransactionApiType, TransactionState, TransactionType } from '../../models/transaction.js'
-import { singleton, inject, injectable } from 'tsyringe'
+import { singleton, inject } from 'tsyringe'
 import { KnexToken } from './knexClient.js'
 
 const tablesList = [
