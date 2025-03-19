@@ -44,12 +44,7 @@ export default class Indexer {
 
   private state: 'created' | 'started' | 'stopped'
 
-  constructor(
-    @inject(Database) db: Database,
-    @inject(LoggerToken) logger: Logger,
-    @inject(ChainNode) node: ChainNode,
-    @inject(EnvToken) env: Env
-  ) {
+  constructor(db: Database, @inject(LoggerToken) logger: Logger, node: ChainNode, @inject(EnvToken) env: Env) {
     this.logger = logger.child({ module: 'indexer' })
     this.env = env
     this.db = db

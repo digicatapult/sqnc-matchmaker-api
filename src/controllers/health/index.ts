@@ -21,7 +21,7 @@ const serviceStatusStrings = {
 export class HealthController extends Controller {
   protected logger: Logger
   constructor(
-    @inject(ServiceWatcher) private serviceWatcher: ServiceWatcher,
+    private serviceWatcher: ServiceWatcher,
     @inject(LoggerToken) logger: Logger
   ) {
     super()

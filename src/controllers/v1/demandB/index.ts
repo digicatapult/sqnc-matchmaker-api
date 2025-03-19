@@ -39,10 +39,10 @@ import type { Logger } from 'pino'
 @injectable()
 export class DemandBController extends DemandController {
   constructor(
-    @inject(Identity) identity: Identity,
-    @inject(ChainNode) node: ChainNode,
-    @inject(AddressResolver) addressResolver: AddressResolver,
-    @inject(Database) db: Database,
+    identity: Identity,
+    node: ChainNode,
+    addressResolver: AddressResolver,
+    db: Database,
     @inject(LoggerToken) logger: Logger
   ) {
     super('demandB', identity, node, addressResolver, db, logger)

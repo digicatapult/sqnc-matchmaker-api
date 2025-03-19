@@ -67,7 +67,7 @@ export class attachment extends Controller {
   db: Database
   ipfs: Ipfs
 
-  constructor(@inject(Database) db: Database, @inject(LoggerToken) logger: Logger) {
+  constructor(db: Database, @inject(LoggerToken) logger: Logger) {
     super()
     this.db = db
     this.log = logger.child({ controller: '/attachment' })

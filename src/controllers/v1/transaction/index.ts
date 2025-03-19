@@ -17,7 +17,7 @@ export class TransactionController extends Controller {
   log: Logger
   db: Database
 
-  constructor(@inject(Database) db: Database, @inject(LoggerToken) logger: Logger) {
+  constructor(db: Database, @inject(LoggerToken) logger: Logger) {
     super()
     this.log = logger.child({ controller: '/transaction' })
     this.db = db

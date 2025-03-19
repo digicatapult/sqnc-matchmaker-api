@@ -20,7 +20,7 @@ import ChainNode from './lib/chainNode.js'
   if (env.ENABLE_INDEXER) {
     const node = container.resolve(ChainNode)
 
-    container.registerSingleton(Indexer)
+    // container.registerSingleton(Indexer)
     const indexer = container.resolve(Indexer)
 
     await indexer.start()

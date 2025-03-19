@@ -32,10 +32,10 @@ export class DemandController extends Controller {
 
   constructor(
     demandType: 'demandA' | 'demandB',
-    @inject(Identity) private identity: Identity,
-    @inject(ChainNode) private node: ChainNode,
-    @inject(AddressResolver) private addressResolver: AddressResolver,
-    @inject(Database) db: Database,
+    private identity: Identity,
+    private node: ChainNode,
+    private addressResolver: AddressResolver,
+    db: Database,
     @inject(LoggerToken) logger: Logger
   ) {
     super()
