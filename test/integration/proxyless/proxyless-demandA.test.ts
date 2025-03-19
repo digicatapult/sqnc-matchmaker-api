@@ -13,10 +13,12 @@ import { pollTransactionState, pollDemandState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import env from '../../../src/env.js'
+import { registerContainerInstances } from '../../helper/registerContainerInstances.js'
 
 describe('on-chain proxyless', function () {
   this.timeout(80000)
-  const db = new Database()
+  registerContainerInstances()
+  const db = container.resolve(Database)
   const node = container.resolve(ChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
   before(() => {})

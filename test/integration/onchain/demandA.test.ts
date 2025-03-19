@@ -19,16 +19,13 @@ import { logger } from '../../../src/lib/logger.js'
 
 describe('on-chain', function () {
   this.timeout(80000)
-  const db = new Database()
-  container.registerInstance(ExtendedChainNode, new ExtendedChainNode(logger, env))
-
-  const node = container.resolve(ExtendedChainNode)
+  const db = container.resolve(Database)
+  const node = new ExtendedChainNode(logger, env)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)
 
   withIdentitySelfMock()
-
   withProxy(node)
 
   beforeEach(async function () {
@@ -40,7 +37,7 @@ describe('on-chain', function () {
   })
 
   describe('demandA', () => {
-    it('creates an demandA on chain', async () => {
+    it('creates a demandA on chain', async () => {
       const lastTokenId = await node.getLastTokenId()
       const {
         body: { id: demandAId },
@@ -69,6 +66,7 @@ describe('on-chain', function () {
         originalTokenId: lastTokenId + 1,
       })
     })
+
     it('creates many demandAs on chain in parallel', async function () {
       const numberDemands = 50
 
@@ -86,7 +84,7 @@ describe('on-chain', function () {
       )
       const [fulfilledDemandIds, rejectedDemandIds] = await filterRejectedAndAcceptedPromises(demandIds)
       if (rejectedDemandIds.length > 0) {
-        throw new Error(`${rejectedDemandIds.length} remand As were rejected with Error: ${rejectedDemandIds[0]}`)
+        throw new Error(`${rejectedDemandIds.length} demand As were rejected with Error: ${rejectedDemandIds[0]}`)
       }
 
       const transactionIds = await Promise.allSettled(

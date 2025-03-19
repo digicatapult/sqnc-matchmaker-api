@@ -1,22 +1,27 @@
 import 'reflect-metadata'
 import { Express } from 'express'
 import { container } from 'tsyringe'
+import { resetContainer } from './ioc.js'
 
 import Indexer from './lib/indexer/index.js'
-import ChainNode from './lib/chainNode.js'
-import Database from './lib/db/index.js'
 import Server from './server.js'
-import env from './env.js'
-import { logger } from './lib/logger.js'
+import { Env, EnvToken } from './env.js'
+import { LoggerToken } from './lib/logger.js'
+import { Logger } from 'pino'
+
+import ChainNode from './lib/chainNode.js'
 ;(async () => {
+  // Register singletons in tsyringe
+  resetContainer()
+  const logger = container.resolve<Logger>(LoggerToken)
+  const env = container.resolve<Env>(EnvToken)
   const app: Express = await Server()
 
   if (env.ENABLE_INDEXER) {
     const node = container.resolve(ChainNode)
-    container.register<Indexer>('Indexer', {
-      useValue: new Indexer({ db: new Database(), logger, node, startupTime: new Date(), env: env }),
-    })
-    const indexer = container.resolve<Indexer>('Indexer')
+
+    // container.registerSingleton(Indexer)
+    const indexer = container.resolve(Indexer)
 
     await indexer.start()
     indexer.processAllBlocks(await node.getLastFinalisedBlockHash()).then(() =>

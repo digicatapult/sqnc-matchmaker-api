@@ -1,5 +1,4 @@
 import { type Logger } from 'pino'
-import { injectable } from 'tsyringe'
 import { SubmittableResult } from '@polkadot/api'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 
@@ -7,7 +6,6 @@ import { type Env } from '../../src/env.js'
 import { ProxyRequest } from '../../src/models/proxy.js'
 import ChainNode, { EventData } from '../../src/lib/chainNode.js'
 
-@injectable()
 export default class ExtendedChainNode extends ChainNode {
   constructor(logger: Logger, env: Env) {
     super(logger, env)

@@ -1,10 +1,11 @@
-import knex, { Knex } from 'knex'
+import type { Knex } from 'knex'
 
-import { pgConfig } from './knexfile.js'
 import { DemandState, DemandSubtype } from '../../models/demand.js'
 import { HEX, UUID } from '../../models/strings.js'
 import { Match2State } from '../../models/match2.js'
 import { TransactionApiType, TransactionState, TransactionType } from '../../models/transaction.js'
+import { singleton, inject } from 'tsyringe'
+import { KnexToken } from './knexClient.js'
 
 const tablesList = [
   'attachment',
@@ -152,15 +153,19 @@ function restore0x(input: DbBlockTrimmed): DbBlock {
   }
 }
 
-const clientSingleton: Knex = knex(pgConfig)
-
+@singleton()
 export default class Database {
+  private client: Knex
   public db: () => Models<() => QueryBuilder>
 
-  constructor(private client: Knex = clientSingleton) {
+  constructor(@inject(KnexToken) client: Knex) {
+    this.client = client
+    if (!client) {
+      throw new Error('Knex instance is undefined. Check if it is correctly registered in DI.')
+    }
     const models = tablesList.reduce((acc, name) => {
       return {
-        [name]: () => client(name),
+        [name]: () => this.client.table(name),
         ...acc,
       }
     }, {}) as Models<() => QueryBuilder>

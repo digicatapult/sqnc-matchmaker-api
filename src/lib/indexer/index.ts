@@ -1,14 +1,15 @@
-import { Logger } from 'pino'
+import { type Logger } from 'pino'
 
-import type Database from '../db/index.js'
+import Database from '../db/index.js'
 import ChainNode from '../chainNode.js'
 import DefaultBlockHandler from './handleBlock.js'
 import { ChangeSet } from './changeSet.js'
 import { HEX } from '../../models/strings.js'
 import { DbBlock } from '../db/index.js'
-import { injectable, singleton } from 'tsyringe'
+import { container, inject, singleton } from 'tsyringe'
 import { serviceState, Status } from '../service-watcher/statusPoll.js'
-import { Env } from '../../env.js'
+import { type Env, EnvToken } from '../../env.js'
+import { LoggerToken } from '../logger.js'
 
 export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 
@@ -29,55 +30,70 @@ export interface BlockProcessingTimes {
 }
 
 @singleton()
-@injectable()
 export default class Indexer {
-  private logger: Logger
+  protected logger: Logger
   private env: Env
   private db: Database
   private node: ChainNode
   private gen: AsyncGenerator<string | null, void, string>
-  private handleBlock: BlockHandler
+  private handleBlock: BlockHandler | null = null
   private retryDelay: number
   private startupTime: Date
   private lastProcessedBlockTime: Date | null // while we are running and up to date
   private lastUnprocessedBlockTime: Date | null // only for when we are catching up on unprocessed blocks
 
-  constructor({ db, logger, node, handleBlock, retryDelay, startupTime, env }: IndexerCtorArgs) {
+  private state: 'created' | 'started' | 'stopped'
+
+  constructor(db: Database, @inject(LoggerToken) logger: Logger, node: ChainNode, @inject(EnvToken) env: Env) {
     this.logger = logger.child({ module: 'indexer' })
     this.env = env
     this.db = db
     this.node = node
     this.gen = this.nextBlockProcessor()
-    this.retryDelay = retryDelay || 1000
+    this.state = 'created'
+    this.retryDelay = this.env.INDEXER_RETRY_DELAY
     this.lastProcessedBlockTime = null
     this.lastUnprocessedBlockTime = null
-    this.startupTime = startupTime
-    if (handleBlock) {
-      this.handleBlock = handleBlock
-      return
-    }
-    const blockHandler = new DefaultBlockHandler({ db, node, logger: this.logger })
-    this.handleBlock = blockHandler.handleBlock.bind(blockHandler)
-  }
+    this.startupTime = new Date()
 
+    // Default block handler if no custom one is set
+    this.setHandleBlock(new DefaultBlockHandler({ db, node, logger: this.logger }))
+  }
+  // Setter method to allow updating handleBlock dynamically
+  public setHandleBlock(blockHandler: DefaultBlockHandler) {
+    this.handleBlock = blockHandler.handleBlock.bind(blockHandler)
+    return
+  }
   public async start() {
     this.logger.info('Starting Block Indexer')
+
+    if (this.state === 'started') {
+      throw new Error('Indexer is already started')
+    }
+
+    if (this.state === 'stopped') {
+      this.gen = this.nextBlockProcessor()
+    }
 
     // get the latest finalised hash
     const latestFinalisedHash = await this.node.getLastFinalisedBlockHash()
     // update the internal generator state and wait for that to finish
     const lastProcessedHash = await this.processNextBlock(latestFinalisedHash)
 
-    // this.state = 'started'
+    this.state = 'started'
     this.logger.info('Block Indexer Started')
 
     return lastProcessedHash
   }
 
   public async close() {
+    if (this.state !== 'started') {
+      throw new Error('Indexer cannot be stopped when not running')
+    }
+
     this.logger.info('Closing Block Indexer')
     await this.gen.return()
-    // this.state = 'stopped'
+    this.state = 'stopped'
     this.logger.info('Block Indexer Closed')
   }
 
@@ -122,6 +138,9 @@ export default class Indexer {
 
         const nextUnprocessedBlockHash = await this.getNextUnprocessedBlockHash(lastProcessedBlock)
         if (nextUnprocessedBlockHash) {
+          if (this.handleBlock === null) {
+            throw new Error(`Handle Block was not set`)
+          }
           const changeSet = await this.handleBlock(nextUnprocessedBlockHash)
           await this.updateDbWithNewBlock(nextUnprocessedBlockHash, changeSet)
           this.lastProcessedBlockTime = new Date()
@@ -272,12 +291,13 @@ export default class Indexer {
     })
   }
 
-  async getStatus() {
+  static async getStatus() {
+    const indexer = container.resolve(Indexer)
     return await getStatus(
-      this.env.INDEXER_TIMEOUT_MS,
-      this.startupTime,
-      this.lastProcessedBlockTime,
-      this.lastUnprocessedBlockTime
+      indexer.env.INDEXER_TIMEOUT_MS,
+      indexer.startupTime,
+      indexer.lastProcessedBlockTime,
+      indexer.lastUnprocessedBlockTime
     )
   }
 }

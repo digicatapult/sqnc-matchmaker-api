@@ -18,14 +18,11 @@ import env from '../../../src/env.js'
 
 describe('on-chain', function () {
   this.timeout(60000)
-  const db = new Database()
-  container.registerInstance(ExtendedChainNode, new ExtendedChainNode(logger, env))
-
-  const node = container.resolve(ExtendedChainNode)
+  const db = container.resolve(Database)
+  const node = new ExtendedChainNode(logger, env)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
 
   withAppAndIndexer(context)
-
   withIdentitySelfMock()
   withProxy(node)
 

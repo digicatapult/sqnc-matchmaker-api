@@ -1,6 +1,5 @@
 import * as envalid from 'envalid'
 import dotenv from 'dotenv'
-import { container } from 'tsyringe'
 
 if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: 'test/test.env' })
@@ -46,13 +45,10 @@ const env = envalid.cleanEnv(process.env, {
   IDP_JWKS_PATH: envalid.str({
     default: '/certs',
   }),
+  INDEXER_RETRY_DELAY: envalid.num({ default: 1000 }),
 })
 
 export default env
 
 export const EnvToken = Symbol('Env')
 export type Env = typeof env
-
-container.register<Env>(EnvToken, {
-  useValue: env,
-})

@@ -3,7 +3,7 @@ import type express from 'express'
 
 import { Controller } from 'tsoa'
 
-import { logger } from '../../../lib/logger.js'
+import { LoggerToken } from '../../../lib/logger.js'
 import Database, { DemandCommentRow, DemandRow } from '../../../lib/db/index.js'
 import {
   DemandResponse,
@@ -21,7 +21,9 @@ import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
 import { AddressResolver } from '../../../utils/determineSelfAddress.js'
+import { inject, injectable } from 'tsyringe'
 
+@injectable()
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
   dbDemandSubtype: 'demand_a' | 'demand_b'
@@ -32,13 +34,15 @@ export class DemandController extends Controller {
     demandType: 'demandA' | 'demandB',
     private identity: Identity,
     private node: ChainNode,
-    private addressResolver: AddressResolver
+    private addressResolver: AddressResolver,
+    db: Database,
+    @inject(LoggerToken) logger: Logger
   ) {
     super()
     this.demandType = demandType
     this.dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'
     this.log = logger.child({ controller: `/${this.demandType}` })
-    this.db = new Database()
+    this.db = db
   }
 
   public async createDemand(req: express.Request, { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {

@@ -16,8 +16,10 @@ import {
   seededDemandAId,
   seededDemandACommentTransactionId2,
 } from '../../seeds/offchainSeeds/transaction.seed.js'
+import { resetContainer } from '../../../src/ioc.js'
 
 describe('transaction', () => {
+  resetContainer()
   let app: Express
 
   before(async function () {

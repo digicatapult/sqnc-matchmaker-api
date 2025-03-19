@@ -16,9 +16,9 @@ import {
   Request,
 } from 'tsoa'
 import type { Logger } from 'pino'
-import { injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { logger } from '../../../lib/logger.js'
+import { LoggerToken } from '../../../lib/logger.js'
 import Database, { DemandRow, Match2Row } from '../../../lib/db/index.js'
 import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index.js'
 import Identity from '../../../lib/services/identity.js'
@@ -57,11 +57,13 @@ export class Match2Controller extends Controller {
   constructor(
     private identity: Identity,
     private node: ChainNode,
-    private addressResolver: AddressResolver
+    private addressResolver: AddressResolver,
+    db: Database,
+    @inject(LoggerToken) logger: Logger
   ) {
     super()
     this.log = logger.child({ controller: '/match2' })
-    this.db = new Database()
+    this.db = db
   }
 
   /**

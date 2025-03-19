@@ -1,10 +1,10 @@
+import { container } from 'tsyringe'
 import env from '../../../src/env.js'
 import Database from '../../../src/lib/db/index.js'
 import { notSelfAddress, proxyAddress, selfAddress } from '../../helper/mock.js'
 
-const db = new Database().db()
-
 export const cleanup = async () => {
+  const db = container.resolve(Database).db()
   await db.attachment().del()
   await db.demand().del()
   await db.transaction().del()
@@ -52,6 +52,7 @@ const seededMatch2TokenId = 43
 const seededDemandTokenId = 42
 
 export const seed = async () => {
+  const db = container.resolve(Database).db()
   await cleanup()
 
   await db.attachment().insert([

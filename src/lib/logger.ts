@@ -1,7 +1,6 @@
-import { pino, Logger } from 'pino'
+import { pino, type Logger } from 'pino'
 
 import env from '../env.js'
-import { container } from 'tsyringe'
 
 export const logger: Logger = pino(
   {
@@ -13,4 +12,3 @@ export const logger: Logger = pino(
 )
 
 export const LoggerToken = Symbol('Logger')
-container.register<Logger>(LoggerToken, { useValue: logger })

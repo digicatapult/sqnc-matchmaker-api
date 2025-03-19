@@ -9,11 +9,7 @@ import { get } from '../../helper/routeHelper.js'
 import { responses as healthResponses } from '../../helper/healthHelper.js'
 import { withOkMock, withIpfsMockError } from '../../helper/mockHealth.js'
 import { resetContainer } from '../../../src/ioc.js'
-import ChainNode from '../../../src/lib/chainNode.js'
 import Indexer from '../../../src/lib/indexer/index.js'
-import Database from '../../../src/lib/db/index.js'
-import { logger } from '../../../src/lib/logger.js'
-import env from '../../../src/env.js'
 
 const getSpecVersion = (actualResult: any) => {
   return actualResult?._body?.details?.api?.detail?.runtime?.versions?.spec
@@ -40,10 +36,7 @@ describe('health check', () => {
     withOkMock()
 
     before(async function () {
-      const node = container.resolve(ChainNode)
-      container.register<Indexer>('Indexer', {
-        useValue: new Indexer({ db: new Database(), logger, node, startupTime: new Date(), env: env }),
-      })
+      container.registerSingleton(Indexer)
       app = await createHttpServer()
     })
 
@@ -72,10 +65,8 @@ describe('health check', () => {
     let app: Express
 
     before(async function () {
-      const node = container.resolve(ChainNode)
-      container.register<Indexer>('Indexer', {
-        useValue: new Indexer({ db: new Database(), logger, node, startupTime: new Date(), env: env }),
-      })
+      container.registerSingleton(Indexer)
+
       app = await createHttpServer()
     })
 

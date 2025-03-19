@@ -1,24 +1,26 @@
 import { Controller, Get, Route, Path, Response, Tags, Security, Query } from 'tsoa'
 import type { Logger } from 'pino'
 
-import { logger } from '../../../lib/logger.js'
+import { LoggerToken } from '../../../lib/logger.js'
 import Database from '../../../lib/db/index.js'
 import type { DATE, UUID } from '../../../models/strings.js'
 import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
 import { type TransactionApiType, type TransactionState, TransactionResponse } from '../../../models/transaction.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
+import { inject, injectable } from 'tsyringe'
 
 @Route('v1/transaction')
 @Tags('transaction')
 @Security('oauth2')
+@injectable()
 export class TransactionController extends Controller {
   log: Logger
   db: Database
 
-  constructor() {
+  constructor(db: Database, @inject(LoggerToken) logger: Logger) {
     super()
     this.log = logger.child({ controller: '/transaction' })
-    this.db = new Database()
+    this.db = db
   }
 
   /**

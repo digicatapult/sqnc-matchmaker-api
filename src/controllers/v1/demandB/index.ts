@@ -14,7 +14,7 @@ import {
   Query,
   Request,
 } from 'tsoa'
-import { injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
 import type {
   DemandResponse,
@@ -29,14 +29,23 @@ import { DemandController } from '../_common/demand.js'
 import Identity from '../../../lib/services/identity.js'
 import ChainNode from '../../../lib/chainNode.js'
 import { AddressResolver } from '../../../utils/determineSelfAddress.js'
+import Database from '../../../lib/db/index.js'
+import { LoggerToken } from '../../../lib/logger.js'
+import type { Logger } from 'pino'
 
 @Route('v1/demandB')
-@injectable()
 @Tags('demandB')
 @Security('oauth2')
+@injectable()
 export class DemandBController extends DemandController {
-  constructor(identity: Identity, node: ChainNode, addressResolver: AddressResolver) {
-    super('demandB', identity, node, addressResolver)
+  constructor(
+    identity: Identity,
+    node: ChainNode,
+    addressResolver: AddressResolver,
+    db: Database,
+    @inject(LoggerToken) logger: Logger
+  ) {
+    super('demandB', identity, node, addressResolver, db, logger)
   }
 
   /**
