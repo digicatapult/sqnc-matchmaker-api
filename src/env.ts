@@ -45,6 +45,7 @@ const env = envalid.cleanEnv(process.env, {
   IDP_JWKS_PATH: envalid.str({
     default: '/certs',
   }),
+  INDEXER_RETRY_DELAY: envalid.num({ default: 1000 }),
 })
 
 export default env

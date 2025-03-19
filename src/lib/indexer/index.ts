@@ -51,7 +51,7 @@ export default class Indexer {
     this.node = node
     this.gen = this.nextBlockProcessor()
     this.state = 'created'
-    this.retryDelay = 1000
+    this.retryDelay = this.env.INDEXER_RETRY_DELAY
     this.lastProcessedBlockTime = null
     this.lastUnprocessedBlockTime = null
     this.startupTime = new Date()
