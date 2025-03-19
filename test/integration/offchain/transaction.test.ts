@@ -16,10 +16,10 @@ import {
   seededDemandAId,
   seededDemandACommentTransactionId2,
 } from '../../seeds/offchainSeeds/transaction.seed.js'
-import { registerContainerInstances } from '../../helper/registerContainerInstances.js'
+import { resetContainer } from '../../../src/ioc.js'
 
 describe('transaction', () => {
-  registerContainerInstances()
+  resetContainer()
   let app: Express
 
   before(async function () {
