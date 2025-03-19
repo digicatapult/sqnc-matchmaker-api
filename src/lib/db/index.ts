@@ -153,8 +153,6 @@ function restore0x(input: DbBlockTrimmed): DbBlock {
   }
 }
 
-// const clientSingleton: Knex = knex(pgConfig)
-
 @singleton()
 export default class Database {
   private client: Knex

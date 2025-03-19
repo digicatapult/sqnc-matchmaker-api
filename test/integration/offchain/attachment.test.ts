@@ -8,7 +8,7 @@ import { get, post, postFile } from '../../helper/routeHelper.js'
 import { withIpfsMockError, withIpfsMock } from '../../helper/mock.js'
 import { cleanup, attachmentSeed, parametersAttachmentId } from '../../seeds/offchainSeeds/attachment.seed.js'
 
-describe.only('attachment', () => {
+describe('attachment', () => {
   const size = 100
   const blobData = 'a'.repeat(size)
   const filename = 'test.pdf'

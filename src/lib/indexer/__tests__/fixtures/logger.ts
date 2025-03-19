@@ -12,9 +12,6 @@ export const withMockLogger = () => {
     child: sinon.stub(),
   }
 
-  // return {
-  //   child: sinon.stub().returns(inner),
-  // } as unknown as Logger
   inner.child.returns(inner)
 
   return inner as unknown as Logger
