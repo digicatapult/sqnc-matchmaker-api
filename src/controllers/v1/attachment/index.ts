@@ -116,7 +116,8 @@ export class attachment extends Controller {
     if (!req.body && !file) throw new BadRequest('nothing to upload')
 
     const filename = file ? file.originalname : 'json'
-    const fileBlob = new Blob([Buffer.from(file?.buffer || JSON.stringify(req.body))])
+    const fileBuffer = file?.buffer ? Buffer.from(file?.buffer) : Buffer.from(JSON.stringify(req.body))
+    const fileBlob = new Blob([fileBuffer])
     const ipfsHash = await this.ipfs.addFile({ blob: fileBlob, filename })
 
     const [{ id, createdAt }] = await this.db.insertAttachment({
