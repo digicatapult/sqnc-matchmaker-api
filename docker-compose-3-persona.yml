@@ -19,7 +19,7 @@ services:
   # -------------------------------------------------------------------- member-a
   member-a-postgres-matchmaker-api:
     image: postgres:17.4-alpine
-    container_name: member-a-postgres-matchmaker-api
+    container_name: member-a-postgres-matchmaker
     ports:
       - 5432:5432
     volumes:
@@ -28,7 +28,9 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-matchmaker-api
-    networks: ['member-a']
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+    networks: [ 'member-a' ]
 
   member-a-postgres-identity:
     image: postgres:17.4-alpine
@@ -41,24 +43,38 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-identity
-    networks: ['member-a']
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+    networks: [ 'member-a' ]
+
+  member-a-postgres-attachment-api:
+    image: postgres:17.4-alpine
+    container_name: member-a-postgres-attachment
+    ports:
+      - 5434:5432
+    volumes:
+      - member-a-attachment-api-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=sqnc-attachment-api
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+    networks: [ 'member-a' ]
 
   member-a-identity:
-    image: digicatapult/sqnc-identity-service:latest
+    image: digicatapult/sqnc-identity-service:v4.0.2
     container_name: member-a-identity
-    command: /bin/sh -c "
-      sleep 10 &&
-      npm run db:migrate &&
-      npm start"
-    ports:
-      - 9000:9000
+    command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
-      - member-a-node
-      - member-a-postgres-identity
+      member-a-postgres-identity:
+        condition: service_healthy
+      member-a-node:
+        condition: service_healthy
+    ports:
+      - 3002:3000
     environment:
-      - PORT=9000
       - API_HOST=member-a-node
-      - API_PORT=9944
       - DB_HOST=member-a-postgres-identity
       - DB_PORT=5432
       - DB_NAME=sqnc-identity
@@ -66,66 +82,91 @@ services:
       - DB_PASSWORD=postgres
       - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
       - IDP_CLIENT_ID=sequence
-      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-a/protocol/openid-connect
-      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-a/protocol/openid-connect
-    networks: ['member-a']
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=member-a
+      - IDP_INTERNAL_REALM=internal
+    networks: [ 'member-a' ]
+
+  member-a-attachment:
+    image: digicatapult/sqnc-attachment-api:v2.1.0
+    container_name: member-a-attachment
+    command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
+    depends_on:
+      member-a-postgres-attachment-api:
+        condition: service_healthy
+    ports:
+      - 3003:3000
+    environment:
+      - DB_HOST=member-a-postgres-attachment
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=sqnc-attachment-api
+      - IPFS_HOST=ipfs
+      - IDENTITY_SERVICE_HOST=member-a-identity
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=member-a
+      - IDP_INTERNAL_REALM=internal
+    networks: [ 'member-a', 'ipfs' ]
 
   member-a-node:
-    image: digicatapult/sqnc-node:latest
+    image: digicatapult/sqnc-node:v12.3.0
     container_name: member-a-node
-    command: --base-path /data
-      --alice
-      --unsafe-rpc-external
-      --rpc-cors all
-      --node-key 0000000000000000000000000000000000000000000000000000000000000001
+    command: --base-path /data --alice --unsafe-rpc-external --rpc-cors all --node-key 0000000000000000000000000000000000000000000000000000000000000001
     ports:
-      - 30333:30333
       - 9944:9944
-      - 9933:9933
     restart: on-failure
-    networks: ['member-a', 'chain']
+    networks: [ 'member-a', 'chain' ]
 
   member-a-matchmaker-api:
-    container_name: member-a-matchmaker-api
+    container_name: member-a-matchmaker
     build:
       context: './'
       dockerfile: 'Dockerfile'
-    command: /bin/sh -c "
-      sleep 10 &&
-      npx knex migrate:latest --knexfile build/lib/db/knexfile &&
-      npx @digicatapult/sqnc-process-management@latest create -h member-a-node -p 9944 -u //Alice -f processFlows.json &&
-      npm start"
+    command: /bin/sh -c "npx knex migrate:latest --knexfile build/lib/db/knexfile && npx @digicatapult/sqnc-process-management@latest create -h member-a-node -p 9944 -u //Alice -f processFlows.json && npm start"
     environment:
-      - PORT=8000
       - NODE_HOST=member-a-node
       - NODE_PORT=9944
-      - DB_HOST=member-a-postgres-matchmaker-api
+      - DB_HOST=member-a-postgres-matchmaker
       - DB_PORT=5432
       - DB_NAME=sqnc-matchmaker-api
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - IDENTITY_SERVICE_HOST=member-a-identity
-      - IDENTITY_SERVICE_PORT=9000
-      - IPFS_HOST=ipfs
-      - IPFS_PORT=5001
+      - IDENTITY_SERVICE_PORT=3000
+      - ATTACHMENT_SERVICE_HOST=member-a-attachment
+      - ATTACHMENT_SERVICE_PORT=3000
       - USER_URI=//Alice
+      - PROXY_FOR=
       - IDP_CLIENT_ID=sequence
-      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-a/protocol/openid-connect
-      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-a/protocol/openid-connect
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=member-a
+      - IDP_INTERNAL_REALM=internal
+      - IDP_INTERNAL_CLIENT_ID=sequence
+      - IDP_INTERNAL_CLIENT_SECRET=secret
     ports:
-      - 8000:8000
+      - 3000:3000
     depends_on:
-      - member-a-node
-      - member-a-identity
-      - member-a-postgres-matchmaker-api
-      - ipfs
+      member-a-node:
+        condition: service_healthy
+      member-a-identity:
+        condition: service_started
+      member-a-attachment:
+        condition: service_healthy
+      member-a-postgres-matchmaker-api:
+        condition: service_healthy
+      ipfs:
+        condition: service_healthy
     restart: on-failure
-    networks: ['member-a', 'ipfs']
+    networks: [ 'member-a' ]
 
   # -------------------------------------------------------------------- member-b
   member-b-postgres-matchmaker-api:
     image: postgres:17.4-alpine
-    container_name: member-b-postgres-matchmaker-api
+    container_name: member-b-postgres-matchmaker
     ports:
       - 5442:5432
     volumes:
@@ -134,7 +175,9 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-matchmaker-api
-    networks: ['member-b']
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+    networks: [ 'member-b' ]
 
   member-b-postgres-identity:
     image: postgres:17.4-alpine
@@ -147,92 +190,138 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-identity
-    networks: ['member-b']
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+    networks: [ 'member-b' ]
+
+  member-b-postgres-attachment-api:
+    image: postgres:17.4-alpine
+    container_name: member-b-postgres-attachment
+    ports:
+      - 5444:5432
+    volumes:
+      - member-b-attachment-api-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=sqnc-attachment-api
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+    networks: [ 'member-b' ]
 
   member-b-identity:
-    image: digicatapult/sqnc-identity-service:latest
+    image: digicatapult/sqnc-identity-service:v4.0.2
     container_name: member-b-identity
-    command: /bin/sh -c "
-      sleep 10 &&
-      npm run db:migrate &&
-      npm start"
-    ports:
-      - 9010:9010
+    command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
-      - member-b-node
-      - member-b-postgres-identity
+      member-b-postgres-identity:
+        condition: service_healthy
+      member-b-node:
+        condition: service_healthy
+    ports:
+      - 3012:3000
     environment:
-      - PORT=9010
       - API_HOST=member-b-node
-      - API_PORT=9944
       - DB_HOST=member-b-postgres-identity
       - DB_PORT=5432
       - DB_NAME=sqnc-identity
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
-      - SELF_ADDRESS=5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
+      - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
       - IDP_CLIENT_ID=sequence
-      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-b/protocol/openid-connect
-      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-b/protocol/openid-connect
-    networks: ['member-b']
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=member-b
+      - IDP_INTERNAL_REALM=internal
+    networks: [ 'member-b' ]
+
+  member-b-attachment:
+    image: digicatapult/sqnc-attachment-api:v2.1.0
+    container_name: member-b-attachment
+    command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
+    depends_on:
+      member-b-postgres-attachment-api:
+        condition: service_healthy
+    ports:
+      - 3013:3000
+    environment:
+      - DB_HOST=member-b-postgres-attachment
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=sqnc-attachment-api
+      - IPFS_HOST=ipfs
+      - IDENTITY_SERVICE_HOST=member-b-identity
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=member-b
+      - IDP_INTERNAL_REALM=internal
+    networks: [ 'member-b', 'ipfs' ]
 
   member-b-node:
-    image: digicatapult/sqnc-node:latest
+    image: digicatapult/sqnc-node:v12.3.0
     container_name: member-b-node
-    command: --base-path /data/
+    command: |
+      --base-path /data/
       --bob
       --unsafe-rpc-external
       --rpc-cors all
       --node-key 0000000000000000000000000000000000000000000000000000000000000002
       --bootnodes /dns4/alice/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
     ports:
-      - 31333:30333
-      - 10044:9944
-      - 10033:9933
+      - 9954:9944
     restart: on-failure
-    networks: ['member-b', 'chain']
+    networks: [ 'member-b', 'chain' ]
 
   member-b-matchmaker-api:
-    container_name: member-b-matchmaker-api
+    container_name: member-b-matchmaker
     build:
       context: './'
       dockerfile: 'Dockerfile'
-    command: /bin/sh -c "
-      sleep 10 &&
-      npx knex migrate:latest --knexfile build/lib/db/knexfile &&
-      npm start"
+    command: /bin/sh -c "npx knex migrate:latest --knexfile build/lib/db/knexfile && npm start"
     environment:
-      - PORT=8010
+      - LOG_LEVEL=trace
       - NODE_HOST=member-b-node
       - NODE_PORT=9944
-      - DB_HOST=member-b-postgres-matchmaker-api
+      - DB_HOST=member-b-postgres-matchmaker
       - DB_PORT=5432
       - DB_NAME=sqnc-matchmaker-api
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - IDENTITY_SERVICE_HOST=member-b-identity
-      - IDENTITY_SERVICE_PORT=9010
-      - IPFS_HOST=ipfs
-      - IPFS_PORT=5001
+      - IDENTITY_SERVICE_PORT=3000
+      - ATTACHMENT_SERVICE_HOST=member-b-attachment
+      - ATTACHMENT_SERVICE_PORT=3000
       - USER_URI=//Bob
+      - PROXY_FOR=
       - IDP_CLIENT_ID=sequence
-      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-b/protocol/openid-connect
-      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-b/protocol/openid-connect
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=member-b
+      - IDP_INTERNAL_REALM=internal
+      - IDP_INTERNAL_CLIENT_ID=sequence
+      - IDP_INTERNAL_CLIENT_SECRET=secret
     ports:
-      - 8010:8010
+      - 3010:3000
     depends_on:
-      - member-b-node
-      - member-b-identity
-      - member-b-postgres-matchmaker-api
-      - ipfs
+      member-b-node:
+        condition: service_healthy
+      member-b-identity:
+        condition: service_started
+      member-b-attachment:
+        condition: service_healthy
+      member-b-postgres-matchmaker-api:
+        condition: service_healthy
+      ipfs:
+        condition: service_healthy
     restart: on-failure
-    networks: ['member-b', 'ipfs']
+    networks: [ 'member-b' ]
 
   # ------------------------------------------------------------------- optimiser
 
   optimiser-postgres-matchmaker-api:
     image: postgres:17.4-alpine
-    container_name: optimiser-postgres-matchmaker-api
+    container_name: optimiser-postgres-matchmaker
     ports:
       - 5452:5432
     volumes:
@@ -241,7 +330,9 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-matchmaker-api
-    networks: ['optimiser']
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+    networks: [ 'optimiser' ]
 
   optimiser-postgres-identity:
     image: postgres:17.4-alpine
@@ -254,85 +345,132 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-identity
-    networks: ['optimiser']
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+    networks: [ 'optimiser' ]
+
+  optimiser-postgres-attachment-api:
+    image: postgres:17.4-alpine
+    container_name: optimiser-postgres-attachment
+    ports:
+      - 5454:5432
+    volumes:
+      - optimiser-attachment-api-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=sqnc-attachment-api
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+    networks: [ 'optimiser' ]
 
   optimiser-identity:
-    image: digicatapult/sqnc-identity-service:latest
+    image: digicatapult/sqnc-identity-service:v4.0.2
     container_name: optimiser-identity
-    command: /bin/sh -c "
-      sleep 10 &&
-      npm run db:migrate &&
-      npm start"
-    ports:
-      - 9020:9020
+    command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
-      - optimiser-node
-      - optimiser-postgres-identity
+      optimiser-postgres-identity:
+        condition: service_healthy
+      optimiser-node:
+        condition: service_healthy
+    ports:
+      - 3022:3000
     environment:
-      - PORT=9020
       - API_HOST=optimiser-node
-      - API_PORT=9944
       - DB_HOST=optimiser-postgres-identity
       - DB_PORT=5432
       - DB_NAME=sqnc-identity
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
-      - SELF_ADDRESS=5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y
+      - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
       - IDP_CLIENT_ID=sequence
-      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/optimiser/protocol/openid-connect
-      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/optimiser/protocol/openid-connect
-    networks: ['optimiser']
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=optimiser
+      - IDP_INTERNAL_REALM=internal
+    networks: [ 'optimiser' ]
+
+  optimiser-attachment:
+    image: digicatapult/sqnc-attachment-api:v2.1.0
+    container_name: optimiser-attachment
+    command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
+    depends_on:
+      optimiser-postgres-attachment-api:
+        condition: service_healthy
+    ports:
+      - 3023:3000
+    environment:
+      - DB_HOST=optimiser-postgres-attachment
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=sqnc-attachment-api
+      - IPFS_HOST=ipfs
+      - IDENTITY_SERVICE_HOST=optimiser-identity
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=optimiser
+      - IDP_INTERNAL_REALM=internal
+    networks: [ 'optimiser', 'ipfs' ]
+
   optimiser-node:
-    image: digicatapult/sqnc-node:latest
+    image: digicatapult/sqnc-node:v12.3.0
     container_name: optimiser-node
-    command: --base-path /data/
+    command: |
+      --base-path /data/
       --charlie
       --unsafe-rpc-external
       --rpc-cors all
       --node-key 0000000000000000000000000000000000000000000000000000000000000003
       --bootnodes /dns4/alice/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
     ports:
-      - 32333:30333
-      - 10144:9944
-      - 10133:9933
+      - 9964:9944
     restart: on-failure
-    networks: ['optimiser', 'chain']
+    networks: [ 'optimiser', 'chain' ]
 
   optimiser-matchmaker-api:
-    container_name: optimiser-matchmaker-api
+    container_name: optimiser-matchmaker
     build:
       context: './'
       dockerfile: 'Dockerfile'
-    command: /bin/sh -c "
-      sleep 10 &&
-      npx knex migrate:latest --knexfile build/lib/db/knexfile &&
-      npm start"
+    command: /bin/sh -c "npx knex migrate:latest --knexfile build/lib/db/knexfile && npm start"
     environment:
-      - PORT=8020
+      - LOG_LEVEL=trace
       - NODE_HOST=optimiser-node
       - NODE_PORT=9944
-      - DB_HOST=optimiser-postgres-matchmaker-api
+      - DB_HOST=optimiser-postgres-matchmaker
       - DB_PORT=5432
       - DB_NAME=sqnc-matchmaker-api
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - IDENTITY_SERVICE_HOST=optimiser-identity
-      - IDENTITY_SERVICE_PORT=9020
-      - IPFS_HOST=ipfs
-      - IPFS_PORT=5001
+      - IDENTITY_SERVICE_PORT=3000
+      - ATTACHMENT_SERVICE_HOST=optimiser-attachment
+      - ATTACHMENT_SERVICE_PORT=3000
       - USER_URI=//Charlie
+      - PROXY_FOR=
       - IDP_CLIENT_ID=sequence
-      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/optimiser/protocol/openid-connect
-      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/optimiser/protocol/openid-connect
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=optimiser
+      - IDP_INTERNAL_REALM=internal
+      - IDP_INTERNAL_CLIENT_ID=sequence
+      - IDP_INTERNAL_CLIENT_SECRET=secret
     ports:
-      - 8020:8020
+      - 3020:3000
     depends_on:
-      - optimiser-node
-      - optimiser-identity
-      - optimiser-postgres-matchmaker-api
-      - ipfs
+      optimiser-node:
+        condition: service_healthy
+      optimiser-identity:
+        condition: service_started
+      optimiser-attachment:
+        condition: service_healthy
+      optimiser-postgres-matchmaker-api:
+        condition: service_healthy
+      ipfs:
+        condition: service_healthy
     restart: on-failure
-    networks: ['optimiser', 'ipfs']
+    networks: [ 'optimiser' ]
 
   # ------------------------------------------------------------------------ ipfs
   ipfs:
@@ -347,7 +485,7 @@ services:
       - 4001:4001
       - 8080:8080
       - 5001:5001
-    networks: ['ipfs']
+    networks: [ 'ipfs' ]
     volumes:
       - ipfs:/data/ipfs
 
@@ -363,13 +501,16 @@ services:
     volumes:
       - ./docker/keycloak:/opt/keycloak/data/import
     command: start-dev --import-realm
-    networks: ['member-a', 'member-b', 'optimiser']
+    networks: [ 'member-a', 'member-b', 'optimiser' ]
 
 volumes:
   member-a-matchmaker-api-storage:
   member-a-identity-storage:
+  member-a-attachment-api-storage:
   member-b-matchmaker-api-storage:
   member-b-identity-storage:
+  member-b-attachment-api-storage:
   optimiser-matchmaker-api-storage:
   optimiser-identity-storage:
+  optimiser-attachment-api-storage:
   ipfs:

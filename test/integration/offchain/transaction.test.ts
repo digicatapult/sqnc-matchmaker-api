@@ -96,11 +96,9 @@ describe('transaction', () => {
     })
   })
 
-  // TODO assert for limit (when set on the db)
   it('returns all transactions', async () => {
     const { status, body } = await get(app, '/v1/transaction')
 
-    // TODO create fixture
     expect(status).to.equal(200)
     expect(body).to.be.an('array')
     expect(body).to.deep.include.members([

@@ -42,7 +42,6 @@ export class UnknownError extends HttpResponse {
  * reports that item was not found
  */
 export class NotFound extends HttpResponse implements INotFound {
-  // TODO once pull of all items is clear update with 'item1' | 'item2'
   public item: string
 
   constructor(item: string) {

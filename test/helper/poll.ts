@@ -28,16 +28,18 @@ const getRow = async (db: Database, method: Method, id: string): Promise<{ state
 
 const pollState =
   (method: Method) =>
-  async (db: Database, id: UUID | undefined, targetState: string, delay = 100, maxRetry = 100): Promise<void> => {
+  async (db: Database, id: UUID, targetState: string, delay = 100, maxRetry = 100): Promise<void> => {
     try {
       let retry = 0
 
       const poll = async (): Promise<void> => {
         if (retry >= maxRetry) {
-          throw new Error(`Maximum number of retries exceeded while waiting for  ${id} to reach state ${targetState}`)
+          throw new Error(
+            `Maximum number of retries exceeded while waiting for ${method}(${id}) to reach state ${targetState}`
+          )
         }
 
-        const row = await getRow(db, method, id || '')
+        const row = await getRow(db, method, id)
         if (row && row.state === targetState) {
           return
         }

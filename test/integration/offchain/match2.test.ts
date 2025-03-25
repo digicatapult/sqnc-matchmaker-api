@@ -35,19 +35,28 @@ import {
   seededRematch2DemndBAllocated,
   seededRematch2DemndACreated,
 } from '../../seeds/offchainSeeds/offchain.match2.seed.js'
-import { parametersAttachmentId } from '../../seeds/offchainSeeds/offchain.match2.seed.js'
 
-import { proxyAlias, withIdentitySelfMock } from '../../helper/mock.js'
+import {
+  MockDispatcherContext,
+  parametersAttachmentId,
+  proxyAlias,
+  withAttachmentMock,
+  withDispatcherMock,
+  withIdentitySelfMock,
+} from '../../helper/mock.js'
 import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
 
 describe('match2', () => {
   let app: Express
+  const context: MockDispatcherContext = {} as MockDispatcherContext
 
   before(async function () {
     app = await createHttpServer()
   })
 
-  withIdentitySelfMock()
+  withDispatcherMock(context)
+  withIdentitySelfMock(context)
+  withAttachmentMock(context)
 
   beforeEach(async function () {
     await match2Seed()

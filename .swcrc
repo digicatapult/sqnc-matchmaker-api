@@ -3,7 +3,6 @@
   "jsc": {
     "parser": {
       "syntax": "typescript",
-      "tsx": false,
       "decorators": true,
       "dynamicImport": true,
       "importMeta": true
@@ -16,9 +15,12 @@
     "target": "es2022"
   },
   "exclude": [
-    "/__test__/"
+    "/__test__/",
+    "/__tests__/",
+    "/test/",
+    "/tests/"
   ],
-  "sourceMaps": true,
+  "sourceMaps": "inline",
   "isModule": true,
   "minify": false
 }

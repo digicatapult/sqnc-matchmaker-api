@@ -4,7 +4,12 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
 import { cleanup, seededDemandBId } from '../../seeds/onchainSeeds/transaction.seed.js'
-import { withIdentitySelfMock } from '../../helper/mock.js'
+import {
+  MockDispatcherContext,
+  withAttachmentMock,
+  withDispatcherMock,
+  withIdentitySelfMock,
+} from '../../helper/mock.js'
 import ChainNode from '../../../src/lib/chainNode.js'
 import { pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
@@ -19,10 +24,13 @@ describe('on-chain', function () {
   const node = container.resolve(ChainNode)
 
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
+  const mockContext: MockDispatcherContext = {} as MockDispatcherContext
 
   withAppAndIndexer(context)
 
-  withIdentitySelfMock()
+  withDispatcherMock(mockContext)
+  withIdentitySelfMock(mockContext)
+  withAttachmentMock(mockContext)
 
   beforeEach(async function () {
     await cleanup()

@@ -3,7 +3,6 @@ import type express from 'express'
 
 import { Controller } from 'tsoa'
 
-import { LoggerToken } from '../../../lib/logger.js'
 import Database, { DemandCommentRow, DemandRow } from '../../../lib/db/index.js'
 import {
   DemandResponse,
@@ -13,7 +12,7 @@ import {
   DemandWithCommentsResponse,
 } from '../../../models/demand.js'
 import { DATE, UUID } from '../../../models/strings.js'
-import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
+import { BadRequest, NotFound, UnknownError } from '../../../lib/error-handler/index.js'
 import { TransactionResponse, TransactionType } from '../../../models/transaction.js'
 import { demandCommentCreate, demandCreate } from '../../../lib/payload.js'
 import ChainNode from '../../../lib/chainNode.js'
@@ -21,9 +20,8 @@ import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
 import { AddressResolver } from '../../../utils/determineSelfAddress.js'
-import { inject, injectable } from 'tsyringe'
+import Attachment from '../../../lib/services/attachment.js'
 
-@injectable()
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
   dbDemandSubtype: 'demand_a' | 'demand_b'
@@ -33,10 +31,11 @@ export class DemandController extends Controller {
   constructor(
     demandType: 'demandA' | 'demandB',
     private identity: Identity,
+    private attachment: Attachment,
     private node: ChainNode,
     private addressResolver: AddressResolver,
     db: Database,
-    @inject(LoggerToken) logger: Logger
+    logger: Logger
   ) {
     super()
     this.demandType = demandType
@@ -46,7 +45,7 @@ export class DemandController extends Controller {
   }
 
   public async createDemand(req: express.Request, { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
-    const [attachment] = await this.db.getAttachment(parametersAttachmentId)
+    const [attachment] = await this.attachment.getAttachments([parametersAttachmentId])
 
     if (!attachment) {
       throw new BadRequest('Attachment not found')
@@ -96,11 +95,14 @@ export class DemandController extends Controller {
   }
 
   public async createDemandOnChain(demandId: UUID): Promise<TransactionResponse> {
-    const [demand] = await this.db.getDemandWithAttachment(demandId, this.dbDemandSubtype)
-    if (!demand) throw new NotFound(this.demandType)
+    const [demand] = await this.db.getDemand(demandId)
+    if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
     if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
 
-    const extrinsic = await this.node.prepareRunProcess(demandCreate(demand))
+    const [attachment] = await this.attachment.getAttachments([demand.parametersAttachmentId])
+    if (!attachment) throw new UnknownError()
+
+    const extrinsic = await this.node.prepareRunProcess(demandCreate(demand, attachment))
 
     const [transaction] = await this.db.insertTransaction({
       api_type: this.dbDemandSubtype,
@@ -148,7 +150,7 @@ export class DemandController extends Controller {
     const [demand] = await this.db.getDemand(demandId)
     if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
 
-    const [comment] = await this.db.getAttachment(attachmentId)
+    const [comment] = await this.attachment.getAttachments([attachmentId])
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
 
     const res = await this.identity.getMemberBySelf(getAuthorization(req))
@@ -169,7 +171,7 @@ export class DemandController extends Controller {
       state: 'pending',
       owner: selfAddress,
       demand: demandId,
-      attachment: attachmentId,
+      attachment_id: attachmentId,
     })
 
     this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))

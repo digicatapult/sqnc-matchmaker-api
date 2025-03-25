@@ -2,8 +2,14 @@ import { describe, beforeEach, afterEach, it } from 'mocha'
 import { Express } from 'express'
 
 import Indexer from '../../../src/lib/indexer/index.js'
-import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
-import { withIdentitySelfMock } from '../../helper/mock.js'
+import { cleanup } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
+import {
+  MockDispatcherContext,
+  parametersAttachmentId,
+  withAttachmentMock,
+  withDispatcherMock,
+  withIdentitySelfMock,
+} from '../../helper/mock.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import {
@@ -27,12 +33,14 @@ describe('on-chain parallel', function () {
   const db = container.resolve(Database)
   const node = new ExtendedChainNode(logger, env)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
+  const mock: MockDispatcherContext = {} as MockDispatcherContext
 
   withAppAndIndexer(context)
-  withIdentitySelfMock()
+  withDispatcherMock(mock)
+  withIdentitySelfMock(mock)
+  withAttachmentMock(mock)
   withProxy(node)
 
-  beforeEach(async () => await seed())
   afterEach(async () => await cleanup())
 
   describe('match2 parallel', async () => {

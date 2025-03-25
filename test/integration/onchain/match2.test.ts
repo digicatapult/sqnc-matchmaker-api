@@ -4,8 +4,14 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
 import { post, get } from '../../helper/routeHelper.js'
-import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
-import { withIdentitySelfMock } from '../../helper/mock.js'
+import { cleanup } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
+import {
+  MockDispatcherContext,
+  parametersAttachmentId,
+  withAttachmentMock,
+  withDispatcherMock,
+  withIdentitySelfMock,
+} from '../../helper/mock.js'
 import Database, { DemandRow, Match2Row, Transaction } from '../../../src/lib/db/index.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
@@ -21,12 +27,14 @@ describe('on-chain', function () {
   const db = container.resolve(Database)
   const node = new ExtendedChainNode(logger, env)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
+  const mock: MockDispatcherContext = {} as MockDispatcherContext
 
   withAppAndIndexer(context)
-  withIdentitySelfMock()
+  withDispatcherMock(mock)
+  withIdentitySelfMock(mock)
+  withAttachmentMock(mock)
   withProxy(node)
 
-  beforeEach(async () => await seed())
   afterEach(async () => await cleanup())
 
   describe('match2', async () => {
@@ -176,7 +184,7 @@ describe('on-chain', function () {
       // wait for block to finalise
       await node.sealBlock()
       await pollTransactionState(db, transactionId, 'finalised')
-      await pollMatch2State(db, ids.rematch2, 'proposed')
+      await pollMatch2State(db, ids.rematch2 as UUID, 'proposed')
 
       // check local entities update with token id
       const [maybeDemandA] = await db.getDemand(ids.demandA)

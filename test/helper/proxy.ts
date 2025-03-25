@@ -18,6 +18,11 @@ export async function setupProxy(node: ExtendedChainNode) {
 }
 
 export async function removeProxy(node: ExtendedChainNode) {
+  const existingProxies = await node.getProxies(proxyReq.delegatingAlias)
+  if (existingProxies.length === 0) {
+    return
+  }
+
   const extrinsicDave = await node.removeProxy(proxyReq)
   await node.submitRunProcessForProxy(extrinsicDave)
 

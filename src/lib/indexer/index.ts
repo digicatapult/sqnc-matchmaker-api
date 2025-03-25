@@ -10,6 +10,7 @@ import { container, inject, singleton } from 'tsyringe'
 import { serviceState, Status } from '../service-watcher/statusPoll.js'
 import { type Env, EnvToken } from '../../env.js'
 import { LoggerToken } from '../logger.js'
+import Attachment from '../services/attachment.js'
 
 export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 
@@ -35,6 +36,7 @@ export default class Indexer {
   private env: Env
   private db: Database
   private node: ChainNode
+  private attachment: Attachment
   private gen: AsyncGenerator<string | null, void, string>
   private handleBlock: BlockHandler | null = null
   private retryDelay: number
@@ -44,11 +46,18 @@ export default class Indexer {
 
   private state: 'created' | 'started' | 'stopped'
 
-  constructor(db: Database, @inject(LoggerToken) logger: Logger, node: ChainNode, @inject(EnvToken) env: Env) {
+  constructor(
+    db: Database,
+    @inject(LoggerToken) logger: Logger,
+    node: ChainNode,
+    @inject(EnvToken) env: Env,
+    attachment: Attachment
+  ) {
     this.logger = logger.child({ module: 'indexer' })
     this.env = env
     this.db = db
     this.node = node
+    this.attachment = attachment
     this.gen = this.nextBlockProcessor()
     this.state = 'created'
     this.retryDelay = this.env.INDEXER_RETRY_DELAY
@@ -221,33 +230,47 @@ export default class Indexer {
   private async updateDbWithNewBlock(blockHash: HEX, changeSet: ChangeSet): Promise<void> {
     this.logger.debug('Inserting changeset %j for block %s', changeSet, blockHash)
     const header = await this.node.getHeader(blockHash)
-    await this.db.withTransaction(async (db) => {
+
+    const createdAttachments = new Map<string, string>()
+    if (changeSet.attachments) {
+      for (const [, attachment] of changeSet.attachments) {
+        const { id } = await this.attachment.insertAttachment(attachment.integrityHash, attachment.ownerAddress)
+        createdAttachments.set(attachment.id, id)
+      }
+    }
+
+    const cleanupAttachments = async (error: unknown) => {
+      const ids = [...createdAttachments.values()]
+      await Promise.allSettled(ids.map((id) => this.attachment.deleteAttachment(id)))
+      throw error
+    }
+
+    const getAttachmentId = (id: string): string => {
+      const attachmentId = createdAttachments.get(id)
+      if (!attachmentId) {
+        throw new Error(`Attachment id not found for ${id}`)
+      }
+      return attachmentId
+    }
+
+    // prepare the db changes as a transaction
+    const dbMutate = this.db.withTransaction(async (db) => {
       if (header.height === 1) {
         await db.insertProcessedBlock({ hash: header.parent, height: '0', parent: header.parent })
       }
       await db.insertProcessedBlock({ ...header, height: `${header.height}` })
 
-      if (changeSet.attachments) {
-        for (const [, demand] of changeSet.attachments) {
-          const { type, ...record } = demand
-          switch (type) {
-            case 'insert':
-              await db.insertAttachment(record)
-              break
-          }
-        }
-      }
-
       if (changeSet.demands) {
         for (const [, demand] of changeSet.demands) {
-          const { type, ...record } = demand
-          switch (type) {
-            case 'insert':
-              await db.insertDemand(record)
-              break
-            case 'update':
-              await db.updateDemand(record.id, record)
-              break
+          if (demand.type === 'insert') {
+            const { type, parameters_attachment_id, ...record } = demand
+            await db.insertDemand({
+              ...record,
+              parameters_attachment_id: getAttachmentId(parameters_attachment_id),
+            })
+          } else {
+            const { type, ...record } = demand
+            await db.updateDemand(record.id, record)
           }
         }
       }
@@ -269,8 +292,8 @@ export default class Indexer {
       if (changeSet.demandComments) {
         for (const [, comment] of changeSet.demandComments) {
           if (comment.type === 'insert') {
-            const { type, ...record } = comment
-            await db.insertDemandComment(record)
+            const { type, attachment_id, ...record } = comment
+            await db.insertDemandComment({ ...record, attachment_id: getAttachmentId(attachment_id) })
           } else {
             const { type, ...record } = comment
             await db.updateDemandCommentForTransaction(record.transaction_id, record)
@@ -280,8 +303,8 @@ export default class Indexer {
       if (changeSet.match2Comments) {
         for (const [, comment] of changeSet.match2Comments) {
           if (comment.type === 'insert') {
-            const { type, ...record } = comment
-            await db.insertMatch2Comment(record)
+            const { type, attachment_id, ...record } = comment
+            await db.insertMatch2Comment({ ...record, attachment_id: getAttachmentId(attachment_id) })
           } else {
             const { type, ...record } = comment
             await db.updateMatch2CommentForTransaction(record.transaction_id, record)
@@ -289,6 +312,9 @@ export default class Indexer {
         }
       }
     })
+
+    // Write to the db and on error cleanup attachments
+    await dbMutate.catch(cleanupAttachments)
   }
 
   static async getStatus() {

@@ -56,7 +56,8 @@ describe('eventProcessor', function () {
       expect(attachment).to.deep.equal({
         type: 'insert',
         id: attachmentId,
-        ipfs_hash: 'a',
+        integrityHash: 'a',
+        ownerAddress: 'alice',
       })
 
       expect(result.demands?.size).to.equal(1)
@@ -67,7 +68,7 @@ describe('eventProcessor', function () {
         owner: '123',
         subtype: 'demand_b',
         state: 'created',
-        parameters_attachment_id: attachmentId,
+        parameters_attachment_id: attachment.id,
         latest_token_id: 1,
         original_token_id: 1,
       })
@@ -123,7 +124,8 @@ describe('eventProcessor', function () {
       expect(attachment).to.deep.equal({
         type: 'insert',
         id: attachmentId,
-        ipfs_hash: 'a',
+        integrityHash: 'a',
+        ownerAddress: 'alice',
       })
 
       expect(result.demands?.size).to.equal(1)
@@ -139,7 +141,7 @@ describe('eventProcessor', function () {
         state: 'created',
         demand: demandId,
         owner: 'alice',
-        attachment: attachmentId,
+        attachment_id: attachment.id,
       })
     })
   })
@@ -509,7 +511,7 @@ describe('eventProcessor', function () {
         )
       })
 
-      it('and updates a match2_comment usig transaction id', () => {
+      it('and updates a match2_comment using transaction id', () => {
         const { match2Comments } = cancelResult
 
         expect(match2Comments).to.deep.equal(

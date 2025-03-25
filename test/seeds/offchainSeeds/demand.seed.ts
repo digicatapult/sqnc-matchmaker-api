@@ -4,7 +4,6 @@ import { notSelfAddress, proxyAddress, selfAddress } from '../../helper/mock.js'
 
 export const cleanup = async () => {
   const db = container.resolve(Database).db()
-  await db.attachment().del()
   await db.demand().del()
   await db.transaction().del()
   await db.demand_comment().del()
@@ -40,16 +39,6 @@ const seededDemandTokenId = 42
 export const demandSeed = async () => {
   const db = container.resolve(Database).db()
   await cleanup()
-
-  await db.attachment().insert([
-    {
-      id: parametersAttachmentId,
-      filename: 'test.txt',
-      ipfs_hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
-      size: 42,
-      created_at: exampleDate,
-    },
-  ])
 
   await db.demand().insert([
     {
@@ -118,7 +107,7 @@ export const demandSeed = async () => {
       owner: proxyAddress,
       state: 'pending',
       demand: seededDemandBId,
-      attachment: parametersAttachmentId,
+      attachment_id: parametersAttachmentId,
       created_at: exampleDate,
       updated_at: exampleDate,
     },
@@ -127,7 +116,7 @@ export const demandSeed = async () => {
       owner: proxyAddress,
       state: 'created',
       demand: seededDemandBId,
-      attachment: parametersAttachmentId,
+      attachment_id: parametersAttachmentId,
       created_at: exampleDate,
       updated_at: exampleDate,
     },
@@ -200,7 +189,7 @@ export const demandSeed = async () => {
       owner: proxyAddress,
       state: 'pending',
       demand: seededDemandAId,
-      attachment: parametersAttachmentId,
+      attachment_id: parametersAttachmentId,
       created_at: exampleDate,
       updated_at: exampleDate,
     },
@@ -209,7 +198,7 @@ export const demandSeed = async () => {
       owner: proxyAddress,
       state: 'created',
       demand: seededDemandAId,
-      attachment: parametersAttachmentId,
+      attachment_id: parametersAttachmentId,
       created_at: exampleDate,
       updated_at: exampleDate,
     },

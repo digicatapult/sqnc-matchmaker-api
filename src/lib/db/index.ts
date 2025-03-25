@@ -8,7 +8,6 @@ import { singleton, inject } from 'tsyringe'
 import { KnexToken } from './knexClient.js'
 
 const tablesList = [
-  'attachment',
   'demand',
   'transaction',
   'match2',
@@ -28,16 +27,6 @@ export type QueryBuilder = Knex.QueryBuilder
 
 export type DbBlock = { hash: HEX; parent: HEX; height: string }
 export type DbBlockTrimmed = { hash: string; parent: string; height: string }
-
-const attachmentColumns = ['id', 'filename', 'size', 'ipfs_hash as ipfsHash', 'created_at AS createdAt']
-
-export interface AttachmentRow {
-  id: UUID
-  filename: string | null
-  size: number | null
-  ipfsHash: string
-  createdAt: Date
-}
 
 const demandColumns = [
   'id',
@@ -63,19 +52,7 @@ export interface DemandRow {
   updatedAt: Date
 }
 
-export interface DemandWithAttachmentRow {
-  owner: string
-  parametersAttachmentId: UUID
-  state: DemandState
-  filename: string | 'json' | null
-  size: number | null
-  subtype: DemandSubtype
-  ipfs_hash: string
-  latestTokenId: number
-  originalTokenId: number
-}
-
-const demandCommentsColumns = ['id', 'owner', 'state', 'attachment AS attachmentId', 'created_at AS createdAt']
+const demandCommentsColumns = ['id', 'owner', 'state', 'attachment_id AS attachmentId', 'created_at AS createdAt']
 
 export interface DemandCommentRow {
   id: UUID
@@ -172,25 +149,6 @@ export default class Database {
     this.db = () => models
   }
 
-  getAttachments = async ({ updatedSince }: { updatedSince?: Date } = {}): Promise<AttachmentRow[]> => {
-    const query = this.db().attachment().select(attachmentColumns)
-    // note the use of created_at here since attachments are immutable
-    return updatedSince ? query.where('created_at', '>', updatedSince) : query
-  }
-
-  getAttachment = async (parametersAttachmentId: string): Promise<[AttachmentRow] | []> => {
-    return this.db().attachment().select(attachmentColumns).where({ id: parametersAttachmentId })
-  }
-
-  updateAttachment = async (id: string, filename: string, size: number) => {
-    return this.db().attachment().update({ filename, size }).where({ id })
-  }
-
-  insertAttachment = async (attachment: object): Promise<[AttachmentRow]> => {
-    const [result] = await this.db().attachment().insert(attachment).returning(attachmentColumns)
-    return [result]
-  }
-
   insertDemand = async (demand: object) => {
     return this.db().demand().insert(demand).returning('*')
   }
@@ -245,14 +203,6 @@ export default class Database {
       .orderBy('created_at', 'asc')
 
     return [result]
-  }
-
-  getDemandWithAttachment = async (id: UUID, subtype: DemandSubtype): Promise<DemandWithAttachmentRow[]> => {
-    return this.db()
-      .demand()
-      .join('attachment', 'demand.parameters_attachment_id', 'attachment.id')
-      .select()
-      .where({ 'demand.id': id, subtype })
   }
 
   insertDemandComment = async (comment: object) => {

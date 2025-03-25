@@ -10,6 +10,8 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-matchmaker-api
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
 
   postgres-identity-service:
     image: postgres:17.4-alpine
@@ -22,14 +24,32 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-identity-service
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+
+  postgres-attachment-api:
+    image: postgres:17.4-alpine
+    container_name: postgres-attachment
+    ports:
+      - 5434:5432
+    volumes:
+      - attachment-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=sqnc-attachment-api
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
 
   sqnc-identity-service:
-    image: digicatapult/sqnc-identity-service:latest
+    image: digicatapult/sqnc-identity-service:v4.0.2
     container_name: identity-service
-    command: /bin/sh -c "
-      sleep 30 &&
-      npm run db:migrate &&
-      npm start"
+    command: /bin/sh -c "npx knex migrate:latest && npm start"
+    depends_on:
+      postgres-identity-service:
+        condition: service_healthy
+      sqnc-node:
+        condition: service_healthy
     ports:
       - 3002:3000
     environment:
@@ -41,17 +61,37 @@ services:
       - DB_PASSWORD=postgres
       - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
       - IDP_CLIENT_ID=sequence
-      - IDP_PUBLIC_URL_PREFIX=http://localhost:3080/realms/member-a/protocol/openid-connect
-      - IDP_INTERNAL_URL_PREFIX=http://keycloak:8080/realms/member-a/protocol/openid-connect
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=member-a
+      - IDP_INTERNAL_REALM=internal
+
+  sqnc-attachment-api:
+    image: digicatapult/sqnc-attachment-api:v2.1.0
+    container_name: attachment-api
+    command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
+    depends_on:
+      postgres-attachment-api:
+        condition: service_healthy
+    ports:
+      - 3003:3000
+    environment:
+      - DB_HOST=postgres-attachment-api
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=sqnc-attachment-api
+      - IPFS_HOST=ipfs
+      - IDENTITY_SERVICE_HOST=identity-service
+      - IDP_CLIENT_ID=sequence
+      - IDP_PUBLIC_ORIGIN=http://localhost:3080
+      - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_OAUTH2_REALM=member-a
+      - IDP_INTERNAL_REALM=internal
 
   sqnc-node:
-    image: digicatapult/sqnc-node:latest
+    image: digicatapult/sqnc-node:v12.3.0
     container_name: node
-    command: --base-path /data/
-      --dev
-      --unsafe-rpc-external
-      --rpc-max-connections 512
-      --rpc-cors all
+    command: --base-path /data/ --dev --unsafe-rpc-external --rpc-max-connections 512 --rpc-cors all
     ports:
       - 30333:30333
       - 9944:9944
@@ -86,3 +126,4 @@ services:
 volumes:
   matchmaker-api-storage:
   identity-storage:
+  attachment-storage:

@@ -4,8 +4,15 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
 import { post } from '../../helper/routeHelper.js'
-import { seed, cleanup, parametersAttachmentId } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
-import { selfAddress, withIdentitySelfMock } from '../../helper/mock.js'
+import { cleanup } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
+import {
+  MockDispatcherContext,
+  parametersAttachmentId,
+  selfAddress,
+  withAttachmentMock,
+  withDispatcherMock,
+  withIdentitySelfMock,
+} from '../../helper/mock.js'
 import Database, { DemandRow, Match2Row } from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
@@ -21,11 +28,13 @@ describe('on-chain proxyless', function () {
   const db = container.resolve(Database)
   const node = container.resolve(ChainNode)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
+  const mock: MockDispatcherContext = {} as MockDispatcherContext
 
   withAppAndIndexer(context)
-  withIdentitySelfMock()
+  withDispatcherMock(mock)
+  withIdentitySelfMock(mock)
+  withAttachmentMock(mock)
 
-  beforeEach(async () => await seed())
   afterEach(async () => await cleanup())
 
   describe('match2', async () => {

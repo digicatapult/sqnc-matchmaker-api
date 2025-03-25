@@ -4,7 +4,12 @@ import sinon from 'sinon'
 import { expect } from 'chai'
 
 import { withMockLogger } from './fixtures/logger.js'
-import { withLastProcessedBlocksByCall, withInitialLastProcessedBlock } from './fixtures/db.js'
+import {
+  withLastProcessedBlocksByCall,
+  withInitialLastProcessedBlock,
+  withMockAttachment,
+  withInitialLastProcessedBlockAndTxError,
+} from './fixtures/db.js'
 import { withHappyChainNode, withGetHeaderBoom } from './fixtures/chainNode.js'
 import Indexer, { getStatus } from '../index.js'
 import { container } from 'tsyringe'
@@ -14,6 +19,7 @@ import { registerInstances } from './fixtures/registerInstances.js'
 describe('Indexer', function () {
   let indexer: Indexer
   const logger = withMockLogger()
+
   beforeEach(async function () {
     container.clearInstances()
   })
@@ -26,7 +32,8 @@ describe('Indexer', function () {
     it('should return null if the db has no processed blocks', async function () {
       const db = withInitialLastProcessedBlock(null)
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
 
       // const handleBlock = sinon.stub().resolves({})
       indexer.setHandleBlock(new DefaultBlockHandler({ db, node, logger }))
@@ -37,7 +44,8 @@ describe('Indexer', function () {
     it('should return hash if the db has processed blocks', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
 
       // const handleBlock = sinon.stub().resolves({})
       indexer.setHandleBlock(new DefaultBlockHandler({ db, node, logger }))
@@ -49,7 +57,8 @@ describe('Indexer', function () {
     it('should handle new blocks immediately', async function () {
       const db = withInitialLastProcessedBlock(null)
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
 
       const handleBlockStub = sinon.stub().resolves({})
       const blockHandlerMock = {
@@ -68,7 +77,8 @@ describe('Indexer', function () {
     it('should do nothing and return null if there are no blocks to process', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({})
       const blockHandlerMock = {
         handleBlock: handleBlockStub,
@@ -85,7 +95,8 @@ describe('Indexer', function () {
     it("should process next block and return it's hash if there's one block to process", async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({})
       const blockHandlerMock = {
         handleBlock: handleBlockStub,
@@ -102,7 +113,8 @@ describe('Indexer', function () {
     it("should process next block and return it's hash if there's more than one block to process", async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({})
       const blockHandlerMock = {
         handleBlock: handleBlockStub,
@@ -119,7 +131,8 @@ describe('Indexer', function () {
     it("should process successive blocks on each call if there's two block to process", async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({})
       const blockHandlerMock = {
         handleBlock: handleBlockStub,
@@ -138,7 +151,8 @@ describe('Indexer', function () {
     it("should do nothing if we're up to date after processing blocks", async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({})
       const blockHandlerMock = {
         handleBlock: handleBlockStub,
@@ -160,7 +174,8 @@ describe('Indexer', function () {
         { hash: '4-hash', parent: '1-hash', height: 4 },
       ])
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({})
       const blockHandlerMock = {
         handleBlock: handleBlockStub,
@@ -179,7 +194,8 @@ describe('Indexer', function () {
     it('should continue to process blocks if last finalised block goes backwards', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 0 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({})
       const blockHandlerMock = {
         handleBlock: handleBlockStub,
@@ -198,7 +214,8 @@ describe('Indexer', function () {
     it('should upsert demands and match2 entries from changeset', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({
         demands: new Map([
           ['123', { type: 'update', id: '42' }],
@@ -209,8 +226,8 @@ describe('Indexer', function () {
           ['101', { type: 'update', id: '45' }],
         ]),
         attachments: new Map([
-          ['111', { type: 'insert', id: '46' }],
-          ['121', { type: 'insert', id: '47' }],
+          ['111', { type: 'insert', id: '46', integrityHash: 'hash1', ownerAddress: 'alice' }],
+          ['121', { type: 'insert', id: '47', integrityHash: 'hash2', ownerAddress: 'bob' }],
         ]),
       })
       const blockHandlerMock = {
@@ -229,27 +246,28 @@ describe('Indexer', function () {
       expect((db.updateMatch2 as sinon.SinonStub).firstCall.args).to.deep.equal(['44', { id: '44' }])
       expect((db.updateMatch2 as sinon.SinonStub).secondCall.args).to.deep.equal(['45', { id: '45' }])
 
-      expect((db.insertAttachment as sinon.SinonStub).calledTwice).to.equal(true)
-      expect((db.insertAttachment as sinon.SinonStub).firstCall.args).to.deep.equal([{ id: '46' }])
-      expect((db.insertAttachment as sinon.SinonStub).secondCall.args).to.deep.equal([{ id: '47' }])
+      expect((attachment.insertAttachment as sinon.SinonStub).calledTwice).to.equal(true)
+      expect((attachment.insertAttachment as sinon.SinonStub).firstCall.args).to.deep.equal(['hash1', 'alice'])
+      expect((attachment.insertAttachment as sinon.SinonStub).secondCall.args).to.deep.equal(['hash2', 'bob'])
     })
 
     it('should insert demands and match2 entries from changeset', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({
         demands: new Map([
-          ['123', { type: 'insert', id: '42' }],
-          ['456', { type: 'insert', id: '43' }],
+          ['123', { type: 'insert', id: '42', parameters_attachment_id: '46' }],
+          ['456', { type: 'insert', id: '43', parameters_attachment_id: '47' }],
         ]),
         matches: new Map([
           ['789', { type: 'insert', id: '44' }],
           ['101', { type: 'insert', id: '45' }],
         ]),
         attachments: new Map([
-          ['111', { type: 'insert', id: '46' }],
-          ['121', { type: 'insert', id: '47' }],
+          ['111', { type: 'insert', id: '46', integrityHash: 'hash1', ownerAddress: 'alice' }],
+          ['121', { type: 'insert', id: '47', integrityHash: 'hash2', ownerAddress: 'bob' }],
         ]),
       })
       const blockHandlerMock = {
@@ -261,16 +279,58 @@ describe('Indexer', function () {
       await indexer.processNextBlock('2-hash')
 
       expect((db.insertDemand as sinon.SinonStub).calledTwice).to.equal(true)
-      expect((db.insertDemand as sinon.SinonStub).firstCall.args[0]).to.deep.equal({ id: '42' })
-      expect((db.insertDemand as sinon.SinonStub).secondCall.args[0]).to.deep.equal({ id: '43' })
+      expect((db.insertDemand as sinon.SinonStub).firstCall.args[0]).to.deep.equal({
+        id: '42',
+        parameters_attachment_id: 'hash1-alice',
+      })
+      expect((db.insertDemand as sinon.SinonStub).secondCall.args[0]).to.deep.equal({
+        id: '43',
+        parameters_attachment_id: 'hash2-bob',
+      })
 
       expect((db.insertMatch2 as sinon.SinonStub).calledTwice).to.equal(true)
       expect((db.insertMatch2 as sinon.SinonStub).firstCall.args[0]).to.deep.equal({ id: '44' })
       expect((db.insertMatch2 as sinon.SinonStub).secondCall.args[0]).to.deep.equal({ id: '45' })
 
-      expect((db.insertAttachment as sinon.SinonStub).calledTwice).to.equal(true)
-      expect((db.insertAttachment as sinon.SinonStub).firstCall.args[0]).to.deep.equal({ id: '46' })
-      expect((db.insertAttachment as sinon.SinonStub).secondCall.args[0]).to.deep.equal({ id: '47' })
+      expect((attachment.insertAttachment as sinon.SinonStub).calledTwice).to.equal(true)
+      expect((attachment.insertAttachment as sinon.SinonStub).firstCall.args).to.deep.equal(['hash1', 'alice'])
+      expect((attachment.insertAttachment as sinon.SinonStub).secondCall.args).to.deep.equal(['hash2', 'bob'])
+    })
+
+    it('should delete attachments on db error', async function () {
+      const db = withInitialLastProcessedBlockAndTxError({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const node = withHappyChainNode()
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
+      const handleBlockStub = sinon.stub().resolves({
+        demands: new Map([
+          ['123', { type: 'insert', id: '42', parameters_attachment_id: '46' }],
+          ['456', { type: 'insert', id: '43', parameters_attachment_id: '47' }],
+        ]),
+        matches: new Map([
+          ['789', { type: 'insert', id: '44' }],
+          ['101', { type: 'insert', id: '45' }],
+        ]),
+        attachments: new Map([
+          ['111', { type: 'insert', id: '46', integrityHash: 'hash1', ownerAddress: 'alice' }],
+          ['121', { type: 'insert', id: '47', integrityHash: 'hash2', ownerAddress: 'bob' }],
+        ]),
+      })
+      const blockHandlerMock = {
+        handleBlock: handleBlockStub,
+      } as unknown as DefaultBlockHandler
+      indexer.setHandleBlock(blockHandlerMock)
+
+      await indexer.start()
+      await indexer.processNextBlock('2-hash')
+
+      expect((attachment.insertAttachment as sinon.SinonStub).callCount).to.equal(4)
+      expect((db.insertMatch2 as sinon.SinonStub).calledTwice).to.equal(true)
+
+      const deleteStub = attachment.deleteAttachment as sinon.SinonStub
+      expect(deleteStub.calledTwice).to.equal(true)
+      expect(deleteStub.firstCall.args).to.deep.equal(['hash1-alice'])
+      expect(deleteStub.secondCall.args).to.deep.equal(['hash2-bob'])
     })
 
     describe('exception cases', function () {
@@ -286,7 +346,8 @@ describe('Indexer', function () {
       it('should retry after configured delay', async function () {
         const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
         const node = withGetHeaderBoom(1)
-        indexer = registerInstances(node, db)
+        const attachment = withMockAttachment()
+        indexer = registerInstances(node, db, attachment)
         const handleBlockStub = sinon.stub().resolves({})
         const blockHandlerMock = {
           handleBlock: handleBlockStub,
@@ -308,7 +369,8 @@ describe('Indexer', function () {
       it('should retry if handler goes boom', async function () {
         const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
         const node = withHappyChainNode()
-        indexer = registerInstances(node, db)
+        const attachment = withMockAttachment()
+        indexer = registerInstances(node, db, attachment)
         const handleBlockStub = sinon.stub().resolves({}).onCall(0).rejects(new Error('BOOM'))
 
         const blockHandlerMock = {
@@ -332,7 +394,8 @@ describe('Indexer', function () {
     it('should process all pending blocks', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({})
       const blockHandlerMock = {
         handleBlock: handleBlockStub,
@@ -351,7 +414,8 @@ describe('Indexer', function () {
     it('should return null if no blocks to process', async function () {
       const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
       const node = withHappyChainNode()
-      indexer = registerInstances(node, db)
+      const attachment = withMockAttachment()
+      indexer = registerInstances(node, db, attachment)
       const handleBlockStub = sinon.stub().resolves({})
       const blockHandlerMock = {
         handleBlock: handleBlockStub,
@@ -378,7 +442,7 @@ describe('Indexer', function () {
       const startupTime = new Date('2024-11-25T00:00:00.000Z')
       clock.setSystemTime(new Date('2024-11-25T00:00:25.000Z'))
       const result = await getStatus(30000, startupTime, null, null)
-      expect(result).to.have.property('status', 'up')
+      expect(result).to.have.property('status', 'ok')
       expect(result.detail).to.have.property('message', 'Service healthy. Starting up.')
     })
     it('should return service DOWN if it has started up a while back', async function () {
@@ -399,7 +463,7 @@ describe('Indexer', function () {
       // lastUnprocessedBlockTime: 2 seconds after current time
       const lastUnprocessedBlockTime = new Date(currentTime.getTime() + 2 * 1000)
       const result = await getStatus(30000, startupTime, null, lastUnprocessedBlockTime)
-      expect(result).to.have.property('status', 'up')
+      expect(result).to.have.property('status', 'ok')
       const latestActivityTime = result.detail?.latestActivityTime
       expect(latestActivityTime).to.be.instanceOf(Date)
       expect(result.detail).to.have.property('message', 'Service healthy. Running.')
@@ -412,7 +476,7 @@ describe('Indexer', function () {
       const lastUnprocessedBlockTime = new Date(currentTime.getTime() + 2 * 1000)
       const lastProcessedBlockTime = new Date(currentTime.getTime() + 4 * 1000)
       const result = await getStatus(30000, startupTime, lastProcessedBlockTime, lastUnprocessedBlockTime)
-      expect(result).to.have.property('status', 'up')
+      expect(result).to.have.property('status', 'ok')
       const latestActivityTime = result.detail?.latestActivityTime
       expect(latestActivityTime).to.be.instanceOf(Date)
       expect(result.detail).to.have.property('message', 'Service healthy. Running.')

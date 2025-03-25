@@ -32,6 +32,7 @@ import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 import { LoggerToken } from '../../../lib/logger.js'
 import Database from '../../../lib/db/index.js'
 import type { Logger } from 'pino'
+import Attachment from '../../../lib/services/attachment.js'
 
 @Route('v1/demandA')
 @injectable()
@@ -40,12 +41,13 @@ import type { Logger } from 'pino'
 export class DemandAController extends DemandController {
   constructor(
     identity: Identity,
+    attachment: Attachment,
     node: ChainNode,
     addressResolver: AddressResolver,
     db: Database,
     @inject(LoggerToken) logger: Logger
   ) {
-    super('demandA', identity, node, addressResolver, db, logger)
+    super('demandA', identity, attachment, node, addressResolver, db, logger)
   }
 
   /**
