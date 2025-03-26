@@ -278,7 +278,7 @@ curl -X 'POST' \
 }'
 ```
 
-Each persona's identity service:
+Each persona's attachment service:
 
 - [MemberA](http://localhost:3003/swagger/)
 - [MemberB](http://localhost:3013/swagger/)

@@ -227,7 +227,7 @@ services:
       - DB_NAME=sqnc-identity
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
-      - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+      - SELF_ADDRESS=5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
@@ -382,7 +382,7 @@ services:
       - DB_NAME=sqnc-identity
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
-      - SELF_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+      - SELF_ADDRESS=5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
