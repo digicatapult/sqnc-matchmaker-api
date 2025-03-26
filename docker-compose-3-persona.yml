@@ -127,7 +127,7 @@ services:
     build:
       context: './'
       dockerfile: 'Dockerfile'
-    command: /bin/sh -c "npx knex migrate:latest --knexfile build/lib/db/knexfile && npx @digicatapult/sqnc-process-management@latest create -h member-a-node -p 9944 -u //Alice -f processFlows.json && npm start"
+    command: /bin/sh -c "npx knex migrate:latest --knexfile build/lib/db/knexfile && npx @digicatapult/sqnc-process-management create -h member-a-node -p 9944 -u //Alice -f processFlows.json && npm start"
     environment:
       - NODE_HOST=member-a-node
       - NODE_PORT=9944
