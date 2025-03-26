@@ -63,7 +63,7 @@ services:
     networks: [ 'member-a' ]
 
   member-a-identity:
-    image: digicatapult/sqnc-identity-service:v4.0.2
+    image: digicatapult/sqnc-identity-service:v4.0.4
     container_name: member-a-identity
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -212,7 +212,7 @@ services:
     networks: [ 'member-b' ]
 
   member-b-identity:
-    image: digicatapult/sqnc-identity-service:v4.0.2
+    image: digicatapult/sqnc-identity-service:v4.0.4
     container_name: member-b-identity
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -369,7 +369,7 @@ services:
     networks: [ 'optimiser' ]
 
   optimiser-identity:
-    image: digicatapult/sqnc-identity-service:v4.0.2
+    image: digicatapult/sqnc-identity-service:v4.0.4
     container_name: optimiser-identity
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -480,7 +480,7 @@ services:
 
   # ------------------------------------------------------------------------ ipfs
   ipfs:
-    image: ipfs/go-ipfs:v0.33.2
+    image: ipfs/go-ipfs:v0.34.1
     container_name: ipfs
     environment:
       - |
