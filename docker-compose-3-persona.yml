@@ -118,6 +118,8 @@ services:
     ports:
       - 9944:9944
     restart: on-failure
+    volumes:
+      - member-a-node-storage:/data
     networks: [ 'member-a', 'chain' ]
 
   member-a-matchmaker-api:
@@ -271,6 +273,8 @@ services:
     ports:
       - 9954:9944
     restart: on-failure
+    volumes:
+      - member-b-node-storage:/data
     networks: [ 'member-b', 'chain' ]
 
   member-b-matchmaker-api:
@@ -426,6 +430,8 @@ services:
     ports:
       - 9964:9944
     restart: on-failure
+    volumes:
+      - optimiser-node-storage:/data
     networks: [ 'optimiser', 'chain' ]
 
   optimiser-matchmaker-api:
@@ -507,10 +513,13 @@ volumes:
   member-a-matchmaker-api-storage:
   member-a-identity-storage:
   member-a-attachment-api-storage:
+  member-a-node-storage:
   member-b-matchmaker-api-storage:
   member-b-identity-storage:
   member-b-attachment-api-storage:
+  member-b-node-storage:
   optimiser-matchmaker-api-storage:
   optimiser-identity-storage:
   optimiser-attachment-api-storage:
+  optimiser-node-storage:
   ipfs:
