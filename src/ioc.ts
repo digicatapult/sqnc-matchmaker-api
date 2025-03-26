@@ -14,7 +14,7 @@ export const iocContainer: IocContainer = {
 }
 
 export function resetContainer() {
-  container.reset()
+  container.clearInstances()
   container.register<Logger>(LoggerToken, { useValue: logger })
   container.register<Env>(EnvToken, { useValue: env })
   container.register<Knex>(KnexToken, { useValue: clientSingleton })

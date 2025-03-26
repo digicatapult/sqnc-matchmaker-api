@@ -14,27 +14,11 @@ npx knex migrate:down --knexfile src/lib/db/knexfile.ts  # used to migrate to th
 
 The following tables exist in the `matchmaker-api` database.
 
-### `attachment`
-
-| column       | PostgreSQL type           | nullable |       default        | description                            |
-| :----------- | :------------------------ | :------- | :------------------: | :------------------------------------- |
-| `id`         | `UUID`                    | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment` |
-| `filename`   | `CHARACTER VARYING (255)` | TRUE     |          -           | Attachment filename                    |
-| `ipfs_hash`  | `CHARACTER VARYING (255)` | FALSE    |          -           | Attachment CID in IPFS                 |
-| `size`       | `BIG INT`                 | TRUE     |          -           | Size of file in bytes if known         |
-| `created_at` | `dateTime`                | FALSE    |       `now()`        | When the row was first created         |
-
-#### Indexes
-
-| columns | Index Type | description |
-| :------ | :--------- | :---------- |
-| `id`    | PRIMARY    | Primary key |
-
 ### `demand`
 
 | column                     | PostgreSQL type | nullable |       default        | description                                          |
 | :------------------------- | :-------------- | :------- | :------------------: | :--------------------------------------------------- |
-| `id`                       | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `attachment`               |
+| `id`                       | `UUID`          | FALSE    | `uuid_generate_v4()` | Unique identifier for the `demand`                   |
 | `owner`                    | `STRING (48)`   | FALSE    |          -           | Demand owner name                                    |
 | `subtype`                  | `ENUM`          | FALSE    |          -           | The demand subtype (`demand_a`, `demand_b`)          |
 | `state`                    | `ENUM`          | FALSE    |          -           | The demand state (`pending`, `created`, `allocated`) |
@@ -49,12 +33,6 @@ The following tables exist in the `matchmaker-api` database.
 | columns | Index Type | description |
 | :------ | :--------- | :---------- |
 | `id`    | PRIMARY    | Primary key |
-
-#### Foreign Keys
-
-| columns                    | References     | description                  |
-| :------------------------- | :------------- | :--------------------------- |
-| `parameters_attachment_id` | attachment(id) | The id of the attachment row |
 
 ### `transaction`
 
@@ -127,15 +105,16 @@ The following tables exist in the `matchmaker-api` database.
 
 ### `demand_comment`
 
-| column       | PostgreSQL type           | nullable | default | description                                   |
-| :----------- | :------------------------ | :------- | :-----: | :-------------------------------------------- |
-| `id`         | `UUID`                    | FALSE    |         | Transaction id when the comment was created   |
-| `owner`      | `CHAR (64)`               | FALSE    |         | Address of the commenter                      |
-| `state`      | `ENUM`                    | FALSE    |         | `pending` or `created`                        |
-| `demand`     | `UUID`                    | FALSE    |         | Id of the demand this comment is on           |
-| `attachment` | `UUID`                    | FALSE    |         | Id of the attachment with the comment content |
-| `created_at` | `Timestamp with timezone` | FALSE    | `now()` | Creation datetime                             |
-| `updated_at` | `Timestamp with timezone` | FALSE    | `now()` | Last updated datetime                         |
+| column           | PostgreSQL type           | nullable | default | description                                        |
+| :--------------- | :------------------------ | :------- | :-----: | :------------------------------------------------- |
+| `id`             | `UUID`                    | FALSE    |         | Transaction id when the comment was created        |
+| `owner`          | `CHAR (64)`               | FALSE    |         | Address of the commenter                           |
+| `state`          | `ENUM`                    | FALSE    |         | `pending` or `created`                             |
+| `demand`         | `UUID`                    | FALSE    |         | Id of the demand this comment is on                |
+| `attachment_id`  | `UUID`                    | FALSE    |         | Id of the attachment with the comment content      |
+| `transaction_id` | `UUID`                    | FALSE    |         | Id of the transaction the comment was performed in |
+| `created_at`     | `Timestamp with timezone` | FALSE    | `now()` | Creation datetime                                  |
+| `updated_at`     | `Timestamp with timezone` | FALSE    | `now()` | Last updated datetime                              |
 
 #### Indexes
 
@@ -145,8 +124,33 @@ The following tables exist in the `matchmaker-api` database.
 
 #### Foreign Keys
 
-| columns        | References                | description                                                                 |
-| :------------- | :------------------------ | :-------------------------------------------------------------------------- |
-| `id`, `demand` | transaction(id, local_id) | Ensures the comment is associated with a transaction for the correct demand |
-| `demand`       | demand(id)                | Ensures the demand is a valid demand                                        |
-| `attachment`   | attachment(id)            | Ensures the comment content is associated with a valid attachment           |
+| columns                    | References                | description                                                                 |
+| :------------------------- | :------------------------ | :-------------------------------------------------------------------------- |
+| `transaction_id`, `demand` | transaction(id, local_id) | Ensures the comment is associated with a transaction for the correct demand |
+| `demand`                   | demand(id)                | Ensures the demand is a valid demand                                        |
+
+### `match2_comment`
+
+| column           | PostgreSQL type           | nullable | default | description                                        |
+| :--------------- | :------------------------ | :------- | :-----: | :------------------------------------------------- |
+| `id`             | `UUID`                    | FALSE    |         | Transaction id when the comment was created        |
+| `owner`          | `CHAR (64)`               | FALSE    |         | Address of the commenter                           |
+| `state`          | `ENUM`                    | FALSE    |         | `pending` or `created`                             |
+| `match2`         | `UUID`                    | FALSE    |         | Id of the match2 this comment is on                |
+| `attachment_id`  | `UUID`                    | FALSE    |         | Id of the attachment with the comment content      |
+| `transaction_id` | `UUID`                    | FALSE    |         | Id of the transaction the comment was performed in |
+| `created_at`     | `Timestamp with timezone` | FALSE    | `now()` | Creation datetime                                  |
+| `updated_at`     | `Timestamp with timezone` | FALSE    | `now()` | Last updated datetime                              |
+
+#### Indexes
+
+| columns | Index Type | description |
+| :------ | :--------- | :---------- |
+| `id`    | PRIMARY    | Primary key |
+
+#### Foreign Keys
+
+| columns                    | References                | description                                                                 |
+| :------------------------- | :------------------------ | :-------------------------------------------------------------------------- |
+| `transaction_id`, `match2` | transaction(id, local_id) | Ensures the comment is associated with a transaction for the correct match2 |
+| `match2`                   | match2(id)                | Ensures the demand is a valid demand                                        |

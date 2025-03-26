@@ -7,7 +7,8 @@ import { AttachmentRecord, DemandRecord, MatchRecord, mergeChangeSets, findLocal
 const mkAttachment: (i: number) => AttachmentRecord = (i) => ({
   type: 'insert',
   id: `${i}`,
-  ipfs_hash: `${i}-hash`,
+  integrityHash: `${i}-hash`,
+  ownerAddress: 'alice',
 })
 
 const mkDemand: (i: number) => DemandRecord = (i) => ({

@@ -1,7 +1,7 @@
 import { logger } from '../logger.js'
 
 export const serviceState = {
-  UP: 'up',
+  UP: 'ok',
   DOWN: 'down',
   ERROR: 'error',
 } as const

@@ -1,10 +1,9 @@
 import { container } from 'tsyringe'
 import Database from '../../../src/lib/db/index.js'
-import { notSelfAddress, proxyAddress } from '../../helper/mock.js'
+import { notSelfAddress, parametersAttachmentId, proxyAddress } from '../../helper/mock.js'
 
 export const cleanup = async () => {
   const db = container.resolve(Database).db()
-  await db.attachment().del()
   await db.demand().del()
   await db.transaction().del()
   await db.match2().del()
@@ -12,7 +11,6 @@ export const cleanup = async () => {
 
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
 
-export const parametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
 export const seededDemandAId = 'ae350c28-f696-4e95-8467-d00507dfcc39'
 export const seededDemandBId = '0f5af074-7d4d-40b4-86a5-17a2391303cb'
 export const seededDemandACreationTransactionId = 'bfd86663-9b2f-4f38-86e5-acdafa5f57fc'
@@ -63,15 +61,6 @@ const seededDemandTokenId = 42
 export const match2Seed = async () => {
   const db = container.resolve(Database).db()
   await cleanup()
-  await db.attachment().insert([
-    {
-      id: parametersAttachmentId,
-      filename: 'test.txt',
-      ipfs_hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
-      size: 42,
-      created_at: exampleDate,
-    },
-  ])
 
   await db.demand().insert([
     {

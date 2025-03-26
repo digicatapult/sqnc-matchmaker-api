@@ -24,7 +24,13 @@ import {
   seededDemandBAlreadyAllocated,
 } from '../../seeds/offchainSeeds/demand.seed.js'
 
-import { proxyAlias, withIdentitySelfMock } from '../../helper/mock.js'
+import {
+  MockDispatcherContext,
+  proxyAlias,
+  withAttachmentMock,
+  withDispatcherMock,
+  withIdentitySelfMock,
+} from '../../helper/mock.js'
 import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
 
 const runDemandTests = (demandType: 'demandA' | 'demandB') => {
@@ -43,12 +49,15 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
 
   describe(demandType, () => {
     let app: Express
+    const context: MockDispatcherContext = {} as MockDispatcherContext
 
     before(async function () {
       app = await createHttpServer()
     })
 
-    withIdentitySelfMock()
+    withDispatcherMock(context)
+    withIdentitySelfMock(context)
+    withAttachmentMock(context)
 
     beforeEach(async function () {
       await demandSeed()

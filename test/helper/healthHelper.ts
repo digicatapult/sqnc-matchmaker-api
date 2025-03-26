@@ -1,7 +1,7 @@
 export const responses = {
   ok: (
     sqncRuntimeVersion: number,
-    ipfsVersion: string,
+    attachmentVersion: string,
     identityVersion: string,
     indexerStatus: string,
     startupTime: Date,
@@ -27,11 +27,10 @@ export const responses = {
             },
           },
         },
-        ipfs: {
+        attachment: {
           status: 'ok',
           detail: {
-            version: ipfsVersion,
-            peerCount: 1,
+            version: attachmentVersion,
           },
         },
         identity: {
@@ -52,8 +51,9 @@ export const responses = {
     },
   }),
 
-  ipfsDown: (
+  attachmentDown: (
     sqncRuntimeVersion: number,
+    attachmentVersion: string,
     identityVersion: string,
     indexerStatus: string,
     startupTime: Date,
@@ -79,10 +79,10 @@ export const responses = {
             },
           },
         },
-        ipfs: {
+        attachment: {
           status: 'down',
           detail: {
-            message: 'Error getting status from IPFS node',
+            version: attachmentVersion,
           },
         },
         identity: {

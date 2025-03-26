@@ -45,6 +45,7 @@ import ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
 import { AddressResolver } from '../../../utils/determineSelfAddress.js'
+import Attachment from '../../../lib/services/attachment.js'
 
 @Route('v1/match2')
 @injectable()
@@ -56,6 +57,7 @@ export class Match2Controller extends Controller {
 
   constructor(
     private identity: Identity,
+    private attachment: Attachment,
     private node: ChainNode,
     private addressResolver: AddressResolver,
     db: Database,
@@ -406,7 +408,7 @@ export class Match2Controller extends Controller {
     const [demandB] = await this.db.getDemand(match2?.demandB)
     if (!demandB) throw new NotFound('demandB')
     //check if attachment exists
-    const [attachment] = await this.db.getAttachment(attachmentId)
+    const [attachment] = await this.attachment.getAttachments([attachmentId])
     if (!attachment) throw new BadRequest(`${attachmentId} not found`)
 
     const roles = [match2.memberA, match2.memberB]
@@ -430,7 +432,7 @@ export class Match2Controller extends Controller {
       state: 'created',
       owner: selfAddress,
       match2: match2Id,
-      attachment: attachmentId,
+      attachment_id: attachmentId,
     })
     this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
 

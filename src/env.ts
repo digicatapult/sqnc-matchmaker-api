@@ -19,13 +19,13 @@ const env = envalid.cleanEnv(process.env, {
   DB_NAME: envalid.str({ default: 'sqnc-matchmaker-api' }),
   IDENTITY_SERVICE_HOST: envalid.host({ devDefault: 'localhost' }),
   IDENTITY_SERVICE_PORT: envalid.port({ devDefault: 3002, default: 3000 }),
+  ATTACHMENT_SERVICE_HOST: envalid.host({ devDefault: 'localhost' }),
+  ATTACHMENT_SERVICE_PORT: envalid.port({ devDefault: 3003, default: 3000 }),
   NODE_HOST: envalid.host({ default: 'localhost' }),
   NODE_PORT: envalid.port({ default: 9944 }),
   ENABLE_INDEXER: envalid.bool({ default: true }),
   USER_URI: envalid.str({ devDefault: '//Alice' }),
   PROXY_FOR: envalid.str({ devDefault: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty' }), // Default Bob (NOTE: you need to manually set up the proxy on chain, if you don't want to use this feature, set to '')
-  IPFS_HOST: envalid.host({ devDefault: 'localhost' }),
-  IPFS_PORT: envalid.port({ default: 5001 }),
   WATCHER_POLL_PERIOD_MS: envalid.num({ default: 10 * 1000 }),
   WATCHER_TIMEOUT_MS: envalid.num({ default: 2 * 1000 }),
   INDEXER_TIMEOUT_MS: envalid.num({ default: 30 * 1000 }),
@@ -33,17 +33,19 @@ const env = envalid.cleanEnv(process.env, {
   API_SWAGGER_TITLE: envalid.str({ default: 'MatchmakerAPI' }),
   API_SWAGGER_HEADING: envalid.str({ default: 'MatchmakerAPI' }),
   IDP_CLIENT_ID: envalid.str({ devDefault: 'sequence' }),
-  IDP_PUBLIC_URL_PREFIX: envalid.url({
-    devDefault: 'http://localhost:3080/realms/member-a/protocol/openid-connect',
+  IDP_INTERNAL_CLIENT_ID: envalid.str({ devDefault: 'sequence' }),
+  IDP_INTERNAL_CLIENT_SECRET: envalid.str({ devDefault: 'secret' }),
+  IDP_PUBLIC_ORIGIN: envalid.url({
+    devDefault: 'http://localhost:3080',
   }),
-  IDP_INTERNAL_URL_PREFIX: envalid.url({
-    devDefault: 'http://localhost:3080/realms/member-a/protocol/openid-connect',
+  IDP_INTERNAL_ORIGIN: envalid.url({
+    devDefault: 'http://localhost:3080',
   }),
-  IDP_TOKEN_PATH: envalid.str({
-    default: '/token',
+  IDP_OAUTH2_REALM: envalid.str({
+    devDefault: 'member-a',
   }),
-  IDP_JWKS_PATH: envalid.str({
-    default: '/certs',
+  IDP_INTERNAL_REALM: envalid.str({
+    devDefault: 'internal',
   }),
   INDEXER_RETRY_DELAY: envalid.num({ default: 1000 }),
 })

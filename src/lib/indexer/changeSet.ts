@@ -32,7 +32,7 @@ export type DemandCommentRecord =
       state: 'created'
       owner: string
       demand: string
-      attachment: string
+      attachment_id: string
     }
   | {
       type: 'update'
@@ -68,7 +68,7 @@ export type Match2CommentRecord =
       state: 'created'
       owner: string
       match2: string
-      attachment: string
+      attachment_id: string
     }
   | {
       type: 'update'
@@ -80,7 +80,8 @@ export type AttachmentRecord = {
   type: 'insert'
   id: string
   filename?: string
-  ipfs_hash: string
+  integrityHash: string
+  ownerAddress: string
   size?: number
 }
 
@@ -112,9 +113,9 @@ const mergeMaps = <T extends Change>(base?: Map<string, T>, update?: Map<string,
 }
 
 export const mergeChangeSets = (base: ChangeSet, update: ChangeSet) => {
+  const attachments = mergeMaps(base.attachments, update.attachments)
   const demands = mergeMaps(base.demands, update.demands)
   const matches = mergeMaps(base.matches, update.matches)
-  const attachments = mergeMaps(base.attachments, update.attachments)
   const demandComments = mergeMaps(base.demandComments, update.demandComments)
 
   const result: ChangeSet = {

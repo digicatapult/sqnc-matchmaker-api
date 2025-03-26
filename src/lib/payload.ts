@@ -1,6 +1,7 @@
 import * as TokenType from '../models/tokenType.js'
-import { AttachmentRow, DemandRow, DemandWithAttachmentRow, Match2Row } from './db/index.js'
+import { DemandRow, Match2Row } from './db/index.js'
 import { bs58ToHex } from '../utils/hex.js'
+import { AttachmentEntry } from './services/attachment.js'
 
 export interface Payload {
   process: { id: string; version: number }
@@ -20,7 +21,7 @@ export interface MetadataFile {
 
 export type Metadata = Record<string, { type: string; value: string | number }>
 
-export const demandCreate = (demand: DemandWithAttachmentRow): Payload => ({
+export const demandCreate = (demand: DemandRow, attachment: AttachmentEntry): Payload => ({
   process: { id: 'demand_create', version: 1 },
   inputs: [],
   outputs: [
@@ -31,13 +32,13 @@ export const demandCreate = (demand: DemandWithAttachmentRow): Payload => ({
         '@type': { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: 'created' },
         subtype: { type: 'LITERAL', value: demand.subtype },
-        parameters: { type: 'FILE', value: bs58ToHex(demand.ipfs_hash) },
+        parameters: { type: 'FILE', value: bs58ToHex(attachment.integrityHash) },
       },
     },
   ],
 })
 
-export const demandCommentCreate = (demand: DemandRow, comment: AttachmentRow): Payload => ({
+export const demandCommentCreate = (demand: DemandRow, comment: AttachmentEntry): Payload => ({
   process: { id: 'demand_comment', version: 1 },
   inputs: [demand.latestTokenId as number],
   outputs: [
@@ -48,7 +49,7 @@ export const demandCommentCreate = (demand: DemandRow, comment: AttachmentRow): 
         '@type': { type: 'LITERAL', value: TokenType.DEMAND },
         state: { type: 'LITERAL', value: demand.state },
         subtype: { type: 'LITERAL', value: demand.subtype },
-        comment: { type: 'FILE', value: bs58ToHex(comment.ipfsHash) },
+        comment: { type: 'FILE', value: bs58ToHex(comment.integrityHash) },
         '@original_id': { type: 'TOKEN_ID', value: demand.originalTokenId as number },
       },
     },
@@ -221,7 +222,7 @@ export const match2Cancel = (
   match2: Match2Row,
   demandA: DemandRow,
   demandB: DemandRow,
-  comment: AttachmentRow
+  comment: AttachmentEntry
 ): Payload => ({
   process: { id: 'match2_cancel', version: 1 },
   inputs: [demandA.latestTokenId as number, demandB.latestTokenId as number, match2.latestTokenId as number],
@@ -255,7 +256,7 @@ export const match2Cancel = (
         demand_a: { type: 'TOKEN_ID', value: demandA.originalTokenId as number },
         demand_b: { type: 'TOKEN_ID', value: demandB.originalTokenId as number },
         '@original_id': { type: 'TOKEN_ID', value: match2.originalTokenId as number },
-        comment: { type: 'FILE', value: bs58ToHex(comment.ipfsHash) },
+        comment: { type: 'FILE', value: bs58ToHex(comment.integrityHash) },
       },
     },
   ],

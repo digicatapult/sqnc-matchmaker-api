@@ -10,7 +10,7 @@ const startIndexerStatus = () =>
       if (env.ENABLE_INDEXER) {
         return Indexer.getStatus()
       }
-      return { status: 'up', detail: { status: 'Indexer is disabled' } }
+      return { status: 'ok', detail: { status: 'Indexer is disabled' } }
     },
     pollingPeriodMs: WATCHER_POLL_PERIOD_MS,
     serviceTimeoutMs: WATCHER_TIMEOUT_MS,

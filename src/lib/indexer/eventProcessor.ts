@@ -47,14 +47,15 @@ const getOrError = <T>(map: Map<string, T>, key: string): T => {
   return val
 }
 
-const attachmentPayload = (map: Map<string, string>, key: string): AttachmentRecord => ({
+const attachmentPayload = (map: Map<string, string>, sender: string, key: string): AttachmentRecord => ({
   type: 'insert',
   id: UUIDv4(),
-  ipfs_hash: getOrError(map, key),
+  integrityHash: getOrError(map, key),
+  ownerAddress: sender,
 })
 
 const DefaultEventProcessors: EventProcessors = {
-  demand_create: (version, transaction, _sender, _inputs, outputs) => {
+  demand_create: (version, transaction, sender, _inputs, outputs) => {
     if (version !== 1) throw new Error(`Incompatible version ${version} for demand_create process`)
 
     const newDemandId = outputs[0].id
@@ -69,7 +70,7 @@ const DefaultEventProcessors: EventProcessors = {
       }
     }
 
-    const attachment: AttachmentRecord = attachmentPayload(newDemand.metadata, 'parameters')
+    const attachment: AttachmentRecord = attachmentPayload(newDemand.metadata, sender, 'parameters')
     const demand: DemandRecord = {
       type: 'insert',
       id: UUIDv4(),
@@ -116,14 +117,14 @@ const DefaultEventProcessors: EventProcessors = {
       }
     }
 
-    const attachment: AttachmentRecord = attachmentPayload(newDemand.metadata, 'comment')
+    const attachment: AttachmentRecord = attachmentPayload(newDemand.metadata, sender, 'comment')
     const comment: DemandCommentRecord = {
       type: 'insert',
       id: UUIDv4(),
       state: 'created',
       demand: demandId,
       owner: sender,
-      attachment: attachment.id,
+      attachment_id: attachment.id,
     }
 
     return {
@@ -371,14 +372,14 @@ const DefaultEventProcessors: EventProcessors = {
         matches,
       }
 
-    const attachment: AttachmentRecord = attachmentPayload(match.metadata, 'comment')
+    const attachment: AttachmentRecord = attachmentPayload(match.metadata, sender, 'comment')
     const comment: Match2CommentRecord = {
       type: 'insert',
       id: UUIDv4(),
       state: 'created',
       match2: matchLocalId,
       owner: sender,
-      attachment: attachment.id,
+      attachment_id: attachment.id,
     }
 
     return {

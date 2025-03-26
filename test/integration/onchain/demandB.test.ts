@@ -4,8 +4,15 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
 import { post } from '../../helper/routeHelper.js'
-import { seed, cleanup, seededDemandBId, parametersAttachmentId } from '../../seeds/onchainSeeds/demandB.seed.js'
-import { selfAddress, withIdentitySelfMock } from '../../helper/mock.js'
+import { seed, cleanup, seededDemandBId } from '../../seeds/onchainSeeds/demandB.seed.js'
+import {
+  MockDispatcherContext,
+  parametersAttachmentId,
+  selfAddress,
+  withAttachmentMock,
+  withDispatcherMock,
+  withIdentitySelfMock,
+} from '../../helper/mock.js'
 import Database, { DemandRow } from '../../../src/lib/db/index.js'
 import { pollDemandCommentState, pollDemandState, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
@@ -21,9 +28,12 @@ describe('on-chain', function () {
   const db = container.resolve(Database)
   const node = new ExtendedChainNode(logger, env)
   const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
+  const mock: MockDispatcherContext = {} as MockDispatcherContext
 
   withAppAndIndexer(context)
-  withIdentitySelfMock()
+  withDispatcherMock(mock)
+  withIdentitySelfMock(mock)
+  withAttachmentMock(mock)
   withProxy(node)
 
   beforeEach(async function () {

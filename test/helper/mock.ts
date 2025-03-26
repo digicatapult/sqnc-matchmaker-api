@@ -7,15 +7,26 @@ export const selfAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
 export const proxyAddress = '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy'
 export const notSelfAlias = 'test-not-self'
 export const notSelfAddress = '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty'
+export const parametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
+export const exampleDate = '2023-01-01T00:00:00.000Z'
 
-export function withIdentitySelfMock() {
-  let originalDispatcher: Dispatcher
-  let mockAgent: MockAgent
+export type MockDispatcherContext = { original: Dispatcher; mock: MockAgent }
+
+export function withDispatcherMock(context: MockDispatcherContext) {
   beforeEach(function () {
-    originalDispatcher = getGlobalDispatcher()
-    mockAgent = new MockAgent()
-    setGlobalDispatcher(mockAgent)
-    const mockIdentity = mockAgent.get(`http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`)
+    context.original = getGlobalDispatcher()
+    context.mock = new MockAgent()
+    setGlobalDispatcher(context.mock)
+  })
+
+  afterEach(function () {
+    setGlobalDispatcher(context.original)
+  })
+}
+
+export function withIdentitySelfMock(context: MockDispatcherContext) {
+  beforeEach(function () {
+    const mockIdentity = context.mock.get(`http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`)
     mockIdentity
       .intercept({
         path: '/v1/self',
@@ -49,71 +60,40 @@ export function withIdentitySelfMock() {
       })
       .persist()
   })
-
-  afterEach(function () {
-    setGlobalDispatcher(originalDispatcher)
-  })
 }
 
-export const withIpfsMock = (fileContent?: string | object | Buffer) => {
-  let originalDispatcher: Dispatcher
-  let mockAgent: MockAgent
-
+export const withAttachmentMock = (context: MockDispatcherContext) => {
   beforeEach(function () {
-    originalDispatcher = getGlobalDispatcher()
-    mockAgent = new MockAgent()
-    setGlobalDispatcher(mockAgent)
-    const mockIpfs = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
+    const mockAttachment = context.mock.get(`http://${env.ATTACHMENT_SERVICE_HOST}:${env.ATTACHMENT_SERVICE_PORT}`)
 
-    mockIpfs
+    mockAttachment
       .intercept({
-        path: '/api/v0/add?cid-version=0&wrap-with-directory=true',
-        method: 'POST',
-      })
-      .reply(200, { Name: '', Hash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn', Size: '63052' })
-
-    mockIpfs
-      .intercept({
-        path: '/api/v0/ls?arg=QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
+        path: '/v1/attachment',
         method: 'POST',
       })
       .reply(200, {
-        Objects: [{ Links: [{ Hash: 'file_hash', Name: 'test' }] }],
+        id: '42',
+        integrityHash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
+        filename: 'test.txt',
+        size: 63052,
+        createdAt: '2021-08-31T12:00:00Z',
       })
-    if (fileContent) {
-      mockIpfs
-        .intercept({
-          path: '/api/v0/cat?arg=file_hash',
-          method: 'POST',
-        })
-        .reply(200, fileContent)
-    }
-  })
+      .persist()
 
-  afterEach(function () {
-    setGlobalDispatcher(originalDispatcher)
-  })
-}
-
-export const withIpfsMockError = () => {
-  let originalDispatcher: Dispatcher
-  let mockAgent: MockAgent
-
-  beforeEach(function () {
-    originalDispatcher = getGlobalDispatcher()
-    mockAgent = new MockAgent()
-    setGlobalDispatcher(mockAgent)
-    const mockIpfs = mockAgent.get(`http://${env.IPFS_HOST}:${env.IPFS_PORT}`)
-
-    mockIpfs
+    mockAttachment
       .intercept({
-        path: '/api/v0/add?cid-version=0&wrap-with-directory=true',
-        method: 'POST',
+        path: `/v1/attachment?id=${parametersAttachmentId}`,
+        method: 'GET',
       })
-      .reply(500, 'error')
-  })
-
-  afterEach(function () {
-    setGlobalDispatcher(originalDispatcher)
+      .reply(200, [
+        {
+          id: parametersAttachmentId,
+          filename: 'test.txt',
+          integrityHash: 'QmXVStDC6kTpVHY1shgBQmyA4SuSrYnNRnHSak5iB6Eehn',
+          size: 42,
+          createdAt: exampleDate,
+        },
+      ])
+      .persist()
   })
 }

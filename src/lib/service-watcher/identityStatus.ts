@@ -4,11 +4,9 @@ import Identity from '../services/identity.js'
 
 const { WATCHER_POLL_PERIOD_MS, WATCHER_TIMEOUT_MS } = env
 
-const identity = new Identity()
-
 const startIdentityStatus = () =>
   startStatusHandler({
-    getStatus: identity.getStatus.bind(identity),
+    getStatus: Identity.getStatus,
     pollingPeriodMs: WATCHER_POLL_PERIOD_MS,
     serviceTimeoutMs: WATCHER_TIMEOUT_MS,
   })

@@ -1,11 +1,11 @@
 import { Express } from 'express'
 import Database, { DemandRow, Match2Row } from '../../src/lib/db/index.js'
-import { parametersAttachmentId } from '../seeds/onchainSeeds/onchain.match2.seed.js'
 import { post } from './routeHelper.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from './poll.js'
 import { expect } from 'chai'
 import ChainNode from '../../src/lib/chainNode'
 import { Response } from 'supertest'
+import { parametersAttachmentId } from './mock.js'
 
 export type DemandType = { originalTokenId: number; demandId: string; transactionId: any }
 

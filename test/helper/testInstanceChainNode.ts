@@ -5,6 +5,18 @@ import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { type Env } from '../../src/env.js'
 import { ProxyRequest } from '../../src/models/proxy.js'
 import ChainNode, { EventData } from '../../src/lib/chainNode.js'
+import { z } from 'zod'
+
+const proxyParser = z.tuple([
+  z.array(
+    z.object({
+      delay: z.number(),
+      delegate: z.string(),
+      proxyType: z.string(),
+    })
+  ),
+  z.number(),
+])
 
 export default class ExtendedChainNode extends ChainNode {
   constructor(logger: Logger, env: Env) {
@@ -20,7 +32,7 @@ export default class ExtendedChainNode extends ChainNode {
         const { dispatchError, status } = result
 
         if (dispatchError) {
-          this.logger.warn('dispatch error %s', dispatchError)
+          this.logger.warn('dispatch error %s', dispatchError, extrinsic)
 
           unsub()
           if (dispatchError.isModule) {
@@ -81,5 +93,14 @@ export default class ExtendedChainNode extends ChainNode {
     })
     const signed = await result.signAsync(account, { nonce })
     return signed
+  }
+
+  async getProxies(delegatingAlias: string) {
+    await this.api.isReady
+
+    const account = this.keyring.addFromUri(delegatingAlias)
+    const proxies = await this.api.query.proxy.proxies(account.address)
+    const asJson = proxies.toJSON()
+    return proxyParser.parse(asJson)[0]
   }
 }

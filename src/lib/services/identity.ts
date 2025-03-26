@@ -1,4 +1,4 @@
-import { singleton } from 'tsyringe'
+import { container, singleton } from 'tsyringe'
 import { z } from 'zod'
 
 import { NotFound, HttpResponse } from '../error-handler/index.js'
@@ -26,9 +26,10 @@ export default class Identity {
     this.URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`
   }
 
-  getStatus = async (): Promise<Status> => {
+  static getStatus = async (): Promise<Status> => {
+    const instance = container.resolve(Identity)
     try {
-      const res = await this.getHealth()
+      const res = await instance.getHealth()
       if (res) {
         if (!res.version.match(/\d+.\d+.\d+/)) {
           return {
