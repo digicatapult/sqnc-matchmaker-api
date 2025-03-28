@@ -63,7 +63,7 @@ services:
     networks: [ 'member-a' ]
 
   member-a-identity:
-    image: digicatapult/sqnc-identity-service:v4.0.4
+    image: digicatapult/sqnc-identity-service:v4.1.0
     container_name: member-a-identity
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -84,12 +84,13 @@ services:
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=member-a
       - IDP_INTERNAL_REALM=internal
     networks: [ 'member-a' ]
 
   member-a-attachment:
-    image: digicatapult/sqnc-attachment-api:v2.1.0
+    image: digicatapult/sqnc-attachment-api:v2.2.0
     container_name: member-a-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -107,6 +108,7 @@ services:
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=member-a
       - IDP_INTERNAL_REALM=internal
     networks: [ 'member-a', 'ipfs' ]
@@ -145,6 +147,7 @@ services:
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=member-a
       - IDP_INTERNAL_REALM=internal
       - IDP_INTERNAL_CLIENT_ID=sequence
@@ -212,7 +215,7 @@ services:
     networks: [ 'member-b' ]
 
   member-b-identity:
-    image: digicatapult/sqnc-identity-service:v4.0.4
+    image: digicatapult/sqnc-identity-service:v4.1.0
     container_name: member-b-identity
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -233,12 +236,13 @@ services:
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=member-b
       - IDP_INTERNAL_REALM=internal
     networks: [ 'member-b' ]
 
   member-b-attachment:
-    image: digicatapult/sqnc-attachment-api:v2.1.0
+    image: digicatapult/sqnc-attachment-api:v2.2.0
     container_name: member-b-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -256,6 +260,7 @@ services:
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=member-b
       - IDP_INTERNAL_REALM=internal
     networks: [ 'member-b', 'ipfs' ]
@@ -301,6 +306,7 @@ services:
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=member-b
       - IDP_INTERNAL_REALM=internal
       - IDP_INTERNAL_CLIENT_ID=sequence
@@ -369,7 +375,7 @@ services:
     networks: [ 'optimiser' ]
 
   optimiser-identity:
-    image: digicatapult/sqnc-identity-service:v4.0.4
+    image: digicatapult/sqnc-identity-service:v4.1.0
     container_name: optimiser-identity
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -390,12 +396,13 @@ services:
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=optimiser
       - IDP_INTERNAL_REALM=internal
     networks: [ 'optimiser' ]
 
   optimiser-attachment:
-    image: digicatapult/sqnc-attachment-api:v2.1.0
+    image: digicatapult/sqnc-attachment-api:v2.2.0
     container_name: optimiser-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -413,6 +420,7 @@ services:
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=optimiser
       - IDP_INTERNAL_REALM=internal
     networks: [ 'optimiser', 'ipfs' ]
@@ -458,6 +466,7 @@ services:
       - IDP_CLIENT_ID=sequence
       - IDP_PUBLIC_ORIGIN=http://localhost:3080
       - IDP_INTERNAL_ORIGIN=http://keycloak:8080
+      - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=optimiser
       - IDP_INTERNAL_REALM=internal
       - IDP_INTERNAL_CLIENT_ID=sequence

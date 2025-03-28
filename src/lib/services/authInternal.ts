@@ -24,8 +24,8 @@ export default class AuthInternal {
     @inject(EnvToken) private env: Env,
     @inject(LoggerToken) private logger: Logger
   ) {
-    this.tokenEndpoint = `${env.IDP_INTERNAL_ORIGIN}/realms/${env.IDP_INTERNAL_REALM}/protocol/openid-connect/token`
-    this.introspectionEndpoint = `${env.IDP_INTERNAL_ORIGIN}/realms/${env.IDP_INTERNAL_REALM}/protocol/openid-connect/token/introspect`
+    this.tokenEndpoint = `${env.IDP_INTERNAL_ORIGIN}${env.IDP_PATH_PREFIX}/realms/${env.IDP_INTERNAL_REALM}/protocol/openid-connect/token`
+    this.introspectionEndpoint = `${env.IDP_INTERNAL_ORIGIN}${env.IDP_PATH_PREFIX}/realms/${env.IDP_INTERNAL_REALM}/protocol/openid-connect/token/introspect`
   }
 
   public async getTokenExpirationDate(accessToken: string) {

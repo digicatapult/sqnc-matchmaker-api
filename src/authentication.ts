@@ -19,5 +19,5 @@ const makeAuth = (securityName: string, jwksUri: string) =>
 
 export const expressAuthentication = makeAuth(
   'oauth2',
-  `${env.IDP_INTERNAL_ORIGIN}/realms/${env.IDP_OAUTH2_REALM}/protocol/openid-connect/certs`
+  `${env.IDP_INTERNAL_ORIGIN}${env.IDP_PATH_PREFIX}/realms/${env.IDP_OAUTH2_REALM}/protocol/openid-connect/certs`
 )
