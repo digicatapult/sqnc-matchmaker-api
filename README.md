@@ -212,6 +212,7 @@ The demo involves three personas: `MemberA`, `MemberB` and an `Optimiser`. Each 
 
 - sqnc-matchmaker-api (+ PostgreSQL)
 - sqnc-identity-service (+ PostgreSQL)
+- sqnc-attachment-api (+ PostgreSQL)
 - sqnc-node
 
 There is also a single `ipfs` node for file storage and `keycloak` instance used as the identity provider with a realm (`member-a`, `member-b`, `optimiser`) configured for each persona.

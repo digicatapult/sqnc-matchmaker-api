@@ -79,6 +79,7 @@ export const errorHandler = function errorHandler(
 ): ExResponse | void {
   const logger = container.resolve<Logger>(LoggerToken)
   if (err instanceof OauthError) {
+    console.log(err)
     return res.status(401).send({
       message: 'Forbidden',
     })

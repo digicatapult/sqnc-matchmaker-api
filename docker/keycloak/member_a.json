@@ -385,11 +385,29 @@
           }
         }
       ],
-      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "email"],
+      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "email", "read", "write"],
       "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
     }
   ],
   "clientScopes": [
+    {
+      "name": "read",
+      "protocol": "openid-connect",
+      "description": "Allows read access",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "write",
+      "protocol": "openid-connect",
+      "description": "Allows write access",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
     {
       "name": "profile",
       "description": "OpenID Connect built-in scope: profile",

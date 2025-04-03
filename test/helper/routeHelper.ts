@@ -3,7 +3,7 @@ import express from 'express'
 
 import env from '../../src/env.js'
 
-const getToken = async () => {
+export const getToken = async () => {
   const tokenReq = await fetch('http://localhost:3080/realms/member-a/protocol/openid-connect/token', {
     method: 'POST',
     headers: {
