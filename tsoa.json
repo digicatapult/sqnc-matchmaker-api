@@ -11,10 +11,10 @@
         "flows": {
           "clientCredentials": {
             "scopes": {
-              "demandA:read": "Read demandB",
+              "demandA:read": "Read demandA",
               "demandA:create": "Create demandA",
               "demandA:comment": "Comment on demandA",
-              "demandB:read": "Read demandA",
+              "demandB:read": "Read demandB",
               "demandB:create": "Create demandB",
               "demandB:comment": "Comment on demandB",
               "match2:read": "Read match2",
