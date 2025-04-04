@@ -30,7 +30,7 @@ export class TransactionController extends Controller {
    */
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<NotFound>(404, 'Item not found')
-  @Security('oauth2', ['read'])
+  @Security('oauth2')
   @Get('/')
   public async getAllTransactions(
     @Query() apiType?: TransactionApiType,
@@ -53,7 +53,7 @@ export class TransactionController extends Controller {
    * @param transactionId The transactions's identifier
    */
   @Response<NotFound>(404, 'Item not found')
-  @Security('oauth2', ['read'])
+  @Security('oauth2')
   @Get('{transactionId}')
   public async getTransaction(@Path() transactionId: UUID): Promise<TransactionResponse> {
     const [transaction] = await this.db.getTransaction(transactionId)

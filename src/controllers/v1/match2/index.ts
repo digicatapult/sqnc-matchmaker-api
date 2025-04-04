@@ -73,7 +73,7 @@ export class Match2Controller extends Controller {
    * @summary Propose a new match2
    */
   @Post()
-  @Security('oauth2', ['write'])
+  @Security('oauth2', ['admin', 'match2:propose'])
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')
@@ -121,7 +121,7 @@ export class Match2Controller extends Controller {
    * Returns the details of all match2s.
    * @summary List match2s
    */
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'match2:read'])
   @Get('/')
   public async getAll(@Request() req: express.Request, @Query() updated_since?: DATE): Promise<Match2Response[]> {
     const query: { updatedSince?: Date } = {}
@@ -140,7 +140,7 @@ export class Match2Controller extends Controller {
    */
   @Response<ValidateError>(422, 'Validation Failed')
   @Response<NotFound>(404, 'Item not found')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'match2:read'])
   @Get('{match2Id}')
   public async getMatch2(@Request() req: express.Request, @Path() match2Id: UUID): Promise<Match2Response> {
     const [match2] = await this.db.getMatch2(match2Id)
@@ -155,7 +155,7 @@ export class Match2Controller extends Controller {
    * @param match2Id The match2's identifier
    */
   @Post('{match2Id}/proposal')
-  @Security('oauth2', ['write'])
+  @Security('oauth2', ['admin', 'match2:propose'])
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
@@ -205,7 +205,7 @@ export class Match2Controller extends Controller {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'match2:propose'])
   @Get('{match2Id}/proposal/{proposalId}')
   public async getMatch2Proposal(@Path() match2Id: UUID, proposalId: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
@@ -223,7 +223,7 @@ export class Match2Controller extends Controller {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'match2:propose'])
   @Get('{match2Id}/proposal')
   public async getMatch2Proposals(
     @Path() match2Id: UUID,
@@ -251,7 +251,7 @@ export class Match2Controller extends Controller {
    * @param match2Id The match2's identifier
    */
   @Post('{match2Id}/accept')
-  @Security('oauth2', ['write'])
+  @Security('oauth2', ['admin', 'match2:accept.reject'])
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('201')
@@ -359,7 +359,7 @@ export class Match2Controller extends Controller {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'match2:accept.reject'])
   @Get('{match2Id}/accept/{acceptId}')
   public async getMatch2Accept(@Path() match2Id: UUID, acceptId: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
@@ -377,7 +377,7 @@ export class Match2Controller extends Controller {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'match2:accept.reject'])
   @Get('{match2Id}/accept')
   public async getMatch2Accepts(@Path() match2Id: UUID, @Query() updated_since?: DATE): Promise<TransactionResponse[]> {
     const query: {
@@ -401,7 +401,7 @@ export class Match2Controller extends Controller {
    * @param match2Id The match2's identifier
    */
   @Post('{match2Id}/cancellation')
-  @Security('oauth2', ['write'])
+  @Security('oauth2', ['admin', 'match2:cancel'])
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('200')
@@ -455,7 +455,7 @@ export class Match2Controller extends Controller {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'match2:cancel'])
   @Get('{match2Id}/cancellation')
   public async getMatch2Cancellations(@Path() match2Id: UUID): Promise<TransactionResponse[]> {
     const query: {
@@ -476,7 +476,7 @@ export class Match2Controller extends Controller {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'match2:cancel'])
   @Get('{match2Id}/cancellation/{cancellationId}')
   public async getMatch2Cancellation(@Path() match2Id: UUID, cancellationId: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
@@ -494,7 +494,7 @@ export class Match2Controller extends Controller {
    * @param match2Id The match2's identifier
    */
   @Post('{match2Id}/rejection')
-  @Security('oauth2', ['write'])
+  @Security('oauth2', ['admin', 'match2:accept.reject'])
   @Response<NotFound>(404, 'Item not found')
   @Response<BadRequest>(400, 'Request was invalid')
   @SuccessResponse('200')
@@ -535,7 +535,7 @@ export class Match2Controller extends Controller {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'match2:accept.reject'])
   @Get('{match2Id}/rejection/{rejectionId}')
   public async getMatch2Rejection(@Path() match2Id: UUID, rejectionId: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.getMatch2(match2Id)
@@ -553,7 +553,7 @@ export class Match2Controller extends Controller {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'match2:accept.reject'])
   @Get('{match2Id}/rejection')
   public async getMatch2Rejections(
     @Path() match2Id: UUID,

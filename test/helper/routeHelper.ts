@@ -13,6 +13,7 @@ export const getToken = async () => {
       grant_type: 'client_credentials',
       client_id: env.IDP_CLIENT_ID,
       client_secret: 'secret',
+      scope: 'admin',
     }),
   })
 

@@ -57,7 +57,7 @@ export class DemandAController extends DemandController {
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<ValidateError>(422, 'Validation Failed')
-  @Security('oauth2', ['write'])
+  @Security('oauth2', ['admin', 'demandA:create'])
   @SuccessResponse('201')
   public async createDemandA(@Request() req: express.Request, @Body() body: DemandRequest): Promise<DemandResponse> {
     return super.createDemand(req, body)
@@ -67,7 +67,7 @@ export class DemandAController extends DemandController {
    * Returns the details of all demandAs.
    * @summary List demandAs
    */
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'demandA:read'])
   @Get('/')
   public async getAll(@Request() req: express.Request, @Query() updated_since?: DATE): Promise<DemandResponse[]> {
     return super.getAll(req, updated_since)
@@ -78,7 +78,7 @@ export class DemandAController extends DemandController {
    * @param demandAId The demandA's identifier
    */
   @Response<NotFound>(404, 'Item not found')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'demandA:read'])
   @Get('{demandAId}')
   public async getDemandA(
     @Request() req: express.Request,
@@ -94,7 +94,7 @@ export class DemandAController extends DemandController {
    */
   @Post('{demandAId}/creation')
   @Response<NotFound>(404, 'Item not found')
-  @Security('oauth2', ['write'])
+  @Security('oauth2', ['admin', 'demandA:create'])
   @SuccessResponse('201')
   public async createDemandAOnChain(@Path() demandAId: UUID): Promise<TransactionResponse> {
     return super.createDemandOnChain(demandAId)
@@ -107,7 +107,7 @@ export class DemandAController extends DemandController {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'demandA:create'])
   @Get('{demandAId}/creation/{creationId}')
   public async getDemandACreation(@Path() demandAId: UUID, @Path() creationId: UUID): Promise<TransactionResponse> {
     return super.getDemandCreation(demandAId, creationId)
@@ -119,7 +119,7 @@ export class DemandAController extends DemandController {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'demandA:create'])
   @Get('{demandAId}/creation/')
   public async getTransactionsFromDemandA(
     @Path() demandAId: UUID,
@@ -136,7 +136,7 @@ export class DemandAController extends DemandController {
   @Post('{demandAId}/comment')
   @Response<NotFound>(404, 'Item not found')
   @Response<NotFound>(400, 'Attachment not found')
-  @Security('oauth2', ['write'])
+  @Security('oauth2', ['admin', 'demandA:comment'])
   @SuccessResponse('201')
   public async createDemandACommentOnChain(
     @Request() req: express.Request,
@@ -153,7 +153,7 @@ export class DemandAController extends DemandController {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'demandA:comment'])
   @Get('{demandAId}/comment/{commentId}')
   public async getDemandAComment(@Path() demandAId: UUID, @Path() commentId: UUID): Promise<TransactionResponse> {
     return super.getDemandComment(demandAId, commentId)
@@ -165,7 +165,7 @@ export class DemandAController extends DemandController {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['read'])
+  @Security('oauth2', ['admin', 'demandA:comment'])
   @Get('{demandAId}/comment')
   public async getDemandAComments(
     @Path() demandAId: UUID,

@@ -8,10 +8,6 @@
     "securityDefinitions": {
       "oauth2": {
         "type": "oauth2",
-        "scopes": {
-          "read": "read",
-          "write": "write"
-        },
         "flows": {
           "clientCredentials": {
             "scopes": []

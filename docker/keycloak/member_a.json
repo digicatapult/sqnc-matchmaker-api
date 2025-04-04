@@ -385,24 +385,71 @@
           }
         }
       ],
-      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "email", "read", "write"],
-      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "demandA:create",
+        "demandA:comment",
+        "demandA:read",
+        "match2:read",
+        "match2:accept.reject"
+      ],
+      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt", "admin"]
     }
   ],
   "clientScopes": [
     {
-      "name": "read",
+      "name": "admin",
       "protocol": "openid-connect",
-      "description": "Allows read access",
+      "description": "Full access to all routes",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"
       }
     },
     {
-      "name": "write",
+      "name": "demandA:create",
       "protocol": "openid-connect",
-      "description": "Allows write access",
+      "description": "Create demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandA:comment",
+      "protocol": "openid-connect",
+      "description": "Comment on demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandA:read",
+      "protocol": "openid-connect",
+      "description": "Read match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:read",
+      "protocol": "openid-connect",
+      "description": "Read match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:accept.reject",
+      "protocol": "openid-connect",
+      "description": "Accept or reject match2",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"
