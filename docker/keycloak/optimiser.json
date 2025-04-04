@@ -397,14 +397,78 @@
         "demandA:read",
         "demandB:read"
       ],
-      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt", "admin"]
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "demandA:create",
+        "demandA:comment",
+        "demandB:create",
+        "demandB:comment",
+        "match2:accept.reject"
+      ]
     }
   ],
   "clientScopes": [
     {
-      "name": "admin",
+      "name": "demandA:read",
       "protocol": "openid-connect",
-      "description": "Full access to all routes",
+      "description": "Read demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandA:create",
+      "protocol": "openid-connect",
+      "description": "Create demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandA:comment",
+      "protocol": "openid-connect",
+      "description": "Comment on demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandB:read",
+      "protocol": "openid-connect",
+      "description": "Read demandB",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandB:create",
+      "protocol": "openid-connect",
+      "description": "Create demandB",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandB:comment",
+      "protocol": "openid-connect",
+      "description": "Comment on demandB",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:read",
+      "protocol": "openid-connect",
+      "description": "Read match2",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"
@@ -429,27 +493,9 @@
       }
     },
     {
-      "name": "match2:read",
+      "name": "match2:accept.reject",
       "protocol": "openid-connect",
-      "description": "Read match2",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "true"
-      }
-    },
-    {
-      "name": "demandA:read",
-      "protocol": "openid-connect",
-      "description": "Read demandA",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "true"
-      }
-    },
-    {
-      "name": "demandB:read",
-      "protocol": "openid-connect",
-      "description": "Read demandB",
+      "description": "Accept or reject match2",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"

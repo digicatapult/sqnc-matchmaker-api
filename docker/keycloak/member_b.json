@@ -391,27 +391,64 @@
         "profile",
         "roles",
         "email",
-        "demandB.create:write",
+        "demandB:create",
         "demandB:comment",
         "demandB:read",
         "match2:read",
         "match2:accept.reject"
       ],
-      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt", "admin"]
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "demandA:read",
+        "demandA:create",
+        "demandA:comment",
+        "match2:propose",
+        "match2:cancel"
+      ]
     }
   ],
   "clientScopes": [
     {
-      "name": "admin",
+      "name": "demandA:read",
       "protocol": "openid-connect",
-      "description": "Full access to all routes",
+      "description": "Read demandA",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"
       }
     },
     {
-      "name": "demandB.create:write",
+      "name": "demandA:create",
+      "protocol": "openid-connect",
+      "description": "Create demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandA:comment",
+      "protocol": "openid-connect",
+      "description": "Comment on demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandB:read",
+      "protocol": "openid-connect",
+      "description": "Read demandB",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandB:create",
       "protocol": "openid-connect",
       "description": "Create demandB",
       "attributes": {
@@ -429,18 +466,27 @@
       }
     },
     {
-      "name": "demandB:read",
+      "name": "match2:read",
       "protocol": "openid-connect",
-      "description": "Read demandB",
+      "description": "Read match2",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"
       }
     },
     {
-      "name": "match2:read",
+      "name": "match2:propose",
       "protocol": "openid-connect",
-      "description": "Read match2",
+      "description": "Propose match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:cancel",
+      "protocol": "openid-connect",
+      "description": "Cancel match2",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"

@@ -112,6 +112,8 @@ Integration tests require the test dependency services be brought up using docke
 docker compose -f ./docker-compose-test.yml up -d
 # install packages
 npm ci
+# build routes
+npm run build
 # run migrations
 npm run db:migrate
 # put process flows on-chain
@@ -237,8 +239,7 @@ curl -X POST \
   -H 'content-type: application/x-www-form-urlencoded' \
   -d grant_type=client_credentials \
   -d client_id=sequence \
-  -d client_secret=secret \
-  -d scope=admin
+  -d client_secret=secret
 ```
 
 This will return a JSON response with the property `access_token` containing the JWT access token which will look something like `eyJhbGci...iPeDl3Fg`. API calls can then be conducted by passing this as a bearer token in an `authorization` header. For curl this is done with an argument like `-H 'authorization: bearer eyJhbGci...iPeDl3Fg'`.
