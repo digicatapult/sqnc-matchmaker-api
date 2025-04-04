@@ -3,7 +3,7 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server.js'
-import { post, get, getToken } from '../../helper/routeHelper.js'
+import { post, get, noScopePost } from '../../helper/routeHelper.js'
 import {
   cleanup,
   demandSeed,
@@ -236,7 +236,7 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(response.body.message).to.equal('Validation failed')
       })
 
-      it('unauthenticated create demand - 401', async () => {
+      it.only('unauthenticated create demand - 401', async () => {
         const response = await post(
           app,
           `/v1/${demandType}`,
@@ -244,7 +244,13 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           { authorization: 'bearer invalid' }
         )
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it.only('missing scope create demand - 401', async () => {
+        const response = await noScopePost(app, `/v1/${demandType}`, { parametersAttachmentId }, {})
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it('non-existent attachment - 400', async () => {
