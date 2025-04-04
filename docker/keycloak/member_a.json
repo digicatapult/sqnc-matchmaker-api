@@ -431,7 +431,7 @@
     {
       "name": "demandA:read",
       "protocol": "openid-connect",
-      "description": "Read match2",
+      "description": "Read demandA",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"

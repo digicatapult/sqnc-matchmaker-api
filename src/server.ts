@@ -40,7 +40,7 @@ export default async (): Promise<Express> => {
   `
 
   const options: SwaggerUiOptions = {
-    swaggerOptions: { url: '/api-docs', oauth: { clientId: env.IDP_CLIENT_ID, scopes: {} } },
+    swaggerOptions: { url: '/api-docs', oauth: { clientId: env.IDP_CLIENT_ID } },
     customCss: customCssToInject,
     customSiteTitle: API_SWAGGER_TITLE,
   }

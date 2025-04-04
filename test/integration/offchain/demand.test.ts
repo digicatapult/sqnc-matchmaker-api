@@ -247,18 +247,6 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(response.body.message).to.equal('Forbidden')
       })
 
-      it.only('missing write scope create demand - 401', async () => {
-        const token = await getToken()
-        const response = await post(
-          app,
-          `/v1/${demandType}`,
-          { parametersAttachmentId },
-          { authorization: 'bearer invalid' }
-        )
-        expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
-      })
-
       it('non-existent attachment - 400', async () => {
         const response = await post(app, `/v1/${demandType}`, { parametersAttachmentId: nonExistentId })
         expect(response.status).to.equal(400)

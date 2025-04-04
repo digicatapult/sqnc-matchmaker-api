@@ -10,7 +10,18 @@
         "type": "oauth2",
         "flows": {
           "clientCredentials": {
-            "scopes": []
+            "scopes": {
+              "admin": "Full access to all routes",
+              "demandA:read": "Read demandB",
+              "demandA:create": "Create demandA",
+              "demandA:comment": "Comment on demandA",
+              "demandB:read": "Read demandA",
+              "demandB:create": "Create demandB",
+              "demandB:comment": "Comment on demandB",
+              "match2:propose": "Propose match2",
+              "match2:cancel": "Cancel match2",
+              "match2:accept.reject": "Accept or reject match2"
+            }
           }
         }
       }
