@@ -231,7 +231,7 @@ The `docker compose` automatically adds process flows using `MemberA`. Process f
 
 ### Authentication
 
-To generate an authentication token for a given persona we will need to perform the client credentials flow against the correct `keycloak` realm. If using the `swagger` interface for each API this can be done by clicking `Authorize` and passing the `client_id` `sequence` and the `client_secret` `secret`. All other API calls through the swagger will now pass with the correct authorization header. If you would prefer to interact with the API from the command line you can generate an authentication token, for example with MemberA, with:
+To generate an authentication token for a given persona we will need to perform the client credentials flow against the correct `keycloak` realm. If using the `swagger` interface for each API this can be done by clicking `Authorize` and passing the `client_id` `sequence` and the `client_secret` `secret`. All other API calls through the swagger will now pass with the correct authorization header. Most routes require a scope, e.g. `GET /demandA` requires scope `demandA:read`. Each persona's keycloak client produces a token with all necessary scopes by default. Additional scopes can be requested via the Swagger UI or as part of a curl request e.g. `-d scope="demandB:read"`. If you would prefer to interact with the API from the command line you can generate an authentication token, for example with MemberA, with:
 
 ```
 curl -X POST \
@@ -242,7 +242,7 @@ curl -X POST \
   -d client_secret=secret
 ```
 
-This will return a JSON response with the property `access_token` containing the JWT access token which will look something like `eyJhbGci...iPeDl3Fg`. API calls can then be conducted by passing this as a bearer token in an `authorization` header. For curl this is done with an argument like `-H 'authorization: bearer eyJhbGci...iPeDl3Fg'`.
+This will return a JSON response with the property `access_token` containing the JWT access token which will look something like `eyJhbGci...iPeDl3Fg`. API calls can then be conducted by passing this as a bearer token in an `authorization` header. For curl this is done with an argument like `-H 'authorization: bearer eyJhbGci...iPeDl3Fg'`. The `scope` property is a space-separated list of all the scopes granted to the token.
 
 ### Identities
 

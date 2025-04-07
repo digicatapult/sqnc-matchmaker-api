@@ -3,7 +3,7 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server.js'
-import { post, get, noScopePost } from '../../helper/routeHelper.js'
+import { post, get, noScopePost, noScopeGet } from '../../helper/routeHelper.js'
 import {
   cleanup,
   demandSeed,
@@ -236,7 +236,7 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(response.body.message).to.equal('Validation failed')
       })
 
-      it.only('unauthenticated create demand - 401', async () => {
+      it('unauthenticated create demand - 401', async () => {
         const response = await post(
           app,
           `/v1/${demandType}`,
@@ -247,8 +247,8 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(response.body.message).to.contain('INVALID_TOKEN')
       })
 
-      it.only('missing scope create demand - 401', async () => {
-        const response = await noScopePost(app, `/v1/${demandType}`, { parametersAttachmentId }, {})
+      it('missing scope create demand - 401', async () => {
+        const response = await noScopePost(app, `/v1/${demandType}`, { parametersAttachmentId })
         expect(response.status).to.equal(401)
         expect(response.body.message).to.contain('MISSING_SCOPES')
       })
@@ -267,7 +267,13 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
       it('unauthenticated get demand - 401', async () => {
         const response = await get(app, `/v1/${demandType}/${seededDemandId}`, { authorization: 'bearer invalid' })
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope get demand - 401', async () => {
+        const response = await noScopeGet(app, `/v1/${demandType}/${seededDemandId}`)
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it(`non-existent ${demandType} id when creating on-chain - 404`, async () => {
@@ -285,7 +291,13 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           authorization: 'bearer invalid',
         })
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope get demand creation - 401', async () => {
+        const response = await noScopeGet(app, `/v1/${demandType}/${seededDemandId}/creation`)
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it(`non-existent ${demandType} id when commenting on-chain - 404`, async () => {
@@ -305,7 +317,13 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           authorization: 'bearer invalid',
         })
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope list demand comment - 401', async () => {
+        const response = await noScopeGet(app, `/v1/${demandType}/${seededDemandId}/comment`)
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it('non-existent comment id when getting comment tx - 404', async () => {
@@ -322,7 +340,16 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           }
         )
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope get demand comment - 401', async () => {
+        const response = await noScopeGet(
+          app,
+          `/v1/${demandType}/${seededDemandId}/comment/${seededDemandBCommentTransactionId}`
+        )
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it(`${demandType} creations with invalid updatedSince - 422`, async () => {
@@ -348,7 +375,13 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           { authorization: 'bearer invalid' }
         )
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope create demand creation - 401', async () => {
+        const response = await noScopePost(app, `/v1/${demandType}/${seededDemandId}/creation`, {})
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it('non-existent Creation ID - 404', async () => {

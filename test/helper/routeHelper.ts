@@ -24,7 +24,6 @@ export const getToken = async (clientId: string = env.IDP_CLIENT_ID, scope: stri
     throw new Error(`Error getting token from keycloak ${tokenReq.statusText}`)
   }
   const body = (await tokenReq.json()) as any
-
   return body.access_token as string
 }
 
@@ -68,6 +67,19 @@ export const postFile = async (
     ...headers,
   }
   return request(app).post(endpoint).set(headersWithToken).attach('file', buf, filename)
+}
+
+export const noScopeGet = async (
+  app: express.Express,
+  endpoint: string,
+  headers: Record<string, string> = {}
+): Promise<request.Test> => {
+  const token = await getToken('test', '')
+  const headersWithToken = {
+    authorization: `bearer ${token}`,
+    ...headers,
+  }
+  return request(app).get(endpoint).set(headersWithToken)
 }
 
 export const noScopePost = async (
