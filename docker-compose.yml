@@ -42,7 +42,7 @@ services:
       test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
 
   sqnc-identity-service:
-    image: digicatapult/sqnc-identity-service:v4.1.0
+    image: digicatapult/sqnc-identity-service:v4.1.3
     container_name: identity-service
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -68,7 +68,7 @@ services:
       - IDP_INTERNAL_REALM=internal
 
   sqnc-attachment-api:
-    image: digicatapult/sqnc-attachment-api:v2.2.0
+    image: digicatapult/sqnc-attachment-api:v2.2.5
     container_name: attachment-api
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -91,7 +91,7 @@ services:
       - IDP_INTERNAL_REALM=internal
 
   sqnc-node:
-    image: digicatapult/sqnc-node:v12.3.0
+    image: digicatapult/sqnc-node:v12.4.0
     container_name: node
     command: --base-path /data/ --dev --unsafe-rpc-external --rpc-max-connections 512 --rpc-cors all
     ports:
