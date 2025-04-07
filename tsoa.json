@@ -20,7 +20,8 @@
               "match2:read": "Read match2",
               "match2:propose": "Propose match2",
               "match2:cancel": "Cancel match2",
-              "match2:accept.reject": "Accept or reject match2"
+              "match2:accept": "Accept match2",
+              "match2:reject": "Reject match2"
             }
           }
         }

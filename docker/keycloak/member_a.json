@@ -395,7 +395,8 @@
         "demandA:create",
         "demandA:comment",
         "match2:read",
-        "match2:accept.reject"
+        "match2:accept",
+        "match2:reject"
       ],
       "optionalClientScopes": [
         "address",
@@ -421,7 +422,20 @@
       "directAccessGrantsEnabled": false,
       "redirectUris": [],
       "webOrigins": [],
-      "bearerOnly": false
+      "bearerOnly": false,
+      "optionalClientScopes": [
+        "demandA:read",
+        "demandA:create",
+        "demandA:comment",
+        "demandB:read",
+        "demandB:create",
+        "demandB:comment",
+        "match2:read",
+        "match2:accept",
+        "match2:reject",
+        "match2:propose",
+        "match2:cancel"
+      ]
     }
   ],
   "clientScopes": [
@@ -507,9 +521,18 @@
       }
     },
     {
-      "name": "match2:accept.reject",
+      "name": "match2:accept",
       "protocol": "openid-connect",
-      "description": "Accept or reject match2",
+      "description": "Accept match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:reject",
+      "protocol": "openid-connect",
+      "description": "Reject match2",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"

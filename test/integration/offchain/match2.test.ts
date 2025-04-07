@@ -3,7 +3,7 @@ import { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server.js'
-import { post, get, noScopePost, noScopeGet } from '../../helper/routeHelper.js'
+import { post, get } from '../../helper/routeHelper.js'
 import {
   cleanup,
   match2Seed,
@@ -88,6 +88,20 @@ describe('match2', () => {
       })
     })
 
+    it('should create a match2 - scope', async () => {
+      const { status } = await post(
+        app,
+        '/v1/match2',
+        {
+          demandA: seededDemandAWithTokenId,
+          demandB: seededDemandBWithTokenId,
+        },
+        {},
+        'match2:propose'
+      )
+      expect(status).to.equal(201)
+    })
+
     it('should get a match2', async () => {
       const response = await get(app, `/v1/match2/${seededMatch2Id}`)
       expect(response.status).to.equal(200)
@@ -102,6 +116,11 @@ describe('match2', () => {
         createdAt: exampleDate,
         updatedAt: exampleDate,
       })
+    })
+
+    it('should get a match2 - scope', async () => {
+      const { status } = await get(app, `/v1/match2/${seededMatch2Id}`, {}, 'match2:read')
+      expect(status).to.equal(200)
     })
 
     it('should get all match2s', async () => {
@@ -119,6 +138,11 @@ describe('match2', () => {
         createdAt: exampleDate,
         updatedAt: exampleDate,
       })
+    })
+
+    it('should get all match2s - scope', async () => {
+      const { status } = await get(app, `/v1/match2`, {}, 'match2:read')
+      expect(status).to.equal(200)
     })
 
     it('should filter based on updated date', async () => {
@@ -140,6 +164,11 @@ describe('match2', () => {
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
+    })
+
+    it('it should get all proposal transactions - scope', async () => {
+      const { status } = await get(app, `/v1/match2/${seededMatch2Id}/proposal`, {}, 'match2:read')
+      expect(status).to.equal(200)
     })
 
     it('should filter accept transactions based on updated date', async () => {
@@ -165,6 +194,16 @@ describe('match2', () => {
       })
     })
 
+    it('it should get an accept transaction - scope', async () => {
+      const { status } = await get(
+        app,
+        `/v1/match2/${seededMatch2Id}/accept/${seededAcceptTransactionId}`,
+        {},
+        'match2:read'
+      )
+      expect(status).to.equal(200)
+    })
+
     it('it should get all accept transactions', async () => {
       const response = await get(app, `/v1/match2/${seededMatch2Id}/accept`)
       expect(response.status).to.equal(200)
@@ -178,6 +217,11 @@ describe('match2', () => {
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
+    })
+
+    it('it should get all accept transactions - scope', async () => {
+      const { status } = await get(app, `/v1/match2/${seededMatch2Id}/accept`, {}, 'match2:read')
+      expect(status).to.equal(200)
     })
 
     it('should filter accept transactions based on updated date', async () => {
@@ -203,6 +247,16 @@ describe('match2', () => {
       })
     })
 
+    it('it should get a rejection transaction - scope', async () => {
+      const { status } = await get(
+        app,
+        `/v1/match2/${seededMatch2Id}/rejection/${seededRejectionTransactionId}`,
+        {},
+        'match2:read'
+      )
+      expect(status).to.equal(200)
+    })
+
     it('it should get all rejection transactions', async () => {
       const { status, body } = await get(app, `/v1/match2/${seededMatch2Id}/rejection`)
       expect(status).to.equal(200)
@@ -216,6 +270,11 @@ describe('match2', () => {
         submittedAt: exampleDate,
         updatedAt: exampleDate,
       })
+    })
+
+    it('it should get all rejection transactions - scope', async () => {
+      const { status } = await get(app, `/v1/match2/${seededMatch2Id}/rejection`, {}, 'match2:read')
+      expect(status).to.equal(200)
     })
 
     it('should filter rejection transactions based on updated date', async () => {
@@ -266,6 +325,11 @@ describe('match2', () => {
       })
     })
 
+    it('gets all cancellation transactions for a specific match2 - scope', async () => {
+      const { status } = await get(app, `/v1/match2/${seededMatch2Id}/cancellation`, {}, 'match2:read')
+      expect(status).to.equal(200)
+    })
+
     it('accepts a remtch2 when it is in acceptedA state', async () => {
       const { status, body } = await post(app, `/v1/match2/${seededMatch2Rematch2Accept}/accept`, {})
 
@@ -276,6 +340,11 @@ describe('match2', () => {
         localId: seededMatch2Rematch2Accept,
         state: 'submitted',
       })
+    })
+
+    it('accepts a remtch2 when it is in acceptedA state - scope', async () => {
+      const { status } = await post(app, `/v1/match2/${seededMatch2Rematch2Accept}/accept`, {}, {}, 'match2:accept')
+      expect(status).to.equal(201)
     })
 
     it('runs rematch2_acceptFinal flow', async () => {
@@ -318,10 +387,16 @@ describe('match2', () => {
     })
 
     it('missing scope create match2', async () => {
-      const response = await noScopePost(app, '/v1/match2', {
-        demandA: seededDemandAWithTokenId,
-        demandB: seededDemandBWithTokenId,
-      })
+      const response = await post(
+        app,
+        '/v1/match2',
+        {
+          demandA: seededDemandAWithTokenId,
+          demandB: seededDemandBWithTokenId,
+        },
+        {},
+        ''
+      )
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
@@ -385,7 +460,7 @@ describe('match2', () => {
     })
 
     it('missing scope get match2 - 401', async () => {
-      const response = await noScopeGet(app, `/v1/match2/${seededMatch2Id}`)
+      const response = await get(app, `/v1/match2/${seededMatch2Id}`, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
@@ -436,7 +511,7 @@ describe('match2', () => {
     })
 
     it('missing scope get match2 proposal - 401', async () => {
-      const response = await noScopeGet(app, `/v1/match2/${seededMatch2Id}/proposal/${seededProposalTransactionId}`)
+      const response = await get(app, `/v1/match2/${seededMatch2Id}/proposal/${seededProposalTransactionId}`, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
@@ -454,7 +529,7 @@ describe('match2', () => {
     })
 
     it('missing scope list match2 proposals - 401', async () => {
-      const response = await noScopeGet(app, `/v1/match2/${seededMatch2Id}/proposal`)
+      const response = await get(app, `/v1/match2/${seededMatch2Id}/proposal`, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
@@ -482,7 +557,7 @@ describe('match2', () => {
     })
 
     it('missing scope accept match2 - 401', async () => {
-      const response = await noScopePost(app, `/v1/match2/${seededMatch2Id}/accept`, {})
+      const response = await post(app, `/v1/match2/${seededMatch2Id}/accept`, {}, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
@@ -531,7 +606,7 @@ describe('match2', () => {
     })
 
     it('missing scope list match2 proposals - 401', async () => {
-      const response = await noScopeGet(app, `/v1/match2/${seededMatch2AcceptedA}/accept`)
+      const response = await get(app, `/v1/match2/${seededMatch2AcceptedA}/accept`, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
@@ -559,7 +634,7 @@ describe('match2', () => {
     })
 
     it('missing scope get match2 accept - 401', async () => {
-      const response = await noScopeGet(app, `/v1/match2/${seededMatch2AcceptedA}/accept/${seededAcceptTransactionId}`)
+      const response = await get(app, `/v1/match2/${seededMatch2AcceptedA}/accept/${seededAcceptTransactionId}`, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
@@ -583,7 +658,7 @@ describe('match2', () => {
     })
 
     it('missing scope match2 reject - 401', async () => {
-      const response = await noScopePost(app, `/v1/match2/${seededMatch2AcceptedA}/rejection`, {})
+      const response = await post(app, `/v1/match2/${seededMatch2AcceptedA}/rejection`, {}, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
@@ -608,7 +683,7 @@ describe('match2', () => {
     })
 
     it('missing scope list match2 rejections - 401', async () => {
-      const response = await noScopeGet(app, `/v1/match2/${seededMatch2AcceptedA}/rejection`)
+      const response = await get(app, `/v1/match2/${seededMatch2AcceptedA}/rejection`, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
@@ -646,9 +721,11 @@ describe('match2', () => {
     })
 
     it('missing scope get match2 rejection - 401', async () => {
-      const response = await noScopeGet(
+      const response = await get(
         app,
-        `/v1/match2/${seededMatch2AcceptedA}/rejection/${seededRejectionTransactionId}`
+        `/v1/match2/${seededMatch2AcceptedA}/rejection/${seededRejectionTransactionId}`,
+        {},
+        ''
       )
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
@@ -679,7 +756,7 @@ describe('match2', () => {
     })
 
     it('missing scope match2 cancel - 401', async () => {
-      const response = await noScopePost(app, `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`, {})
+      const response = await post(app, `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`, {}, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
@@ -720,9 +797,11 @@ describe('match2', () => {
     })
 
     it('missing scope get match2 cancellation - 401', async () => {
-      const response = await noScopeGet(
+      const response = await get(
         app,
-        `/v1/match2/${seededMatch2AcceptedFinal}/cancellation/${seededMatch2CancellationId}`
+        `/v1/match2/${seededMatch2AcceptedFinal}/cancellation/${seededMatch2CancellationId}`,
+        {},
+        ''
       )
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
@@ -748,7 +827,7 @@ describe('match2', () => {
     })
 
     it('missing scope list match2 cancellations - 401', async () => {
-      const response = await noScopeGet(app, `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`)
+      const response = await get(app, `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })

@@ -107,7 +107,7 @@ export class DemandAController extends DemandController {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['demandA:create'])
+  @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}/creation/{creationId}')
   public async getDemandACreation(@Path() demandAId: UUID, @Path() creationId: UUID): Promise<TransactionResponse> {
     return super.getDemandCreation(demandAId, creationId)
@@ -119,7 +119,7 @@ export class DemandAController extends DemandController {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['demandA:create'])
+  @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}/creation/')
   public async getTransactionsFromDemandA(
     @Path() demandAId: UUID,
@@ -153,7 +153,7 @@ export class DemandAController extends DemandController {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['demandA:comment'])
+  @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}/comment/{commentId}')
   public async getDemandAComment(@Path() demandAId: UUID, @Path() commentId: UUID): Promise<TransactionResponse> {
     return super.getDemandComment(demandAId, commentId)
@@ -165,7 +165,7 @@ export class DemandAController extends DemandController {
    */
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
-  @Security('oauth2', ['demandA:comment'])
+  @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}/comment')
   public async getDemandAComments(
     @Path() demandAId: UUID,

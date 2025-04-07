@@ -1,17 +1,27 @@
-import { Controller, Get, Route, Path, Response, Tags, Security, Query } from 'tsoa'
+import { Controller, Get, Route, Path, Response, Tags, Security, Query, Request } from 'tsoa'
 import type { Logger } from 'pino'
 
 import { LoggerToken } from '../../../lib/logger.js'
 import Database from '../../../lib/db/index.js'
 import type { DATE, UUID } from '../../../models/strings.js'
 import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
-import { type TransactionApiType, type TransactionState, TransactionResponse } from '../../../models/transaction.js'
+import {
+  type TransactionApiType,
+  type TransactionState,
+  scopeToApiTypeMap,
+  TransactionResponse,
+  TransactionScope,
+} from '../../../models/transaction.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import { inject, injectable } from 'tsyringe'
+import { type ScopedRequest } from '../../../models/scope.js'
+import { OauthError } from '@digicatapult/tsoa-oauth-express'
 
 @Route('v1/transaction')
 @Tags('transaction')
-@Security('oauth2')
+@Security('oauth2', ['demandA:read'])
+@Security('oauth2', ['demandB:read'])
+@Security('oauth2', ['match2:read'])
 @injectable()
 export class TransactionController extends Controller {
   log: Logger
@@ -30,16 +40,20 @@ export class TransactionController extends Controller {
    */
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<NotFound>(404, 'Item not found')
-  @Security('oauth2')
   @Get('/')
   public async getAllTransactions(
+    @Request() req: ScopedRequest,
     @Query() apiType?: TransactionApiType,
     @Query() status?: TransactionState,
     @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
-    const query: { state?: TransactionState; apiType?: TransactionApiType; updatedSince?: Date } = {
+    const grantedApiTypes = grantedApiTypesFromScopes(req, apiType)
+
+    if (grantedApiTypes.length === 0) throw new OauthError('MISSING_SCOPES')
+
+    const query: { state?: TransactionState; apiTypes?: TransactionApiType[]; updatedSince?: Date } = {
       state: status,
-      apiType,
+      apiTypes: grantedApiTypes,
     }
     if (updated_since) {
       query.updatedSince = parseDateParam(updated_since)
@@ -53,12 +67,28 @@ export class TransactionController extends Controller {
    * @param transactionId The transactions's identifier
    */
   @Response<NotFound>(404, 'Item not found')
-  @Security('oauth2')
   @Get('{transactionId}')
-  public async getTransaction(@Path() transactionId: UUID): Promise<TransactionResponse> {
+  public async getTransaction(
+    @Request() req: ScopedRequest,
+    @Path() transactionId: UUID
+  ): Promise<TransactionResponse> {
     const [transaction] = await this.db.getTransaction(transactionId)
     if (!transaction) throw new NotFound('transaction')
 
+    const grantedApiTypes = grantedApiTypesFromScopes(req)
+    if (!grantedApiTypes.includes(transaction.apiType)) throw new OauthError('MISSING_SCOPES')
+
     return transaction
   }
+}
+
+const grantedApiTypesFromScopes = (req: ScopedRequest, queryApiType?: TransactionApiType) => {
+  const scopes = req.user?.jwt?.scope?.split(' ') ?? []
+  return scopes.reduce<TransactionApiType[]>((acc, scope) => {
+    const scopedApiType = scopeToApiTypeMap[scope as TransactionScope]
+
+    // ignore scope if: doesn't grant access to an api type OR match the apiType in query (if provided)
+    if (!scopedApiType || (queryApiType && queryApiType !== scopedApiType)) return acc
+    return [...acc, scopedApiType]
+  }, [])
 }

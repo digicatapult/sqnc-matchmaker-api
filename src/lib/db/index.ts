@@ -257,19 +257,19 @@ export default class Database {
 
   getTransactions = async ({
     state,
-    apiType,
+    apiTypes,
     updatedSince,
   }: {
     state?: TransactionState
-    apiType?: TransactionApiType
+    apiTypes?: TransactionApiType[]
     updatedSince?: Date
   }) => {
     let query = this.db().transaction().select(transactionColumns)
     if (state) {
       query = query.where({ state })
     }
-    if (apiType) {
-      query = query.where({ api_type: apiType })
+    if (apiTypes) {
+      query.whereIn('api_type', apiTypes)
     }
     if (updatedSince) {
       query = query.where('updated_at', '>', updatedSince)

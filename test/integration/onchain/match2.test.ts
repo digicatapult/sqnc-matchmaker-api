@@ -22,7 +22,7 @@ import { logger } from '../../../src/lib/logger.js'
 import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
 import env from '../../../src/env.js'
 
-describe('on-chain', function () {
+describe.only('on-chain', function () {
   this.timeout(180000)
   const db = container.resolve(Database)
   const node = new ExtendedChainNode(logger, env)
@@ -133,6 +133,52 @@ describe('on-chain', function () {
       const match2 = maybeMatch2 as Match2Row
       expect(match2.latestTokenId).to.equal(lastTokenId + 3)
       expect(match2.originalTokenId).to.equal(lastTokenId + 3)
+    })
+
+    it('should propose + accept + reject a match2 on-chain - scope', async () => {
+      const { status, body } = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {}, {}, `match2:propose`)
+      expect(status).to.equal(201)
+
+      await node.sealBlock()
+      await pollTransactionState(db, body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'proposed')
+
+      const responseAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {}, {}, `match2:accept`)
+      expect(responseAcceptA.status).to.equal(201)
+
+      await node.sealBlock()
+      await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedA')
+
+      const rejection = await post(context.app, `/v1/match2/${ids.match2}/rejection`, {}, {}, `match2:reject`)
+      expect(rejection.status).to.equal(200)
+    })
+
+    it('should propose + accept + cancel a match2 on-chain - scope', async () => {
+      const { status, body } = await post(context.app, `/v1/match2/${ids.match2}/proposal`, {}, {}, `match2:propose`)
+      expect(status).to.equal(201)
+
+      await node.sealBlock()
+      await pollTransactionState(db, body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'proposed')
+
+      const responseAcceptA = await post(context.app, `/v1/match2/${ids.match2}/accept`, {}, {}, `match2:accept`)
+      expect(responseAcceptA.status).to.equal(201)
+
+      await node.sealBlock()
+      await pollTransactionState(db, responseAcceptA.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedA')
+
+      const responseAcceptFinal = await post(context.app, `/v1/match2/${ids.match2}/accept`, {}, {}, `match2:accept`)
+      expect(responseAcceptFinal.status).to.equal(201)
+
+      await node.sealBlock()
+      await pollTransactionState(db, responseAcceptFinal.body.id, 'finalised')
+      await pollMatch2State(db, ids.match2, 'acceptedFinal')
+
+      const data = { attachmentId: parametersAttachmentId }
+      const cancellation = await post(context.app, `/v1/match2/${ids.match2}/cancellation`, data, {}, `match2:cancel`)
+      expect(cancellation.status).to.equal(200)
     })
 
     it('should propose a rematch2 on-chain', async () => {
