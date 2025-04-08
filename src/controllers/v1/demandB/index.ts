@@ -136,7 +136,7 @@ export class DemandBController extends DemandController {
   @Post('{demandBId}/comment')
   @Response<NotFound>(404, 'Item not found')
   @Response<NotFound>(400, 'Attachment not found')
-  @Security('oauth2', ['demandA:comment'])
+  @Security('oauth2', ['demandB:comment'])
   @SuccessResponse('201')
   public async createDemandBCommentOnChain(
     @Request() req: express.Request,
