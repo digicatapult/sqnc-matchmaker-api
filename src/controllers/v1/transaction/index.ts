@@ -1,3 +1,4 @@
+import type express from 'express'
 import { Controller, Get, Route, Path, Response, Tags, Security, Query, Request } from 'tsoa'
 import type { Logger } from 'pino'
 
@@ -14,7 +15,6 @@ import {
 } from '../../../models/transaction.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import { inject, injectable } from 'tsyringe'
-import { type ScopedRequest } from '../../../models/scope.js'
 import { OauthError } from '@digicatapult/tsoa-oauth-express'
 
 @Route('v1/transaction')
@@ -42,14 +42,15 @@ export class TransactionController extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Get('/')
   public async getAllTransactions(
-    @Request() req: ScopedRequest,
+    @Request() req: express.Request,
     @Query() apiType?: TransactionApiType,
     @Query() status?: TransactionState,
     @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
-    const grantedApiTypes = grantedApiTypesFromScopes(req, apiType)
+    const grantedApiTypes = grantedApiTypesFromScopes(req)
 
     if (grantedApiTypes.length === 0) throw new OauthError('MISSING_SCOPES')
+    if (apiType && !grantedApiTypes.includes(apiType)) throw new OauthError('MISSING_SCOPES')
 
     const query: { state?: TransactionState; apiTypes?: TransactionApiType[]; updatedSince?: Date } = {
       state: status,
@@ -69,7 +70,7 @@ export class TransactionController extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Get('{transactionId}')
   public async getTransaction(
-    @Request() req: ScopedRequest,
+    @Request() req: express.Request,
     @Path() transactionId: UUID
   ): Promise<TransactionResponse> {
     const [transaction] = await this.db.getTransaction(transactionId)
@@ -82,13 +83,10 @@ export class TransactionController extends Controller {
   }
 }
 
-const grantedApiTypesFromScopes = (req: ScopedRequest, queryApiType?: TransactionApiType) => {
+const grantedApiTypesFromScopes = (req: express.Request) => {
   const scopes = req.user?.jwt?.scope?.split(' ') ?? []
   return scopes.reduce<TransactionApiType[]>((acc, scope) => {
     const scopedApiType = scopeToApiTypeMap[scope as TransactionScope]
-
-    // ignore scope if: doesn't grant access to an api type OR match the apiType in query (if provided)
-    if (!scopedApiType || (queryApiType && queryApiType !== scopedApiType)) return acc
-    return [...acc, scopedApiType]
+    return scopedApiType ? [...acc, scopedApiType] : acc
   }, [])
 }

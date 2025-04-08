@@ -1,5 +1,3 @@
-import type express from 'express'
-
 export const scopes = [
   'demandA:read',
   'demandA:prepare',
@@ -18,11 +16,3 @@ export const scopes = [
 ] as const
 
 export type Scope = (typeof scopes)[number]
-
-export interface ScopedRequest extends express.Request {
-  user: {
-    jwt: {
-      scope?: string
-    }
-  }
-}
