@@ -391,9 +391,10 @@
         "profile",
         "roles",
         "email",
+        "demandB:read",
+        "demandB:prepare",
         "demandB:create",
         "demandB:comment",
-        "demandB:read",
         "match2:read",
         "match2:accept",
         "match2:reject"
@@ -404,8 +405,10 @@
         "offline_access",
         "microprofile-jwt",
         "demandA:read",
+        "demandA:prepare",
         "demandA:create",
         "demandA:comment",
+        "match2:prepare",
         "match2:propose",
         "match2:cancel"
       ]
@@ -416,6 +419,15 @@
       "name": "demandA:read",
       "protocol": "openid-connect",
       "description": "Read demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandA:prepare",
+      "protocol": "openid-connect",
+      "description": "Prepare demandA",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"
@@ -449,6 +461,15 @@
       }
     },
     {
+      "name": "demandB:prepare",
+      "protocol": "openid-connect",
+      "description": "Prepare demandB",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
       "name": "demandB:create",
       "protocol": "openid-connect",
       "description": "Create demandB",
@@ -470,6 +491,15 @@
       "name": "match2:read",
       "protocol": "openid-connect",
       "description": "Read match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:prepare",
+      "protocol": "openid-connect",
+      "description": "Prepare match2",
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"

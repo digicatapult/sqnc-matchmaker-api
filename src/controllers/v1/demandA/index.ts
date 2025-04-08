@@ -57,7 +57,7 @@ export class DemandAController extends DemandController {
   @Post()
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<ValidateError>(422, 'Validation Failed')
-  @Security('oauth2', ['demandA:create'])
+  @Security('oauth2', ['demandA:prepare'])
   @SuccessResponse('201')
   public async createDemandA(@Request() req: express.Request, @Body() body: DemandRequest): Promise<DemandResponse> {
     return super.createDemand(req, body)

@@ -83,8 +83,8 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         })
       })
 
-      it(`should create a ${demandType} - scope`, async () => {
-        const { status } = await post(app, `/v1/${demandType}`, { parametersAttachmentId }, {}, `${demandType}:create`)
+      it(`should prepare a ${demandType} - scope`, async () => {
+        const { status } = await post(app, `/v1/${demandType}`, { parametersAttachmentId }, {}, `${demandType}:prepare`)
         expect(status).to.equal(201)
       })
 

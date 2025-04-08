@@ -73,7 +73,7 @@ export class Match2Controller extends Controller {
    * @summary Propose a new match2
    */
   @Post()
-  @Security('oauth2', ['match2:propose'])
+  @Security('oauth2', ['match2:prepare'])
   @Response<BadRequest>(400, 'Request was invalid')
   @Response<ValidateError>(422, 'Validation Failed')
   @SuccessResponse('201')

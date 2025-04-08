@@ -97,7 +97,7 @@ describe('match2', () => {
           demandB: seededDemandBWithTokenId,
         },
         {},
-        'match2:propose'
+        'match2:prepare'
       )
       expect(status).to.equal(201)
     })
