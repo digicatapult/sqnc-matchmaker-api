@@ -22,7 +22,7 @@ import { logger } from '../../../src/lib/logger.js'
 import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
 import env from '../../../src/env.js'
 
-describe.only('on-chain', function () {
+describe('on-chain', function () {
   this.timeout(180000)
   const db = container.resolve(Database)
   const node = new ExtendedChainNode(logger, env)
