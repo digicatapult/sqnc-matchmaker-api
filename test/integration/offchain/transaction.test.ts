@@ -17,6 +17,7 @@ import {
   seededDemandACommentTransactionId2,
 } from '../../seeds/offchainSeeds/transaction.seed.js'
 import { resetContainer } from '../../../src/ioc.js'
+import { type Transaction } from '../../../src/lib/db/index.js'
 
 describe('transaction', () => {
   resetContainer()
@@ -94,6 +95,11 @@ describe('transaction', () => {
       submittedAt: '2023-01-01T00:00:00.000Z',
       updatedAt: '2023-01-01T00:00:00.000Z',
     })
+  })
+
+  it('returns transaction by id - scope', async () => {
+    const { status } = await get(app, `/v1/transaction/${seededDemandACommentTransactionId}`, {}, 'demandA:read')
+    expect(status).to.equal(200)
   })
 
   it('returns all transactions', async () => {
@@ -177,9 +183,36 @@ describe('transaction', () => {
     ])
   })
 
+  it('returns only demand_a transactions - scope', async () => {
+    const { status, body } = await get(app, '/v1/transaction', {}, 'demandA:read')
+
+    expect(status).to.equal(200)
+    expect(body.every((transaction: Transaction) => transaction.apiType === 'demand_a')).to.equal(true)
+  })
+
+  it('returns only demand_b transactions - scope', async () => {
+    const { status, body } = await get(app, '/v1/transaction', {}, 'demandB:read')
+
+    expect(status).to.equal(200)
+    expect(body.every((transaction: Transaction) => transaction.apiType === 'demand_b')).to.equal(true)
+  })
+
+  it('returns all match2 transactions - scope', async () => {
+    const { status, body } = await get(app, '/v1/transaction', {}, 'match2:read')
+
+    expect(status).to.equal(200)
+    expect(body.every((transaction: Transaction) => transaction.apiType === 'match2')).to.equal(true)
+  })
+
   it('should return 401 listing transactions when unauthenticated', async () => {
     const { status } = await get(app, `/v1/transaction`, { authorization: 'bearer invalid' })
     expect(status).to.equal(401)
+  })
+
+  it('missing scope list transactions - 401', async () => {
+    const response = await get(app, `/v1/transaction`, {}, '')
+    expect(response.status).to.equal(401)
+    expect(response.body.message).to.contain('MISSING_SCOPES')
   })
 
   it('should return 401 get transaction when unauthenticated', async () => {
@@ -187,6 +220,18 @@ describe('transaction', () => {
       authorization: 'bearer invalid',
     })
     expect(status).to.equal(401)
+  })
+
+  it('missing all scopes get transaction - 401', async () => {
+    const response = await get(app, `/v1/transaction/${seededDemandACommentTransactionId}`, {}, '')
+    expect(response.status).to.equal(401)
+    expect(response.body.message).to.contain('MISSING_SCOPES')
+  })
+
+  it('incorrect scope get transaction - 401', async () => {
+    const response = await get(app, `/v1/transaction/${seededDemandACommentTransactionId}`, {}, 'demandB:read')
+    expect(response.status).to.equal(401)
+    expect(response.body.message).to.contain('MISSING_SCOPES')
   })
 
   it('should filter transactions based on updated date', async () => {

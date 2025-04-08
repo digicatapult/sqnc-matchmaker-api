@@ -1,9 +1,8 @@
 import request from 'supertest'
 import express from 'express'
+import { scopes } from '../../src/models/scope.js'
 
-import env from '../../src/env.js'
-
-const getToken = async () => {
+export const getToken = async (scope: string = scopes.join(' ')) => {
   const tokenReq = await fetch('http://localhost:3080/realms/member-a/protocol/openid-connect/token', {
     method: 'POST',
     headers: {
@@ -11,15 +10,15 @@ const getToken = async () => {
     },
     body: new URLSearchParams({
       grant_type: 'client_credentials',
-      client_id: env.IDP_CLIENT_ID,
+      client_id: 'test',
       client_secret: 'secret',
+      ...(scope ? { scope } : {}),
     }),
   })
 
   if (!tokenReq.ok) {
     throw new Error(`Error getting token from keycloak ${tokenReq.statusText}`)
   }
-
   const body = (await tokenReq.json()) as any
   return body.access_token as string
 }
@@ -27,9 +26,10 @@ const getToken = async () => {
 export const get = async (
   app: express.Express,
   endpoint: string,
-  headers: Record<string, string> = {}
+  headers: Record<string, string> = {},
+  scope?: string
 ): Promise<request.Test> => {
-  const token = await getToken()
+  const token = await getToken(scope)
   const headersWithToken = {
     authorization: `bearer ${token}`,
     ...headers,
@@ -41,9 +41,10 @@ export const post = async (
   app: express.Express,
   endpoint: string,
   body: object,
-  headers: Record<string, string> = {}
+  headers: Record<string, string> = {},
+  scope?: string
 ): Promise<request.Test> => {
-  const token = await getToken()
+  const token = await getToken(scope)
   const headersWithToken = {
     authorization: `bearer ${token}`,
     ...headers,

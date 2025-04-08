@@ -80,7 +80,7 @@ export const errorHandler = function errorHandler(
   const logger = container.resolve<Logger>(LoggerToken)
   if (err instanceof OauthError) {
     return res.status(401).send({
-      message: 'Forbidden',
+      message: err.message,
     })
   }
   if (err instanceof ValidateError) {

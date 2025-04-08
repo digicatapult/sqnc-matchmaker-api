@@ -70,6 +70,14 @@ describe('on-chain', function () {
       expect(demandB.originalTokenId).to.equal(lastTokenId + 1)
     })
 
+    it('creates a demandB on chain - scope', async () => {
+      const {
+        body: { id: demandBId },
+      } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
+      const { status } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {}, {}, `demandB:create`)
+      expect(status).to.equal(201)
+    })
+
     it('creates many demandBs on chain in parallel', async function () {
       const numberDemands = 50
 
@@ -142,6 +150,25 @@ describe('on-chain', function () {
       if (rejectedDemandsWithCreatedState.length > 0) {
         throw new Error(`demands B that failed to reach state created ${rejectedDemandsWithCreatedState.length}`)
       }
+    })
+
+    it('should comment on a demandB on-chain - scope', async () => {
+      const creationResponse = await post(context.app, `/v1/demandB/${seededDemandBId}/creation`, {})
+      expect(creationResponse.status).to.equal(201)
+      await node.sealBlock()
+      await pollTransactionState(db, creationResponse.body.id, 'finalised')
+      await pollDemandState(db, seededDemandBId, 'created')
+
+      const { status } = await post(
+        context.app,
+        `/v1/demandB/${seededDemandBId}/comment`,
+        {
+          attachmentId: parametersAttachmentId,
+        },
+        {},
+        `demandB:comment`
+      )
+      expect(status).to.equal(201)
     })
 
     it('should comment on a demandB on-chain', async () => {
