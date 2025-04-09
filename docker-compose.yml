@@ -42,7 +42,7 @@ services:
       test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
 
   sqnc-identity-service:
-    image: digicatapult/sqnc-identity-service:v4.1.6
+    image: digicatapult/sqnc-identity-service:v4.1.7
     container_name: identity-service
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
