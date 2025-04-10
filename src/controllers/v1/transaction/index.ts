@@ -15,6 +15,8 @@ import {
 } from '../../../models/transaction.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import { inject, injectable } from 'tsyringe'
+import { Where } from '../../../lib/db/types.js'
+import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
 import { OauthError } from '@digicatapult/tsoa-oauth-express'
 
 @Route('v1/transaction')
@@ -52,15 +54,13 @@ export class TransactionController extends Controller {
     if (grantedApiTypes.length === 0) throw new OauthError('MISSING_SCOPES')
     if (apiType && !grantedApiTypes.includes(apiType)) throw new OauthError('MISSING_SCOPES')
 
-    const query: { state?: TransactionState; apiTypes?: TransactionApiType[]; updatedSince?: Date } = {
-      state: status,
-      apiTypes: grantedApiTypes,
-    }
-    if (updated_since) {
-      query.updatedSince = parseDateParam(updated_since)
-    }
+    const query: Where<'transaction'> = [['api_type', 'IN', grantedApiTypes]]
+    if (status) query.push(['state', '=', status])
+    if (apiType) query.push(['api_type', '=', apiType])
+    if (updated_since) query.push(['updated_at', '>', parseDateParam(updated_since)])
 
-    return await this.db.getTransactions(query)
+    const dbTxs = await this.db.get('transaction', query)
+    return dbTxs.map(dbTransactionToResponse)
   }
 
   /**
@@ -73,13 +73,13 @@ export class TransactionController extends Controller {
     @Request() req: express.Request,
     @Path() transactionId: UUID
   ): Promise<TransactionResponse> {
-    const [transaction] = await this.db.getTransaction(transactionId)
+    const [transaction] = await this.db.get('transaction', { id: transactionId })
     if (!transaction) throw new NotFound('transaction')
 
     const grantedApiTypes = grantedApiTypesFromScopes(req)
-    if (!grantedApiTypes.includes(transaction.apiType)) throw new OauthError('MISSING_SCOPES')
+    if (!grantedApiTypes.includes(transaction.api_type)) throw new OauthError('MISSING_SCOPES')
 
-    return transaction
+    return dbTransactionToResponse(transaction)
   }
 }
 

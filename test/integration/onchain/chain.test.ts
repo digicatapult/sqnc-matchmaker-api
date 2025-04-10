@@ -45,20 +45,22 @@ describe('on-chain', function () {
       // use invalid process to cause a dispatch error
       const invalidProcess = { id: 'invalid', version: 1 }
       const extrinsic = await node.prepareRunProcess({ process: invalidProcess, inputs: [], outputs: [] })
-      const [transaction] = await db.insertTransaction({
+      const [transaction] = await db.insert('transaction', {
         api_type: 'demand_b',
         transaction_type: 'creation',
         local_id: seededDemandBId,
         state: 'submitted',
-        hash: extrinsic.hash.toHex(),
+        hash: extrinsic.hash.toHex().slice(2),
       })
 
-      node.submitRunProcess(extrinsic, db.updateTransactionState(transaction.id))
+      node.submitRunProcess(extrinsic, async (state) => {
+        await db.update('transaction', { id: transaction.id }, { state })
+      })
 
       // wait for dispatch error
       await node.sealBlock()
       await pollTransactionState(db, transaction.id, 'failed')
-      const [failedTransaction] = await db.getTransaction(transaction.id)
+      const [failedTransaction] = await db.get('transaction', { id: transaction.id })
       expect(failedTransaction?.state).to.equal('failed')
     })
   })

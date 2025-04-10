@@ -17,12 +17,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/swagger.json"
+    "src/swagger.json",
+    "test"
   ],
-  "exclude": [
-    "**/*.test.ts",
-    "test",
-    "**/__test__",
-    "**/__tests__"
-  ]
 }

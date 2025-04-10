@@ -67,15 +67,15 @@ describe('on-chain proxyless', function () {
       await pollTransactionState(db, transactionId, 'finalised')
       await pollDemandState(db, demandAId, 'created')
 
-      const [demandA] = await db.getDemand(demandAId)
+      const [demandA] = await db.get('demand', { id: demandAId })
       expect(demandA).to.contain({
         id: demandAId,
         owner: selfAddress,
         state: 'created',
         subtype: 'demand_a',
-        parametersAttachmentId,
-        latestTokenId: lastTokenId + 1,
-        originalTokenId: lastTokenId + 1,
+        parameters_attachment_id: parametersAttachmentId,
+        latest_token_id: lastTokenId + 1,
+        original_token_id: lastTokenId + 1,
       })
     })
   })

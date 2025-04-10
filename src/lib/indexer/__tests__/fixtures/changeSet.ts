@@ -23,8 +23,9 @@ export const findIdTestSet: ChangeSet = {
       '0x01',
       {
         id: '0x01',
-        ipfs_hash: '01',
+        integrityHash: '01',
         type: 'insert',
+        ownerAddress: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
       },
     ],
   ]),

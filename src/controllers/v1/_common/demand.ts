@@ -3,7 +3,8 @@ import type express from 'express'
 
 import { Controller } from 'tsoa'
 
-import Database, { DemandCommentRow, DemandRow } from '../../../lib/db/index.js'
+import Database from '../../../lib/db/index.js'
+import type { DemandCommentRow, DemandRow } from '../../../lib/db/types.js'
 import {
   DemandResponse,
   DemandRequest,
@@ -13,7 +14,7 @@ import {
 } from '../../../models/demand.js'
 import { DATE, UUID } from '../../../models/strings.js'
 import { BadRequest, NotFound, UnknownError } from '../../../lib/error-handler/index.js'
-import { TransactionResponse, TransactionType } from '../../../models/transaction.js'
+import { TransactionResponse } from '../../../models/transaction.js'
 import { demandCommentCreate, demandCreate } from '../../../lib/payload.js'
 import ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
@@ -21,10 +22,12 @@ import Identity from '../../../lib/services/identity.js'
 import { getAuthorization } from '../../../lib/utils/shared.js'
 import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 import Attachment from '../../../lib/services/attachment.js'
+import { TransactionRow, Where } from '../../../lib/db/types.js'
+import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
-  dbDemandSubtype: 'demand_a' | 'demand_b'
+  dbDemandSubtype: DemandSubtype
   log: Logger
   db: Database
 
@@ -57,11 +60,13 @@ export class DemandController extends Controller {
     const selfAddress = res.address
     const selfAlias = res.alias
 
-    const [demand] = await this.db.insertDemand({
+    const [demand] = await this.db.insert('demand', {
       owner: selfAddress,
       subtype: this.dbDemandSubtype,
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: null,
+      original_token_id: null,
     })
 
     return {
@@ -75,71 +80,79 @@ export class DemandController extends Controller {
   }
 
   public async getAll(req: express.Request, updated_since?: DATE): Promise<DemandResponse[]> {
-    const query: { subtype: DemandSubtype; updatedSince?: Date } = { subtype: this.dbDemandSubtype }
+    const query: Where<'demand'> = [['subtype', '=', this.dbDemandSubtype]]
     if (updated_since) {
-      query.updatedSince = parseDateParam(updated_since)
+      query.push(['updated_at', '>', parseDateParam(updated_since)])
     }
 
-    const demands = await this.db.getDemands(query)
+    const demands = await this.db.get('demand', query)
     const result = await Promise.all(demands.map(async (demand) => responseWithAlias(req, demand, this.identity)))
     return result
   }
 
   public async getDemand(req: express.Request, demandId: UUID): Promise<DemandWithCommentsResponse> {
-    const [demand] = await this.db.getDemand(demandId)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    const comments = await this.db.getDemandComments(demandId, 'created')
+    const comments = await this.db.get('demand_comment', { demand: demandId, state: 'created' }, [
+      ['created_at', 'asc'],
+    ])
 
     return responseWithComments(req, await responseWithAlias(req, demand, this.identity), comments, this.identity)
   }
 
   public async createDemandOnChain(demandId: UUID): Promise<TransactionResponse> {
-    const [demand] = await this.db.getDemand(demandId)
-    if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
+    if (!demand) throw new NotFound(this.demandType)
     if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
 
-    const [attachment] = await this.attachment.getAttachments([demand.parametersAttachmentId])
+    const [attachment] = await this.attachment.getAttachments([demand.parameters_attachment_id])
     if (!attachment) throw new UnknownError()
 
     const extrinsic = await this.node.prepareRunProcess(demandCreate(demand, attachment))
 
-    const [transaction] = await this.db.insertTransaction({
+    const [transaction] = await this.db.insert('transaction', {
       api_type: this.dbDemandSubtype,
       transaction_type: 'creation',
       local_id: demandId,
       state: 'submitted',
-      hash: extrinsic.hash.toHex(),
+      hash: extrinsic.hash.toHex().slice(2),
     })
 
-    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+    await this.node.submitRunProcess(extrinsic, async (state: TransactionRow['state']) => {
+      await this.db.update('transaction', { id: transaction.id }, { state })
+    })
 
-    return transaction
+    return dbTransactionToResponse(transaction)
   }
 
   public async getDemandCreation(demandId: UUID, creationId: UUID): Promise<TransactionResponse> {
-    const [demand] = await this.db.getDemand(demandId)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    const [creation] = await this.db.getTransaction(creationId)
+    const [creation] = await this.db.get('transaction', {
+      id: creationId,
+      local_id: demand.id,
+      transaction_type: 'creation',
+    })
     if (!creation) throw new NotFound('creation')
-    return creation
+    return dbTransactionToResponse(creation)
   }
 
-  public async getTransactionsFromDemand(demandId: UUID, updated_since?: DATE): Promise<TransactionResponse[]> {
-    const query: {
-      localId: UUID
-      transactionType: TransactionType
-      updatedSince?: Date
-    } = { localId: demandId, transactionType: 'creation' }
+  public async getDemandCreations(demandId: UUID, updated_since?: DATE): Promise<TransactionResponse[]> {
+    const query: Where<'transaction'> = [
+      ['local_id', '=', demandId],
+      ['transaction_type', '=', 'creation'],
+    ]
     if (updated_since) {
-      query.updatedSince = parseDateParam(updated_since)
+      query.push(['updated_at', '>', parseDateParam(updated_since)])
     }
 
-    const [demandAB] = await this.db.getDemand(demandId)
+    const [demandAB] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demandAB) throw new NotFound(this.demandType)
 
-    return await this.db.getTransactionsByLocalId(query)
+    const dbTxs = await this.db.get('transaction', query)
+    return dbTxs.map(dbTransactionToResponse)
   }
 
   public async createDemandCommentOnChain(
@@ -147,8 +160,8 @@ export class DemandController extends Controller {
     demandId: UUID,
     { attachmentId }: DemandCommentRequest
   ): Promise<TransactionResponse> {
-    const [demand] = await this.db.getDemand(demandId)
-    if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
+    if (!demand) throw new NotFound(this.demandType)
 
     const [comment] = await this.attachment.getAttachments([attachmentId])
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
@@ -158,15 +171,15 @@ export class DemandController extends Controller {
 
     const extrinsic = await this.node.prepareRunProcess(demandCommentCreate(demand, comment))
 
-    const [transaction] = await this.db.insertTransaction({
+    const [transaction] = await this.db.insert('transaction', {
       api_type: this.dbDemandSubtype,
       transaction_type: 'comment',
       local_id: demandId,
       state: 'submitted',
-      hash: extrinsic.hash.toHex(),
+      hash: extrinsic.hash.toHex().slice(2),
     })
 
-    await this.db.insertDemandComment({
+    await this.db.insert('demand_comment', {
       transaction_id: transaction.id,
       state: 'pending',
       owner: selfAddress,
@@ -174,34 +187,40 @@ export class DemandController extends Controller {
       attachment_id: attachmentId,
     })
 
-    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+    await this.node.submitRunProcess(extrinsic, async (state) => {
+      await this.db.update('transaction', { id: transaction.id }, { state })
+    })
 
-    return transaction
+    return dbTransactionToResponse(transaction)
   }
 
   public async getDemandComment(demandId: UUID, commentId: UUID): Promise<TransactionResponse> {
-    const [demand] = await this.db.getDemand(demandId)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    const [comment] = await this.db.getTransaction(commentId)
+    const [comment] = await this.db.get('transaction', {
+      id: commentId,
+      local_id: demand.id,
+      transaction_type: 'comment',
+    })
     if (!comment) throw new NotFound('comment')
-    return comment
+    return dbTransactionToResponse(comment)
   }
 
   public async getDemandComments(demandId: UUID, updated_since?: DATE): Promise<TransactionResponse[]> {
-    const query: {
-      localId: UUID
-      transactionType: TransactionType
-      updatedSince?: Date
-    } = { localId: demandId, transactionType: 'comment' }
+    const query: Where<'transaction'> = [
+      ['local_id', '=', demandId],
+      ['transaction_type', '=', 'comment'],
+    ]
     if (updated_since) {
-      query.updatedSince = parseDateParam(updated_since)
+      query.push(['updated_at', '>', parseDateParam(updated_since)])
     }
 
-    const [demand] = await this.db.getDemand(demandId)
-    if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
+    if (!demand) throw new NotFound(this.demandType)
 
-    return await this.db.getTransactionsByLocalId(query)
+    const dbTxs = await this.db.get('transaction', query)
+    return dbTxs.map(dbTransactionToResponse)
   }
 }
 
@@ -217,9 +236,9 @@ const responseWithAlias = async (
     id: demand.id,
     owner: ownerAlias,
     state: demand.state,
-    parametersAttachmentId: demand.parametersAttachmentId,
-    createdAt: demand.createdAt.toISOString(),
-    updatedAt: demand.updatedAt.toISOString(),
+    parametersAttachmentId: demand.parameters_attachment_id,
+    createdAt: demand.created_at.toISOString(),
+    updatedAt: demand.updated_at.toISOString(),
   }
 }
 
@@ -242,9 +261,9 @@ const responseWithComments = async (
   )
   return {
     ...demand,
-    comments: comments.map(({ attachmentId, createdAt, owner }) => ({
-      attachmentId,
-      createdAt: createdAt.toISOString(),
+    comments: comments.map(({ attachment_id, created_at, owner }) => ({
+      attachmentId: attachment_id,
+      createdAt: created_at.toISOString(),
       owner: aliasMap.get(owner) as string,
     })),
   }

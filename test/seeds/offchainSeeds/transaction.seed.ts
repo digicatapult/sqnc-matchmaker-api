@@ -1,9 +1,10 @@
 import { container } from 'tsyringe'
 import Database from '../../../src/lib/db/index.js'
+import { dbInsert } from './helper.js'
 
 export const cleanup = async () => {
-  const db = container.resolve(Database).db()
-  await db.transaction().del()
+  const db = container.resolve(Database)
+  await db.delete('transaction', {})
 }
 
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -40,44 +41,45 @@ export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c947478
 export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
 
 export const transactionSeed = async () => {
-  const db = container.resolve(Database).db()
+  const db = container.resolve(Database)
+  const insert = dbInsert(db)
   await cleanup()
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandBCreationTransactionId,
       api_type: 'demand_b',
       transaction_type: 'creation',
       local_id: seededDemandBId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandBCreationTransactionId2,
       api_type: 'demand_b',
       transaction_type: 'creation',
       local_id: seededDemandBId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandBCommentTransactionId,
       api_type: 'demand_b',
       transaction_type: 'comment',
       local_id: seededDemandBId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
     {
@@ -86,47 +88,47 @@ export const transactionSeed = async () => {
       transaction_type: 'comment',
       local_id: seededDemandBId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandACreationTransactionId,
       api_type: 'demand_a',
       transaction_type: 'creation',
       local_id: seededDemandAId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandACreationTransactionId2,
       api_type: 'demand_a',
       transaction_type: 'creation',
       local_id: seededDemandAId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandACommentTransactionId,
       api_type: 'demand_a',
       transaction_type: 'comment',
       local_id: seededDemandAId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
     {
@@ -135,47 +137,47 @@ export const transactionSeed = async () => {
       transaction_type: 'comment',
       local_id: seededDemandAId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededProposalTransactionId,
       api_type: 'match2',
       transaction_type: 'proposal',
       local_id: seededMatch2Id,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededAcceptTransactionId,
       api_type: 'match2',
       transaction_type: 'accept',
       local_id: seededMatch2Id,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededRejectionTransactionId,
       api_type: 'match2',
       transaction_type: 'rejection',
       local_id: seededMatch2Id,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
