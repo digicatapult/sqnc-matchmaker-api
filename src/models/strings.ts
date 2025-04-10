@@ -19,3 +19,8 @@ export type HEX = `0x${string}`
  * @example 2023-05-04T09:47:32.393Z
  */
 export type DATE = string
+
+/**
+ * SS58 address
+ */
+export type ADDRESS = string
