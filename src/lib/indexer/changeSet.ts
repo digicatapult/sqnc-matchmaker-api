@@ -11,8 +11,8 @@ export type DemandRecord =
       type: 'insert'
       id: string
       owner: string
-      subtype: string
-      state: string
+      subtype: 'demand_a' | 'demand_b'
+      state: 'pending' | 'created' | 'allocated' | 'cancelled'
       parameters_attachment_id: string
       latest_token_id: number
       original_token_id: number
@@ -20,7 +20,7 @@ export type DemandRecord =
   | {
       type: 'update'
       id: string
-      state: string
+      state: 'pending' | 'created' | 'allocated' | 'cancelled'
       original_token_id?: number
       latest_token_id: number
     }
@@ -33,6 +33,7 @@ export type DemandCommentRecord =
       owner: string
       demand: string
       attachment_id: string
+      transaction_id: null
     }
   | {
       type: 'update'
@@ -47,17 +48,17 @@ export type MatchRecord =
       optimiser: string
       member_a: string
       member_b: string
-      state: string
+      state: 'pending' | 'proposed' | 'acceptedA' | 'acceptedB' | 'acceptedFinal' | 'rejected' | 'cancelled'
       demand_a_id: string
       demand_b_id: string
       latest_token_id: number
       original_token_id: number
-      replaces_id?: UUID
+      replaces_id: UUID | null
     }
   | {
       type: 'update'
       id: string
-      state: string
+      state: 'pending' | 'proposed' | 'acceptedA' | 'acceptedB' | 'acceptedFinal' | 'rejected' | 'cancelled'
       original_token_id?: number
       latest_token_id?: number
     }
@@ -69,6 +70,7 @@ export type Match2CommentRecord =
       owner: string
       match2: string
       attachment_id: string
+      transaction_id: null
     }
   | {
       type: 'update'

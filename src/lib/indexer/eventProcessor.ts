@@ -1,7 +1,7 @@
 import { v4 as UUIDv4 } from 'uuid'
 
 import { UUID } from '../../models/strings.js'
-import { Transaction } from '../db/index.js'
+import { TransactionRow } from '../db/types.js'
 import {
   AttachmentRecord,
   ChangeSet,
@@ -10,6 +10,7 @@ import {
   Match2CommentRecord,
   MatchRecord,
 } from './changeSet.js'
+import { z } from 'zod'
 
 const processNames = [
   'demand_create',
@@ -32,20 +33,37 @@ export const ValidateProcessName = (name: string): name is PROCESSES => processN
 export type EventProcessors = {
   [key in PROCESSES]: (
     version: number,
-    transaction: Transaction | null,
+    transaction: TransactionRow | null,
     sender: string,
     inputs: { id: number; localId: UUID }[],
     outputs: { id: number; roles: Map<string, string>; metadata: Map<string, string> }[]
   ) => ChangeSet
 }
 
-const getOrError = <T>(map: Map<string, T>, key: string): T => {
+const getOrError = <T>(map: Map<string, T>, key: string) => {
   const val = map.get(key)
   if (val === undefined) {
     throw new Error(`Invalid token detected onchain. Missing prop ${key}`)
   }
   return val
 }
+
+const demandSubtypeParser = z.union([z.literal('demand_a'), z.literal('demand_b')])
+const demandStateParser = z.union([
+  z.literal('pending'),
+  z.literal('created'),
+  z.literal('allocated'),
+  z.literal('cancelled'),
+])
+const match2StateParser = z.union([
+  z.literal('pending'),
+  z.literal('proposed'),
+  z.literal('acceptedA'),
+  z.literal('acceptedB'),
+  z.literal('acceptedFinal'),
+  z.literal('rejected'),
+  z.literal('cancelled'),
+])
 
 const attachmentPayload = (map: Map<string, string>, sender: string, key: string): AttachmentRecord => ({
   type: 'insert',
@@ -62,7 +80,7 @@ const DefaultEventProcessors: EventProcessors = {
     const newDemand = outputs[0]
 
     if (transaction) {
-      const id = transaction.localId
+      const id = transaction.local_id
       return {
         demands: new Map([
           [id, { type: 'update', id, state: 'created', latest_token_id: newDemandId, original_token_id: newDemandId }],
@@ -75,7 +93,7 @@ const DefaultEventProcessors: EventProcessors = {
       type: 'insert',
       id: UUIDv4(),
       owner: getOrError(newDemand.roles, 'owner'),
-      subtype: getOrError(newDemand.metadata, 'subtype'),
+      subtype: demandSubtypeParser.parse(getOrError(newDemand.metadata, 'subtype')),
       state: 'created',
       parameters_attachment_id: attachment.id,
       latest_token_id: newDemand.id,
@@ -97,7 +115,7 @@ const DefaultEventProcessors: EventProcessors = {
     const demandUpdate: DemandRecord = {
       type: 'update',
       id: demandId,
-      state: getOrError(newDemand.metadata, 'state'),
+      state: demandStateParser.parse(getOrError(newDemand.metadata, 'state')),
       latest_token_id: newDemand.id,
     }
 
@@ -125,6 +143,7 @@ const DefaultEventProcessors: EventProcessors = {
       demand: demandId,
       owner: sender,
       attachment_id: attachment.id,
+      transaction_id: null,
     }
 
     return {
@@ -145,7 +164,7 @@ const DefaultEventProcessors: EventProcessors = {
     const newMatch = outputs[2]
 
     if (transaction) {
-      const id = transaction.localId
+      const id = transaction.local_id
       return {
         demands: new Map(
           newDemands.map(({ id, tokenId }) => [id, { type: 'update', id, state: 'created', latest_token_id: tokenId }])
@@ -167,6 +186,7 @@ const DefaultEventProcessors: EventProcessors = {
       demand_b_id: inputs[1].localId,
       latest_token_id: newMatchId,
       original_token_id: newMatchId,
+      replaces_id: null,
     }
 
     return {
@@ -219,7 +239,7 @@ const DefaultEventProcessors: EventProcessors = {
     }
 
     if (transaction) {
-      const id = transaction.localId
+      const id = transaction.local_id
       return {
         demands: commonUpdates.demands,
         matches: new Map([
@@ -271,7 +291,7 @@ const DefaultEventProcessors: EventProcessors = {
             id: localId,
             type: 'update',
             latest_token_id: match.id,
-            state: getOrError(match.metadata, 'state'),
+            state: match2StateParser.parse(getOrError(match.metadata, 'state')),
           },
         ],
       ]),
@@ -365,12 +385,13 @@ const DefaultEventProcessors: EventProcessors = {
       [matchLocalId, { id: matchLocalId, latest_token_id: match.id, ...shared }],
     ])
 
-    if (transaction)
+    if (transaction) {
       return {
         match2Comments: new Map([[transaction.id, { ...shared, transaction_id: transaction.id, state: 'created' }]]),
         demands,
         matches,
       }
+    }
 
     const attachment: AttachmentRecord = attachmentPayload(match.metadata, sender, 'comment')
     const comment: Match2CommentRecord = {
@@ -380,6 +401,7 @@ const DefaultEventProcessors: EventProcessors = {
       match2: matchLocalId,
       owner: sender,
       attachment_id: attachment.id,
+      transaction_id: null,
     }
 
     return {

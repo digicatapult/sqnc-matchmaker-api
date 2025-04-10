@@ -115,11 +115,11 @@ export class DemandAController extends DemandController {
   @Response<NotFound>(404, 'Item not found.')
   @SuccessResponse('200')
   @Get('{demandAId}/creation/')
-  public async getTransactionsFromDemandA(
+  public async getDemandACreations(
     @Path() demandAId: UUID,
     @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
-    return super.getTransactionsFromDemand(demandAId, updated_since)
+    return super.getDemandCreations(demandAId, updated_since)
   }
 
   /**

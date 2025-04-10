@@ -2,7 +2,7 @@ import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
 import eventProcessors from '../eventProcessor.js'
-import { Transaction } from '../../db/index.js'
+import { TransactionRow } from '../../db/types.js'
 import { ChangeSet } from '../changeSet.js'
 
 describe('eventProcessor', function () {
@@ -20,7 +20,7 @@ describe('eventProcessor', function () {
     it('should return update to demand if transaction exists', function () {
       const result = eventProcessors['demand_create'](
         1,
-        { localId: '42' } as Transaction,
+        { local_id: '42' } as TransactionRow,
         'alice',
         [],
         [{ id: 1, roles: new Map(), metadata: new Map() }]
@@ -89,7 +89,7 @@ describe('eventProcessor', function () {
     it('should return update to demand and demandComment if transaction exists', function () {
       const result = eventProcessors['demand_comment'](
         1,
-        { localId: '42', id: '10' } as Transaction,
+        { local_id: '42', id: '10' } as TransactionRow,
         'alice',
         [{ id: 1, localId: '42' }],
         [{ id: 2, roles: new Map(), metadata: new Map([['state', 'allocated']]) }]
@@ -142,6 +142,7 @@ describe('eventProcessor', function () {
         demand: demandId,
         owner: 'alice',
         attachment_id: attachment.id,
+        transaction_id: null,
       })
     })
   })
@@ -160,7 +161,7 @@ describe('eventProcessor', function () {
     it('should return update to demand if transaction exists', function () {
       const result = eventProcessors['match2_propose'](
         1,
-        { localId: 'id_42' } as Transaction,
+        { local_id: 'id_42' } as TransactionRow,
         'alice',
         [
           { id: 1, localId: 'id_1' },
@@ -231,6 +232,7 @@ describe('eventProcessor', function () {
         demand_b_id: 'id_2',
         latest_token_id: 5,
         original_token_id: 5,
+        replaces_id: null,
       })
     })
   })
@@ -249,7 +251,7 @@ describe('eventProcessor', function () {
     it('should return update to demand if transaction exists', function () {
       const result = eventProcessors['rematch2_propose'](
         1,
-        { localId: 'id_42' } as Transaction,
+        { local_id: 'id_42' } as TransactionRow,
         'alice',
         [
           { id: 1, localId: 'id_1' }, //demandA
@@ -470,7 +472,7 @@ describe('eventProcessor', function () {
       beforeEach(() => {
         cancelResult = eventProcessors['match2_cancel'](
           1,
-          { localId: 'id_3', id: 'transaction_id' } as Transaction,
+          { local_id: 'id_3', id: 'transaction_id' } as TransactionRow,
           'alice',
           [
             { id: 1, localId: 'demandA_id' },

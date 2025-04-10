@@ -1,12 +1,12 @@
 import { Logger } from 'pino'
 
 import ChainNode, { ProcessRanEvent } from '../chainNode.js'
-import Database from '../db/index.js'
 import { ChangeSet, findLocalIdInChangeSet, mergeChangeSets } from './changeSet.js'
 import defaultEventProcessors, { EventProcessors, ValidateProcessName } from './eventProcessor.js'
+import { IndexerDatabaseExtensions } from './indexerDb.js'
 
 export interface EventHandlerCtorArgs {
-  db: Database
+  db: IndexerDatabaseExtensions
   logger: Logger
   node: ChainNode
   eventProcessors?: EventProcessors
@@ -14,7 +14,7 @@ export interface EventHandlerCtorArgs {
 
 export default class EventHandler {
   private logger: Logger
-  private db: Database
+  private db: IndexerDatabaseExtensions
   private node: ChainNode
   private eventProcessors: EventProcessors
 

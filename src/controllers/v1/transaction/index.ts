@@ -8,6 +8,8 @@ import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
 import { type TransactionApiType, type TransactionState, TransactionResponse } from '../../../models/transaction.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import { inject, injectable } from 'tsyringe'
+import { Where } from '../../../lib/db/types.js'
+import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
 
 @Route('v1/transaction')
 @Tags('transaction')
@@ -36,15 +38,13 @@ export class TransactionController extends Controller {
     @Query() status?: TransactionState,
     @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
-    const query: { state?: TransactionState; apiType?: TransactionApiType; updatedSince?: Date } = {
-      state: status,
-      apiType,
-    }
-    if (updated_since) {
-      query.updatedSince = parseDateParam(updated_since)
-    }
+    const query: Where<'transaction'> = []
+    if (status) query.push(['state', '=', status])
+    if (apiType) query.push(['api_type', '=', apiType])
+    if (updated_since) query.push(['updated_at', '>', parseDateParam(updated_since)])
 
-    return await this.db.getTransactions(query)
+    const dbTxs = await this.db.get('transaction', query)
+    return dbTxs.map(dbTransactionToResponse)
   }
 
   /**
@@ -54,9 +54,9 @@ export class TransactionController extends Controller {
   @Response<NotFound>(404, 'Item not found')
   @Get('{transactionId}')
   public async getTransaction(@Path() transactionId: UUID): Promise<TransactionResponse> {
-    const [transaction] = await this.db.getTransaction(transactionId)
+    const [transaction] = await this.db.get('transaction', { id: transactionId })
     if (!transaction) throw new NotFound('transaction')
 
-    return transaction
+    return dbTransactionToResponse(transaction)
   }
 }

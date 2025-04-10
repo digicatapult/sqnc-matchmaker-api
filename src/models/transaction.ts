@@ -11,6 +11,7 @@ export type TransactionState = 'submitted' | 'inBlock' | 'finalised' | 'failed'
 export interface TransactionResponse {
   id: UUID
   state: TransactionState
+  localId: UUID
   apiType: TransactionApiType
   transactionType: TransactionType
   submittedAt: Date
