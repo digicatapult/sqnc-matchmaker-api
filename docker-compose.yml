@@ -11,7 +11,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-matchmaker-api
     healthcheck:
-      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
 
   postgres-identity-service:
     image: postgres:17.4-alpine
@@ -25,7 +25,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-identity-service
     healthcheck:
-      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
 
   postgres-attachment-api:
     image: postgres:17.4-alpine
@@ -39,10 +39,10 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=sqnc-attachment-api
     healthcheck:
-      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
 
   sqnc-identity-service:
-    image: digicatapult/sqnc-identity-service:v4.1.7
+    image: digicatapult/sqnc-identity-service:v4.2.0
     container_name: identity-service
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
