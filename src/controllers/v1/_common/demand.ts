@@ -75,7 +75,12 @@ export class DemandController extends Controller {
   }
 
   public async getAll(req: express.Request, updated_since?: DATE): Promise<DemandResponse[]> {
-    const query: { subtype: DemandSubtype; updatedSince?: Date } = { subtype: this.dbDemandSubtype }
+    const { address: callerAddress } = await this.addressResolver.determineSelfAddress(req)
+
+    const query: { subtype: DemandSubtype; updatedSince?: Date; owner?: string } = {
+      subtype: this.dbDemandSubtype,
+      owner: callerAddress,
+    }
     if (updated_since) {
       query.updatedSince = parseDateParam(updated_since)
     }
@@ -88,6 +93,18 @@ export class DemandController extends Controller {
   public async getDemand(req: express.Request, demandId: UUID): Promise<DemandWithCommentsResponse> {
     const [demand] = await this.db.getDemand(demandId)
     if (!demand) throw new NotFound(this.demandType)
+
+    const { address: callerAddress } = await this.addressResolver.determineSelfAddress(req)
+
+    const match2s = await this.db.getMatch2sByDemand(demandId)
+
+    const inMatch2s = match2s.some((match2) => {
+      return match2.memberA === callerAddress || match2.memberB === callerAddress
+    })
+
+    if (!inMatch2s && demand.owner !== callerAddress) {
+      throw new NotFound(this.demandType) // throwing this to avoid leaking information
+    }
 
     const comments = await this.db.getDemandComments(demandId, 'created')
 

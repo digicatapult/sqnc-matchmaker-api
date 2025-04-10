@@ -167,13 +167,18 @@ export default class Database {
   getDemands = async ({
     subtype,
     updatedSince,
+    owner,
   }: {
     subtype: DemandSubtype
     updatedSince?: Date
+      owner?: string
   }): Promise<DemandRow[]> => {
-    const query = this.db().demand().select(demandColumns).where({ subtype })
+    let query = this.db().demand().select(demandColumns).where({ subtype })
+    if (owner) {
+      query = query.andWhere({ owner })
+    }
     if (updatedSince) {
-      return query.where('updated_at', '>', updatedSince)
+      query = query.andWhere('updated_at', '>', updatedSince)
     }
     return query
   }
@@ -354,6 +359,15 @@ export default class Database {
 
   getMatch2 = async (match2Id: UUID): Promise<[Match2Row] | []> => {
     return this.db().match2().select(match2Columns).where({ id: match2Id })
+  }
+
+  getMatch2sByDemand = async (demandId: UUID): Promise<[Match2Row] | []> => {
+    const match2s = await this.db()
+      .match2()
+      .select(match2Columns)
+      .orWhere({ demand_a_id: demandId })
+      .orWhere({ demand_b_id: demandId })
+    return match2s
   }
 
   getLastProcessedBlock = async (): Promise<DbBlock | null> => {

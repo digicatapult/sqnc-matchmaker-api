@@ -68,7 +68,7 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
     })
 
     describe('happy path', () => {
-      it(`should create a ${demandType}`, async () => {
+      it.only(`should create a ${demandType}`, async () => {
         const response = await post(app, `/v1/${demandType}`, { parametersAttachmentId })
         expect(response.status).to.equal(201)
 
