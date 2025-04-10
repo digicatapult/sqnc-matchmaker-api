@@ -215,7 +215,6 @@ export class Match2Controller extends Controller {
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
 
-    // TODO: add test
     const [proposal] = await this.db.get('transaction', {
       id: proposalId,
       local_id: match2.id,
@@ -379,7 +378,6 @@ export class Match2Controller extends Controller {
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
 
-    // TODO: add test
     const [accept] = await this.db.get('transaction', { id: acceptId, local_id: match2.id, transaction_type: 'accept' })
     if (!accept) throw new NotFound('accept')
 

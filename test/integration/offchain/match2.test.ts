@@ -498,6 +498,11 @@ describe('match2', () => {
       expect(response.status).to.equal(404)
     })
 
+    it('using cancel id - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2AcceptedA}/proposal/${seededMatch2CancellationId}`)
+      expect(response.status).to.equal(404)
+    })
+
     it('non-existent match2 when getting a proposal - 404', async () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/proposal/${seededProposalTransactionId}`)
       expect(response.status).to.equal(404)
@@ -624,6 +629,11 @@ describe('match2', () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/accept/${seededAcceptTransactionId}`)
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('match2 not found')
+    })
+
+    it('using cancel id - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2AcceptedA}/accept/${seededMatch2CancellationId}`)
+      expect(response.status).to.equal(404)
     })
 
     it('unauthenticated get match2 accept - 401', async () => {

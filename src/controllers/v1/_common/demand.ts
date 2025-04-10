@@ -91,7 +91,7 @@ export class DemandController extends Controller {
   }
 
   public async getDemand(req: express.Request, demandId: UUID): Promise<DemandWithCommentsResponse> {
-    const [demand] = await this.db.get('demand', { id: demandId })
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
     const comments = await this.db.get('demand_comment', { demand: demandId, state: 'created' }, [
@@ -102,8 +102,8 @@ export class DemandController extends Controller {
   }
 
   public async createDemandOnChain(demandId: UUID): Promise<TransactionResponse> {
-    const [demand] = await this.db.get('demand', { id: demandId })
-    if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
+    if (!demand) throw new NotFound(this.demandType)
     if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
 
     const [attachment] = await this.attachment.getAttachments([demand.parameters_attachment_id])
@@ -127,10 +127,9 @@ export class DemandController extends Controller {
   }
 
   public async getDemandCreation(demandId: UUID, creationId: UUID): Promise<TransactionResponse> {
-    const [demand] = await this.db.get('demand', { id: demandId })
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    // TODO: Add test
     const [creation] = await this.db.get('transaction', {
       id: creationId,
       local_id: demand.id,
@@ -149,7 +148,7 @@ export class DemandController extends Controller {
       query.push(['updated_at', '>', parseDateParam(updated_since)])
     }
 
-    const [demandAB] = await this.db.get('demand', { id: demandId })
+    const [demandAB] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demandAB) throw new NotFound(this.demandType)
 
     const dbTxs = await this.db.get('transaction', query)
@@ -161,8 +160,8 @@ export class DemandController extends Controller {
     demandId: UUID,
     { attachmentId }: DemandCommentRequest
   ): Promise<TransactionResponse> {
-    const [demand] = await this.db.get('demand', { id: demandId })
-    if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
+    if (!demand) throw new NotFound(this.demandType)
 
     const [comment] = await this.attachment.getAttachments([attachmentId])
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
@@ -196,10 +195,9 @@ export class DemandController extends Controller {
   }
 
   public async getDemandComment(demandId: UUID, commentId: UUID): Promise<TransactionResponse> {
-    const [demand] = await this.db.get('demand', { id: demandId })
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    // TODO: Add test
     const [comment] = await this.db.get('transaction', {
       id: commentId,
       local_id: demand.id,
@@ -218,8 +216,8 @@ export class DemandController extends Controller {
       query.push(['updated_at', '>', parseDateParam(updated_since)])
     }
 
-    const [demand] = await this.db.get('demand', { id: demandId })
-    if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
+    if (!demand) throw new NotFound(this.demandType)
 
     const dbTxs = await this.db.get('transaction', query)
     return dbTxs.map(dbTransactionToResponse)
