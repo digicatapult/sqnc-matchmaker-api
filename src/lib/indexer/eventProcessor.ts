@@ -1,7 +1,7 @@
 import { v4 as UUIDv4 } from 'uuid'
 
 import { UUID } from '../../models/strings.js'
-import { TransactionRow } from '../db/types.js'
+import { demandStateParser, demandSubtypeParser, match2StateParser, TransactionRow } from '../db/types.js'
 import {
   AttachmentRecord,
   ChangeSet,
@@ -10,7 +10,6 @@ import {
   Match2CommentRecord,
   MatchRecord,
 } from './changeSet.js'
-import { z } from 'zod'
 
 const processNames = [
   'demand_create',
@@ -47,23 +46,6 @@ const getOrError = <T>(map: Map<string, T>, key: string) => {
   }
   return val
 }
-
-const demandSubtypeParser = z.union([z.literal('demand_a'), z.literal('demand_b')])
-const demandStateParser = z.union([
-  z.literal('pending'),
-  z.literal('created'),
-  z.literal('allocated'),
-  z.literal('cancelled'),
-])
-const match2StateParser = z.union([
-  z.literal('pending'),
-  z.literal('proposed'),
-  z.literal('acceptedA'),
-  z.literal('acceptedB'),
-  z.literal('acceptedFinal'),
-  z.literal('rejected'),
-  z.literal('cancelled'),
-])
 
 const attachmentPayload = (map: Map<string, string>, sender: string, key: string): AttachmentRecord => ({
   type: 'insert',

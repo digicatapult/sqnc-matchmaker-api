@@ -13,19 +13,33 @@ export const tablesList = [
   'match2_comment',
 ] as const
 
+export const demandStateParser = z.union([
+  z.literal('pending'),
+  z.literal('created'),
+  z.literal('allocated'),
+  z.literal('cancelled'),
+])
+export const demandSubtypeParser = z.union([z.literal('demand_a'), z.literal('demand_b')])
 const insertDemand = z.object({
   owner: z.string(),
-  state: z.union([z.literal('pending'), z.literal('created'), z.literal('allocated'), z.literal('cancelled')]),
-  subtype: z.union([z.literal('demand_a'), z.literal('demand_b')]),
+  state: demandStateParser,
+  subtype: demandSubtypeParser,
   parameters_attachment_id: z.string(),
   latest_token_id: z.union([z.number(), z.null()]),
   original_token_id: z.union([z.number(), z.null()]),
 })
 
+export const transactionApiTypeParser = z.union([z.literal('match2'), z.literal('demand_a'), z.literal('demand_b')])
+export const transactionStateParser = z.union([
+  z.literal('submitted'),
+  z.literal('inBlock'),
+  z.literal('finalised'),
+  z.literal('failed'),
+])
 const insertTransaction = z.object({
   local_id: z.string(),
-  api_type: z.union([z.literal('match2'), z.literal('demand_a'), z.literal('demand_b')]),
-  state: z.union([z.literal('submitted'), z.literal('inBlock'), z.literal('finalised'), z.literal('failed')]),
+  api_type: transactionApiTypeParser,
+  state: transactionStateParser,
   transaction_type: z.union([
     z.literal('creation'),
     z.literal('proposal'),
@@ -37,19 +51,20 @@ const insertTransaction = z.object({
   hash: char64Parser,
 })
 
+export const match2StateParser = z.union([
+  z.literal('pending'),
+  z.literal('proposed'),
+  z.literal('acceptedA'),
+  z.literal('acceptedB'),
+  z.literal('acceptedFinal'),
+  z.literal('rejected'),
+  z.literal('cancelled'),
+])
 const insertMatch2 = z.object({
   optimiser: z.string().max(48),
   member_a: z.string().max(48),
   member_b: z.string().max(48),
-  state: z.union([
-    z.literal('pending'),
-    z.literal('proposed'),
-    z.literal('acceptedA'),
-    z.literal('acceptedB'),
-    z.literal('acceptedFinal'),
-    z.literal('rejected'),
-    z.literal('cancelled'),
-  ]),
+  state: match2StateParser,
   latest_token_id: z.union([z.number(), z.null()]),
   original_token_id: z.union([z.number(), z.null()]),
   demand_a_id: z.string(),
