@@ -5,12 +5,13 @@ import ChainNode from '../chainNode.js'
 import DefaultBlockHandler from './handleBlock.js'
 import { ChangeSet } from './changeSet.js'
 import { HEX } from '../../models/strings.js'
-import { DbBlock } from '../db/index.js'
 import { container, inject, singleton } from 'tsyringe'
 import { serviceState, Status } from '../service-watcher/statusPoll.js'
 import { type Env, EnvToken } from '../../env.js'
 import { LoggerToken } from '../logger.js'
 import Attachment from '../services/attachment.js'
+import { IndexerDatabaseExtensions } from './indexerDb.js'
+import { ProcessedBlockRow } from '../db/types.js'
 
 export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 
@@ -34,7 +35,8 @@ export interface BlockProcessingTimes {
 export default class Indexer {
   protected logger: Logger
   private env: Env
-  private db: Database
+
+  private db: IndexerDatabaseExtensions
   private node: ChainNode
   private attachment: Attachment
   private gen: AsyncGenerator<string | null, void, string>
@@ -47,7 +49,7 @@ export default class Indexer {
   private state: 'created' | 'started' | 'stopped'
 
   constructor(
-    db: Database,
+    db: IndexerDatabaseExtensions,
     @inject(LoggerToken) logger: Logger,
     node: ChainNode,
     @inject(EnvToken) env: Env,
@@ -176,20 +178,23 @@ export default class Indexer {
     }
   }
 
-  private async getNextUnprocessedBlockHash(lastProcessedBlock: DbBlock | null): Promise<HEX | null> {
+  private async getNextUnprocessedBlockHash(lastProcessedBlock: ProcessedBlockRow | null): Promise<HEX | null> {
     // get unprocessed block from db with height equal to the lastProcessedBlock height plus 1
-    const lastProcessedHeight = lastProcessedBlock ? parseInt(lastProcessedBlock.height, 10) : 0
-    const nextUnprocessedBlockHeight = lastProcessedHeight + 1
+    const lastProcessedHeight = lastProcessedBlock ? lastProcessedBlock.height : BigInt(0)
+    const nextUnprocessedBlockHeight = lastProcessedHeight + BigInt(1)
     const nextUnprocesedBlock = await this.db.getNextUnprocessedBlockAtHeight(nextUnprocessedBlockHeight)
     return nextUnprocesedBlock?.hash || null
   }
 
-  private async updateUnprocessedBlocks(lastProcessedBlock: DbBlock | null, lastFinalisedHash: HEX): Promise<void> {
+  private async updateUnprocessedBlocks(
+    lastProcessedBlock: ProcessedBlockRow | null,
+    lastFinalisedHash: HEX
+  ): Promise<void> {
     this.logger.debug('Updating list of finalised blocks to be processed')
 
     // ensure the finalised block is recorded in the db as this will be the latest known unprocessed block in most cases
     // this will mean we have a potential gap between the last finalised block and the last processed block in the db
-    const lastProcessedHeight = lastProcessedBlock ? parseInt(lastProcessedBlock.height) : 0
+    const lastProcessedHeight = lastProcessedBlock ? lastProcessedBlock.height : BigInt(0)
     const lastFinalisedBlock = await this.node.getHeader(lastFinalisedHash)
     if (lastFinalisedBlock.height > lastProcessedHeight) {
       this.logger.trace(
@@ -200,7 +205,7 @@ export default class Indexer {
       await this.db.tryInsertUnprocessedBlock({
         hash: lastFinalisedBlock.hash,
         parent: lastFinalisedBlock.parent,
-        height: `${lastFinalisedBlock.height}`,
+        height: BigInt(lastFinalisedBlock.height),
       })
     }
 
@@ -213,14 +218,13 @@ export default class Indexer {
 
     // start looping from the beginning of the gap in known unprocessed blocks until the last processed height
     let parentHash = nextRecordedUnprocessedBlock.parent
-    const nextRecordedUnprocessedBlockHeight = parseInt(nextRecordedUnprocessedBlock.height, 10)
-    for (let height = nextRecordedUnprocessedBlockHeight - 1; height > lastProcessedHeight; height--) {
+    for (let height = nextRecordedUnprocessedBlock.height - BigInt(1); height > lastProcessedHeight; height--) {
       const unprocessedBlock = await this.node.getHeader(parentHash)
       this.logger.trace('Asserting unprocessed block %s at height %d', unprocessedBlock.hash, unprocessedBlock.height)
       await this.db.tryInsertUnprocessedBlock({
         hash: unprocessedBlock.hash,
         parent: unprocessedBlock.parent,
-        height: `${unprocessedBlock.height}`,
+        height: BigInt(unprocessedBlock.height),
       })
       this.lastUnprocessedBlockTime = new Date() // time for when we have last leaned about a block
       parentHash = unprocessedBlock.parent
@@ -256,9 +260,9 @@ export default class Indexer {
     // prepare the db changes as a transaction
     const dbMutate = this.db.withTransaction(async (db) => {
       if (header.height === 1) {
-        await db.insertProcessedBlock({ hash: header.parent, height: '0', parent: header.parent })
+        await db.insertProcessedBlock({ hash: header.parent, height: BigInt(0), parent: header.parent })
       }
-      await db.insertProcessedBlock({ ...header, height: `${header.height}` })
+      await db.insertProcessedBlock({ ...header, height: BigInt(header.height) })
 
       if (changeSet.demands) {
         for (const [, demand] of changeSet.demands) {
@@ -277,14 +281,12 @@ export default class Indexer {
 
       if (changeSet.matches) {
         for (const [, match2] of changeSet.matches) {
-          const { type, ...record } = match2
-          switch (type) {
-            case 'insert':
-              await db.insertMatch2(record)
-              break
-            case 'update':
-              await db.updateMatch2(record.id, record)
-              break
+          if (match2.type === 'insert') {
+            const { type, ...record } = match2
+            await db.insertMatch2(record)
+          } else {
+            const { type, ...record } = match2
+            await db.updateMatch2(record.id, record)
           }
         }
       }

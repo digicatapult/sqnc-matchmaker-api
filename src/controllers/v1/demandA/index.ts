@@ -121,11 +121,11 @@ export class DemandAController extends DemandController {
   @SuccessResponse('200')
   @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}/creation/')
-  public async getTransactionsFromDemandA(
+  public async getDemandACreations(
     @Path() demandAId: UUID,
     @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
-    return super.getTransactionsFromDemand(demandAId, updated_since)
+    return super.getDemandCreations(demandAId, updated_since)
   }
 
   /**

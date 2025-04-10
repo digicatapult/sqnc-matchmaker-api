@@ -36,6 +36,7 @@ import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
 const runDemandTests = (demandType: 'demandA' | 'demandB') => {
   const dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'
   const seededDemandId = demandType === 'demandA' ? seededDemandAId : seededDemandBId
+  const seededOtherDemandId = demandType === 'demandA' ? seededDemandBId : seededDemandAId
   const seededCreationTransactionId =
     demandType === 'demandA' ? seededDemandACreationTransactionId : seededDemandBCreationTransactionId
   const seededCreationTransactionId2 =
@@ -321,6 +322,11 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
+      it('trying to get a demandB with a demandA id', async () => {
+        const response = await get(app, `/v1/${demandType}/${seededOtherDemandId}`, {}, `${demandType}:read`)
+        expect(response.status).to.equal(404)
+      })
+
       it(`non-existent ${demandType} id when creating on-chain - 404`, async () => {
         const response = await post(app, `/v1/${demandType}/${nonExistentId}/creation`, {})
         expect(response.status).to.equal(404)
@@ -399,6 +405,15 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
+      it('with creation transaction id - 404', async () => {
+        const { status } = await get(
+          app,
+          `/v1/${demandType}/${seededDemandId}/comment/${seededCreationTransactionId}`,
+          {}
+        )
+        expect(status).to.equal(404)
+      })
+
       it(`${demandType} creations with invalid updatedSince - 422`, async () => {
         const { status, body } = await get(app, `/v1/${demandType}/${seededDemandId}/creation?updated_since=foo`)
         expect(status).to.equal(422)
@@ -434,6 +449,15 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
       it('non-existent Creation ID - 404', async () => {
         const response = await get(app, `/v1/${demandType}/${seededDemandId}/creation/${nonExistentId}`)
         expect(response.status).to.equal(404)
+      })
+
+      it('with comment transaction id - 404', async () => {
+        const { status } = await get(
+          app,
+          `/v1/${demandType}/${seededDemandId}/creation/${seededCommentTransactionId}`,
+          {}
+        )
+        expect(status).to.equal(404)
       })
 
       it(`non-existent ${demandType} ID when using a Creation ID - 404`, async () => {

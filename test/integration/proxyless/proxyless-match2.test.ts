@@ -13,7 +13,7 @@ import {
   withDispatcherMock,
   withIdentitySelfMock,
 } from '../../helper/mock.js'
-import Database, { DemandRow, Match2Row } from '../../../src/lib/db/index.js'
+import Database from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
@@ -66,13 +66,13 @@ describe('on-chain proxyless', function () {
       await pollTransactionState(db, demandATransactionId, 'finalised')
       await pollDemandState(db, demandAId, 'created')
 
-      const [demandA]: DemandRow[] = await db.getDemand(demandAId)
+      const [demandA] = await db.get('demand', { id: demandAId })
 
       await node.sealBlock()
       await pollTransactionState(db, demandBTransactionId, 'finalised')
       await pollDemandState(db, demandBId, 'created')
 
-      const [demandB]: DemandRow[] = await db.getDemand(demandBId)
+      const [demandB] = await db.get('demand', { id: demandBId })
 
       //additional demandB for testing rematch2 flow
       const {
@@ -91,8 +91,8 @@ describe('on-chain proxyless', function () {
       } = await post(context.app, '/v1/match2', { demandA: demandA.id, demandB: demandB.id })
 
       ids = {
-        originalDemandB: demandB.originalTokenId as number,
-        originalDemandA: demandA.originalTokenId as number,
+        originalDemandB: demandB.original_token_id as number,
+        originalDemandA: demandA.original_token_id as number,
         demandA: demandAId,
         demandB: demandBId,
         match2: match2Id,
@@ -122,29 +122,29 @@ describe('on-chain proxyless', function () {
       await pollMatch2State(db, ids.match2, 'proposed')
 
       // check local entities update with token id
-      const [maybeDemandA] = await db.getDemand(ids.demandA)
-      const demandA = maybeDemandA as DemandRow
-      expect(demandA.latestTokenId).to.equal(lastTokenId + 1)
-      expect(demandA.originalTokenId).to.equal(ids.originalDemandA)
+      const [maybeDemandA] = await db.get('demand', { id: ids.demandA })
+      const demandA = maybeDemandA
+      expect(demandA.latest_token_id).to.equal(lastTokenId + 1)
+      expect(demandA.original_token_id).to.equal(ids.originalDemandA)
 
-      const [maybeDemandB] = await db.getDemand(ids.demandB)
-      const demandB = maybeDemandB as DemandRow
-      expect(demandB.latestTokenId).to.equal(lastTokenId + 2)
-      expect(demandB.originalTokenId).to.equal(ids.originalDemandB)
+      const [maybeDemandB] = await db.get('demand', { id: ids.demandB })
+      const demandB = maybeDemandB
+      expect(demandB.latest_token_id).to.equal(lastTokenId + 2)
+      expect(demandB.original_token_id).to.equal(ids.originalDemandB)
 
-      const [maybeMatch2] = await db.getMatch2(ids.match2)
-      const match2 = maybeMatch2 as Match2Row
-      expect(match2.latestTokenId).to.equal(lastTokenId + 3)
-      expect(match2.originalTokenId).to.equal(lastTokenId + 3)
+      const [maybeMatch2] = await db.get('match2', { id: ids.match2 })
+      const match2 = maybeMatch2
+      expect(match2.latest_token_id).to.equal(lastTokenId + 3)
+      expect(match2.original_token_id).to.equal(lastTokenId + 3)
       expect(match2).to.contain({
         id: ids.match2,
         optimiser: selfAddress,
-        memberA: selfAddress,
-        memberB: selfAddress,
+        member_a: selfAddress,
+        member_b: selfAddress,
         state: 'proposed',
-        replaces: null,
-        latestTokenId: lastTokenId + 3,
-        originalTokenId: lastTokenId + 3,
+        replaces_id: null,
+        latest_token_id: lastTokenId + 3,
+        original_token_id: lastTokenId + 3,
       })
     })
   })

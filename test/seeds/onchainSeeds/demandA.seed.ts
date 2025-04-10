@@ -2,13 +2,14 @@ import { container } from 'tsyringe'
 import env from '../../../src/env.js'
 import Database from '../../../src/lib/db/index.js'
 import { parametersAttachmentId, proxyAddress, selfAddress } from '../../helper/mock.js'
+import { dbInsert } from './helper.js'
 
 export const cleanup = async () => {
-  const db = container.resolve(Database).db()
-  await db.demand().del()
-  await db.transaction().del()
-  await db.match2().del()
-  await db.demand_comment().del()
+  const db = container.resolve(Database)
+  await db.delete('demand', {})
+  await db.delete('transaction', {})
+  await db.delete('match2', {})
+  await db.delete('demand_comment', {})
 }
 
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -45,18 +46,21 @@ export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c947478
 export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
 
 export const seed = async () => {
-  const db = container.resolve(Database).db()
+  const db = container.resolve(Database)
+  const insert = dbInsert(db)
   await cleanup()
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandAId,
       owner: env.PROXY_FOR === '' ? selfAddress : proxyAddress,
       subtype: 'demand_a',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 }

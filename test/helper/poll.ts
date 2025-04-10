@@ -1,26 +1,24 @@
 import Database from '../../src/lib/db/index.js'
 import { UUID } from '../../src/models/strings.js'
 
-type Method = 'getTransaction' | 'getDemand' | 'getDemandCommentForTransaction' | 'getMatch2' extends keyof Database
-  ? 'getTransaction' | 'getDemand' | 'getDemandCommentForTransaction' | 'getMatch2'
-  : never
+type Method = 'getTransaction' | 'getDemand' | 'getDemandCommentForTransaction' | 'getMatch2'
 
 const getRow = async (db: Database, method: Method, id: string): Promise<{ state: string } | undefined> => {
   switch (method) {
     case 'getTransaction': {
-      const [row] = await db.getTransaction(id)
+      const [row] = await db.get('transaction', { id })
       return row
     }
     case 'getDemand': {
-      const [row] = await db.getDemand(id)
+      const [row] = await db.get('demand', { id })
       return row
     }
     case 'getDemandCommentForTransaction': {
-      const [row] = await db.getDemandCommentForTransaction(id)
+      const [row] = await db.get('demand_comment', { transaction_id: id })
       return row
     }
     case 'getMatch2': {
-      const [row] = await db.getMatch2(id)
+      const [row] = await db.get('match2', { id })
       return row
     }
   }
@@ -51,7 +49,8 @@ const pollState =
 
       await poll()
     } catch (e) {
-      throw new Error(`error: ${e.message}`)
+      const err = e as Error
+      throw new Error(`error: ${err.message}`)
     }
   }
 
