@@ -100,4 +100,20 @@ export default class Identity {
   }
 
   getMemberByAddress = (alias: string, authorization: string) => this.getMemberByAlias(alias, authorization)
+
+  async updateRole(role: string, authorization: string): Promise<void> {
+    const res = await fetch(`${this.URL_PREFIX}/v1/roles/${role}`, {
+      method: 'PUT',
+      headers: {
+        authorization,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!res.ok) {
+      throw new HttpResponse({
+        message: 'Failed to update role',
+      })
+    }
+  }
 }
