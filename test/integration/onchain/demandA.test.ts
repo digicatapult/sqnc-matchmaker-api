@@ -78,6 +78,14 @@ describe('on-chain', function () {
       })
     })
 
+    it('creates a demandA on chain - scope', async () => {
+      const {
+        body: { id: demandAId },
+      } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
+      const { status } = await post(context.app, `/v1/demandA/${demandAId}/creation`, {}, {}, `demandA:create`)
+      expect(status).to.equal(201)
+    })
+
     it('creates many demandAs on chain in parallel', async function () {
       const numberDemands = 50
 
@@ -194,6 +202,26 @@ describe('on-chain', function () {
         transaction_id: transactionId,
       })
     })
+
+    it('should comment on a demandA on-chain - scope', async () => {
+      const creationResponse = await post(context.app, `/v1/demandA/${seededDemandAId}/creation`, {})
+      expect(creationResponse.status).to.equal(201)
+      await node.clearAllTransactions()
+      await pollTransactionState(db, creationResponse.body.id, 'finalised')
+      await pollDemandState(db, seededDemandAId, 'created')
+
+      const { status } = await post(
+        context.app,
+        `/v1/demandA/${seededDemandAId}/comment`,
+        {
+          attachmentId: parametersAttachmentId,
+        },
+        {},
+        `demandA:comment`
+      )
+      expect(status).to.equal(201)
+    })
+
     it('comment on many demandAs on chain in parallel', async function () {
       const numberDemands = 50
 

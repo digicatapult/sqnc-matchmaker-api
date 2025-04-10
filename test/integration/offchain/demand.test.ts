@@ -83,6 +83,11 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         })
       })
 
+      it(`should prepare a ${demandType} - scope`, async () => {
+        const { status } = await post(app, `/v1/${demandType}`, { parametersAttachmentId }, {}, `${demandType}:prepare`)
+        expect(status).to.equal(201)
+      })
+
       it(`should get a ${demandType}`, async () => {
         const response = await get(app, `/v1/${demandType}/${seededDemandId}`)
         expect(response.status).to.equal(200)
@@ -103,6 +108,11 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         })
       })
 
+      it(`should get a ${demandType} - scope`, async () => {
+        const { status } = await get(app, `/v1/${demandType}/${seededDemandId}`, {}, `${demandType}:read`)
+        expect(status).to.equal(200)
+      })
+
       it(`should get all ${demandType}s`, async () => {
         const { status, body } = await get(app, `/v1/${demandType}`)
         expect(status).to.equal(200)
@@ -115,6 +125,11 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           state: 'pending',
           updatedAt: exampleDate,
         })
+      })
+
+      it(`should get all ${demandType}s - scope`, async () => {
+        const { status } = await get(app, `/v1/${demandType}`, {}, `${demandType}:read`)
+        expect(status).to.equal(200)
       })
 
       it('should filter based on updated date', async () => {
@@ -135,6 +150,16 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           submittedAt: exampleDate,
           updatedAt: exampleDate,
         })
+      })
+
+      it('should get a transaction - scope', async () => {
+        const { status } = await get(
+          app,
+          `/v1/${demandType}/${seededDemandId}/creation/${seededCreationTransactionId}`,
+          {},
+          `${demandType}:read`
+        )
+        expect(status).to.equal(200)
       })
 
       it(`should get all creation transactions from a ${demandType} ID - 200`, async () => {
@@ -162,6 +187,11 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         ])
       })
 
+      it(`should get all creation transactions from a ${demandType} ID - scope`, async () => {
+        const { status } = await get(app, `/v1/${demandType}/${seededDemandId}/creation`, {}, `${demandType}:read`)
+        expect(status).to.equal(200)
+      })
+
       it(`should get all comment transactions from a ${demandType} ID - 200`, async () => {
         const response = await get(app, `/v1/${demandType}/${seededDemandId}/comment`)
         expect(response.status).to.equal(200)
@@ -185,6 +215,11 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
             updatedAt: exampleDate,
           },
         ])
+      })
+
+      it(`should get all comment transactions from a ${demandType} ID - scope`, async () => {
+        const { status } = await get(app, `/v1/${demandType}/${seededDemandId}/comment`, {}, `${demandType}:read`)
+        expect(status).to.equal(200)
       })
 
       it(`should filter ${demandType} creations based on updated date`, async () => {
@@ -218,6 +253,16 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           updatedAt: exampleDate,
         })
       })
+
+      it('should get comment transaction from a tx ID - scope', async () => {
+        const { status } = await get(
+          app,
+          `/v1/${demandType}/${seededDemandId}/comment/${seededCommentTransactionId}`,
+          {},
+          `${demandType}:read`
+        )
+        expect(status).to.equal(200)
+      })
     })
 
     describe('sad path', () => {
@@ -244,7 +289,13 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           { authorization: 'bearer invalid' }
         )
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope create demand - 401', async () => {
+        const response = await post(app, `/v1/${demandType}`, { parametersAttachmentId }, {}, '')
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it('non-existent attachment - 400', async () => {
@@ -261,7 +312,13 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
       it('unauthenticated get demand - 401', async () => {
         const response = await get(app, `/v1/${demandType}/${seededDemandId}`, { authorization: 'bearer invalid' })
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope get demand - 401', async () => {
+        const response = await get(app, `/v1/${demandType}/${seededDemandId}`, {}, '')
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it(`non-existent ${demandType} id when creating on-chain - 404`, async () => {
@@ -279,7 +336,13 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           authorization: 'bearer invalid',
         })
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope get demand creation - 401', async () => {
+        const response = await get(app, `/v1/${demandType}/${seededDemandId}/creation`, {}, '')
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it(`non-existent ${demandType} id when commenting on-chain - 404`, async () => {
@@ -299,7 +362,13 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           authorization: 'bearer invalid',
         })
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope list demand comment - 401', async () => {
+        const response = await get(app, `/v1/${demandType}/${seededDemandId}/comment`, {}, '')
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it('non-existent comment id when getting comment tx - 404', async () => {
@@ -316,7 +385,18 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           }
         )
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope get demand comment - 401', async () => {
+        const response = await get(
+          app,
+          `/v1/${demandType}/${seededDemandId}/comment/${seededDemandBCommentTransactionId}`,
+          {},
+          ''
+        )
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it(`${demandType} creations with invalid updatedSince - 422`, async () => {
@@ -342,7 +422,13 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           { authorization: 'bearer invalid' }
         )
         expect(response.status).to.equal(401)
-        expect(response.body.message).to.equal('Forbidden')
+        expect(response.body.message).to.contain('INVALID_TOKEN')
+      })
+
+      it('missing scope create demand creation - 401', async () => {
+        const response = await post(app, `/v1/${demandType}/${seededDemandId}/creation`, {}, {}, '')
+        expect(response.status).to.equal(401)
+        expect(response.body.message).to.contain('MISSING_SCOPES')
       })
 
       it('non-existent Creation ID - 404', async () => {

@@ -385,11 +385,162 @@
           }
         }
       ],
-      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "email"],
-      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "match2:prepare",
+        "match2:propose",
+        "match2:cancel",
+        "match2:read",
+        "demandA:read",
+        "demandB:read"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "demandA:prepare",
+        "demandA:create",
+        "demandA:comment",
+        "demandB:prepare",
+        "demandB:create",
+        "demandB:comment",
+        "match2:accept",
+        "match2:reject"
+      ]
     }
   ],
   "clientScopes": [
+    {
+      "name": "demandA:read",
+      "protocol": "openid-connect",
+      "description": "Read demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandA:prepare",
+      "protocol": "openid-connect",
+      "description": "Prepare demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandA:create",
+      "protocol": "openid-connect",
+      "description": "Create demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandA:comment",
+      "protocol": "openid-connect",
+      "description": "Comment on demandA",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandB:read",
+      "protocol": "openid-connect",
+      "description": "Read demandB",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandB:prepare",
+      "protocol": "openid-connect",
+      "description": "Prepare demandB",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandB:create",
+      "protocol": "openid-connect",
+      "description": "Create demandB",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "demandB:comment",
+      "protocol": "openid-connect",
+      "description": "Comment on demandB",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:read",
+      "protocol": "openid-connect",
+      "description": "Read match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:prepare",
+      "protocol": "openid-connect",
+      "description": "Prepare match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:propose",
+      "protocol": "openid-connect",
+      "description": "Propose match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:cancel",
+      "protocol": "openid-connect",
+      "description": "Cancel match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:accept",
+      "protocol": "openid-connect",
+      "description": "Accept or reject match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "match2:reject",
+      "protocol": "openid-connect",
+      "description": "Reject match2",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
     {
       "name": "profile",
       "description": "OpenID Connect built-in scope: profile",
