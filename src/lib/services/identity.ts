@@ -10,7 +10,7 @@ import AuthInternal from './authInternal.js'
 const identityResponseValidator = z.object({
   address: z.string(),
   alias: z.string(),
-  role: z.union([z.undefined(), z.literal('Optimiser'), z.literal('Self')]),
+  role: z.union([z.undefined(), z.literal('Optimiser'), z.literal('Self')]).optional(),
 })
 export type IdentityResponse = z.infer<typeof identityResponseValidator>
 
