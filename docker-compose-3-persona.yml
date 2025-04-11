@@ -90,7 +90,7 @@ services:
     networks: ['member-a']
 
   member-a-attachment:
-    image: digicatapult/sqnc-attachment-api:v2.2.9
+    image: digicatapult/sqnc-attachment-api:v3.0.4
     container_name: member-a-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -242,7 +242,7 @@ services:
     networks: ['member-b']
 
   member-b-attachment:
-    image: digicatapult/sqnc-attachment-api:v2.2.9
+    image: digicatapult/sqnc-attachment-api:v3.0.4
     container_name: member-b-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -402,7 +402,7 @@ services:
     networks: ['optimiser']
 
   optimiser-attachment:
-    image: digicatapult/sqnc-attachment-api:v2.2.9
+    image: digicatapult/sqnc-attachment-api:v3.0.4
     container_name: optimiser-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
