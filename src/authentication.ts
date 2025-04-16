@@ -1,6 +1,6 @@
 import type express from 'express'
 
-import mkExpressAuthentication from '@digicatapult/tsoa-oauth-express'
+import mkExpressAuthentication, { mergeAcceptAny } from '@digicatapult/tsoa-oauth-express'
 
 import env from './env.js'
 
@@ -17,7 +17,13 @@ const makeAuth = (securityName: string, jwksUri: string) =>
     },
   })
 
-export const expressAuthentication = makeAuth(
-  'oauth2',
-  `${env.IDP_INTERNAL_ORIGIN}${env.IDP_PATH_PREFIX}/realms/${env.IDP_OAUTH2_REALM}/protocol/openid-connect/certs`
-)
+export const expressAuthentication = mergeAcceptAny([
+  makeAuth(
+    'oauth2',
+    `${env.IDP_INTERNAL_ORIGIN}${env.IDP_PATH_PREFIX}/realms/${env.IDP_OAUTH2_REALM}/protocol/openid-connect/certs`
+  ),
+  makeAuth(
+    'internal',
+    `${env.IDP_INTERNAL_ORIGIN}${env.IDP_PATH_PREFIX}/realms/${env.IDP_INTERNAL_REALM}/protocol/openid-connect/certs`
+  ),
+])
