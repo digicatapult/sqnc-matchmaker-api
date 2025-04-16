@@ -96,26 +96,15 @@ export class AuthorizationController extends Controller {
     rows: T[],
     mapper: (row: T, identity: IdentityResponse) => Promise<boolean>
   ) {
-    return new Promise((resolve) => {
-      let resolved = false
-      Promise.all(
-        rows.map((row) => {
-          mapper(row, identity).then((check) => {
-            if (check) {
-              resolved = true
-              resolve(true)
-            }
-          })
-        })
-      ).then(() => {
-        if (!resolved) {
-          resolve(false)
-        }
-      })
-    })
+    for (const row of rows) {
+      if (await mapper(row, identity)) {
+        return true
+      }
+    }
+    return false
   }
 
-  private async authorizeForOurDemand(demand: DemandRow, extIdentity: IdentityResponse): Promise<boolean> {
+  private authorizeForOurDemand = async (demand: DemandRow, extIdentity: IdentityResponse): Promise<boolean> => {
     // share with our OPTIMISERs, and any owner of a demand matched with our demand
 
     if (extIdentity.role === 'Optimiser') {
@@ -135,7 +124,7 @@ export class AuthorizationController extends Controller {
     return false
   }
 
-  private async authorizeForOtherDemand(demand: DemandRow, extIdentity: IdentityResponse): Promise<boolean> {
+  private authorizeForOtherDemand = async (demand: DemandRow, extIdentity: IdentityResponse): Promise<boolean> => {
     // share with the owner of the demand, the optimiser for any match with that demand and the owner of any demand matched with that demand
 
     if (demand.owner === extIdentity.address) {
@@ -154,7 +143,7 @@ export class AuthorizationController extends Controller {
     return false
   }
 
-  private async authorizeForMatch2(match: Match2Row, extIdentity: IdentityResponse): Promise<boolean> {
+  private authorizeForMatch2 = async (match: Match2Row, extIdentity: IdentityResponse): Promise<boolean> => {
     // share with the owner of the match or the owner of either demand referenced in the match
 
     const ids = new Set([match.member_a, match.member_b, match.optimiser])
