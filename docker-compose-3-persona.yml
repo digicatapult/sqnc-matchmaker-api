@@ -111,6 +111,9 @@ services:
       - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=member-a
       - IDP_INTERNAL_REALM=internal
+      - IDP_EXTERNAL_REALM=external
+      - IDP_INTERNAL_CLIENT_ID=sequence
+      - IDP_INTERNAL_CLIENT_SECRET=secret
     networks: ['member-a', 'ipfs']
 
   member-a-node:
@@ -263,6 +266,9 @@ services:
       - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=member-b
       - IDP_INTERNAL_REALM=internal
+      - IDP_EXTERNAL_REALM=external
+      - IDP_INTERNAL_CLIENT_ID=sequence
+      - IDP_INTERNAL_CLIENT_SECRET=secret
     networks: ['member-b', 'ipfs']
 
   member-b-node:
@@ -423,6 +429,9 @@ services:
       - IDP_PATH_PREFIX=
       - IDP_OAUTH2_REALM=optimiser
       - IDP_INTERNAL_REALM=internal
+      - IDP_EXTERNAL_REALM=external
+      - IDP_INTERNAL_CLIENT_ID=sequence
+      - IDP_INTERNAL_CLIENT_SECRET=secret
     networks: ['optimiser', 'ipfs']
 
   optimiser-node:
