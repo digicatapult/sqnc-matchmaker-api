@@ -8,7 +8,7 @@ export type DemandSubtype = 'demand_a' | 'demand_b'
 /**
  * The possible states of a Demand
  */
-export type DemandState = 'pending' | 'created' | 'allocated'
+export type DemandState = 'pending' | 'created' | 'allocated' | 'cancelled'
 
 /**
  * A Demand returned by the API

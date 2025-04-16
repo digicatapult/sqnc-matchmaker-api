@@ -13,7 +13,7 @@ import {
   withDispatcherMock,
   withIdentitySelfMock,
 } from '../../helper/mock.js'
-import Database, { DemandRow } from '../../../src/lib/db/index.js'
+import Database from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
 import { pollDemandState, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
@@ -65,16 +65,16 @@ describe('on-chain proxyless', function () {
       await pollDemandState(db, seededDemandBId, 'created')
 
       // check local demandB updates with token id
-      const [maybeDemandB] = await db.getDemand(seededDemandBId)
-      const demandB = maybeDemandB as DemandRow
+      const [maybeDemandB] = await db.get('demand', { id: seededDemandBId })
+      const demandB = maybeDemandB
       expect(demandB).to.contain({
         id: seededDemandBId,
         owner: selfAddress,
         state: 'created',
         subtype: 'demand_b',
-        parametersAttachmentId,
-        latestTokenId: lastTokenId + 1,
-        originalTokenId: lastTokenId + 1,
+        parameters_attachment_id: parametersAttachmentId,
+        latest_token_id: lastTokenId + 1,
+        original_token_id: lastTokenId + 1,
       })
     })
   })

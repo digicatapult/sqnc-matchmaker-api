@@ -42,7 +42,7 @@ describe('Indexer', function () {
     })
 
     it('should return hash if the db has processed blocks', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -75,7 +75,7 @@ describe('Indexer', function () {
       container.clearInstances()
     })
     it('should do nothing and return null if there are no blocks to process', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -93,7 +93,7 @@ describe('Indexer', function () {
     })
 
     it("should process next block and return it's hash if there's one block to process", async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -111,7 +111,7 @@ describe('Indexer', function () {
     })
 
     it("should process next block and return it's hash if there's more than one block to process", async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -129,7 +129,7 @@ describe('Indexer', function () {
     })
 
     it("should process successive blocks on each call if there's two block to process", async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -149,7 +149,7 @@ describe('Indexer', function () {
     })
 
     it("should do nothing if we're up to date after processing blocks", async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -169,9 +169,9 @@ describe('Indexer', function () {
 
     it('should skip over blocks if another instance processes them', async function () {
       const db = withLastProcessedBlocksByCall([
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '1-hash', parent: '0-hash', height: 1 },
-        { hash: '4-hash', parent: '1-hash', height: 4 },
+        { hash: '1-hash', parent: '0-hash', height: BigInt(1) },
+        { hash: '1-hash', parent: '0-hash', height: BigInt(1) },
+        { hash: '4-hash', parent: '1-hash', height: BigInt(4) },
       ])
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
@@ -192,7 +192,7 @@ describe('Indexer', function () {
     })
 
     it('should continue to process blocks if last finalised block goes backwards', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 0 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(0) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -212,7 +212,7 @@ describe('Indexer', function () {
     })
 
     it('should upsert demands and match2 entries from changeset', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -252,7 +252,7 @@ describe('Indexer', function () {
     })
 
     it('should insert demands and match2 entries from changeset', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -298,7 +298,7 @@ describe('Indexer', function () {
     })
 
     it('should delete attachments on db error', async function () {
-      const db = withInitialLastProcessedBlockAndTxError({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlockAndTxError({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -344,7 +344,7 @@ describe('Indexer', function () {
       })
 
       it('should retry after configured delay', async function () {
-        const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+        const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
         const node = withGetHeaderBoom(1)
         const attachment = withMockAttachment()
         indexer = registerInstances(node, db, attachment)
@@ -367,7 +367,7 @@ describe('Indexer', function () {
       })
 
       it('should retry if handler goes boom', async function () {
-        const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+        const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
         const node = withHappyChainNode()
         const attachment = withMockAttachment()
         indexer = registerInstances(node, db, attachment)
@@ -392,7 +392,7 @@ describe('Indexer', function () {
 
   describe('processAllBlocks', function () {
     it('should process all pending blocks', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)
@@ -412,7 +412,7 @@ describe('Indexer', function () {
     })
 
     it('should return null if no blocks to process', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const node = withHappyChainNode()
       const attachment = withMockAttachment()
       indexer = registerInstances(node, db, attachment)

@@ -1,12 +1,13 @@
 import { container } from 'tsyringe'
 import Database from '../../../src/lib/db/index.js'
 import { notSelfAddress, proxyAddress, selfAddress } from '../../helper/mock.js'
+import { dbInsert } from './helper.js'
 
 export const cleanup = async () => {
-  const db = container.resolve(Database).db()
-  await db.demand().del()
-  await db.transaction().del()
-  await db.demand_comment().del()
+  const db = container.resolve(Database)
+  await db.delete('demand', {})
+  await db.delete('transaction', {})
+  await db.delete('demand_comment', {})
 }
 
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -37,56 +38,59 @@ const seededDemandBNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
 const seededDemandTokenId = 42
 
 export const demandSeed = async () => {
-  const db = container.resolve(Database).db()
+  const db = container.resolve(Database)
+  const insert = dbInsert(db)
   await cleanup()
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBId,
       owner: proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandBCreationTransactionId,
       api_type: 'demand_b',
       transaction_type: 'creation',
       local_id: seededDemandBId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandBCreationTransactionId2,
       api_type: 'demand_b',
       transaction_type: 'creation',
       local_id: seededDemandBId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandBCommentTransactionId,
       api_type: 'demand_b',
       transaction_type: 'comment',
       local_id: seededDemandBId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
     {
@@ -95,21 +99,22 @@ export const demandSeed = async () => {
       transaction_type: 'comment',
       local_id: seededDemandBId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.demand_comment().insert([
+  await insert('demand_comment', [
     {
       id: seededDemandBCommentTransactionId,
       owner: proxyAddress,
       state: 'pending',
       demand: seededDemandBId,
       attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      transaction_id: null,
     },
     {
       id: seededDemandBCommentTransactionId2,
@@ -117,58 +122,61 @@ export const demandSeed = async () => {
       state: 'created',
       demand: seededDemandBId,
       attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      transaction_id: null,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandAId,
       owner: proxyAddress,
       subtype: 'demand_a',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandACreationTransactionId,
       api_type: 'demand_a',
       transaction_type: 'creation',
       local_id: seededDemandAId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandACreationTransactionId2,
       api_type: 'demand_a',
       transaction_type: 'creation',
       local_id: seededDemandAId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandACommentTransactionId,
       api_type: 'demand_a',
       transaction_type: 'comment',
       local_id: seededDemandAId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
     {
@@ -177,21 +185,22 @@ export const demandSeed = async () => {
       transaction_type: 'comment',
       local_id: seededDemandAId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.demand_comment().insert([
+  await insert('demand_comment', [
     {
       id: seededDemandACommentTransactionId,
       owner: proxyAddress,
       state: 'pending',
       demand: seededDemandAId,
       attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      transaction_id: null,
     },
     {
       id: seededDemandACommentTransactionId2,
@@ -199,12 +208,13 @@ export const demandSeed = async () => {
       state: 'created',
       demand: seededDemandAId,
       attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      transaction_id: null,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandANotOwnedId,
       owner: notSelfAddress,
@@ -213,12 +223,12 @@ export const demandSeed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBNotOwnedId,
       owner: notSelfAddress,
@@ -227,36 +237,40 @@ export const demandSeed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBMissingTokenId,
       owner: proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandAMissingTokenId,
       owner: selfAddress,
       subtype: 'demand_a',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBWithTokenId,
       owner: selfAddress,
@@ -265,12 +279,12 @@ export const demandSeed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandAWithTokenId,
       owner: selfAddress,
@@ -279,32 +293,36 @@ export const demandSeed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBAlreadyAllocated,
       owner: selfAddress,
       subtype: 'demand_b',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandAAlreadyAllocated,
       owner: selfAddress,
       subtype: 'demand_a',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 }

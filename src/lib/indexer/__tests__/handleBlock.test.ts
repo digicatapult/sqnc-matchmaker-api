@@ -12,7 +12,7 @@ import { withMockEventHandler } from './fixtures/eventHandler.js'
 describe('BlockHandler', function () {
   describe('handleBlock', function () {
     it('should fetch events from node for blockHash', async function () {
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const logger = withMockLogger()
       const node = withProcessRanEvents([])
       const blockHandler = new BlockHandler({ db, logger, node })
@@ -26,7 +26,7 @@ describe('BlockHandler', function () {
       const events = events2
       const changeSets = changeSets2
 
-      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: 1 })
+      const db = withInitialLastProcessedBlock({ hash: '1-hash', parent: '0-hash', height: BigInt(1) })
       const logger = withMockLogger()
       const node = withProcessRanEvents(events)
       const eventHandler = withMockEventHandler(changeSets)

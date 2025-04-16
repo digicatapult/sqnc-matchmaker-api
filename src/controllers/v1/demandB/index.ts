@@ -125,7 +125,7 @@ export class DemandBController extends DemandController {
     @Path() demandBId: UUID,
     @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
-    return super.getTransactionsFromDemand(demandBId, updated_since)
+    return super.getDemandCreations(demandBId, updated_since)
   }
 
   /**

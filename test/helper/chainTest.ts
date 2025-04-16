@@ -18,10 +18,10 @@ export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) =
     const blockHash = await node.getLastFinalisedBlockHash()
     const blockHeader = await node.getHeader(blockHash)
     await db
-      .insertProcessedBlock({
-        hash: blockHash,
-        height: blockHeader.height.toString(10),
-        parent: blockHash,
+      .insert('processed_blocks', {
+        hash: blockHash.slice(2),
+        height: BigInt(blockHeader.height),
+        parent: blockHash.slice(2),
       })
       .catch((err: any) => {
         // intentional ignorance of errors

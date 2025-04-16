@@ -1,12 +1,13 @@
 import { container } from 'tsyringe'
 import Database from '../../../src/lib/db/index.js'
 import { notSelfAddress, parametersAttachmentId, proxyAddress } from '../../helper/mock.js'
+import { dbInsert } from './helper.js'
 
 export const cleanup = async () => {
-  const db = container.resolve(Database).db()
-  await db.demand().del()
-  await db.transaction().del()
-  await db.match2().del()
+  const db = container.resolve(Database)
+  await db.delete('demand', {})
+  await db.delete('transaction', {})
+  await db.delete('match2', {})
 }
 
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -59,47 +60,52 @@ const seededMatch2TokenId = 43
 const seededDemandTokenId = 42
 
 export const match2Seed = async () => {
-  const db = container.resolve(Database).db()
+  const db = container.resolve(Database)
+  const insert = dbInsert(db)
   await cleanup()
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBId,
       owner: proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededDemandBCreationTransactionId,
       api_type: 'demand_b',
       transaction_type: 'creation',
       local_id: seededDemandBId,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandAId,
       owner: proxyAddress,
       subtype: 'demand_a',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandANotOwnedId,
       owner: notSelfAddress,
@@ -108,12 +114,12 @@ export const match2Seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBNotOwnedId,
       owner: notSelfAddress,
@@ -122,36 +128,40 @@ export const match2Seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBMissingTokenId,
       owner: proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandAMissingTokenId,
       owner: proxyAddress,
       subtype: 'demand_a',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBWithTokenId,
       owner: proxyAddress,
@@ -160,12 +170,12 @@ export const match2Seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandAWithTokenId,
       owner: proxyAddress,
@@ -174,36 +184,40 @@ export const match2Seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBAlreadyAllocated,
       owner: proxyAddress,
       subtype: 'demand_b',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandAAlreadyAllocated,
       owner: proxyAddress,
       subtype: 'demand_a',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.match2().insert([
+  await insert('match2', [
     {
       id: seededMatch2Id,
       state: 'pending',
@@ -212,51 +226,54 @@ export const match2Seed = async () => {
       member_b: proxyAddress,
       demand_a_id: seededDemandAId,
       demand_b_id: seededDemandBId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+      replaces_id: null,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededProposalTransactionId,
       api_type: 'match2',
       transaction_type: 'proposal',
       local_id: seededMatch2Id,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededAcceptTransactionId,
       api_type: 'match2',
       transaction_type: 'accept',
       local_id: seededMatch2Id,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededRejectionTransactionId,
       api_type: 'match2',
       transaction_type: 'rejection',
       local_id: seededMatch2Id,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.match2().insert([
+  await insert('match2', [
     {
       id: seededMatch2WithAllocatedDemands,
       state: 'pending',
@@ -265,12 +282,15 @@ export const match2Seed = async () => {
       member_b: proxyAddress,
       demand_a_id: seededDemandAAlreadyAllocated,
       demand_b_id: seededDemandBAlreadyAllocated,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+      replaces_id: null,
     },
   ])
 
-  await db.match2().insert([
+  await insert('match2', [
     {
       id: seededMatch2AcceptedA,
       state: 'acceptedA',
@@ -279,13 +299,16 @@ export const match2Seed = async () => {
       member_b: proxyAddress,
       demand_a_id: seededDemandAId,
       demand_b_id: seededDemandBId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+      replaces_id: null,
     },
   ])
 
   //added token ids to this match
-  await db.match2().insert([
+  await insert('match2', [
     {
       id: seededMatch2AcceptedFinal,
       state: 'acceptedFinal',
@@ -296,38 +319,39 @@ export const match2Seed = async () => {
       demand_b_id: seededDemandBId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      replaces_id: null,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededMatch2CancellationId,
       api_type: 'match2',
       transaction_type: 'cancellation',
       local_id: seededMatch2Id,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.transaction().insert([
+  await insert('transaction', [
     {
       id: seededMatch2CancellationId2,
       api_type: 'match2',
       transaction_type: 'cancellation',
       local_id: seededMatch2Id,
       state: 'submitted',
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       hash: transactionHash,
     },
   ])
 
-  await db.match2().insert([
+  await insert('match2', [
     {
       id: seededMatch2NotAcceptableA,
       state: 'acceptedB',
@@ -338,12 +362,13 @@ export const match2Seed = async () => {
       demand_b_id: seededDemandBWithTokenId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      replaces_id: null,
     },
   ])
 
-  await db.match2().insert([
+  await insert('match2', [
     {
       id: seededMatch2NotAcceptableB,
       state: 'acceptedA',
@@ -354,12 +379,13 @@ export const match2Seed = async () => {
       demand_b_id: seededDemandBNotOwnedId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      replaces_id: null,
     },
   ])
 
-  await db.match2().insert([
+  await insert('match2', [
     {
       id: seededMatch2NotAcceptableBoth,
       state: 'acceptedB',
@@ -370,12 +396,13 @@ export const match2Seed = async () => {
       demand_b_id: seededDemandBNotOwnedId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      replaces_id: null,
     },
   ])
 
-  await db.match2().insert([
+  await insert('match2', [
     {
       id: seededMatch2NotInRoles,
       state: 'acceptedB',
@@ -386,13 +413,14 @@ export const match2Seed = async () => {
       demand_b_id: seededDemandBNotOwnedId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      replaces_id: null,
     },
   ])
 
   // * rematch2-accept
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandAAllocated,
       owner: proxyAddress,
@@ -401,8 +429,8 @@ export const match2Seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
     {
       id: seededDemandBCrated,
@@ -412,8 +440,8 @@ export const match2Seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
     {
       id: seededDemandACrated,
@@ -423,12 +451,12 @@ export const match2Seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.match2().insert([
+  await insert('match2', [
     {
       id: seededRematch2DemndACreated,
       state: 'acceptedA',
@@ -439,8 +467,8 @@ export const match2Seed = async () => {
       demand_b_id: seededDemandBCrated,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       replaces_id: seededMatch2AcceptedFinal,
     },
     {
@@ -453,8 +481,8 @@ export const match2Seed = async () => {
       demand_b_id: seededDemandBAlreadyAllocated,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       replaces_id: seededMatch2AcceptedFinal,
     },
     {
@@ -467,8 +495,8 @@ export const match2Seed = async () => {
       demand_b_id: seededDemandBCrated,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       replaces_id: seededMatch2AcceptedFinal,
     },
     {
@@ -481,8 +509,8 @@ export const match2Seed = async () => {
       demand_b_id: seededDemandBCrated,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
       replaces_id: seededMatch2AcceptedFinal,
     },
   ])

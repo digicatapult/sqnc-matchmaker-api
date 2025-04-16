@@ -2,14 +2,14 @@ import { container } from 'tsyringe'
 import env from '../../../src/env.js'
 import Database from '../../../src/lib/db/index.js'
 import { notSelfAddress, parametersAttachmentId, proxyAddress, selfAddress } from '../../helper/mock.js'
+import { dbInsert } from './helper.js'
 
 export const cleanup = async () => {
-  const db = container.resolve(Database).db()
-
-  await db.demand().del()
-  await db.transaction().del()
-  await db.match2().del()
-  await db.demand_comment().del()
+  const db = container.resolve(Database)
+  await db.delete('demand', {})
+  await db.delete('transaction', {})
+  await db.delete('match2', {})
+  await db.delete('demand_comment', {})
 }
 
 export const transactionHash = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -51,22 +51,25 @@ const seededMatch2TokenId = 43
 const seededDemandTokenId = 42
 
 export const seed = async () => {
-  const db = container.resolve(Database).db()
+  const db = container.resolve(Database)
+  const insert = dbInsert(db)
   await cleanup()
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBId,
       owner: env.PROXY_FOR === '' ? selfAddress : proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandANotOwnedId,
       owner: notSelfAddress,
@@ -75,12 +78,12 @@ export const seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.demand().insert([
+  await insert('demand', [
     {
       id: seededDemandBWithTokenId,
       owner: proxyAddress,
@@ -89,12 +92,12 @@ export const seed = async () => {
       parameters_attachment_id: parametersAttachmentId,
       latest_token_id: seededDemandTokenId,
       original_token_id: seededDemandTokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
     },
   ])
 
-  await db.match2().insert([
+  await insert('match2', [
     {
       id: seededMatch2NotAcceptableA,
       state: 'acceptedB',
@@ -105,8 +108,9 @@ export const seed = async () => {
       demand_b_id: seededDemandBWithTokenId,
       latest_token_id: seededMatch2TokenId,
       original_token_id: seededMatch2TokenId,
-      created_at: exampleDate,
-      updated_at: exampleDate,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      replaces_id: null,
     },
   ])
 }
