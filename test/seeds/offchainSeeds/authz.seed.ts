@@ -12,19 +12,16 @@ export const cleanup = async () => {
   await db.delete('match2_comment', {})
 }
 
-export const demandAParametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
-export const demandBParametersAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
-export const demandACommentAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf1'
-export const demandBCommentAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf2'
-export const demandANotOwnedCommentAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf3'
-export const demandBNotOwnedCommentAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf4'
-export const demandAOwnedByNotSelfAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf5'
-export const demandBOwnedByNotOptimiserAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf6'
-export const demandAOwnedByNotOptimiserAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf0'
-export const demandBOwnedByNotSelfAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf7'
-export const match2CommentAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eae0'
-export const match2NotOwnedCommentAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eae1'
-export const match2OwnedByOptimiserCommentAttachmentId = 'a789ad47-91c3-446e-90f9-a7c9b233eae1'
+export const demandAParametersId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf8'
+export const demandBParametersId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
+export const demandACommentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf1'
+export const demandBCommentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf2'
+export const demandAOwnedByNotSelfCommentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf5'
+export const demandBOwnedByNotOptimiserCommentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf6'
+export const demandAOwnedByNotOptimiserCommentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf0'
+export const demandBOwnedByNotSelfCommentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf7'
+export const match2CommentId = 'a789ad47-91c3-446e-90f9-a7c9b233eae0'
+export const match2NotOwnedCommentId = 'a789ad47-91c3-446e-90f9-a7c9b233eae1'
 
 const notSelfOwnedDemandAId = randomUUID()
 const notOptimiserOwnedDemandBId = randomUUID()
@@ -32,7 +29,6 @@ const notSelfOwnedDemandBId = randomUUID()
 const notOptimiserOwnedDemandAId = randomUUID()
 const match2Id = randomUUID()
 const match2ProxyOwnedId = randomUUID()
-
 const proxyOwnedDemandAId = randomUUID()
 const externalOwnedDemandBId = randomUUID()
 const externalOwnedDemandAId = randomUUID()
@@ -46,14 +42,14 @@ export const authzSeed = async () => {
   const insert = dbInsert(db)
   await cleanup()
 
-  // proxy-owned demand A matched with external-owned demand B. Proxy-owned comment on both demands
+  // proxy-owned demand A matched with external-owned demand B. Proxy-owned comment on own demand A
   await insert('demand', [
     {
       id: proxyOwnedDemandAId,
       owner: proxyAddress,
       subtype: 'demand_a',
       state: 'pending',
-      parameters_attachment_id: demandAParametersAttachmentId,
+      parameters_attachment_id: demandAParametersId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       latest_token_id: null,
@@ -78,17 +74,7 @@ export const authzSeed = async () => {
       owner: proxyAddress,
       state: 'pending',
       demand: proxyOwnedDemandAId,
-      attachment_id: demandACommentAttachmentId,
-      created_at: new Date(exampleDate),
-      updated_at: new Date(exampleDate),
-      transaction_id: null,
-    },
-    {
-      id: randomUUID(),
-      owner: proxyAddress,
-      state: 'pending',
-      demand: externalOwnedDemandBId,
-      attachment_id: demandBNotOwnedCommentAttachmentId,
+      attachment_id: demandACommentId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       transaction_id: null,
@@ -112,7 +98,7 @@ export const authzSeed = async () => {
     },
   ])
 
-  // external-owned demand A matched with proxy-owned demand B. Proxy-owned comment on both demands
+  // external-owned demand A matched with proxy-owned demand B. Proxy-owned comment on own demand B
   await insert('demand', [
     {
       id: externalOwnedDemandAId,
@@ -130,7 +116,7 @@ export const authzSeed = async () => {
       owner: proxyAddress,
       subtype: 'demand_b',
       state: 'pending',
-      parameters_attachment_id: demandBParametersAttachmentId,
+      parameters_attachment_id: demandBParametersId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       latest_token_id: null,
@@ -143,18 +129,8 @@ export const authzSeed = async () => {
       id: randomUUID(),
       owner: proxyAddress,
       state: 'pending',
-      demand: externalOwnedDemandAId,
-      attachment_id: demandANotOwnedCommentAttachmentId,
-      created_at: new Date(exampleDate),
-      updated_at: new Date(exampleDate),
-      transaction_id: null,
-    },
-    {
-      id: randomUUID(),
-      owner: proxyAddress,
-      state: 'pending',
       demand: proxyOwnedDemandBId,
-      attachment_id: demandBCommentAttachmentId,
+      attachment_id: demandBCommentId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       transaction_id: null,
@@ -178,7 +154,8 @@ export const authzSeed = async () => {
     },
   ])
 
-  // external-owned demand A matched with notOptimiser-owned demand B. Proxy-owned comment on both demands
+  // external-owned demand A matched with notOptimiser-owned demand B. Proxy-owned comment on both demands.
+  // proxy-owned match2, proxy-owned comment on both match2s.
   await insert('demand', [
     {
       id: notSelfOwnedDemandAId,
@@ -210,7 +187,7 @@ export const authzSeed = async () => {
       owner: proxyAddress,
       state: 'pending',
       demand: notSelfOwnedDemandAId,
-      attachment_id: demandAOwnedByNotSelfAttachmentId,
+      attachment_id: demandAOwnedByNotSelfCommentId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       transaction_id: null,
@@ -220,7 +197,7 @@ export const authzSeed = async () => {
       owner: proxyAddress,
       state: 'pending',
       demand: notOptimiserOwnedDemandBId,
-      attachment_id: demandBOwnedByNotOptimiserAttachmentId,
+      attachment_id: demandBOwnedByNotOptimiserCommentId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       transaction_id: null,
@@ -267,7 +244,7 @@ export const authzSeed = async () => {
       state: 'pending',
       owner: proxyAddress,
       match2: match2Id,
-      attachment_id: match2NotOwnedCommentAttachmentId,
+      attachment_id: match2NotOwnedCommentId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       transaction_id: null,
@@ -280,7 +257,7 @@ export const authzSeed = async () => {
       state: 'pending',
       owner: proxyAddress,
       match2: match2ProxyOwnedId,
-      attachment_id: match2CommentAttachmentId,
+      attachment_id: match2CommentId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       transaction_id: null,
@@ -319,7 +296,7 @@ export const authzSeed = async () => {
       owner: proxyAddress,
       state: 'pending',
       demand: notOptimiserOwnedDemandAId,
-      attachment_id: demandAOwnedByNotOptimiserAttachmentId,
+      attachment_id: demandAOwnedByNotOptimiserCommentId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       transaction_id: null,
@@ -329,7 +306,7 @@ export const authzSeed = async () => {
       owner: proxyAddress,
       state: 'pending',
       demand: notSelfOwnedDemandBId,
-      attachment_id: demandBOwnedByNotSelfAttachmentId,
+      attachment_id: demandBOwnedByNotSelfCommentId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       transaction_id: null,

@@ -17,16 +17,16 @@ import {
 import { AuthorizationRequest } from '../../../src/models/authorization.js'
 import {
   authzSeed,
-  demandACommentAttachmentId,
-  demandANotOwnedCommentAttachmentId,
-  demandAOwnedByNotSelfAttachmentId,
-  demandAParametersAttachmentId,
-  demandBCommentAttachmentId,
-  demandBNotOwnedCommentAttachmentId,
-  demandBOwnedByNotSelfAttachmentId,
-  demandBParametersAttachmentId,
-  match2CommentAttachmentId,
-  match2NotOwnedCommentAttachmentId,
+  demandACommentId,
+  demandAOwnedByNotOptimiserCommentId,
+  demandAOwnedByNotSelfCommentId,
+  demandAParametersId,
+  demandBCommentId,
+  demandBOwnedByNotOptimiserCommentId,
+  demandBOwnedByNotSelfCommentId,
+  demandBParametersId,
+  match2CommentId,
+  match2NotOwnedCommentId,
   notOptimiserAddress,
 } from '../../seeds/offchainSeeds/authz.seed.js'
 
@@ -55,7 +55,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandAParametersAttachmentId,
+            resourceId: demandAParametersId,
             accountAddress: notSelfAddress,
           },
         }
@@ -66,7 +66,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandBParametersAttachmentId,
+            resourceId: demandBParametersId,
             accountAddress: notSelfAddress,
           },
         }
@@ -77,7 +77,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandAParametersAttachmentId,
+            resourceId: demandAParametersId,
             accountAddress: optimiserAddress,
           },
         }
@@ -88,7 +88,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandBParametersAttachmentId,
+            resourceId: demandBParametersId,
             accountAddress: optimiserAddress,
           },
         }
@@ -101,7 +101,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandACommentAttachmentId,
+            resourceId: demandACommentId,
             accountAddress: notSelfAddress,
           },
         }
@@ -112,7 +112,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandBCommentAttachmentId,
+            resourceId: demandBCommentId,
             accountAddress: notSelfAddress,
           },
         }
@@ -123,7 +123,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandACommentAttachmentId,
+            resourceId: demandACommentId,
             accountAddress: optimiserAddress,
           },
         }
@@ -134,7 +134,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandBCommentAttachmentId,
+            resourceId: demandBCommentId,
             accountAddress: optimiserAddress,
           },
         }
@@ -147,7 +147,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandAOwnedByNotSelfAttachmentId,
+            resourceId: demandAOwnedByNotSelfCommentId,
             accountAddress: notSelfAddress,
           },
         }
@@ -158,7 +158,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandBOwnedByNotSelfAttachmentId,
+            resourceId: demandBOwnedByNotSelfCommentId,
             accountAddress: notSelfAddress,
           },
         }
@@ -169,7 +169,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandAOwnedByNotSelfAttachmentId,
+            resourceId: demandAOwnedByNotSelfCommentId,
             accountAddress: optimiserAddress,
           },
         }
@@ -180,7 +180,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandBOwnedByNotSelfAttachmentId,
+            resourceId: demandBOwnedByNotSelfCommentId,
             accountAddress: optimiserAddress,
           },
         }
@@ -191,7 +191,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandANotOwnedCommentAttachmentId,
+            resourceId: demandAOwnedByNotOptimiserCommentId,
             accountAddress: notSelfAddress,
           },
         }
@@ -202,7 +202,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: demandBNotOwnedCommentAttachmentId,
+            resourceId: demandBOwnedByNotOptimiserCommentId,
             accountAddress: notSelfAddress,
           },
         }
@@ -215,7 +215,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: match2CommentAttachmentId,
+            resourceId: match2CommentId,
             accountAddress: notSelfAddress,
           },
         }
@@ -226,7 +226,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: match2CommentAttachmentId,
+            resourceId: match2CommentId,
             accountAddress: notOptimiserAddress,
           },
         }
@@ -239,7 +239,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: match2NotOwnedCommentAttachmentId,
+            resourceId: match2NotOwnedCommentId,
             accountAddress: notSelfAddress,
           },
         }
@@ -250,7 +250,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: match2NotOwnedCommentAttachmentId,
+            resourceId: match2NotOwnedCommentId,
             accountAddress: notOptimiserAddress,
           },
         }
@@ -261,7 +261,7 @@ describe('authz', () => {
         const request: AuthorizationRequest = {
           input: {
             resourceType: 'attachment',
-            resourceId: match2NotOwnedCommentAttachmentId,
+            resourceId: match2NotOwnedCommentId,
             accountAddress: optimiserAddress,
           },
         }
@@ -275,7 +275,7 @@ describe('authz', () => {
       const request: AuthorizationRequest = {
         input: {
           resourceType: 'attachment',
-          resourceId: demandAParametersAttachmentId,
+          resourceId: demandAParametersId,
           accountAddress: selfAddress,
         },
       }
