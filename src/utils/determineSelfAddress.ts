@@ -1,7 +1,5 @@
-import type express from 'express'
 import { EnvToken, type Env } from '../env.js'
 import Identity from '../lib/services/identity.js'
-import { getAuthorization } from '../lib/utils/shared.js'
 import { inject, singleton } from 'tsyringe'
 
 @singleton()
@@ -15,12 +13,12 @@ export class AddressResolver {
     this.proxyFor = env.PROXY_FOR
   }
 
-  async determineSelfAddress(req: express.Request) {
+  async determineSelfAddress() {
     let res: { address: string; alias: string }
     if (this.proxyFor !== '') {
-      res = this.self || (await this.identity.getMemberByAddress(this.proxyFor, getAuthorization(req)))
+      res = this.self || (await this.identity.getMemberByAddress(this.proxyFor))
     } else {
-      res = this.self || (await this.identity.getMemberBySelf(getAuthorization(req)))
+      res = this.self || (await this.identity.getMemberBySelf())
     }
 
     this.self = res

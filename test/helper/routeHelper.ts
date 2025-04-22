@@ -2,8 +2,8 @@ import request from 'supertest'
 import express from 'express'
 import { scopes } from '../../src/models/scope.js'
 
-export const getToken = async (scope: string = scopes.join(' ')) => {
-  const tokenReq = await fetch('http://localhost:3080/realms/member-a/protocol/openid-connect/token', {
+export const getToken = async (scope: string = scopes.join(' '), realm: 'member-a' | 'internal' = 'member-a') => {
+  const tokenReq = await fetch(`http://localhost:3080/realms/${realm}/protocol/openid-connect/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -65,4 +65,18 @@ export const postFile = async (
     ...headers,
   }
   return request(app).post(endpoint).set(headersWithToken).attach('file', buf, filename)
+}
+
+export const postInternal = async (
+  app: express.Express,
+  endpoint: string,
+  body: object,
+  headers: Record<string, string> = {}
+): Promise<request.Test> => {
+  const token = await getToken('', 'internal')
+  const headersWithToken = {
+    authorization: `bearer ${token}`,
+    ...headers,
+  }
+  return request(app).post(endpoint).send(body).set(headersWithToken)
 }

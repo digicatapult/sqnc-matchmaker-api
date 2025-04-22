@@ -1,5 +1,4 @@
 import type { Logger } from 'pino'
-import type express from 'express'
 
 import { Controller } from 'tsoa'
 
@@ -19,7 +18,6 @@ import { demandCommentCreate, demandCreate } from '../../../lib/payload.js'
 import ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
-import { getAuthorization } from '../../../lib/utils/shared.js'
 import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 import Attachment from '../../../lib/services/attachment.js'
 import { TransactionRow, Where } from '../../../lib/db/types.js'
@@ -47,7 +45,7 @@ export class DemandController extends Controller {
     this.db = db
   }
 
-  public async createDemand(req: express.Request, { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
+  public async createDemand({ parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
     const [attachment] = await this.attachment.getAttachments([parametersAttachmentId])
 
     if (!attachment) {
@@ -56,7 +54,7 @@ export class DemandController extends Controller {
 
     // So self should be whoever is actually making this transaction -> which is Dave if there is a PROXY_FOR env (because then Alice is a proxy for Dave)
     // He is also the one who is associated with it in a db
-    const res = await this.addressResolver.determineSelfAddress(req)
+    const res = await this.addressResolver.determineSelfAddress()
     const selfAddress = res.address
     const selfAlias = res.alias
 
@@ -79,18 +77,18 @@ export class DemandController extends Controller {
     }
   }
 
-  public async getAll(req: express.Request, updated_since?: DATE): Promise<DemandResponse[]> {
+  public async getAll(updated_since?: DATE): Promise<DemandResponse[]> {
     const query: Where<'demand'> = [['subtype', '=', this.dbDemandSubtype]]
     if (updated_since) {
       query.push(['updated_at', '>', parseDateParam(updated_since)])
     }
 
     const demands = await this.db.get('demand', query)
-    const result = await Promise.all(demands.map(async (demand) => responseWithAlias(req, demand, this.identity)))
+    const result = await Promise.all(demands.map(async (demand) => responseWithAlias(demand, this.identity)))
     return result
   }
 
-  public async getDemand(req: express.Request, demandId: UUID): Promise<DemandWithCommentsResponse> {
+  public async getDemand(demandId: UUID): Promise<DemandWithCommentsResponse> {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
@@ -98,7 +96,7 @@ export class DemandController extends Controller {
       ['created_at', 'asc'],
     ])
 
-    return responseWithComments(req, await responseWithAlias(req, demand, this.identity), comments, this.identity)
+    return responseWithComments(await responseWithAlias(demand, this.identity), comments, this.identity)
   }
 
   public async createDemandOnChain(demandId: UUID): Promise<TransactionResponse> {
@@ -156,7 +154,6 @@ export class DemandController extends Controller {
   }
 
   public async createDemandCommentOnChain(
-    req: express.Request,
     demandId: UUID,
     { attachmentId }: DemandCommentRequest
   ): Promise<TransactionResponse> {
@@ -166,7 +163,7 @@ export class DemandController extends Controller {
     const [comment] = await this.attachment.getAttachments([attachmentId])
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
 
-    const res = await this.identity.getMemberBySelf(getAuthorization(req))
+    const res = await this.identity.getMemberBySelf()
     const selfAddress = res.address
 
     const extrinsic = await this.node.prepareRunProcess(demandCommentCreate(demand, comment))
@@ -224,12 +221,8 @@ export class DemandController extends Controller {
   }
 }
 
-const responseWithAlias = async (
-  req: express.Request,
-  demand: DemandRow,
-  identity: Identity
-): Promise<DemandResponse> => {
-  const res = await identity.getMemberByAddress(demand.owner, getAuthorization(req))
+const responseWithAlias = async (demand: DemandRow, identity: Identity): Promise<DemandResponse> => {
+  const res = await identity.getMemberByAddress(demand.owner)
   const ownerAlias = res.alias
 
   return {
@@ -243,7 +236,6 @@ const responseWithAlias = async (
 }
 
 const responseWithComments = async (
-  req: express.Request,
   demand: DemandResponse,
   comments: DemandCommentRow[],
   identity: Identity
@@ -252,7 +244,7 @@ const responseWithComments = async (
   const aliasMap = new Map(
     await Promise.all(
       commentors.map(async (commentor) => {
-        const res = await identity.getMemberByAddress(commentor, getAuthorization(req))
+        const res = await identity.getMemberByAddress(commentor)
         const alias = res.alias
 
         return [commentor, alias] as const
