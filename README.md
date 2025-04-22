@@ -42,6 +42,7 @@ Use a `.env` at root of the repository to set values for the environment variabl
 | IDP_INTERNAL_REALM         |    Y     |                         -                          | Realm to use when authenticating cluster internal users                                                                                                                                                                                                                                        |
 | PROXY_FOR                  |    Y     | '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty' | This is the ss58 address that transactions will be performed as. (who we are performing the transaction on behalf of) Note that if you want to use this feature in dev - you need to manually set up the proxy on chain before performing transactions, otherwise set this to an empty string. |
 | INDEXER_RETRY_DELAY        |    Y     |                       `1000`                       | The delay upon which the indexer re-tries.                                                                                                                                                                                                                                                     |
+| ROLES        |    Y     |                       `['member_a']`                       | Array of roles assumed by the instance. |
 
 ## Prerequisites
 
