@@ -60,6 +60,12 @@ export class BadRequest extends HttpResponse implements IBadRequest {
   }
 }
 
+export class Unauthorized extends HttpResponse {
+  constructor(message = 'unauthorized') {
+    super({ code: 401, message })
+  }
+}
+
 export class ServiceUnavailable extends HttpResponse {
   public code: number
   public data: Health
