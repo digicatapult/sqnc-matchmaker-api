@@ -10,6 +10,6 @@ export interface AuthorizationRequest {
 
 export interface AuthorizationResponse {
   result: {
-    allowed: true
+    allow: true
   }
 }
