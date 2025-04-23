@@ -288,5 +288,5 @@ describe('authz', () => {
 const assertAuthorized = async (app: Express, request: AuthorizationRequest) => {
   const response = await postInternal(app, '/v1/authz', request)
   expect(response.status).to.equal(200)
-  expect(response.body.result.allowed).to.equal(true)
+  expect(response.body.result.allow).to.equal(true)
 }
