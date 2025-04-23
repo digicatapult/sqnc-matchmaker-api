@@ -1,4 +1,3 @@
-import type express from 'express'
 import { describe, it } from 'mocha'
 import { AddressResolver } from '../determineSelfAddress.js'
 import Identity from '../../lib/services/identity.js'
@@ -14,11 +13,11 @@ describe('address determination', function () {
     getMemberByAddress: async () => proxyMember,
     getMemberBySelf: async () => selfAddress,
   } as unknown as Identity
-  const req = { headers: { authorization: 'dummy-token' } } as express.Request
+
   describe('member by address', function () {
     it('should get member by address because proxy is provided', async function () {
       const addressResolver = new AddressResolver(identity, env)
-      const result = await addressResolver.determineSelfAddress(req)
+      const result = await addressResolver.determineSelfAddress()
       expect(result).to.deep.equal(proxyMember)
     })
   })
@@ -26,7 +25,7 @@ describe('address determination', function () {
     it('should get member by self because proxy is not provided', async function () {
       const envNoProxy = { ...env, PROXY_FOR: '' }
       const addressResolver = new AddressResolver(identity, envNoProxy)
-      const result = await addressResolver.determineSelfAddress(req)
+      const result = await addressResolver.determineSelfAddress()
       expect(result).to.deep.equal(selfAddress)
     })
   })

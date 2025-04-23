@@ -1,6 +1,6 @@
 import { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 import { ValidateError } from 'tsoa'
-import { OauthError } from '@digicatapult/tsoa-oauth-express'
+import { AggregateOAuthError, OauthError } from '@digicatapult/tsoa-oauth-express'
 
 import { Health } from '../../models/health.js'
 import { LoggerToken } from '../logger.js'
@@ -84,7 +84,7 @@ export const errorHandler = function errorHandler(
   next: NextFunction
 ): ExResponse | void {
   const logger = container.resolve<Logger>(LoggerToken)
-  if (err instanceof OauthError) {
+  if (err instanceof OauthError || err instanceof AggregateOAuthError) {
     return res.status(401).send({
       message: err.message,
     })
