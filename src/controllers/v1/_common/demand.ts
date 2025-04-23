@@ -89,30 +89,35 @@ export class DemandController extends Controller {
     if (updated_since) {
       query.push(['updated_at', '>', parseDateParam(updated_since)])
     }
-    const member = await this.identity.getMemberBySelf(getAuthorization(req))
-    const selfAddress = member.address
-    const role = process.env.ROLE
-    if (role == 'member-a' || role == 'member-b') {
-      query.push(['owner', '=', selfAddress])
-    }
-    if (role == 'member-a') {
-      //get demands from match2 where I am a member
-      const demand_b_ids = (await this.db.get('match2', { member_a: selfAddress })).flatMap((match2) => {
-        return match2.demand_b_id
-      })
-      query.push(['id', 'IN', demand_b_ids])
-    }
-    if (role == 'member-b') {
-      //get demands from match2 where I am a member
-      const demand_a_ids = (await this.db.get('match2', { member_a: selfAddress })).flatMap((match2) => {
-        return match2.demand_a_id
-      })
-      query.push(['id', 'IN', demand_a_ids])
+    const selfAddress = (await this.addressResolver.determineSelfAddress(req)).address
+    const roles = env.ROLES
+    // if roles does not include admin or optimiser filter demands
+    const isPrivileged = roles.includes('optimiser') || roles.includes('admin')
+    const demands: DemandRow[] = []
+
+    if (isPrivileged) {
+      // Privileged roles get all demands matching base query
+      demands.push(...(await this.db.get('demand', query)))
+    } else {
+      // Owner's own demands
+      const ownedQuery: Where<'demand'> = [...query, ['owner', '=', selfAddress]]
+      demands.push(...(await this.db.get('demand', ownedQuery)))
+
+      // Demands where role is a member_a or member_b or both
+      for (const member of roles) {
+        const member_a_boolean = member === 'member-a'
+        const match2Query: Where<'match2'> = [[member_a_boolean ? 'member_a' : 'member_b', '=', selfAddress]]
+        const matches = await this.db.get('match2', match2Query)
+        const demandIds = matches.map((m) => (member_a_boolean ? m.demand_b_id : m.demand_a_id))
+        if (demandIds.length > 0) {
+          const matchedQuery: Where<'demand'> = [...query, ['id', 'IN', demandIds]]
+          demands.push(...(await this.db.get('demand', matchedQuery)))
+        }
+      }
     }
 
-    const demands = await this.db.get('demand', query)
-    const result = await Promise.all(demands.map(async (demand) => responseWithAlias(req, demand, this.identity)))
-    return result
+    const uniqueDemands = Array.from(new Map(demands.map((d) => [d.id, d])).values())
+    return await Promise.all(uniqueDemands.map((d) => responseWithAlias(req, d, this.identity)))
   }
 
   public async getDemand(req: express.Request, demandId: UUID): Promise<DemandWithCommentsResponse> {
