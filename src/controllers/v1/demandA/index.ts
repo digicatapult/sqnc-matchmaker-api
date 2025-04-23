@@ -91,12 +91,8 @@ export class DemandAController extends DemandController {
   @SuccessResponse('200')
   @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}/creation/{creationId}')
-  public async getDemandACreation(
-    @Request() req: express.Request,
-    @Path() demandAId: UUID,
-    @Path() creationId: UUID
-  ): Promise<TransactionResponse> {
-    return super.getDemandCreation(req, demandAId, creationId)
+  public async getDemandACreation(@Path() demandAId: UUID, @Path() creationId: UUID): Promise<TransactionResponse> {
+    return super.getDemandCreation(demandAId, creationId)
   }
 
   /**
@@ -108,11 +104,10 @@ export class DemandAController extends DemandController {
   @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}/creation/')
   public async getDemandACreations(
-    @Request() req: express.Request,
     @Path() demandAId: UUID,
     @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
-    return super.getDemandCreations(req, demandAId, updated_since)
+    return super.getDemandCreations(demandAId, updated_since)
   }
 
   /**
@@ -141,12 +136,8 @@ export class DemandAController extends DemandController {
   @SuccessResponse('200')
   @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}/comment/{commentId}')
-  public async getDemandAComment(
-    @Request() req: express.Request,
-    @Path() demandAId: UUID,
-    @Path() commentId: UUID
-  ): Promise<TransactionResponse> {
-    return super.getDemandComment(req, demandAId, commentId)
+  public async getDemandAComment(@Path() demandAId: UUID, @Path() commentId: UUID): Promise<TransactionResponse> {
+    return super.getDemandComment(demandAId, commentId)
   }
 
   /**
@@ -158,10 +149,9 @@ export class DemandAController extends DemandController {
   @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}/comment')
   public async getDemandAComments(
-    @Request() req: express.Request,
     @Path() demandAId: UUID,
     @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
-    return super.getDemandComments(req, demandAId, updated_since)
+    return super.getDemandComments(demandAId, updated_since)
   }
 }

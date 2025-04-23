@@ -122,8 +122,8 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (await this.canReadDemand(demand, req)) {
-      throw new Unauthorized('You are not allowed to view this demand')
+    if (await this.canReadDemand(demand)) {
+      throw new NotFound(`No demand with id ${demandId} found`)
     }
 
     const comments = await this.db.get('demand_comment', { demand: demandId, state: 'created' }, [
@@ -161,12 +161,12 @@ export class DemandController extends Controller {
     return dbTransactionToResponse(transaction)
   }
 
-  public async getDemandCreation(req: express.Request, demandId: UUID, creationId: UUID): Promise<TransactionResponse> {
+  public async getDemandCreation(demandId: UUID, creationId: UUID): Promise<TransactionResponse> {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (!(await this.canReadDemand(demand, req))) {
-      throw new Unauthorized('You are not allowed to view this demand')
+    if (!(await this.canReadDemand(demand))) {
+      throw new NotFound(this.demandType)
     }
 
     const [creation] = await this.db.get('transaction', {
@@ -178,11 +178,7 @@ export class DemandController extends Controller {
     return dbTransactionToResponse(creation)
   }
 
-  public async getDemandCreations(
-    req: express.Request,
-    demandId: UUID,
-    updated_since?: DATE
-  ): Promise<TransactionResponse[]> {
+  public async getDemandCreations(demandId: UUID, updated_since?: DATE): Promise<TransactionResponse[]> {
     const query: Where<'transaction'> = [
       ['local_id', '=', demandId],
       ['transaction_type', '=', 'creation'],
@@ -194,8 +190,8 @@ export class DemandController extends Controller {
     const [demandAB] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demandAB) throw new NotFound(this.demandType)
 
-    if (!(await this.canReadDemand(demandAB, req))) {
-      throw new Unauthorized('You are not allowed to view this demand')
+    if (!(await this.canReadDemand(demandAB))) {
+      throw new NotFound(this.demandType)
     }
 
     const dbTxs = await this.db.get('transaction', query)
@@ -244,11 +240,11 @@ export class DemandController extends Controller {
     return dbTransactionToResponse(transaction)
   }
 
-  public async getDemandComment(req: express.Request, demandId: UUID, commentId: UUID): Promise<TransactionResponse> {
+  public async getDemandComment(demandId: UUID, commentId: UUID): Promise<TransactionResponse> {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (!(await this.canReadDemand(demand, req))) {
+    if (!(await this.canReadDemand(demand))) {
       throw new Unauthorized('You are not allowed to view this demand')
     }
 
@@ -261,11 +257,7 @@ export class DemandController extends Controller {
     return dbTransactionToResponse(comment)
   }
 
-  public async getDemandComments(
-    req: express.Request,
-    demandId: UUID,
-    updated_since?: DATE
-  ): Promise<TransactionResponse[]> {
+  public async getDemandComments(demandId: UUID, updated_since?: DATE): Promise<TransactionResponse[]> {
     const query: Where<'transaction'> = [
       ['local_id', '=', demandId],
       ['transaction_type', '=', 'comment'],
@@ -277,7 +269,7 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (!(await this.canReadDemand(demand, req))) {
+    if (!(await this.canReadDemand(demand))) {
       throw new Unauthorized('You are not allowed to view this demand')
     }
 
@@ -285,12 +277,12 @@ export class DemandController extends Controller {
     return dbTxs.map(dbTransactionToResponse)
   }
 
-  public async canReadDemand(demand: DemandRow, req: express.Request): Promise<boolean> {
+  public async canReadDemand(demand: DemandRow): Promise<boolean> {
     const roles = env.ROLES
     if (roles.includes('admin') || roles.includes('optimizer')) {
       return true
     }
-    const member = await this.addressResolver.determineSelfAddress(req)
+    const member = await this.addressResolver.determineSelfAddress()
     const selfAddress = member.address
     if (demand.owner === selfAddress) {
       return true
