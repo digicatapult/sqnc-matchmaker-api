@@ -47,10 +47,6 @@ export class DemandController extends Controller {
   }
 
   public async createDemand({ parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
-    if (!this.canWriteDemand) {
-      throw new Unauthorized('You are not allowed to create this demand')
-    }
-
     const [attachment] = await this.attachment.getAttachments([parametersAttachmentId])
 
     if (!attachment) {
@@ -101,12 +97,15 @@ export class DemandController extends Controller {
       const ownedQuery: Where<'demand'> = [...query, ['owner', '=', selfAddress]]
       demands.push(...(await this.db.get('demand', ownedQuery)))
 
-      // Demands where role is a member_a or member_b or both
+      // roles that contain only member_a or member_b or both
       for (const member of roles) {
-        const member_a_boolean = member === 'member-a'
-        const match2Query: Where<'match2'> = [[member_a_boolean ? 'member_a' : 'member_b', '=', selfAddress]]
+        const demand_a_boolean = this.dbDemandSubtype === 'demand_a'
+
+        // Get all match2s where the member is either member_a or member_b
+        const match2Query: Where<'match2'> = [[member === 'member_a' ? 'member_a' : 'member_b', '=', selfAddress]]
         const matches = await this.db.get('match2', match2Query)
-        const demandIds = matches.map((m) => (member_a_boolean ? m.demand_b_id : m.demand_a_id))
+        // From the match2s get all the demands that are type this.dbDemandSubtype
+        const demandIds = matches.map((m) => (demand_a_boolean ? m.demand_a_id : m.demand_b_id))
         if (demandIds.length > 0) {
           const matchedQuery: Where<'demand'> = [...query, ['id', 'IN', demandIds]]
           demands.push(...(await this.db.get('demand', matchedQuery)))
@@ -122,8 +121,8 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (await this.canReadDemand(demand)) {
-      throw new NotFound(`No demand with id ${demandId} found`)
+    if (!(await this.canAccessDemand(demand))) {
+      throw new NotFound(this.demandType)
     }
 
     const comments = await this.db.get('demand_comment', { demand: demandId, state: 'created' }, [
@@ -134,11 +133,11 @@ export class DemandController extends Controller {
   }
 
   public async createDemandOnChain(demandId: UUID): Promise<TransactionResponse> {
-    if (!this.canWriteDemand) {
-      throw new Unauthorized('You are not allowed to create this demand')
-    }
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
+    if (!(await this.canAccessDemand(demand, false))) {
+      throw new NotFound(this.demandType)
+    }
     if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
 
     const [attachment] = await this.attachment.getAttachments([demand.parameters_attachment_id])
@@ -165,7 +164,7 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (!(await this.canReadDemand(demand))) {
+    if (!(await this.canAccessDemand(demand))) {
       throw new NotFound(this.demandType)
     }
 
@@ -190,7 +189,7 @@ export class DemandController extends Controller {
     const [demandAB] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demandAB) throw new NotFound(this.demandType)
 
-    if (!(await this.canReadDemand(demandAB))) {
+    if (!(await this.canAccessDemand(demandAB))) {
       throw new NotFound(this.demandType)
     }
 
@@ -202,12 +201,11 @@ export class DemandController extends Controller {
     demandId: UUID,
     { attachmentId }: DemandCommentRequest
   ): Promise<TransactionResponse> {
-    if (!this.canWriteDemand) {
-      throw new Unauthorized('You are not allowed to create this demand')
-    }
-
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
+    if (!this.canAccessDemand(demand, false)) {
+      throw new NotFound(this.demandType)
+    }
 
     const [comment] = await this.attachment.getAttachments([attachmentId])
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
@@ -244,7 +242,7 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (!(await this.canReadDemand(demand))) {
+    if (!(await this.canAccessDemand(demand))) {
       throw new Unauthorized('You are not allowed to view this demand')
     }
 
@@ -269,7 +267,7 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (!(await this.canReadDemand(demand))) {
+    if (!(await this.canAccessDemand(demand))) {
       throw new Unauthorized('You are not allowed to view this demand')
     }
 
@@ -277,34 +275,28 @@ export class DemandController extends Controller {
     return dbTxs.map(dbTransactionToResponse)
   }
 
-  public async canReadDemand(demand: DemandRow): Promise<boolean> {
+  public async canAccessDemand(demand: DemandRow, readOnly: boolean = true): Promise<boolean> {
     const roles = env.ROLES
     if (roles.includes('admin') || roles.includes('optimizer')) {
       return true
     }
     const member = await this.addressResolver.determineSelfAddress()
     const selfAddress = member.address
-    if (demand.owner === selfAddress) {
+    if (demand.owner === member.address) {
       return true
     }
 
-    const query: Where<'match2'> = []
-    query.push(roles.includes('member-a') ? ['member_a', '=', selfAddress] : ['member_b', '=', selfAddress])
-    query.push(roles.includes('member-a') ? ['demand_b_id', '=', demand.id] : ['demand_a_id', '=', demand.id])
-    const match2 = await this.db.get('match2', query)
-    if (match2.length > 0) {
-      return true
+    if (readOnly) {
+      const query: Where<'match2'> = [[this.demandType === 'demandA' ? 'demand_a_id' : 'demand_b_id', '=', demand.id]]
+      const [m] = await this.db.get('match2', query)
+      if (m) {
+        const match2Members = [m.member_a, m.member_b]
+        if (match2Members.includes(selfAddress)) {
+          return true
+        }
+      }
     }
     return false
-  }
-
-  public canWriteDemand(): boolean {
-    const roles = env.ROLES
-    return (
-      (roles.includes('member-a') && this.dbDemandSubtype == 'demand_a') ||
-      (roles.includes('member-b') && this.dbDemandSubtype == 'demand_b') ||
-      roles.includes('admin')
-    )
   }
 }
 

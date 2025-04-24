@@ -44,6 +44,7 @@ import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 import Attachment from '../../../lib/services/attachment.js'
 import { DemandRow, Match2Row, Where } from '../../../lib/db/types.js'
 import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
+import env from '../../../env.js'
 
 @Route('v1/match2')
 @injectable()
@@ -125,7 +126,11 @@ export class Match2Controller extends Controller {
     if (updated_since) query.push(['updated_at', '>', parseDateParam(updated_since)])
 
     const match2s = await this.db.get('match2', query)
-    const result = await Promise.all(match2s.map(async (match2) => responseWithAliases(match2, this.identity)))
+    const filteredMatch2s = match2s.filter(async (match2) => {
+      const canRead = await this.match2Member(match2)
+      return canRead
+    })
+    const result = await Promise.all(filteredMatch2s.map(async (match2) => responseWithAliases(match2, this.identity)))
     return result
   }
 
@@ -140,6 +145,7 @@ export class Match2Controller extends Controller {
   public async getMatch2(@Path() match2Id: UUID): Promise<Match2Response> {
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
 
     return responseWithAliases(match2, this.identity)
   }
@@ -156,11 +162,14 @@ export class Match2Controller extends Controller {
   @SuccessResponse('201')
   public async proposeMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.get('match2', { id: match2Id }) //new match
+    // If you are not an admin and not the optimiser for this match2, you cannot propose it
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
     validatePreLocal(match2, 'Match2', { state: 'pending' })
 
     let originalMatch: { match2: Match2Row; demandB: DemandRow } | null = null //old match2
     if (match2.replaces_id) {
       const [originalMatch2] = await this.db.get('match2', { id: match2.replaces_id })
+      if (!(await this.match2Member(match2))) throw new NotFound('match2')
       validatePreLocal(originalMatch2, 'Match2', { state: 'acceptedFinal' })
       const [originalDemandB] = await this.db.get('demand', { id: originalMatch2.demand_b_id }) //old demandB
       validatePreOnChain(originalDemandB, 'DemandB', { subtype: 'demand_b', state: 'allocated' })
@@ -207,6 +216,7 @@ export class Match2Controller extends Controller {
   public async getMatch2Proposal(@Path() match2Id: UUID, proposalId: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
 
     const [proposal] = await this.db.get('transaction', {
       id: proposalId,
@@ -238,6 +248,7 @@ export class Match2Controller extends Controller {
 
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
 
     const dbTxs = await this.db.get('transaction', query)
     return dbTxs.map(dbTransactionToResponse)
@@ -256,6 +267,8 @@ export class Match2Controller extends Controller {
   @SuccessResponse('201')
   public async acceptMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.get('match2', { id: match2Id })
+    if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
     validatePreOnChain(match2, 'Match2', {})
 
     const state: Match2State = match2.state
@@ -367,6 +380,7 @@ export class Match2Controller extends Controller {
   public async getMatch2Accept(@Path() match2Id: UUID, acceptId: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
 
     const [accept] = await this.db.get('transaction', { id: acceptId, local_id: match2.id, transaction_type: 'accept' })
     if (!accept) throw new NotFound('accept')
@@ -391,6 +405,7 @@ export class Match2Controller extends Controller {
 
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
 
     const dbTxs = await this.db.get('transaction', query)
     return dbTxs.map(dbTransactionToResponse)
@@ -413,6 +428,7 @@ export class Match2Controller extends Controller {
     const { attachmentId } = body
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
     const [demandA] = await this.db.get('demand', { id: match2?.demand_a_id })
     if (!demandA) throw new NotFound('demandA')
     const [demandB] = await this.db.get('demand', { id: match2?.demand_b_id })
@@ -471,6 +487,7 @@ export class Match2Controller extends Controller {
 
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
 
     const dbTxs = await this.db.get('transaction', query)
     return dbTxs.map(dbTransactionToResponse)
@@ -488,6 +505,7 @@ export class Match2Controller extends Controller {
   public async getMatch2Cancellation(@Path() match2Id: UUID, cancellationId: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
 
     const [cancellation] = await this.db.get('transaction', {
       id: cancellationId,
@@ -512,11 +530,7 @@ export class Match2Controller extends Controller {
   public async rejectMatch2OnChain(@Path() match2Id: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
-
-    const roles = [match2.member_a, match2.member_b, match2.optimiser]
-
-    const { address: selfAddress } = await this.addressResolver.determineSelfAddress()
-    if (!roles.includes(selfAddress)) throw new BadRequest(`You do not have a role on the match2`)
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
 
     const rejectableStates: Match2State[] = ['proposed', 'acceptedA', 'acceptedB']
     if (!rejectableStates.includes(match2.state))
@@ -550,6 +564,7 @@ export class Match2Controller extends Controller {
   public async getMatch2Rejection(@Path() match2Id: UUID, rejectionId: UUID): Promise<TransactionResponse> {
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
 
     const [rejection] = await this.db.get('transaction', {
       id: rejectionId,
@@ -583,9 +598,19 @@ export class Match2Controller extends Controller {
 
     const [match2] = await this.db.get('match2', { id: match2Id })
     if (!match2) throw new NotFound('match2')
+    if (!(await this.match2Member(match2))) throw new NotFound('match2')
 
     const dbTxs = await this.db.get('transaction', query)
     return dbTxs.map(dbTransactionToResponse)
+  }
+
+  public async match2Member(match2: Match2Row): Promise<boolean> {
+    const roles = env.ROLES
+    if (roles.includes('admin')) return true
+
+    const { address: selfAddress } = await this.addressResolver.determineSelfAddress()
+    const match2Members = [match2.member_a, match2.member_b, match2.optimiser]
+    return match2Members.includes(selfAddress)
   }
 }
 

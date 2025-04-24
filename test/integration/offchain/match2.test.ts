@@ -681,8 +681,9 @@ describe('match2', () => {
 
     it('rejection of match2 submitter not in roles - 400', async () => {
       const response = await post(app, `/v1/match2/${seededMatch2NotInRoles}/rejection`, {})
-      expect(response.status).to.equal(400)
-      expect(response.body).to.equal(`You do not have a role on the match2`)
+      // Not found because match2 submitter can only see their matches they are members of
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal(`match2 not found`)
     })
 
     it('unauthenticated list match2 rejections - 401', async () => {
@@ -783,8 +784,9 @@ describe('match2', () => {
       const response = await post(app, `/v1/match2/619fb8ca-4dd9-4843-8c7a-9d9c9474784e/cancellation`, {
         attachmentId: parametersAttachmentId,
       })
-      expect(response.status).to.equal(400)
-      expect(response.body).to.equal('You do not have a role on the match2')
+      // Not found because only members and admin can see matches
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
     })
 
     it('with invalid state - 400', async () => {

@@ -9,7 +9,7 @@ if (process.env.NODE_ENV === 'test') {
   dotenv.config()
 }
 
-const allowedRoles = ['member-a', 'member-b', 'admin', 'optimiser'] as const
+const allowedRoles = ['member_a', 'member_b', 'admin', 'optimiser'] as const
 
 export type Roles = (typeof allowedRoles)[number]
 
@@ -68,7 +68,7 @@ const env = envalid.cleanEnv(process.env, {
     devDefault: 'internal',
   }),
   INDEXER_RETRY_DELAY: envalid.num({ default: 1000 }),
-  ROLES: rolesArray({ default: ['member-a'] }),
+  ROLES: rolesArray({ default: ['member_a'] }),
 })
 
 export default env
