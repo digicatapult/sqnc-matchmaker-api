@@ -118,7 +118,7 @@ services:
       - 5001:5001
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.2.0
+    image: quay.io/keycloak/keycloak:26.2.1
     container_name: keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
