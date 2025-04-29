@@ -12,7 +12,7 @@ import { DemandRow, Match2Row, Where } from '../../../lib/db/types.js'
 
 const success = {
   result: {
-    allowed: true as const,
+    allow: true as const,
   },
 }
 
