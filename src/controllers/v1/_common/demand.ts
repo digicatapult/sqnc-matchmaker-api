@@ -277,26 +277,18 @@ export class DemandController extends Controller {
 
   public async canAccessDemand(demand: DemandRow, readOnly: boolean = true): Promise<boolean> {
     const roles = env.ROLES
-    if (roles.includes('admin') || roles.includes('optimizer')) {
-      return true
-    }
-    const member = await this.addressResolver.determineSelfAddress()
-    const selfAddress = member.address
-    if (demand.owner === member.address) {
-      return true
-    }
+    if (roles.includes('admin') || roles.includes('optimizer')) return true
 
-    if (readOnly) {
-      const query: Where<'match2'> = [[this.demandType === 'demandA' ? 'demand_a_id' : 'demand_b_id', '=', demand.id]]
-      const [m] = await this.db.get('match2', query)
-      if (m) {
-        const match2Members = [m.member_a, m.member_b]
-        if (match2Members.includes(selfAddress)) {
-          return true
-        }
-      }
-    }
-    return false
+    const member = await this.addressResolver.determineSelfAddress()
+    if (demand.owner === member.address) return true
+
+    if (!readOnly) return false
+
+    const query: Where<'match2'> = [[this.demandType === 'demandA' ? 'demand_a_id' : 'demand_b_id', '=', demand.id]]
+    const [match] = await this.db.get('match2', query)
+    if (!match) return false
+
+    return [match.member_a, match.member_b].includes(member.address)
   }
 }
 

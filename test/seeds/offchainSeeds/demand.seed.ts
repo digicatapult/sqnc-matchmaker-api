@@ -2,6 +2,7 @@ import { container } from 'tsyringe'
 import Database from '../../../src/lib/db/index.js'
 import { notSelfAddress, proxyAddress, selfAddress } from '../../helper/mock.js'
 import { dbInsert } from './helper.js'
+import { seededMatch2IsMemberId, seededMatch2IsNotMemberId } from './offchain.match2.seed.js'
 
 export const cleanup = async () => {
   const db = container.resolve(Database)
@@ -26,6 +27,8 @@ export const seededDemandACommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28
 export const seededDemandBCommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28336012b'
 export const seededDemandBAlreadyAllocated = '859a1561-a22d-4b09-925e-54ee9f9324cc'
 export const seededDemandAAlreadyAllocated = '807d1184-9670-4fb0-bb33-28582e5467b1'
+export const seededDemandAMatchedNotOwnedId = '817d1184-9670-4fb0-bb33-28582e5467b1'
+export const seededDemandBMatchedNotOwnedId = '818d1184-9670-4fb0-bb33-28582e5467b1'
 
 export const nonExistentId = 'a789ad47-91c3-446e-90f9-a7c9b233eaf9'
 export const seededDemandAWithTokenId = '64d89075-0059-4a8a-87da-c6715d64d0a9'
@@ -33,8 +36,8 @@ export const seededDemandAMissingTokenId = '76b7c704-f9a0-4a80-9554-7268df097798
 export const seededDemandBMissingTokenId = 'b2348deb-d967-4317-8637-2867ced70356'
 
 const seededDemandBWithTokenId = 'b005f4a1-400e-410e-aa72-8e97385f63e6'
-const seededDemandANotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
-const seededDemandBNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
+export const seededDemandANotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
+export const seededDemandBNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
 const seededDemandTokenId = 42
 
 export const demandSeed = async () => {
@@ -301,7 +304,7 @@ export const demandSeed = async () => {
   await insert('demand', [
     {
       id: seededDemandBAlreadyAllocated,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_b',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
@@ -315,7 +318,7 @@ export const demandSeed = async () => {
   await insert('demand', [
     {
       id: seededDemandAAlreadyAllocated,
-      owner: selfAddress,
+      owner: proxyAddress,
       subtype: 'demand_a',
       state: 'allocated',
       parameters_attachment_id: parametersAttachmentId,
@@ -323,6 +326,67 @@ export const demandSeed = async () => {
       updated_at: new Date(exampleDate),
       latest_token_id: null,
       original_token_id: null,
+    },
+  ])
+  await insert('demand', [
+    {
+      id: seededDemandAMatchedNotOwnedId,
+      owner: notSelfAddress,
+      subtype: 'demand_a',
+      state: 'allocated',
+      parameters_attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+    },
+  ])
+
+  await insert('demand', [
+    {
+      id: seededDemandBMatchedNotOwnedId,
+      owner: notSelfAddress,
+      subtype: 'demand_b',
+      state: 'allocated',
+      parameters_attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+    },
+  ])
+  // Is a member of the match2
+  await insert('match2', [
+    {
+      id: seededMatch2IsMemberId,
+      state: 'pending',
+      optimiser: notSelfAddress,
+      member_a: proxyAddress,
+      member_b: notSelfAddress,
+      demand_a_id: seededDemandAMatchedNotOwnedId,
+      demand_b_id: seededDemandBMatchedNotOwnedId,
+      latest_token_id: null,
+      original_token_id: null,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      replaces_id: null,
+    },
+  ])
+
+  await insert('match2', [
+    {
+      id: seededMatch2IsNotMemberId,
+      state: 'pending',
+      optimiser: notSelfAddress,
+      member_a: notSelfAddress,
+      member_b: notSelfAddress,
+      demand_a_id: seededDemandANotOwnedId,
+      demand_b_id: seededDemandBNotOwnedId,
+      latest_token_id: null,
+      original_token_id: null,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      replaces_id: null,
     },
   ])
 }

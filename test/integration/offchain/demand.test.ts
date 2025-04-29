@@ -22,6 +22,10 @@ import {
   seededDemandBCommentTransactionId2,
   seededDemandAAlreadyAllocated,
   seededDemandBAlreadyAllocated,
+  seededDemandANotOwnedId,
+  seededDemandBNotOwnedId,
+  seededDemandAMatchedNotOwnedId,
+  seededDemandBMatchedNotOwnedId,
 } from '../../seeds/offchainSeeds/demand.seed.js'
 
 import {
@@ -47,6 +51,9 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
     demandType === 'demandA' ? seededDemandACommentTransactionId2 : seededDemandBCommentTransactionId2
   const seededDemandAlreadyAllocated =
     demandType === 'demandA' ? seededDemandAAlreadyAllocated : seededDemandBAlreadyAllocated
+  const seededDemandNotOwnedId = demandType === 'demandA' ? seededDemandANotOwnedId : seededDemandBNotOwnedId
+  const seededDemandMatchedNotOwnedId =
+    demandType === 'demandA' ? seededDemandAMatchedNotOwnedId : seededDemandBMatchedNotOwnedId
 
   describe(demandType, () => {
     let app: Express
@@ -114,6 +121,16 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         expect(status).to.equal(200)
       })
 
+      it(`should get a ${demandType} where owner is a member in a match - scope`, async () => {
+        const { status } = await get(
+          app,
+          `/v1/${demandType}/${seededDemandMatchedNotOwnedId}`,
+          {},
+          `${demandType}:read`
+        )
+        expect(status).to.equal(200)
+      })
+
       it(`should get all ${demandType}s`, async () => {
         const { status, body } = await get(app, `/v1/${demandType}`)
         expect(status).to.equal(200)
@@ -129,8 +146,17 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
       })
 
       it(`should get all ${demandType}s - scope`, async () => {
-        const { status } = await get(app, `/v1/${demandType}`, {}, `${demandType}:read`)
+        const { status, body } = await get(app, `/v1/${demandType}`, {}, `${demandType}:read`)
         expect(status).to.equal(200)
+        expect(body.find(({ id }: { id: string }) => id === seededDemandId)).to.deep.equal({
+          createdAt: exampleDate,
+          id: seededDemandId,
+          owner: proxyAlias,
+          parametersAttachmentId: parametersAttachmentId,
+          state: 'pending',
+          updatedAt: exampleDate,
+        })
+        expect(body.some(({ id }: { id: string }) => id === seededDemandNotOwnedId)).to.be.equal(false)
       })
 
       it('should filter based on updated date', async () => {
@@ -307,6 +333,11 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
 
       it(`non-existent ${demandType} id - 404`, async () => {
         const response = await get(app, `/v1/${demandType}/${nonExistentId}`)
+        expect(response.status).to.equal(404)
+      })
+
+      it(`non-owned non-member ${demandType} id - 404`, async () => {
+        const response = await get(app, `/v1/${demandType}/${seededDemandNotOwnedId}`)
         expect(response.status).to.equal(404)
       })
 

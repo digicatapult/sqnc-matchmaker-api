@@ -609,8 +609,7 @@ export class Match2Controller extends Controller {
     if (roles.includes('admin')) return true
 
     const { address: selfAddress } = await this.addressResolver.determineSelfAddress()
-    const match2Members = [match2.member_a, match2.member_b, match2.optimiser]
-    return match2Members.includes(selfAddress)
+    return [match2.member_a, match2.member_b, match2.optimiser].includes(selfAddress)
   }
 }
 
