@@ -156,6 +156,7 @@ services:
       - IDP_INTERNAL_REALM=internal
       - IDP_INTERNAL_CLIENT_ID=sequence
       - IDP_INTERNAL_CLIENT_SECRET=secret
+      - ROLES=member-a
     ports:
       - 3000:3000
     depends_on:
@@ -319,6 +320,7 @@ services:
       - IDP_INTERNAL_REALM=internal
       - IDP_INTERNAL_CLIENT_ID=sequence
       - IDP_INTERNAL_CLIENT_SECRET=secret
+      - ROLES=member-b
     ports:
       - 3010:3000
     depends_on:
@@ -483,6 +485,7 @@ services:
       - IDP_INTERNAL_REALM=internal
       - IDP_INTERNAL_CLIENT_ID=sequence
       - IDP_INTERNAL_CLIENT_SECRET=secret
+      - ROLES=optimiser
     ports:
       - 3020:3000
     depends_on:

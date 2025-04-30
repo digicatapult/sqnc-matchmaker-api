@@ -102,7 +102,7 @@ export class DemandController extends Controller {
         const demand_a_boolean = this.dbDemandSubtype === 'demand_a'
 
         // Get all match2s where the member is either member_a or member_b
-        const match2Query: Where<'match2'> = [[member === 'member_a' ? 'member_a' : 'member_b', '=', selfAddress]]
+        const match2Query: Where<'match2'> = [[member === 'member-a' ? 'member_a' : 'member_b', '=', selfAddress]]
         const matches = await this.db.get('match2', match2Query)
         // From the match2s get all the demands that are type this.dbDemandSubtype
         const demandIds = matches.map((m) => (demand_a_boolean ? m.demand_a_id : m.demand_b_id))
