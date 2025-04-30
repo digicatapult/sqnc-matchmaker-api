@@ -27,7 +27,7 @@ export const seededDemandBCommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
 export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
 export const seededRejectionTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07078'
-export const seededDemandANotOwnedId = 'f8a2b0c1-4d3e-4a5f-8bs7c-6d9e5f3a0b2c'
+export const seededDemandANotOwnedId = 'f8a2b0c1-4d3e-4a5f-8b57-c6d9e5f3a0b2'
 
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
 export const exampleDate = '2023-01-01T00:00:00.000Z'
