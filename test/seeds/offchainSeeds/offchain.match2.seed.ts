@@ -55,6 +55,7 @@ export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c947478
 export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
 export const seededMatch2IsMemberId = '619fb8ca-4dd9-4843-8c7a-9d9c9474784f'
 export const seededMatch2IsNotMemberId = '619fb8ca-4dd9-4843-8c7a-9d9c9474784d'
+export const seededMatch2IsNotMemberInReplacesId = '619fb8ca-4dd9-4843-8c7a-9d9c9474784a'
 
 const seededDemandANotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
 const seededDemandBNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
@@ -514,6 +515,20 @@ export const match2Seed = async () => {
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
       replaces_id: seededMatch2AcceptedFinal,
+    },
+    {
+      id: seededMatch2IsNotMemberInReplacesId,
+      state: 'pending',
+      optimiser: proxyAddress,
+      member_a: proxyAddress,
+      member_b: proxyAddress,
+      demand_a_id: seededDemandAAllocated,
+      demand_b_id: seededDemandBCrated,
+      latest_token_id: seededMatch2TokenId,
+      original_token_id: seededMatch2TokenId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      replaces_id: seededMatch2NotInRoles,
     },
   ])
 }

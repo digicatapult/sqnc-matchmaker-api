@@ -126,10 +126,14 @@ export class Match2Controller extends Controller {
     if (updated_since) query.push(['updated_at', '>', parseDateParam(updated_since)])
 
     const match2s = await this.db.get('match2', query)
-    const filteredMatch2s = match2s.filter(async (match2) => {
-      const canRead = await this.match2Member(match2)
-      return canRead
-    })
+
+    const filteredMatch2s: Match2Row[] = []
+    for (const match2 of match2s) {
+      if (await this.match2Member(match2)) {
+        filteredMatch2s.push(match2)
+      }
+    }
+
     const result = await Promise.all(filteredMatch2s.map(async (match2) => responseWithAliases(match2, this.identity)))
     return result
   }
@@ -169,7 +173,7 @@ export class Match2Controller extends Controller {
     let originalMatch: { match2: Match2Row; demandB: DemandRow } | null = null //old match2
     if (match2.replaces_id) {
       const [originalMatch2] = await this.db.get('match2', { id: match2.replaces_id })
-      if (!(await this.match2Member(match2))) throw new NotFound('match2')
+      if (!(await this.match2Member(originalMatch2))) throw new NotFound('match2')
       validatePreLocal(originalMatch2, 'Match2', { state: 'acceptedFinal' })
       const [originalDemandB] = await this.db.get('demand', { id: originalMatch2.demand_b_id }) //old demandB
       validatePreOnChain(originalDemandB, 'DemandB', { subtype: 'demand_b', state: 'allocated' })

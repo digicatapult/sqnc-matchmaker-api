@@ -79,7 +79,7 @@ describe('on-chain', function () {
       expect(status).to.equal(201)
     })
 
-    it.only('returns 404 when attempting to create a demandA on chain - scope', async () => {
+    it('returns 404 when attempting to create a demandA on chain - scope', async () => {
       const { status } = await post(
         context.app,
         `/v1/demandA/${seededDemandBNotOwnedId}/creation`,
