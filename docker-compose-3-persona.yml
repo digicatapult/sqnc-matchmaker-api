@@ -90,7 +90,7 @@ services:
     networks: ['member-a']
 
   member-a-attachment:
-    image: digicatapult/sqnc-attachment-api:v3.0.19
+    image: digicatapult/sqnc-attachment-api:v3.0.20
     container_name: member-a-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -246,7 +246,7 @@ services:
     networks: ['member-b']
 
   member-b-attachment:
-    image: digicatapult/sqnc-attachment-api:v3.0.19
+    image: digicatapult/sqnc-attachment-api:v3.0.20
     container_name: member-b-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -410,7 +410,7 @@ services:
     networks: ['optimiser']
 
   optimiser-attachment:
-    image: digicatapult/sqnc-attachment-api:v3.0.19
+    image: digicatapult/sqnc-attachment-api:v3.0.20
     container_name: optimiser-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -518,7 +518,7 @@ services:
 
   # ------------------------------------------------------------------------ keycloak
   keycloak:
-    image: quay.io/keycloak/keycloak:26.2.1
+    image: quay.io/keycloak/keycloak:26.2.2
     container_name: keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
