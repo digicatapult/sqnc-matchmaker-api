@@ -27,6 +27,7 @@ export const seededDemandBCommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
 export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
 export const seededRejectionTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07078'
+export const seededDemandBNotOwnedId = 'f8a2b0c1-4d3e-4a5f-8b7c-6d9e5f3a0b2c'
 
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
 export const exampleDate = '2023-01-01T00:00:00.000Z'
@@ -59,6 +60,20 @@ export const seed = async () => {
     {
       id: seededDemandBId,
       owner: env.PROXY_FOR === '' ? selfAddress : proxyAddress,
+      subtype: 'demand_b',
+      state: 'pending',
+      parameters_attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+    },
+  ])
+
+  await insert('demand', [
+    {
+      id: seededDemandBNotOwnedId,
+      owner: notSelfAddress,
       subtype: 'demand_b',
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,

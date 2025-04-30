@@ -4,7 +4,7 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
 import { post } from '../../helper/routeHelper.js'
-import { seed, cleanup, seededDemandAId } from '../../seeds/onchainSeeds/demandA.seed.js'
+import { seed, cleanup, seededDemandAId, seededDemandANotOwnedId } from '../../seeds/onchainSeeds/demandA.seed.js'
 
 import {
   MockDispatcherContext,
@@ -84,6 +84,17 @@ describe('on-chain', function () {
       } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
       const { status } = await post(context.app, `/v1/demandA/${demandAId}/creation`, {}, {}, `demandA:create`)
       expect(status).to.equal(201)
+    })
+
+    it('returns 404 when attempting to create a demandA on chain - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandA/${seededDemandANotOwnedId}/creation`,
+        {},
+        {},
+        `demandA:create`
+      )
+      expect(status).to.equal(404)
     })
 
     it('creates many demandAs on chain in parallel', async function () {
