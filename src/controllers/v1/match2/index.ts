@@ -44,7 +44,8 @@ import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 import Attachment from '../../../lib/services/attachment.js'
 import { DemandRow, Match2Row, Where } from '../../../lib/db/types.js'
 import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
-import env from '../../../env.js'
+import type { Env } from '../../../env.js'
+import { EnvToken } from '../../../env.js'
 
 @Route('v1/match2')
 @injectable()
@@ -53,6 +54,7 @@ import env from '../../../env.js'
 export class Match2Controller extends Controller {
   log: Logger
   db: Database
+  env: Env
 
   constructor(
     private identity: Identity,
@@ -60,11 +62,13 @@ export class Match2Controller extends Controller {
     private node: ChainNode,
     private addressResolver: AddressResolver,
     db: Database,
-    @inject(LoggerToken) logger: Logger
+    @inject(LoggerToken) logger: Logger,
+    @inject(EnvToken) env: Env
   ) {
     super()
     this.log = logger.child({ controller: '/match2' })
     this.db = db
+    this.env = env
   }
 
   /**
@@ -609,7 +613,7 @@ export class Match2Controller extends Controller {
   }
 
   public async match2Member(match2: Match2Row): Promise<boolean> {
-    const roles = env.ROLES
+    const roles = this.env.ROLES
     if (roles.includes('admin')) return true
 
     const { address: selfAddress } = await this.addressResolver.determineSelfAddress()

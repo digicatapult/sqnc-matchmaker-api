@@ -22,13 +22,14 @@ import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 import Attachment from '../../../lib/services/attachment.js'
 import { TransactionRow, Where } from '../../../lib/db/types.js'
 import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
-import env from '../../../env.js'
+import { Env } from '../../../env.js'
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
   dbDemandSubtype: DemandSubtype
   log: Logger
   db: Database
+  env: Env
 
   constructor(
     demandType: 'demandA' | 'demandB',
@@ -37,13 +38,15 @@ export class DemandController extends Controller {
     private node: ChainNode,
     private addressResolver: AddressResolver,
     db: Database,
-    logger: Logger
+    logger: Logger,
+    env: Env
   ) {
     super()
     this.demandType = demandType
     this.dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'
     this.log = logger.child({ controller: `/${this.demandType}` })
     this.db = db
+    this.env = env
   }
 
   public async createDemand({ parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
@@ -84,44 +87,47 @@ export class DemandController extends Controller {
       query.push(['updated_at', '>', parseDateParam(updated_since)])
     }
     const selfAddress = (await this.addressResolver.determineSelfAddress()).address
-    const roles = env.ROLES
-    // if roles does not include admin or optimiser filter demands
-    const isPrivileged = roles.includes('optimiser') || roles.includes('admin')
+    const roles = this.env.ROLES
     const demands: DemandRow[] = []
 
-    if (isPrivileged) {
+    if (roles.includes('optimiser') || roles.includes('admin')) {
       // Privileged roles get all demands matching base query
       demands.push(...(await this.db.get('demand', query)))
-    } else {
-      // Owner's own demands
-      const ownedQuery: Where<'demand'> = [...query, ['owner', '=', selfAddress]]
-      demands.push(...(await this.db.get('demand', ownedQuery)))
+      return await Promise.all(demands.map(async (demand) => responseWithAlias(demand, this.identity)))
+    }
+    // Owner's own demands
+    const ownedQuery: Where<'demand'> = [['owner', '=', selfAddress]]
+    const ownedDemands = await this.db.get('demand', ownedQuery)
 
-      // roles that contain only member_a or member_b or both
-      for (const member of roles) {
-        const demand_a_boolean = this.dbDemandSubtype === 'demand_a'
-
-        // Get all match2s where the member is either member_a or member_b
-        const match2Query: Where<'match2'> = [[member === 'member-a' ? 'member_a' : 'member_b', '=', selfAddress]]
-        const matches = await this.db.get('match2', match2Query)
-        // From the match2s get all the demands that are type this.dbDemandSubtype
-        const demandIds = matches.map((m) => (demand_a_boolean ? m.demand_a_id : m.demand_b_id))
-        if (demandIds.length > 0) {
-          const matchedQuery: Where<'demand'> = [...query, ['id', 'IN', demandIds]]
-          demands.push(...(await this.db.get('demand', matchedQuery)))
-        }
-      }
+    if (ownedDemands.length == 0) {
+      return await Promise.all(demands.map(async (demand) => responseWithAlias(demand, this.identity)))
     }
 
-    const uniqueDemands = Array.from(new Map(demands.map((d) => [d.id, d])).values())
-    return await Promise.all(uniqueDemands.map(async (demand) => responseWithAlias(demand, this.identity)))
+    demands.push(...ownedDemands.filter((demand) => demand.subtype === this.dbDemandSubtype))
+
+    const ownedDemandsOppositeSubTypeIds = ownedDemands
+      .filter((demand) => demand.subtype !== this.dbDemandSubtype)
+      .map((demand) => demand.id)
+
+    // Get all demands that are matched with the users demands
+    const match2Query: Where<'match2'> = [
+      [this.demandType === 'demandA' ? 'demand_b_id' : 'demand_a_id', 'IN', ownedDemandsOppositeSubTypeIds],
+    ]
+    const matches = await this.db.get('match2', match2Query)
+    const notOwnedDemandIds = matches.map((m) => (this.dbDemandSubtype === 'demand_a' ? m.demand_a_id : m.demand_b_id))
+    if (notOwnedDemandIds.length > 0) {
+      const matchedQuery: Where<'demand'> = [...query, ['id', 'IN', notOwnedDemandIds]]
+      demands.push(...(await this.db.get('demand', matchedQuery)))
+    }
+
+    return await Promise.all(demands.map(async (demand) => responseWithAlias(demand, this.identity)))
   }
 
   public async getDemand(demandId: UUID): Promise<DemandWithCommentsResponse> {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
-
-    if (!(await this.canAccessDemand(demand))) {
+    // If you can view the demand, you are a admin optimiser
+    if (!(await this.canAccessDemand(demand, 'read'))) {
       throw new NotFound(this.demandType)
     }
 
@@ -135,9 +141,14 @@ export class DemandController extends Controller {
   public async createDemandOnChain(demandId: UUID): Promise<TransactionResponse> {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
-    if (!(await this.canAccessDemand(demand, false))) {
-      throw new NotFound(this.demandType)
+
+    if (!(await this.canAccessDemand(demand, 'createOnChain'))) {
+      if (!(await this.canAccessDemand(demand, 'read'))) {
+        throw new NotFound(this.demandType)
+      }
+      throw new Unauthorized(`You are not allowed to create demand ${demandId} on-chain`)
     }
+
     if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
 
     const [attachment] = await this.attachment.getAttachments([demand.parameters_attachment_id])
@@ -164,7 +175,7 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (!(await this.canAccessDemand(demand))) {
+    if (!(await this.canAccessDemand(demand, 'read'))) {
       throw new NotFound(this.demandType)
     }
 
@@ -189,7 +200,7 @@ export class DemandController extends Controller {
     const [demandAB] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demandAB) throw new NotFound(this.demandType)
 
-    if (!(await this.canAccessDemand(demandAB))) {
+    if (!(await this.canAccessDemand(demandAB, 'read'))) {
       throw new NotFound(this.demandType)
     }
 
@@ -203,8 +214,12 @@ export class DemandController extends Controller {
   ): Promise<TransactionResponse> {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
-    if (!this.canAccessDemand(demand, false)) {
-      throw new NotFound(this.demandType)
+
+    if (!(await this.canAccessDemand(demand, 'createOnChain'))) {
+      if (!(await this.canAccessDemand(demand, 'read'))) {
+        throw new NotFound(this.demandType)
+      }
+      throw new Unauthorized(`You are not allowed to create demand ${demandId} on-chain`)
     }
 
     const [comment] = await this.attachment.getAttachments([attachmentId])
@@ -242,8 +257,8 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (!(await this.canAccessDemand(demand))) {
-      throw new Unauthorized('You are not allowed to view this demand')
+    if (!(await this.canAccessDemand(demand, 'read'))) {
+      throw new NotFound(this.demandType)
     }
 
     const [comment] = await this.db.get('transaction', {
@@ -267,7 +282,7 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    if (!(await this.canAccessDemand(demand))) {
+    if (!(await this.canAccessDemand(demand, 'read'))) {
       throw new Unauthorized('You are not allowed to view this demand')
     }
 
@@ -275,20 +290,24 @@ export class DemandController extends Controller {
     return dbTxs.map(dbTransactionToResponse)
   }
 
-  public async canAccessDemand(demand: DemandRow, readOnly: boolean = true): Promise<boolean> {
-    const roles = env.ROLES
-    if (roles.includes('admin') || roles.includes('optimizer')) return true
-
+  public async canAccessDemand(demand: DemandRow, accessType: 'read' | 'createOnChain'): Promise<boolean> {
+    const roles = this.env.ROLES
     const member = await this.addressResolver.determineSelfAddress()
-    if (demand.owner === member.address) return true
 
-    if (!readOnly) return false
-
-    const query: Where<'match2'> = [[this.demandType === 'demandA' ? 'demand_a_id' : 'demand_b_id', '=', demand.id]]
-    const [match] = await this.db.get('match2', query)
-    if (!match) return false
-
-    return [match.member_a, match.member_b].includes(member.address)
+    if (accessType === 'createOnChain') {
+      if (roles.includes('admin')) return true
+      if (demand.owner === member.address) return true
+      return false
+    }
+    if (accessType === 'read') {
+      if (roles.includes('admin') || roles.includes('optimizer')) return true
+      if (demand.owner === member.address) return true
+      const query: Where<'match2'> = [[this.demandType === 'demandA' ? 'demand_a_id' : 'demand_b_id', '=', demand.id]]
+      const [match] = await this.db.get('match2', query)
+      if (!match) return false
+      return [match.member_a, match.member_b].includes(member.address)
+    }
+    return false
   }
 }
 

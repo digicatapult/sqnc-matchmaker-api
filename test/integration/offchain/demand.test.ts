@@ -4,6 +4,7 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server.js'
 import { post, get } from '../../helper/routeHelper.js'
+import { mockEnvWithRoles } from '../../helper/mock.js'
 import {
   cleanup,
   demandSeed,
@@ -36,6 +37,8 @@ import {
   withIdentitySelfMock,
 } from '../../helper/mock.js'
 import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
+import { resetContainer } from '../../../src/ioc.js'
+import { allowedRoles } from '../../../src/env.js'
 
 const runDemandTests = (demandType: 'demandA' | 'demandB') => {
   const dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'
@@ -143,20 +146,6 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           state: 'pending',
           updatedAt: exampleDate,
         })
-      })
-
-      it(`should get all ${demandType}s - scope`, async () => {
-        const { status, body } = await get(app, `/v1/${demandType}`, {}, `${demandType}:read`)
-        expect(status).to.equal(200)
-        expect(body.find(({ id }: { id: string }) => id === seededDemandId)).to.deep.equal({
-          createdAt: exampleDate,
-          id: seededDemandId,
-          owner: proxyAlias,
-          parametersAttachmentId: parametersAttachmentId,
-          state: 'pending',
-          updatedAt: exampleDate,
-        })
-        expect(body.some(({ id }: { id: string }) => id === seededDemandNotOwnedId)).to.be.equal(false)
       })
 
       it('should filter based on updated date', async () => {
@@ -290,6 +279,59 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         )
         expect(status).to.equal(200)
       })
+
+      for (const persona of allowedRoles) {
+        const privliegedReadRoles = ['admin', 'optimiser']
+        describe(`Persona ${persona}`, () => {
+          beforeEach(() => {
+            mockEnvWithRoles([persona])
+          })
+          afterEach(() => {
+            resetContainer()
+          })
+          it.only(`should get all ${demandType}s - scope`, async () => {
+            const { status, body } = await get(app, `/v1/${demandType}`, {}, `${demandType}:read`)
+            expect(status).to.equal(200)
+            if (persona !== 'optimiser' && persona !== 'admin') {
+              expect(body.find(({ id }: { id: string }) => id === seededDemandId)).to.deep.equal({
+                createdAt: exampleDate,
+                id: seededDemandId,
+                owner: proxyAlias,
+                parametersAttachmentId: parametersAttachmentId,
+                state: 'pending',
+                updatedAt: exampleDate,
+              })
+              expect(body.some(({ id }: { id: string }) => id === seededDemandNotOwnedId)).to.be.equal(false)
+            }
+          })
+          if (!privliegedReadRoles.includes(persona)) {
+            it.only(`should get a ${demandType} it is matched with but does not own - scope`, async () => {
+              const { status, body } = await get(
+                app,
+                `/v1/${demandType}/${seededDemandMatchedNotOwnedId}`,
+                {},
+                `${demandType}:read`
+              )
+              expect(status).to.equal(200)
+              expect(body).to.deep.equal({
+                id: seededDemandMatchedNotOwnedId,
+                owner: proxyAlias,
+                state: 'pending',
+                parametersAttachmentId,
+                comments: [
+                  {
+                    attachmentId: parametersAttachmentId,
+                    createdAt: exampleDate,
+                    owner: proxyAlias,
+                  },
+                ],
+                createdAt: exampleDate,
+                updatedAt: exampleDate,
+              })
+            })
+          }
+        })
+      }
     })
 
     describe('sad path', () => {
@@ -333,11 +375,6 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
 
       it(`non-existent ${demandType} id - 404`, async () => {
         const response = await get(app, `/v1/${demandType}/${nonExistentId}`)
-        expect(response.status).to.equal(404)
-      })
-
-      it(`non-owned non-member ${demandType} id - 404`, async () => {
-        const response = await get(app, `/v1/${demandType}/${seededDemandNotOwnedId}`)
         expect(response.status).to.equal(404)
       })
 
@@ -500,6 +537,31 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
         const response = await get(app, `/v1/${demandType}/${nonExistentId}/creation/`)
         expect(response.status).to.equal(404)
       })
+
+      for (const persona of allowedRoles) {
+        if (persona === 'admin' || persona === 'optimiser') continue
+        describe(`Persona ${persona}`, () => {
+          beforeEach(() => {
+            mockEnvWithRoles([persona])
+          })
+          afterEach(() => {
+            resetContainer()
+          })
+          it(`non-owned ${demandType} id - 404`, async () => {
+            const response = await get(app, `/v1/${demandType}/${seededDemandNotOwnedId}`, {}, `${demandType}:read`)
+            expect(response.status).to.equal(404)
+          })
+          it(`non-owned non-matched ${demandType} id - 404`, async () => {
+            const response = await get(
+              app,
+              `/v1/${demandType}/${seededDemandId}/creation/${seededCreationTransactionId}`,
+              {},
+              `${demandType}:read`
+            )
+            expect(response.status).to.equal(404)
+          })
+        })
+      }
     })
   })
 }
