@@ -479,7 +479,7 @@ describe('match2', () => {
     })
 
     it('non-member when getting match2 - 404', async () => {
-      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}`, {}, '')
+      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}`, {}, 'match2:read')
       expect(response.status).to.equal(404)
     })
 
@@ -560,7 +560,7 @@ describe('match2', () => {
         app,
         `/v1/match2/${seededMatch2NotInRoles}/proposal/${seededProposalTransactionId}`,
         {},
-        ''
+        'match2:read'
       )
       expect(response.status).to.equal(404)
     })
@@ -584,7 +584,7 @@ describe('match2', () => {
     })
 
     it('non-member on match2 when getting proposals - 404', async () => {
-      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/proposal`, {}, '')
+      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/proposal`, {}, 'match2:read')
       expect(response.status).to.equal(404)
     })
 
@@ -824,7 +824,7 @@ describe('match2', () => {
     it('non-member transaction when getting a rejection - 404', async () => {
       const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/rejection/${nonExistentId}`)
       expect(response.status).to.equal(404)
-      expect(response.body).to.equal('rejection not found')
+      expect(response.body).to.equal('match2 not found')
     })
 
     it('unauthenticated match2 cancel - 401', async () => {
@@ -907,7 +907,7 @@ describe('match2', () => {
     it('non-member transaction when getting a cancellation - 404', async () => {
       const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/cancellation/${nonExistentId}`)
       expect(response.status).to.equal(404)
-      expect(response.body).to.equal('cancellation not found')
+      expect(response.body).to.equal('match2 not found')
     })
 
     it('unauthenticated list match2 cancellations - 401', async () => {
