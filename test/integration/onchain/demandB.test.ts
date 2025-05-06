@@ -85,35 +85,35 @@ describe('on-chain', function () {
       expect(status).to.equal(201)
     })
 
-    it('returns 404 when attempting to create a demandA on chain - scope', async () => {
+    it('returns 404 when attempting to create a demandB on chain - scope', async () => {
       const { status } = await post(
         context.app,
-        `/v1/demandA/${seededDemandBNotOwnedId}/creation`,
+        `/v1/demandB/${seededDemandBNotOwnedId}/creation`,
         {},
         {},
-        `demandA:create`
+        `demandB:create`
       )
       expect(status).to.equal(404)
     })
 
-    it('returns 401 when attempting to create a demandA on chain this is not owned but matched - scope', async () => {
+    it('returns 401 when attempting to create a demandB on chain that is not owned but matched - scope', async () => {
       const { status } = await post(
         context.app,
-        `/v1/demandA/${seededDemandBMatchedNotOwnedId}/creation`,
+        `/v1/demandB/${seededDemandBMatchedNotOwnedId}/creation`,
         {},
         {},
-        `demandA:create`
+        `demandB:create`
       )
       expect(status).to.equal(401)
     })
 
-    it('returns 401 when attempting to create a demandA comment on chain this is not owned but matched - scope', async () => {
+    it('returns 401 when attempting to create a demandB comment on chain this is not owned but matched - scope', async () => {
       const { status } = await post(
         context.app,
-        `/v1/demandA/${seededDemandBMatchedNotOwnedId}/comment`,
+        `/v1/demandB/${seededDemandBMatchedNotOwnedId}/comment`,
         {},
         {},
-        `demandA:create`
+        `demandB:create`
       )
       expect(status).to.equal(401)
     })
