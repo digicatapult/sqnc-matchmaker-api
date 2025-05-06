@@ -88,12 +88,12 @@ export class DemandController extends Controller {
     }
     const selfAddress = (await this.addressResolver.determineSelfAddress()).address
     const roles = this.env.ROLES
-    const demands: DemandRow[] = []
 
     if (roles.includes('optimiser') || roles.includes('admin')) {
       // Privileged roles get all demands matching base query
-      demands.push(...(await this.db.get('demand', query)))
-      return await Promise.all(demands.map(async (demand) => responseWithAlias(demand, this.identity)))
+      return await Promise.all(
+        (await this.db.get('demand', query)).map(async (demand) => responseWithAlias(demand, this.identity))
+      )
     }
     // Owner's own demands
     const ownedQuery: Where<'demand'> = [['owner', '=', selfAddress]]
@@ -103,10 +103,10 @@ export class DemandController extends Controller {
     const ownedDemands = await this.db.get('demand', ownedQuery)
 
     if (ownedDemands.length === 0) {
-      return await Promise.all(demands.map(async (demand) => responseWithAlias(demand, this.identity)))
+      return []
     }
 
-    demands.push(...ownedDemands.filter((demand) => demand.subtype === this.dbDemandSubtype))
+    const filteredOwnedDemands = ownedDemands.filter((demand) => demand.subtype === this.dbDemandSubtype)
 
     const ownedDemandsOppositeSubTypeIds = ownedDemands
       .filter((demand) => demand.subtype !== this.dbDemandSubtype)
@@ -118,15 +118,18 @@ export class DemandController extends Controller {
     ]
     const matches = await this.db.get('match2', match2Query)
     const notOwnedDemandIds = matches.map((m) => (this.dbDemandSubtype === 'demand_a' ? m.demand_a_id : m.demand_b_id))
+    const matchedDemands = []
     if (notOwnedDemandIds.length > 0) {
       const matchedQuery: Where<'demand'> = [...query, ['id', 'IN', notOwnedDemandIds]]
       if (updated_since) {
         matchedQuery.push(['updated_at', '>', parseDateParam(updated_since)])
       }
-      demands.push(...(await this.db.get('demand', matchedQuery)))
+      matchedDemands.push(...(await this.db.get('demand', matchedQuery)))
     }
 
-    return await Promise.all(demands.map(async (demand) => responseWithAlias(demand, this.identity)))
+    return await Promise.all(
+      [...filteredOwnedDemands, ...matchedDemands].map(async (demand) => responseWithAlias(demand, this.identity))
+    )
   }
 
   public async getDemand(demandId: UUID): Promise<DemandWithCommentsResponse> {
