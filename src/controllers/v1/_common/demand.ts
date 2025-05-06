@@ -102,7 +102,7 @@ export class DemandController extends Controller {
     }
     const ownedDemands = await this.db.get('demand', ownedQuery)
 
-    if (ownedDemands.length == 0) {
+    if (ownedDemands.length === 0) {
       return await Promise.all(demands.map(async (demand) => responseWithAlias(demand, this.identity)))
     }
 
