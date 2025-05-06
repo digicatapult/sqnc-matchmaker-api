@@ -42,7 +42,7 @@ services:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
 
   sqnc-identity-service:
-    image: digicatapult/sqnc-identity-service:v4.2.14
+    image: digicatapult/sqnc-identity-service:v4.2.15
     container_name: identity-service
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -68,7 +68,7 @@ services:
       - IDP_INTERNAL_REALM=internal
 
   sqnc-attachment-api:
-    image: digicatapult/sqnc-attachment-api:v3.0.19
+    image: digicatapult/sqnc-attachment-api:v3.0.21
     container_name: attachment-api
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -95,7 +95,7 @@ services:
       - AUTHZ_WEBHOOK=http://localhost:3000/v1/authz
 
   sqnc-node:
-    image: digicatapult/sqnc-node:v12.5.0
+    image: digicatapult/sqnc-node:v12.5.1
     container_name: node
     command: --base-path /data/ --dev --unsafe-rpc-external --rpc-max-connections 512 --rpc-cors all
     ports:
@@ -118,7 +118,7 @@ services:
       - 5001:5001
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.2.1
+    image: quay.io/keycloak/keycloak:26.2.2
     container_name: keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
