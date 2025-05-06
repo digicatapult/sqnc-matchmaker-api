@@ -45,6 +45,7 @@ export const seededMatch2NotAcceptableA = '46d7dbe8-aaef-472e-af9f-ecdd2681d3a5'
 export const seededMatch2NotAcceptableB = '097d3905-72aa-4517-85d2-0091d26fceac'
 export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c9474784d'
 export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
+export const seededDemandAMatchedNotOwnedId = '817d1184-9670-4fb0-bb33-28582e5467b1'
 
 export const seed = async () => {
   const db = container.resolve(Database)
@@ -75,6 +76,50 @@ export const seed = async () => {
       updated_at: new Date(exampleDate),
       latest_token_id: null,
       original_token_id: null,
+    },
+  ])
+  await insert('demand', [
+    {
+      id: seededDemandAMatchedNotOwnedId,
+      owner: notSelfAddress,
+      subtype: 'demand_a',
+      state: 'allocated',
+      parameters_attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+    },
+  ])
+
+  await insert('demand', [
+    {
+      id: seededDemandBId,
+      owner: env.PROXY_FOR === '' ? selfAddress : proxyAddress,
+      subtype: 'demand_b',
+      state: 'pending',
+      parameters_attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+    },
+  ])
+
+  await insert('match2', [
+    {
+      id: seededMatch2Id,
+      state: 'pending',
+      optimiser: proxyAddress,
+      member_a: notSelfAddress,
+      member_b: env.PROXY_FOR === '' ? selfAddress : proxyAddress,
+      demand_a_id: seededDemandAMatchedNotOwnedId,
+      demand_b_id: seededDemandBId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+      replaces_id: null,
     },
   ])
 }

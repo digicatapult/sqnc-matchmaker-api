@@ -4,7 +4,7 @@ import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server.js'
 import { post, get } from '../../helper/routeHelper.js'
-import { mockEnvWithRoles } from '../../helper/mock.js'
+import { mockEnvWithRoles, notSelfAlias } from '../../helper/mock.js'
 import {
   cleanup,
   demandSeed,
@@ -27,6 +27,10 @@ import {
   seededDemandBNotOwnedId,
   seededDemandAMatchedNotOwnedId,
   seededDemandBMatchedNotOwnedId,
+  seededDemandBNotOwnedCommentTransactionId,
+  seededDemandANotOwnedCommentTransactionId,
+  seededDemandANotOwnedCreationTransactionId,
+  seededDemandBNotOwnedCreationTransactionId,
 } from '../../seeds/offchainSeeds/demand.seed.js'
 
 import {
@@ -57,6 +61,10 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
   const seededDemandNotOwnedId = demandType === 'demandA' ? seededDemandANotOwnedId : seededDemandBNotOwnedId
   const seededDemandMatchedNotOwnedId =
     demandType === 'demandA' ? seededDemandAMatchedNotOwnedId : seededDemandBMatchedNotOwnedId
+  const seededNotOwnedCommentTransactionId =
+    demandType === 'demandA' ? seededDemandANotOwnedCommentTransactionId : seededDemandBNotOwnedCommentTransactionId
+  const seededNotOwnedCreationTransactionId =
+    demandType === 'demandA' ? seededDemandANotOwnedCreationTransactionId : seededDemandBNotOwnedCreationTransactionId
 
   describe(demandType, () => {
     let app: Express
@@ -281,7 +289,7 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
       })
 
       for (const persona of allowedRoles) {
-        const privliegedReadRoles = ['admin', 'optimiser']
+        const privilegedReadRoles = ['admin', 'optimiser']
         describe(`Persona ${persona}`, () => {
           beforeEach(() => {
             mockEnvWithRoles([persona])
@@ -289,10 +297,10 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
           afterEach(() => {
             resetContainer()
           })
-          it.only(`should get all ${demandType}s - scope`, async () => {
+          it(`should get all ${demandType}s - scope`, async () => {
             const { status, body } = await get(app, `/v1/${demandType}`, {}, `${demandType}:read`)
             expect(status).to.equal(200)
-            if (persona !== 'optimiser' && persona !== 'admin') {
+            if (!privilegedReadRoles.includes(persona)) {
               expect(body.find(({ id }: { id: string }) => id === seededDemandId)).to.deep.equal({
                 createdAt: exampleDate,
                 id: seededDemandId,
@@ -304,8 +312,8 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
               expect(body.some(({ id }: { id: string }) => id === seededDemandNotOwnedId)).to.be.equal(false)
             }
           })
-          if (!privliegedReadRoles.includes(persona)) {
-            it.only(`should get a ${demandType} it is matched with but does not own - scope`, async () => {
+          if (!privilegedReadRoles.includes(persona)) {
+            it(`should get a ${demandType} it is matched with but does not own - scope`, async () => {
               const { status, body } = await get(
                 app,
                 `/v1/${demandType}/${seededDemandMatchedNotOwnedId}`,
@@ -315,8 +323,8 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
               expect(status).to.equal(200)
               expect(body).to.deep.equal({
                 id: seededDemandMatchedNotOwnedId,
-                owner: proxyAlias,
-                state: 'pending',
+                owner: notSelfAlias,
+                state: 'allocated',
                 parametersAttachmentId,
                 comments: [
                   {
@@ -328,6 +336,24 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
                 createdAt: exampleDate,
                 updatedAt: exampleDate,
               })
+            })
+            it(`should get a comment transaction from a tx ID from a unowned ${demandType} - scope`, async () => {
+              const { status } = await get(
+                app,
+                `/v1/${demandType}/${seededDemandMatchedNotOwnedId}/comment/${seededNotOwnedCommentTransactionId}`,
+                {},
+                `${demandType}:read`
+              )
+              expect(status).to.equal(200)
+            })
+            it(`should get a creation transactions from a unowned ${demandType} ID - scope`, async () => {
+              const { status } = await get(
+                app,
+                `/v1/${demandType}/${seededDemandMatchedNotOwnedId}/creation/${seededNotOwnedCreationTransactionId}`,
+                {},
+                `${demandType}:read`
+              )
+              expect(status).to.equal(200)
             })
           }
         })
@@ -551,10 +577,19 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
             const response = await get(app, `/v1/${demandType}/${seededDemandNotOwnedId}`, {}, `${demandType}:read`)
             expect(response.status).to.equal(404)
           })
-          it(`non-owned non-matched ${demandType} id - 404`, async () => {
+          it(`non-owned non-matched demand creation ${demandType} id - 404`, async () => {
             const response = await get(
               app,
-              `/v1/${demandType}/${seededDemandId}/creation/${seededCreationTransactionId}`,
+              `/v1/${demandType}/${seededDemandNotOwnedId}/creation/${seededCreationTransactionId}`,
+              {},
+              `${demandType}:read`
+            )
+            expect(response.status).to.equal(404)
+          })
+          it(`non-owned non-matched demand comment ${demandType} id - 404`, async () => {
+            const response = await get(
+              app,
+              `/v1/${demandType}/${seededDemandNotOwnedId}/comment/${seededCreationTransactionId}`,
               {},
               `${demandType}:read`
             )

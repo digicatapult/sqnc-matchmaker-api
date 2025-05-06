@@ -4,7 +4,13 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
 import { post } from '../../helper/routeHelper.js'
-import { seed, cleanup, seededDemandBId, seededDemandBNotOwnedId } from '../../seeds/onchainSeeds/demandB.seed.js'
+import {
+  seed,
+  cleanup,
+  seededDemandBId,
+  seededDemandBNotOwnedId,
+  seededDemandBMatchedNotOwnedId,
+} from '../../seeds/onchainSeeds/demandB.seed.js'
 import {
   MockDispatcherContext,
   parametersAttachmentId,
@@ -88,6 +94,28 @@ describe('on-chain', function () {
         `demandA:create`
       )
       expect(status).to.equal(404)
+    })
+
+    it('returns 401 when attempting to create a demandA on chain this is not owned but matched - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandA/${seededDemandBMatchedNotOwnedId}/creation`,
+        {},
+        {},
+        `demandA:create`
+      )
+      expect(status).to.equal(401)
+    })
+
+    it('returns 401 when attempting to create a demandA comment on chain this is not owned but matched - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandA/${seededDemandBMatchedNotOwnedId}/comment`,
+        {},
+        {},
+        `demandA:create`
+      )
+      expect(status).to.equal(401)
     })
 
     it('creates many demandBs on chain in parallel', async function () {

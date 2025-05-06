@@ -97,6 +97,9 @@ export class DemandController extends Controller {
     }
     // Owner's own demands
     const ownedQuery: Where<'demand'> = [['owner', '=', selfAddress]]
+    if (updated_since) {
+      ownedQuery.push(['updated_at', '>', parseDateParam(updated_since)])
+    }
     const ownedDemands = await this.db.get('demand', ownedQuery)
 
     if (ownedDemands.length == 0) {
@@ -117,6 +120,9 @@ export class DemandController extends Controller {
     const notOwnedDemandIds = matches.map((m) => (this.dbDemandSubtype === 'demand_a' ? m.demand_a_id : m.demand_b_id))
     if (notOwnedDemandIds.length > 0) {
       const matchedQuery: Where<'demand'> = [...query, ['id', 'IN', notOwnedDemandIds]]
+      if (updated_since) {
+        matchedQuery.push(['updated_at', '>', parseDateParam(updated_since)])
+      }
       demands.push(...(await this.db.get('demand', matchedQuery)))
     }
 

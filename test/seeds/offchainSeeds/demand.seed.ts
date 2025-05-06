@@ -38,6 +38,14 @@ export const seededDemandBMissingTokenId = 'b2348deb-d967-4317-8637-2867ced70356
 const seededDemandBWithTokenId = 'b005f4a1-400e-410e-aa72-8e97385f63e6'
 export const seededDemandANotOwnedId = 'c88908aa-a2a6-48df-a698-572aa30159c0'
 export const seededDemandBNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
+export const seededDemandANotOwnedCreationTransactionId = 'c88908aa-a2a6-48df-a698-572aa30159c1'
+export const seededDemandBNotOwnedCreationTransactionId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d8'
+export const seededDemandANotOwnedCreationTransactionId2 = 'c88908aa-a2a6-48df-a698-572aa30159c2'
+export const seededDemandBNotOwnedCreationTransactionId2 = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d7'
+export const seededDemandANotOwnedCommentTransactionId = 'c88908aa-a2a6-48df-a698-572aa30159c3'
+export const seededDemandBNotOwnedCommentTransactionId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d6'
+export const seededDemandANotOwnedCommentTransactionId2 = 'c88908aa-a2a6-48df-a698-572aa30159c4'
+export const seededDemandBNotOwnedCommentTransactionId2 = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d5'
 const seededDemandTokenId = 42
 
 export const demandSeed = async () => {
@@ -231,6 +239,55 @@ export const demandSeed = async () => {
     },
   ])
 
+  await insert('transaction', [
+    {
+      id: seededDemandANotOwnedCreationTransactionId,
+      api_type: 'demand_a',
+      transaction_type: 'creation',
+      local_id: seededDemandAMatchedNotOwnedId,
+      state: 'submitted',
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      hash: transactionHash,
+    },
+  ])
+
+  await insert('transaction', [
+    {
+      id: seededDemandANotOwnedCreationTransactionId2,
+      api_type: 'demand_a',
+      transaction_type: 'creation',
+      local_id: seededDemandAMatchedNotOwnedId,
+      state: 'submitted',
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      hash: transactionHash,
+    },
+  ])
+
+  await insert('transaction', [
+    {
+      id: seededDemandANotOwnedCommentTransactionId,
+      api_type: 'demand_a',
+      transaction_type: 'comment',
+      local_id: seededDemandAMatchedNotOwnedId,
+      state: 'submitted',
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      hash: transactionHash,
+    },
+    {
+      id: seededDemandANotOwnedCommentTransactionId2,
+      api_type: 'demand_a',
+      transaction_type: 'comment',
+      local_id: seededDemandAMatchedNotOwnedId,
+      state: 'submitted',
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      hash: transactionHash,
+    },
+  ])
+
   await insert('demand', [
     {
       id: seededDemandBNotOwnedId,
@@ -242,6 +299,55 @@ export const demandSeed = async () => {
       original_token_id: seededDemandTokenId,
       created_at: new Date(exampleDate),
       updated_at: new Date(exampleDate),
+    },
+  ])
+
+  await insert('transaction', [
+    {
+      id: seededDemandBNotOwnedCreationTransactionId,
+      api_type: 'demand_b',
+      transaction_type: 'creation',
+      local_id: seededDemandBMatchedNotOwnedId,
+      state: 'submitted',
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      hash: transactionHash,
+    },
+  ])
+
+  await insert('transaction', [
+    {
+      id: seededDemandBNotOwnedCreationTransactionId2,
+      api_type: 'demand_b',
+      transaction_type: 'creation',
+      local_id: seededDemandBMatchedNotOwnedId,
+      state: 'submitted',
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      hash: transactionHash,
+    },
+  ])
+
+  await insert('transaction', [
+    {
+      id: seededDemandBNotOwnedCommentTransactionId,
+      api_type: 'demand_b',
+      transaction_type: 'comment',
+      local_id: seededDemandBMatchedNotOwnedId,
+      state: 'submitted',
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      hash: transactionHash,
+    },
+    {
+      id: seededDemandBNotOwnedCommentTransactionId2,
+      api_type: 'demand_b',
+      transaction_type: 'comment',
+      local_id: seededDemandBMatchedNotOwnedId,
+      state: 'submitted',
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      hash: transactionHash,
     },
   ])
 
@@ -342,6 +448,29 @@ export const demandSeed = async () => {
     },
   ])
 
+  await insert('demand_comment', [
+    {
+      id: seededDemandANotOwnedCommentTransactionId,
+      owner: proxyAddress,
+      state: 'pending',
+      demand: seededDemandAMatchedNotOwnedId,
+      attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      transaction_id: null,
+    },
+    {
+      id: seededDemandANotOwnedCommentTransactionId2,
+      owner: proxyAddress,
+      state: 'created',
+      demand: seededDemandAMatchedNotOwnedId,
+      attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      transaction_id: null,
+    },
+  ])
+
   await insert('demand', [
     {
       id: seededDemandBMatchedNotOwnedId,
@@ -355,6 +484,30 @@ export const demandSeed = async () => {
       original_token_id: null,
     },
   ])
+
+  await insert('demand_comment', [
+    {
+      id: seededDemandBNotOwnedCommentTransactionId,
+      owner: proxyAddress,
+      state: 'pending',
+      demand: seededDemandBMatchedNotOwnedId,
+      attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      transaction_id: null,
+    },
+    {
+      id: seededDemandBNotOwnedCommentTransactionId2,
+      owner: proxyAddress,
+      state: 'created',
+      demand: seededDemandBMatchedNotOwnedId,
+      attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      transaction_id: null,
+    },
+  ])
+
   // Is a member of the match2
   await insert('match2', [
     {
