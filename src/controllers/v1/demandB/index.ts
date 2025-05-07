@@ -18,6 +18,8 @@ import Database from '../../../lib/db/index.js'
 import { LoggerToken } from '../../../lib/logger.js'
 import type { Logger } from 'pino'
 import Attachment from '../../../lib/services/attachment.js'
+import type { Env } from '../../../env.js'
+import { EnvToken } from '../../../env.js'
 
 @Route('v1/demandB')
 @Tags('demandB')
@@ -30,9 +32,10 @@ export class DemandBController extends DemandController {
     node: ChainNode,
     addressResolver: AddressResolver,
     db: Database,
-    @inject(LoggerToken) logger: Logger
+    @inject(LoggerToken) logger: Logger,
+    @inject(EnvToken) env: Env
   ) {
-    super('demandB', identity, attachment, node, addressResolver, db, logger)
+    super('demandB', identity, attachment, node, addressResolver, db, logger, env)
   }
 
   /**

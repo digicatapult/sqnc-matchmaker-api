@@ -18,6 +18,8 @@ import { LoggerToken } from '../../../lib/logger.js'
 import Database from '../../../lib/db/index.js'
 import type { Logger } from 'pino'
 import Attachment from '../../../lib/services/attachment.js'
+import type { Env } from '../../../env.js'
+import { EnvToken } from '../../../env.js'
 
 @Route('v1/demandA')
 @injectable()
@@ -30,9 +32,10 @@ export class DemandAController extends DemandController {
     node: ChainNode,
     addressResolver: AddressResolver,
     db: Database,
-    @inject(LoggerToken) logger: Logger
+    @inject(LoggerToken) logger: Logger,
+    @inject(EnvToken) env: Env
   ) {
-    super('demandA', identity, attachment, node, addressResolver, db, logger)
+    super('demandA', identity, attachment, node, addressResolver, db, logger, env)
   }
 
   /**

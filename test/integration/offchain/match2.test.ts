@@ -34,6 +34,7 @@ import {
   seededMatch2Rematch2AcceptFinal,
   seededRematch2DemndBAllocated,
   seededRematch2DemndACreated,
+  seededMatch2IsNotMemberInReplacesId,
 } from '../../seeds/offchainSeeds/offchain.match2.seed.js'
 
 import {
@@ -140,9 +141,21 @@ describe('match2', () => {
       })
     })
 
-    it('should get all match2s - scope', async () => {
-      const { status } = await get(app, `/v1/match2`, {}, 'match2:read')
+    it('should get all match2s that user is a member of - scope', async () => {
+      const { status, body } = await get(app, `/v1/match2`, {}, 'match2:read')
       expect(status).to.equal(200)
+      expect(body.find(({ id }: { id: string }) => id === seededMatch2Id)).to.deep.equal({
+        id: seededMatch2Id,
+        state: 'pending',
+        optimiser: proxyAlias,
+        memberA: proxyAlias,
+        memberB: proxyAlias,
+        demandA: seededDemandAId,
+        demandB: seededDemandBId,
+        createdAt: exampleDate,
+        updatedAt: exampleDate,
+      })
+      expect(body.some(({ id }: { id: string }) => id === seededMatch2NotInRoles)).to.be.equal(false)
     })
 
     it('should filter based on updated date', async () => {
@@ -330,7 +343,7 @@ describe('match2', () => {
       expect(status).to.equal(200)
     })
 
-    it('accepts a remtch2 when it is in acceptedA state', async () => {
+    it('accepts a rematch2 when it is in acceptedA state', async () => {
       const { status, body } = await post(app, `/v1/match2/${seededMatch2Rematch2Accept}/accept`, {})
 
       expect(status).to.equal(201)
@@ -342,7 +355,7 @@ describe('match2', () => {
       })
     })
 
-    it('accepts a remtch2 when it is in acceptedA state - scope', async () => {
+    it('accepts a rematch2 when it is in acceptedA state - scope', async () => {
       const { status } = await post(app, `/v1/match2/${seededMatch2Rematch2Accept}/accept`, {}, {}, 'match2:accept')
       expect(status).to.equal(201)
     })
@@ -465,10 +478,31 @@ describe('match2', () => {
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
 
+    it('non-member when getting match2 - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}`, {}, 'match2:read')
+      expect(response.status).to.equal(404)
+    })
+
     it('incorrect state when creating on-chain - 400', async () => {
       const response = await post(app, `/v1/match2/${seededMatch2AcceptedA}/proposal`, {})
       expect(response.status).to.equal(400)
       expect(response.body).to.equal(`state must be pending, is: acceptedA`)
+    })
+
+    it('non-optimiser on match2 - 404', async () => {
+      const response = await post(app, `/v1/match2/${seededMatch2NotInRoles}/proposal`, {}, {}, 'match2:propose')
+      expect(response.status).to.equal(404)
+    })
+
+    it('non-optimiser on replaces match2 - 404', async () => {
+      const response = await post(
+        app,
+        `/v1/match2/${seededMatch2IsNotMemberInReplacesId}/proposal`,
+        {},
+        {},
+        'match2:propose'
+      )
+      expect(response.status).to.equal(404)
     })
 
     it('demandA missing token ID - 400', async () => {
@@ -521,6 +555,16 @@ describe('match2', () => {
       expect(response.body.message).to.contain('MISSING_SCOPES')
     })
 
+    it('non-member on match2 when getting a proposal - 404', async () => {
+      const response = await get(
+        app,
+        `/v1/match2/${seededMatch2NotInRoles}/proposal/${seededProposalTransactionId}`,
+        {},
+        'match2:read'
+      )
+      expect(response.status).to.equal(404)
+    })
+
     it('non-existent match2 when listing proposals - 404', async () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/proposal`)
       expect(response.status).to.equal(404)
@@ -537,6 +581,11 @@ describe('match2', () => {
       const response = await get(app, `/v1/match2/${seededMatch2Id}/proposal`, {}, '')
       expect(response.status).to.equal(401)
       expect(response.body.message).to.contain('MISSING_SCOPES')
+    })
+
+    it('non-member on match2 when getting proposals - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/proposal`, {}, 'match2:read')
+      expect(response.status).to.equal(404)
     })
 
     it('list proposals with invalid updatedSince - 422', async () => {
@@ -597,6 +646,12 @@ describe('match2', () => {
       expect(response.body).to.equal('match2 not found')
     })
 
+    it('non-member match2 id when accepting - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/accept`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
     it('non-existent match2 when listing accepts - 404', async () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/accept`)
       expect(response.status).to.equal(404)
@@ -627,6 +682,12 @@ describe('match2', () => {
 
     it('non-existent match2 when getting an accept - 404', async () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/accept/${seededAcceptTransactionId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-member match2 when getting an accept - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/accept/${seededAcceptTransactionId}`)
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('match2 not found')
     })
@@ -679,10 +740,11 @@ describe('match2', () => {
       expect(response.body).to.equal(`Match2 state must be one of: proposed, acceptedA, acceptedB`)
     })
 
-    it('rejection of match2 submitter not in roles - 400', async () => {
+    it('rejection of match2 submitter not in roles - 404', async () => {
       const response = await post(app, `/v1/match2/${seededMatch2NotInRoles}/rejection`, {})
-      expect(response.status).to.equal(400)
-      expect(response.body).to.equal(`You do not have a role on the match2`)
+      // Not found because match2 submitter can only see their matches they are members of
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal(`match2 not found`)
     })
 
     it('unauthenticated list match2 rejections - 401', async () => {
@@ -706,6 +768,12 @@ describe('match2', () => {
 
     it('non-existent match2 when listing rejections - 404', async () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/rejection`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-member match2 when listing rejections - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/rejection`)
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('match2 not found')
     })
@@ -753,6 +821,12 @@ describe('match2', () => {
       expect(response.body).to.equal('rejection not found')
     })
 
+    it('non-member transaction when getting a rejection - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/rejection/${nonExistentId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
     it('unauthenticated match2 cancel - 401', async () => {
       const { status } = await post(
         app,
@@ -779,12 +853,13 @@ describe('match2', () => {
       expect(response.body).to.equal('match2 not found')
     })
 
-    it('with invalid role - 400', async () => {
+    it('with invalid role - 404', async () => {
       const response = await post(app, `/v1/match2/619fb8ca-4dd9-4843-8c7a-9d9c9474784e/cancellation`, {
         attachmentId: parametersAttachmentId,
       })
-      expect(response.status).to.equal(400)
-      expect(response.body).to.equal('You do not have a role on the match2')
+      // Not found because only members and admin can see matches
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
     })
 
     it('with invalid state - 400', async () => {
@@ -829,6 +904,12 @@ describe('match2', () => {
       expect(response.body).to.equal('cancellation not found')
     })
 
+    it('non-member transaction when getting a cancellation - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/cancellation/${nonExistentId}`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
     it('unauthenticated list match2 cancellations - 401', async () => {
       const { status } = await get(app, `/v1/match2/${seededMatch2AcceptedFinal}/cancellation`, {
         authorization: 'bearer invalid',
@@ -844,6 +925,12 @@ describe('match2', () => {
 
     it('non-existent match2 when listing cancellations - 404', async () => {
       const response = await get(app, `/v1/match2/${nonExistentId}/cancellation`)
+      expect(response.status).to.equal(404)
+      expect(response.body).to.equal('match2 not found')
+    })
+
+    it('non-member match2 when listing cancellations - 404', async () => {
+      const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}/cancellation`)
       expect(response.status).to.equal(404)
       expect(response.body).to.equal('match2 not found')
     })

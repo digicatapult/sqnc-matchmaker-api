@@ -4,7 +4,13 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
 import { post } from '../../helper/routeHelper.js'
-import { seed, cleanup, seededDemandBId } from '../../seeds/onchainSeeds/demandB.seed.js'
+import {
+  seed,
+  cleanup,
+  seededDemandBId,
+  seededDemandBNotOwnedId,
+  seededDemandBMatchedNotOwnedId,
+} from '../../seeds/onchainSeeds/demandB.seed.js'
 import {
   MockDispatcherContext,
   parametersAttachmentId,
@@ -77,6 +83,39 @@ describe('on-chain', function () {
       } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
       const { status } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {}, {}, `demandB:create`)
       expect(status).to.equal(201)
+    })
+
+    it('returns 404 when attempting to create a demandB on chain - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandB/${seededDemandBNotOwnedId}/creation`,
+        {},
+        {},
+        `demandB:create`
+      )
+      expect(status).to.equal(404)
+    })
+
+    it('returns 401 when attempting to create a demandB on chain that is not owned but matched - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandB/${seededDemandBMatchedNotOwnedId}/creation`,
+        {},
+        {},
+        `demandB:create`
+      )
+      expect(status).to.equal(401)
+    })
+
+    it('returns 401 when attempting to create a demandB comment on chain this is not owned but matched - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandB/${seededDemandBMatchedNotOwnedId}/comment`,
+        {},
+        {},
+        `demandB:create`
+      )
+      expect(status).to.equal(401)
     })
 
     it('creates many demandBs on chain in parallel', async function () {

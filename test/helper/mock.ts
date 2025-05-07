@@ -1,6 +1,11 @@
 import { MockAgent, setGlobalDispatcher, getGlobalDispatcher, Dispatcher } from 'undici'
-import env from '../../src/env.js'
+import env, { EnvToken, rolesArray, envSchema } from '../../src/env.js'
+import type { Env } from '../../src/env.js'
 import { notOptimiserAddress } from '../seeds/offchainSeeds/authz.seed.js'
+
+import { cleanEnv } from 'envalid'
+import { container } from 'tsyringe'
+import { resetContainer } from '../../src/ioc.js'
 
 export const selfAlias = 'test-self'
 export const proxyAlias = '//Dave'
@@ -122,4 +127,21 @@ export const withAttachmentMock = (context: MockDispatcherContext) => {
       ])
       .persist()
   })
+}
+
+export function mockEnvWithRoles(roles: string[]) {
+  resetContainer()
+
+  const testEnv: Env = cleanEnv(
+    {
+      ...process.env,
+      ROLES: roles.join(','),
+    },
+    {
+      ...envSchema,
+      ROLES: rolesArray({ default: roles }),
+    }
+  )
+
+  container.registerInstance<Env>(EnvToken, testEnv)
 }

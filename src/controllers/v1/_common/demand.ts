@@ -12,7 +12,7 @@ import {
   DemandWithCommentsResponse,
 } from '../../../models/demand.js'
 import { DATE, UUID } from '../../../models/strings.js'
-import { BadRequest, NotFound, UnknownError } from '../../../lib/error-handler/index.js'
+import { BadRequest, NotFound, Unauthorized, UnknownError } from '../../../lib/error-handler/index.js'
 import { TransactionResponse } from '../../../models/transaction.js'
 import { demandCommentCreate, demandCreate } from '../../../lib/payload.js'
 import ChainNode from '../../../lib/chainNode.js'
@@ -22,12 +22,14 @@ import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 import Attachment from '../../../lib/services/attachment.js'
 import { TransactionRow, Where } from '../../../lib/db/types.js'
 import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
+import { Env } from '../../../env.js'
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
   dbDemandSubtype: DemandSubtype
   log: Logger
   db: Database
+  env: Env
 
   constructor(
     demandType: 'demandA' | 'demandB',
@@ -36,13 +38,15 @@ export class DemandController extends Controller {
     private node: ChainNode,
     private addressResolver: AddressResolver,
     db: Database,
-    logger: Logger
+    logger: Logger,
+    env: Env
   ) {
     super()
     this.demandType = demandType
     this.dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'
     this.log = logger.child({ controller: `/${this.demandType}` })
     this.db = db
+    this.env = env
   }
 
   public async createDemand({ parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
@@ -82,15 +86,59 @@ export class DemandController extends Controller {
     if (updated_since) {
       query.push(['updated_at', '>', parseDateParam(updated_since)])
     }
+    const selfAddress = (await this.addressResolver.determineSelfAddress()).address
+    const roles = this.env.ROLES
 
-    const demands = await this.db.get('demand', query)
-    const result = await Promise.all(demands.map(async (demand) => responseWithAlias(demand, this.identity)))
-    return result
+    if (roles.includes('optimiser') || roles.includes('admin')) {
+      // Privileged roles get all demands matching base query
+      return await Promise.all(
+        (await this.db.get('demand', query)).map(async (demand) => responseWithAlias(demand, this.identity))
+      )
+    }
+    // Owner's own demands
+    const ownedQuery: Where<'demand'> = [['owner', '=', selfAddress]]
+    if (updated_since) {
+      ownedQuery.push(['updated_at', '>', parseDateParam(updated_since)])
+    }
+    const ownedDemands = await this.db.get('demand', ownedQuery)
+
+    if (ownedDemands.length === 0) {
+      return []
+    }
+
+    const filteredOwnedDemands = ownedDemands.filter((demand) => demand.subtype === this.dbDemandSubtype)
+
+    const ownedDemandsOppositeSubTypeIds = ownedDemands
+      .filter((demand) => demand.subtype !== this.dbDemandSubtype)
+      .map((demand) => demand.id)
+
+    // Get all demands that are matched with the users demands
+    const match2Query: Where<'match2'> = [
+      [this.demandType === 'demandA' ? 'demand_b_id' : 'demand_a_id', 'IN', ownedDemandsOppositeSubTypeIds],
+    ]
+    const matches = await this.db.get('match2', match2Query)
+    const notOwnedDemandIds = matches.map((m) => (this.dbDemandSubtype === 'demand_a' ? m.demand_a_id : m.demand_b_id))
+    const matchedDemands = []
+    if (notOwnedDemandIds.length > 0) {
+      const matchedQuery: Where<'demand'> = [...query, ['id', 'IN', notOwnedDemandIds]]
+      if (updated_since) {
+        matchedQuery.push(['updated_at', '>', parseDateParam(updated_since)])
+      }
+      matchedDemands.push(...(await this.db.get('demand', matchedQuery)))
+    }
+
+    return await Promise.all(
+      [...filteredOwnedDemands, ...matchedDemands].map(async (demand) => responseWithAlias(demand, this.identity))
+    )
   }
 
   public async getDemand(demandId: UUID): Promise<DemandWithCommentsResponse> {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
+    // If you can view the demand, you are a admin optimiser
+    if (!(await this.canAccessDemand(demand, 'read'))) {
+      throw new NotFound(this.demandType)
+    }
 
     const comments = await this.db.get('demand_comment', { demand: demandId, state: 'created' }, [
       ['created_at', 'asc'],
@@ -102,6 +150,14 @@ export class DemandController extends Controller {
   public async createDemandOnChain(demandId: UUID): Promise<TransactionResponse> {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
+
+    if (!(await this.canAccessDemand(demand, 'createOnChain'))) {
+      if (!(await this.canAccessDemand(demand, 'read'))) {
+        throw new NotFound(this.demandType)
+      }
+      throw new Unauthorized(`You are not allowed to create demand ${demandId} on-chain`)
+    }
+
     if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
 
     const [attachment] = await this.attachment.getAttachments([demand.parameters_attachment_id])
@@ -128,6 +184,10 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
+    if (!(await this.canAccessDemand(demand, 'read'))) {
+      throw new NotFound(this.demandType)
+    }
+
     const [creation] = await this.db.get('transaction', {
       id: creationId,
       local_id: demand.id,
@@ -149,6 +209,10 @@ export class DemandController extends Controller {
     const [demandAB] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demandAB) throw new NotFound(this.demandType)
 
+    if (!(await this.canAccessDemand(demandAB, 'read'))) {
+      throw new NotFound(this.demandType)
+    }
+
     const dbTxs = await this.db.get('transaction', query)
     return dbTxs.map(dbTransactionToResponse)
   }
@@ -159,6 +223,13 @@ export class DemandController extends Controller {
   ): Promise<TransactionResponse> {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
+
+    if (!(await this.canAccessDemand(demand, 'createOnChain'))) {
+      if (!(await this.canAccessDemand(demand, 'read'))) {
+        throw new NotFound(this.demandType)
+      }
+      throw new Unauthorized(`You are not allowed to create demand ${demandId} on-chain`)
+    }
 
     const [comment] = await this.attachment.getAttachments([attachmentId])
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
@@ -195,6 +266,10 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
+    if (!(await this.canAccessDemand(demand, 'read'))) {
+      throw new NotFound(this.demandType)
+    }
+
     const [comment] = await this.db.get('transaction', {
       id: commentId,
       local_id: demand.id,
@@ -216,8 +291,32 @@ export class DemandController extends Controller {
     const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
+    if (!(await this.canAccessDemand(demand, 'read'))) {
+      throw new Unauthorized('You are not allowed to view this demand')
+    }
+
     const dbTxs = await this.db.get('transaction', query)
     return dbTxs.map(dbTransactionToResponse)
+  }
+
+  public async canAccessDemand(demand: DemandRow, accessType: 'read' | 'createOnChain'): Promise<boolean> {
+    const roles = this.env.ROLES
+    const member = await this.addressResolver.determineSelfAddress()
+
+    if (accessType === 'createOnChain') {
+      if (roles.includes('admin')) return true
+      if (demand.owner === member.address) return true
+      return false
+    }
+    if (accessType === 'read') {
+      if (roles.includes('admin') || roles.includes('optimizer')) return true
+      if (demand.owner === member.address) return true
+      const query: Where<'match2'> = [[this.demandType === 'demandA' ? 'demand_a_id' : 'demand_b_id', '=', demand.id]]
+      const [match] = await this.db.get('match2', query)
+      if (!match) return false
+      return [match.member_a, match.member_b].includes(member.address)
+    }
+    return false
   }
 }
 

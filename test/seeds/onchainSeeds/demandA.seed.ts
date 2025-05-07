@@ -1,7 +1,7 @@
 import { container } from 'tsyringe'
 import env from '../../../src/env.js'
 import Database from '../../../src/lib/db/index.js'
-import { parametersAttachmentId, proxyAddress, selfAddress } from '../../helper/mock.js'
+import { parametersAttachmentId, proxyAddress, selfAddress, notSelfAddress } from '../../helper/mock.js'
 import { dbInsert } from './helper.js'
 
 export const cleanup = async () => {
@@ -27,6 +27,7 @@ export const seededDemandBCommentTransactionId2 = '3e1b64cc-62e4-417c-b73e-e4f28
 export const seededProposalTransactionId = '8a5343dc-88a3-4b61-b156-330d52f506f8'
 export const seededAcceptTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07079'
 export const seededRejectionTransactionId = 'd8eb8a94-222b-4481-b315-1dcbf2e07078'
+export const seededDemandANotOwnedId = 'f8a2b0c1-4d3e-4a5f-8b57-c6d9e5f3a0b2'
 
 export const seededMatch2Id = 'f960e4a1-6182-4dd3-8ac2-6f3fad995551'
 export const exampleDate = '2023-01-01T00:00:00.000Z'
@@ -44,6 +45,7 @@ export const seededMatch2NotAcceptableA = '46d7dbe8-aaef-472e-af9f-ecdd2681d3a5'
 export const seededMatch2NotAcceptableB = '097d3905-72aa-4517-85d2-0091d26fceac'
 export const seededMatch2NotAcceptableBoth = '619fb8ca-4dd9-4843-8c7a-9d9c9474784d'
 export const seededMatch2NotInRoles = '619fb8ca-4dd9-4843-8c7a-9d9c9474784e'
+export const seededDemandAMatchedNotOwnedId = '817d1184-9670-4fb0-bb33-28582e5467b1'
 
 export const seed = async () => {
   const db = container.resolve(Database)
@@ -61,6 +63,63 @@ export const seed = async () => {
       updated_at: new Date(exampleDate),
       latest_token_id: null,
       original_token_id: null,
+    },
+  ])
+  await insert('demand', [
+    {
+      id: seededDemandANotOwnedId,
+      owner: notSelfAddress,
+      subtype: 'demand_a',
+      state: 'pending',
+      parameters_attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+    },
+  ])
+  await insert('demand', [
+    {
+      id: seededDemandAMatchedNotOwnedId,
+      owner: notSelfAddress,
+      subtype: 'demand_a',
+      state: 'allocated',
+      parameters_attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+    },
+  ])
+
+  await insert('demand', [
+    {
+      id: seededDemandBId,
+      owner: env.PROXY_FOR === '' ? selfAddress : proxyAddress,
+      subtype: 'demand_b',
+      state: 'pending',
+      parameters_attachment_id: parametersAttachmentId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+    },
+  ])
+
+  await insert('match2', [
+    {
+      id: seededMatch2Id,
+      state: 'pending',
+      optimiser: proxyAddress,
+      member_a: notSelfAddress,
+      member_b: env.PROXY_FOR === '' ? selfAddress : proxyAddress,
+      demand_a_id: seededDemandAMatchedNotOwnedId,
+      demand_b_id: seededDemandBId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: null,
+      original_token_id: null,
+      replaces_id: null,
     },
   ])
 }

@@ -4,7 +4,7 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
 import { post } from '../../helper/routeHelper.js'
-import { seed, cleanup, seededDemandAId } from '../../seeds/onchainSeeds/demandA.seed.js'
+import { seed, cleanup, seededDemandAId, seededDemandANotOwnedId } from '../../seeds/onchainSeeds/demandA.seed.js'
 
 import {
   MockDispatcherContext,
@@ -24,6 +24,7 @@ import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
 import env from '../../../src/env.js'
 import { logger } from '../../../src/lib/logger.js'
 import { DemandRow } from '../../../src/lib/db/types.js'
+import { seededDemandAMatchedNotOwnedId } from '../../seeds/offchainSeeds/demand.seed.js'
 
 describe('on-chain', function () {
   this.timeout(80000)
@@ -84,6 +85,39 @@ describe('on-chain', function () {
       } = await post(context.app, '/v1/demandA', { parametersAttachmentId })
       const { status } = await post(context.app, `/v1/demandA/${demandAId}/creation`, {}, {}, `demandA:create`)
       expect(status).to.equal(201)
+    })
+
+    it('returns 404 when attempting to create a demandA on chain that is not owned or matched - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandA/${seededDemandANotOwnedId}/creation`,
+        {},
+        {},
+        `demandA:create`
+      )
+      expect(status).to.equal(404)
+    })
+
+    it('returns 401 when attempting to create a demandA on chain this is not owned but matched - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandA/${seededDemandAMatchedNotOwnedId}/creation`,
+        {},
+        {},
+        `demandA:create`
+      )
+      expect(status).to.equal(401)
+    })
+
+    it('returns 401 when attempting to create a demandA comment on chain this is not owned but matched - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandA/${seededDemandAMatchedNotOwnedId}/comment`,
+        {},
+        {},
+        `demandA:create`
+      )
+      expect(status).to.equal(401)
     })
 
     it('creates many demandAs on chain in parallel', async function () {
