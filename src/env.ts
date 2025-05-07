@@ -68,7 +68,7 @@ export const envSchema = {
     devDefault: 'internal',
   }),
   INDEXER_RETRY_DELAY: envalid.num({ default: 1000 }),
-  ROLES: rolesArray({ default: ['member-a'] }),
+  ROLES: rolesArray({ devDefault: ['member-a'] }),
 }
 
 const env = envalid.cleanEnv(process.env, envSchema)
