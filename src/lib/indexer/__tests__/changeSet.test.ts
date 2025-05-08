@@ -2,7 +2,14 @@ import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
 import { findIdTestSet } from './fixtures/changeSet.js'
-import { AttachmentRecord, DemandRecord, MatchRecord, mergeChangeSets, findLocalIdInChangeSet } from '../changeSet.js'
+import {
+  AttachmentRecord,
+  DemandRecord,
+  MatchRecord,
+  mergeChangeSets,
+  findLocalIdInChangeSet,
+  PermissionRecord,
+} from '../changeSet.js'
 
 const mkAttachment: (i: number) => AttachmentRecord = (i) => ({
   type: 'insert',
@@ -25,6 +32,15 @@ const mkMatch2: (i: number) => MatchRecord = (i) => ({
   state: 'proposed',
 })
 
+const mkPermission: (i: number) => PermissionRecord = (i) => ({
+  type: 'insert',
+  id: `${i}`,
+  latest_token_id: i,
+  original_token_id: i,
+  owner: 'alice',
+  scope: 'member_a',
+})
+
 describe('changeSet', function () {
   describe('mergeChangeSets', function () {
     it('should return undefined if neither base or update have entries', function () {
@@ -37,6 +53,7 @@ describe('changeSet', function () {
         attachments: new Map([['123', mkAttachment(1)]]),
         demands: new Map([['123', mkDemand(1)]]),
         matches: new Map([['123', mkMatch2(1)]]),
+        permissions: new Map([['123', mkPermission(1)]]),
       }
       const result = mergeChangeSets(base, {})
       expect(result).to.deep.equal(base)
@@ -52,16 +69,29 @@ describe('changeSet', function () {
       expect(result).to.deep.equal(update)
     })
 
+    it('should return update only when update contains delete', function () {
+      const base = {
+        permissions: new Map([['123', mkPermission(1)]]),
+      }
+      const update = {
+        permissions: new Map([['123', { type: 'delete' as const, id: '123' }]]),
+      }
+      const result = mergeChangeSets(base, update)
+      expect(result).to.deep.equal(update)
+    })
+
     it('should include entries from base and update when keys are different', function () {
       const update = {
         attachments: new Map([['123', mkAttachment(1)]]),
         demands: new Map([['123', mkDemand(1)]]),
         matches: new Map([['123', mkMatch2(1)]]),
+        permissions: new Map([['123', mkPermission(1)]]),
       }
       const base = {
         attachments: new Map([['456', mkAttachment(2)]]),
         demands: new Map([['456', mkDemand(2)]]),
         matches: new Map([['456', mkMatch2(2)]]),
+        permissions: new Map([['456', mkPermission(2)]]),
       }
       const result = mergeChangeSets(base, update)
       expect(result).to.deep.equal({
@@ -76,6 +106,10 @@ describe('changeSet', function () {
         matches: new Map([
           ['123', mkMatch2(1)],
           ['456', mkMatch2(2)],
+        ]),
+        permissions: new Map([
+          ['123', mkPermission(1)],
+          ['456', mkPermission(2)],
         ]),
       })
     })
@@ -114,6 +148,11 @@ describe('changeSet', function () {
     it('should return id if token appears in matches', function () {
       const result = findLocalIdInChangeSet(findIdTestSet, 43)
       expect(result).to.equal('0x03')
+    })
+
+    it('should return id if token appears in permissions', function () {
+      const result = findLocalIdInChangeSet(findIdTestSet, 45)
+      expect(result).to.equal('0x06')
     })
   })
 })

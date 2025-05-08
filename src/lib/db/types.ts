@@ -11,6 +11,7 @@ export const tablesList = [
   'unprocessed_blocks',
   'demand_comment',
   'match2_comment',
+  'permission',
 ] as const
 
 export const demandStateParser = z.union([
@@ -72,6 +73,14 @@ const insertMatch2 = z.object({
   replaces_id: z.union([z.string(), z.null()]),
 })
 
+export const permissionScopeParser = z.union([z.literal('member_a'), z.literal('member_b'), z.literal('optimiser')])
+const insertPermission = z.object({
+  owner: z.string().max(48),
+  scope: permissionScopeParser,
+  latest_token_id: z.number(),
+  original_token_id: z.number(),
+})
+
 const insertBlock = z.object({
   hash: char64Parser,
   height: z.union([z.string(), z.number()]).transform((h) => BigInt(h)),
@@ -129,6 +138,10 @@ const Zod = {
     insert: insertMatch2Comment,
     get: insertMatch2Comment.merge(defaultFields),
   },
+  permission: {
+    insert: insertPermission,
+    get: insertPermission.merge(defaultFields),
+  },
 }
 
 export type InsertDemand = z.infer<typeof Zod.demand.insert>
@@ -145,6 +158,8 @@ export type InsertDemandComment = z.infer<typeof Zod.demand_comment.insert>
 export type DemandCommentRow = z.infer<typeof Zod.demand_comment.get>
 export type InsertMatch2Comment = z.infer<typeof Zod.match2_comment.insert>
 export type Match2CommentRow = z.infer<typeof Zod.match2_comment.get>
+export type InsertPermissionRow = z.infer<typeof Zod.permission.insert>
+export type PermissionRow = z.infer<typeof Zod.permission.get>
 
 export type TABLES_TUPLE = typeof tablesList
 export type TABLE = TABLES_TUPLE[number]
