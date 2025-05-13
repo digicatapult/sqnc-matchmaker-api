@@ -46,6 +46,8 @@ import {
   withIdentitySelfMock,
 } from '../../helper/mock.js'
 import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
+import { container } from 'tsyringe'
+import Database from '../../../src/lib/db/index.js'
 
 describe('match2', () => {
   let app: Express
@@ -481,6 +483,15 @@ describe('match2', () => {
     it('non-member when getting match2 - 404', async () => {
       const response = await get(app, `/v1/match2/${seededMatch2NotInRoles}`, {}, 'match2:read')
       expect(response.status).to.equal(404)
+    })
+
+    it(`match2 proposal when missing on-chain permissions`, async () => {
+      // remove permission from seeded data
+      const db = container.resolve(Database)
+      await db.delete('permission', { scope: 'optimiser' })
+
+      const response = await post(app, `/v1/match2/${seededMatch2Id}/proposal`, {})
+      expect(response.status).to.equal(401)
     })
 
     it('incorrect state when creating on-chain - 400', async () => {

@@ -6,11 +6,12 @@ import { cleanup } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
 import {
   MockDispatcherContext,
   parametersAttachmentId,
+  proxyAddress,
   withAttachmentMock,
   withDispatcherMock,
   withIdentitySelfMock,
 } from '../../helper/mock.js'
-import { withAppAndIndexer } from '../../helper/chainTest.js'
+import { withAllPermissions, withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import {
   createMatch2s,
@@ -36,6 +37,8 @@ describe('on-chain parallel', function () {
   const mock: MockDispatcherContext = {} as MockDispatcherContext
 
   withAppAndIndexer(context)
+  withAllPermissions(proxyAddress)
+
   withDispatcherMock(mock)
   withIdentitySelfMock(mock)
   withAttachmentMock(mock)

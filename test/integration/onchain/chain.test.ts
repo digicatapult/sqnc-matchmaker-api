@@ -6,16 +6,18 @@ import Indexer from '../../../src/lib/indexer/index.js'
 import { cleanup, seededDemandBId } from '../../seeds/onchainSeeds/transaction.seed.js'
 import {
   MockDispatcherContext,
+  proxyAddress,
   withAttachmentMock,
   withDispatcherMock,
   withIdentitySelfMock,
 } from '../../helper/mock.js'
-import ChainNode from '../../../src/lib/chainNode.js'
+
 import { pollTransactionState } from '../../helper/poll.js'
-import { withAppAndIndexer } from '../../helper/chainTest.js'
+import { withAllPermissions, withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import Database from '../../../src/lib/db/index.js'
 import { registerContainerInstances } from '../../helper/registerContainerInstances.js'
+import ChainNode from '../../../src/lib/chainNode.js'
 
 describe('on-chain', function () {
   this.timeout(60000)
@@ -23,10 +25,11 @@ describe('on-chain', function () {
   const db = container.resolve(Database)
   const node = container.resolve(ChainNode)
 
-  const context: { app: Express; indexer: Indexer } = {} as { app: Express; indexer: Indexer }
+  const context: { app: Express; indexer: Indexer } = {} as typeof context
   const mockContext: MockDispatcherContext = {} as MockDispatcherContext
 
   withAppAndIndexer(context)
+  withAllPermissions(proxyAddress)
 
   withDispatcherMock(mockContext)
   withIdentitySelfMock(mockContext)

@@ -10,7 +10,7 @@ token Permission {
 pub fn permission_create || => | permission: Permission | where {
   sender == root
 }
-pub fn permission_create | permission: Permission | => || where {
+pub fn permission_destroy | permission: Permission | => || where {
   sender == root
 }
 

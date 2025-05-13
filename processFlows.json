@@ -129,7 +129,7 @@
     "version": 1
   },
   {
-    "name": "permission_create",
+    "name": "permission_destroy",
     "program": [
       {
         "Restriction": {

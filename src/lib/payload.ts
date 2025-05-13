@@ -9,10 +9,13 @@ export interface Payload {
   outputs: Output[]
 }
 
-export interface Input {
-  type: 'TOKEN' | 'REFERENCE'
-  value: number
-}
+export type Input =
+  | {
+      Token: number
+    }
+  | {
+      Reference: number
+    }
 
 export interface Output {
   roles: Record<string, string>
@@ -28,7 +31,7 @@ export type Metadata = Record<string, { type: string; value: string | number }>
 
 export const demandCreate = (permission: PermissionRow, demand: DemandRow, attachment: AttachmentEntry): Payload => ({
   process: { id: 'demand_create', version: 2 },
-  inputs: [{ type: 'REFERENCE', value: permission.latest_token_id }],
+  inputs: [{ Reference: permission.latest_token_id }],
   outputs: [
     {
       roles: { owner: demand.owner },
@@ -45,7 +48,7 @@ export const demandCreate = (permission: PermissionRow, demand: DemandRow, attac
 
 export const demandCommentCreate = (demand: DemandRow, comment: AttachmentEntry): Payload => ({
   process: { id: 'demand_comment', version: 1 },
-  inputs: [{ type: 'TOKEN', value: demand.latest_token_id as number }],
+  inputs: [{ Token: demand.latest_token_id as number }],
   outputs: [
     {
       roles: { owner: demand.owner },
@@ -70,10 +73,10 @@ export const rematch2Propose = (
 ): Payload => ({
   process: { id: 'rematch2_propose', version: 2 },
   inputs: [
-    { type: 'REFERENCE', value: permission.latest_token_id as number },
-    { type: 'REFERENCE', value: demandA.latest_token_id as number },
-    { type: 'REFERENCE', value: originalMatch2.match2.latest_token_id as number },
-    { type: 'REFERENCE', value: demandB.latest_token_id as number },
+    { Reference: permission.latest_token_id as number },
+    { Reference: demandA.latest_token_id as number },
+    { Reference: originalMatch2.match2.latest_token_id as number },
+    { Reference: demandB.latest_token_id as number },
   ],
   outputs: [
     {
@@ -98,9 +101,9 @@ export const match2Propose = (
 ): Payload => ({
   process: { id: 'match2_propose', version: 2 },
   inputs: [
-    { type: 'REFERENCE', value: permission.latest_token_id },
-    { type: 'REFERENCE', value: demandA.latest_token_id as number },
-    { type: 'REFERENCE', value: demandB.latest_token_id as number },
+    { Reference: permission.latest_token_id },
+    { Reference: demandA.latest_token_id as number },
+    { Reference: demandB.latest_token_id as number },
   ],
   outputs: [
     {
@@ -124,7 +127,7 @@ export const match2AcceptFirst = (
   replaces?: number | null
 ): Payload => ({
   process: { id: 'match2_accept', version: 1 },
-  inputs: [{ type: 'TOKEN', value: match2.latest_token_id as number }],
+  inputs: [{ Token: match2.latest_token_id as number }],
   outputs: [
     {
       roles: { optimiser: match2.optimiser, member_a: match2.member_a, member_b: match2.member_b },
@@ -144,9 +147,9 @@ export const match2AcceptFirst = (
 export const match2AcceptFinal = (match2: Match2Row, demandA: DemandRow, demandB: DemandRow): Payload => ({
   process: { id: 'match2_acceptFinal', version: 1 },
   inputs: [
-    { type: 'TOKEN', value: demandA.latest_token_id as number },
-    { type: 'TOKEN', value: demandB.latest_token_id as number },
-    { type: 'TOKEN', value: match2.latest_token_id as number },
+    { Token: demandA.latest_token_id as number },
+    { Token: demandB.latest_token_id as number },
+    { Token: match2.latest_token_id as number },
   ],
   outputs: [
     {
@@ -191,9 +194,9 @@ export const match2Cancel = (
 ): Payload => ({
   process: { id: 'match2_cancel', version: 1 },
   inputs: [
-    { type: 'TOKEN', value: demandA.latest_token_id as number },
-    { type: 'TOKEN', value: demandB.latest_token_id as number },
-    { type: 'TOKEN', value: match2.latest_token_id as number },
+    { Token: demandA.latest_token_id as number },
+    { Token: demandB.latest_token_id as number },
+    { Token: match2.latest_token_id as number },
   ],
   outputs: [
     {
@@ -233,7 +236,7 @@ export const match2Cancel = (
 
 export const match2Reject = (match2: Match2Row): Payload => ({
   process: { id: 'match2_reject', version: 1 },
-  inputs: [{ type: 'TOKEN', value: match2.latest_token_id as number }],
+  inputs: [{ Token: match2.latest_token_id as number }],
   outputs: [],
 })
 
@@ -255,11 +258,11 @@ export const rematch2AcceptFinal = ({
 }: Rematch2AcceptFinal): Payload => ({
   process: { id: 'rematch2_acceptFinal', version: 2 },
   inputs: [
-    { type: 'REFERENCE', value: demandA.latest_token_id as number },
-    { type: 'TOKEN', value: oldDemandB.latest_token_id as number },
-    { type: 'TOKEN', value: oldMatch2.latest_token_id as number },
-    { type: 'TOKEN', value: demandB.latest_token_id as number },
-    { type: 'TOKEN', value: match2.latest_token_id as number },
+    { Reference: demandA.latest_token_id as number },
+    { Token: oldDemandB.latest_token_id as number },
+    { Token: oldMatch2.latest_token_id as number },
+    { Token: demandB.latest_token_id as number },
+    { Token: match2.latest_token_id as number },
   ],
   outputs: [
     {

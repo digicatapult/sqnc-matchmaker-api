@@ -24,7 +24,7 @@ const getRow = async (db: Database, method: Method, id: string): Promise<{ state
   }
 }
 
-const pollState =
+const pollStateById =
   (method: Method) =>
   async (db: Database, id: UUID, targetState: string, delay = 100, maxRetry = 100): Promise<void> => {
     try {
@@ -54,7 +54,39 @@ const pollState =
     }
   }
 
-export const pollTransactionState = pollState('getTransaction')
-export const pollDemandState = pollState('getDemand')
-export const pollDemandCommentState = pollState('getDemandCommentForTransaction')
-export const pollMatch2State = pollState('getMatch2')
+export const pollTransactionState = pollStateById('getTransaction')
+export const pollDemandState = pollStateById('getDemand')
+export const pollDemandCommentState = pollStateById('getDemandCommentForTransaction')
+export const pollMatch2State = pollStateById('getMatch2')
+
+export const pollPermissionState = async (
+  db: Database,
+  owner: string,
+  scope: 'member_a' | 'member_b' | 'optimiser',
+  delay = 100,
+  maxRetry = 100
+): Promise<void> => {
+  try {
+    let retry = 0
+
+    const poll = async (): Promise<void> => {
+      if (retry >= maxRetry) {
+        throw new Error(`Maximum number of retries exceeded while waiting for permission ${scope} for ${owner}`)
+      }
+
+      const [row] = await db.get('permission', { owner, scope })
+      if (row) {
+        return
+      }
+
+      retry += 1
+
+      return new Promise((resolve) => setTimeout(resolve, delay)).then(poll)
+    }
+
+    await poll()
+  } catch (e) {
+    const err = e as Error
+    throw new Error(`error: ${err.message}`)
+  }
+}

@@ -5,6 +5,7 @@ import { dbInsert } from './helper.js'
 
 export const cleanup = async () => {
   const db = container.resolve(Database)
+  await db.delete('permission', {})
   await db.delete('demand', {})
   await db.delete('transaction', {})
   await db.delete('match2', {})
@@ -62,10 +63,24 @@ const seededDemandBNotOwnedId = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d9'
 const seededMatch2TokenId = 43
 const seededDemandTokenId = 42
 
+export const permissionId = '610d34e6-52c4-4430-bf9d-f73f74d11304'
+
 export const match2Seed = async () => {
   const db = container.resolve(Database)
   const insert = dbInsert(db)
   await cleanup()
+
+  await insert('permission', [
+    {
+      id: permissionId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: 1,
+      original_token_id: 1,
+      owner: proxyAddress,
+      scope: 'optimiser',
+    },
+  ])
 
   await insert('demand', [
     {
