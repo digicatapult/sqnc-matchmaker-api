@@ -2,7 +2,19 @@
 Token specification example from l3. See https://github.com/digicatapult/sqnc-documentation/blob/main/docs/l3/index.md for details
 */
 
-// `token`s define token formats that should be persisted in transitions
+[#version(1)]
+token Permission {
+  owner: Role,
+  scope: "member_a" | "member_b" | "optimiser"
+}
+pub fn permission_create || => | permission: Permission | where {
+  sender == root
+}
+pub fn permission_destroy | permission: Permission | => || where {
+  sender == root
+}
+
+[#version(1)]
 token Demand {
   // fields can be of type Role, File, Literal, a specific literal, a token type or a union of any of these
   owner: Role,
@@ -12,6 +24,7 @@ token Demand {
   comment: None | File,
 }
 
+[#version(1)]
 token Match2 {
   optimiser: Role,
   member_a: Role,
@@ -23,9 +36,6 @@ token Match2 {
   comment: None | File,
 }
 
-// `fn`s define process flow restrictions and consist of a set of inputs, a set of outputs and a set of additional conditions
-// A `fn` can be private in which case it will not be published as a flow itself but can be referred to in the conditions of
-// other flows
 fn clone_demand_partial | a: Demand | => | b: Demand | where {
   a == b,
   a.owner == b.owner,
@@ -53,32 +63,36 @@ fn clone_match | a: Match2 | => | b: Match2 | where {
   a.state == b.state,
 }
 
-pub fn demand_create || => | out: Demand | where {
+[#version(2)]
+pub fn demand_create | permission: &Permission | => | out: Demand | where {
+  permission.owner == sender,
+  (permission.scope == "member_a" & out.subtype == "demand_a") |
+  (permission.scope == "member_b" & out.subtype == "demand_b"),
   out.owner == sender,
   out.state == "created",
   out.parameters: File
 }
 
-// public `fn` will be published as a process flow
+[#version(2)]
 pub fn match2_propose |
-  demand_a_in: Demand,
-  demand_b_in: Demand,
+  permission: &Permission,
+  demand_a: &Demand,
+  demand_b: &Demand,
 | => |
-  demand_a_out: Demand,
-  demand_b_out: Demand,
-  match2_out: Match2
+  match2: Match2
 | where {
-  clone_demand |demand_a_in | => |demand_a_out|,
-  demand_a_in.subtype == "demand_a",
-  clone_demand |demand_b_in | => |demand_b_out|,
-  demand_b_in.subtype == "demand_b",
-  match2_out.optimiser == sender,
-  (match2_out.demand_a == demand_a_in & match2_out.member_a == demand_a_in.owner) &
-  (match2_out.demand_b == demand_b_in & match2_out.member_b == demand_b_in.owner),
-  match2_out.state == "proposed",
-  match2_out.replaces: None
+  permission.owner == sender,
+  permission.scope == "optimiser",
+  demand_a.subtype == "demand_a",
+  demand_b.subtype == "demand_b",
+  match2.optimiser == sender,
+  (match2.demand_a == demand_a & match2.member_a == demand_a.owner) &
+  (match2.demand_b == demand_b & match2.member_b == demand_b.owner),
+  match2.state == "proposed",
+  match2.replaces: None
 }
 
+[#version(1)]
 pub fn match2_accept | in: Match2 | => | out: Match2 | where {
   clone_match_partial | in | => | out |,
   in.state == "proposed",
@@ -86,6 +100,7 @@ pub fn match2_accept | in: Match2 | => | out: Match2 | where {
   (out.state == "acceptedB" & out.member_b == sender)
 }
 
+[#version(1)]
 pub fn match2_acceptFinal | demand_a_in: Demand, demand_b_in: Demand, match_in: Match2 | => | demand_a_out: Demand, demand_b_out: Demand, match_out: Match2 | where {
   clone_demand_partial | demand_a_in | => | demand_a_out |,
   demand_a_in.subtype == "demand_a",
@@ -107,6 +122,7 @@ pub fn match2_acceptFinal | demand_a_in: Demand, demand_b_in: Demand, match_in: 
   match_out.replaces: None
 }
 
+[#version(1)]
 pub fn demand_comment | in: Demand | => | out: Demand | where {
   clone_demand | in | => | out |,
   out.comment: File
@@ -136,42 +152,42 @@ pub fn match2_cancel | demand_a_in: Demand, demand_b_in: Demand, match_in: Match
   match_out.member_a == sender | match_out.member_b == sender
 }
 
-pub fn rematch2_propose | demand_a_in: Demand, old_match_in: Match2, demand_b_in: Demand | => | demand_a_out: Demand, old_match_out: Match2, demand_b_out: Demand, new_match: Match2 | where {
-  clone_demand | demand_a_in | => | demand_a_out |,
-  demand_a_in.subtype == "demand_a",
-  demand_a_in.state == "allocated",
+[#version(2)]
+pub fn rematch2_propose | permission: &Permission, demand_a: &Demand, old_match: &Match2, demand_b: &Demand | => | new_match: Match2 | where {
+  permission.scope == "optimiser",
+  permission.owner == sender,
 
-  clone_demand | demand_b_in | => | demand_b_out |,
-  demand_b_in.subtype == "demand_b",
-  demand_b_in.state == "created",
+  demand_a.subtype == "demand_a",
+  demand_a.state == "allocated",
 
-  clone_match | old_match_in | => | old_match_out |,
-  old_match_out.demand_a == demand_a_in,
-  old_match_in.state == "acceptedFinal",
+  demand_b.subtype == "demand_b",
+  demand_b.state == "created",
+
+  old_match.demand_a == demand_a,
+  old_match.state == "acceptedFinal",
 
   new_match.optimiser == sender,
-  (new_match.demand_a == demand_a_in & new_match.member_a == demand_a_in.owner) |
-  (new_match.demand_b == demand_b_in & new_match.member_b == demand_b_in.owner),
+  (new_match.demand_a == demand_a & new_match.member_a == demand_a.owner) |
+  (new_match.demand_b == demand_b & new_match.member_b == demand_b.owner),
   new_match.state == "proposed",
-  new_match.replaces == old_match_in,
+  new_match.replaces == old_match,
 }
 
+[#version(2)]
 pub fn rematch2_acceptFinal |
-  demand_a_in: Demand,
+  demand_a: &Demand,
   old_demand_b_in: Demand,
   old_match_in: Match2,
   demand_b_in: Demand,
   new_match_in: Match2
 | => |
-  demand_a_out: Demand,
   old_demand_b_out: Demand,
   old_match_out: Match2,
   demand_b_out: Demand,
   new_match_out: Match2
 | where {
-  clone_demand | demand_a_in | => | demand_a_out |,
-  demand_a_in.subtype == "demand_a",
-  demand_a_in.state == "allocated",
+  demand_a.subtype == "demand_a",
+  demand_a.state == "allocated",
 
   clone_demand_partial | old_demand_b_in | => | old_demand_b_out |,
   old_demand_b_in.subtype == "demand_b",
@@ -181,7 +197,7 @@ pub fn rematch2_acceptFinal |
   clone_match_partial | old_match_in | => | old_match_out |,
   old_match_in.state == "acceptedFinal",
   old_match_out.state == "cancelled",
-  old_match_out.demand_a == demand_a_in,
+  old_match_out.demand_a == demand_a,
   old_match_out.demand_b == old_demand_b_in,
 
   clone_demand_partial | demand_b_in | => | demand_b_out |,
@@ -191,7 +207,7 @@ pub fn rematch2_acceptFinal |
 
   clone_match_partial | new_match_in | => | new_match_out |,
   new_match_out.state == "acceptedFinal",
-  new_match_out.demand_a == demand_a_in,
+  new_match_out.demand_a == demand_a,
   new_match_out.demand_b == demand_b_in,
   (new_match_in.state == "acceptedA" & new_match_out.member_b == sender) |
   (new_match_in.state == "acceptedB" & new_match_out.member_a == sender),
