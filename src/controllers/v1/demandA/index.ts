@@ -1,19 +1,4 @@
-import type express from 'express'
-
-import {
-  ValidateError,
-  Get,
-  Post,
-  Route,
-  Path,
-  Response,
-  Body,
-  SuccessResponse,
-  Tags,
-  Security,
-  Query,
-  Request,
-} from 'tsoa'
+import { ValidateError, Get, Post, Route, Path, Response, Body, SuccessResponse, Tags, Security, Query } from 'tsoa'
 import { inject, injectable } from 'tsyringe'
 
 import type {
@@ -33,6 +18,8 @@ import { LoggerToken } from '../../../lib/logger.js'
 import Database from '../../../lib/db/index.js'
 import type { Logger } from 'pino'
 import Attachment from '../../../lib/services/attachment.js'
+import type { Env } from '../../../env.js'
+import { EnvToken } from '../../../env.js'
 
 @Route('v1/demandA')
 @injectable()
@@ -45,9 +32,10 @@ export class DemandAController extends DemandController {
     node: ChainNode,
     addressResolver: AddressResolver,
     db: Database,
-    @inject(LoggerToken) logger: Logger
+    @inject(LoggerToken) logger: Logger,
+    @inject(EnvToken) env: Env
   ) {
-    super('demandA', identity, attachment, node, addressResolver, db, logger)
+    super('demandA', identity, attachment, node, addressResolver, db, logger, env)
   }
 
   /**
@@ -59,8 +47,8 @@ export class DemandAController extends DemandController {
   @Response<ValidateError>(422, 'Validation Failed')
   @Security('oauth2', ['demandA:prepare'])
   @SuccessResponse('201')
-  public async createDemandA(@Request() req: express.Request, @Body() body: DemandRequest): Promise<DemandResponse> {
-    return super.createDemand(req, body)
+  public async createDemandA(@Body() body: DemandRequest): Promise<DemandResponse> {
+    return super.createDemand(body)
   }
 
   /**
@@ -69,8 +57,8 @@ export class DemandAController extends DemandController {
    */
   @Security('oauth2', ['demandA:read'])
   @Get('/')
-  public async getAll(@Request() req: express.Request, @Query() updated_since?: DATE): Promise<DemandResponse[]> {
-    return super.getAll(req, updated_since)
+  public async getAll(@Query() updated_since?: DATE): Promise<DemandResponse[]> {
+    return super.getAll(updated_since)
   }
 
   /**
@@ -80,11 +68,8 @@ export class DemandAController extends DemandController {
   @Response<NotFound>(404, 'Item not found')
   @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}')
-  public async getDemandA(
-    @Request() req: express.Request,
-    @Path() demandAId: UUID
-  ): Promise<DemandWithCommentsResponse> {
-    return super.getDemand(req, demandAId)
+  public async getDemandA(@Path() demandAId: UUID): Promise<DemandWithCommentsResponse> {
+    return super.getDemand(demandAId)
   }
 
   /**
@@ -121,11 +106,11 @@ export class DemandAController extends DemandController {
   @SuccessResponse('200')
   @Security('oauth2', ['demandA:read'])
   @Get('{demandAId}/creation/')
-  public async getTransactionsFromDemandA(
+  public async getDemandACreations(
     @Path() demandAId: UUID,
     @Query() updated_since?: DATE
   ): Promise<TransactionResponse[]> {
-    return super.getTransactionsFromDemand(demandAId, updated_since)
+    return super.getDemandCreations(demandAId, updated_since)
   }
 
   /**
@@ -139,11 +124,10 @@ export class DemandAController extends DemandController {
   @Security('oauth2', ['demandA:comment'])
   @SuccessResponse('201')
   public async createDemandACommentOnChain(
-    @Request() req: express.Request,
     @Path() demandAId: UUID,
     @Body() body: DemandCommentRequest
   ): Promise<TransactionResponse> {
-    return super.createDemandCommentOnChain(req, demandAId, body)
+    return super.createDemandCommentOnChain(demandAId, body)
   }
 
   /**

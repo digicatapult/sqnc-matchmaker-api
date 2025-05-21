@@ -17,7 +17,7 @@ import {
   seededDemandACommentTransactionId2,
 } from '../../seeds/offchainSeeds/transaction.seed.js'
 import { resetContainer } from '../../../src/ioc.js'
-import { type Transaction } from '../../../src/lib/db/index.js'
+import { TransactionResponse } from '../../../src/models/transaction.js'
 
 describe('transaction', () => {
   resetContainer()
@@ -187,21 +187,21 @@ describe('transaction', () => {
     const { status, body } = await get(app, '/v1/transaction', {}, 'demandA:read')
 
     expect(status).to.equal(200)
-    expect(body.every((transaction: Transaction) => transaction.apiType === 'demand_a')).to.equal(true)
+    expect(body.every((transaction: TransactionResponse) => transaction.apiType === 'demand_a')).to.equal(true)
   })
 
   it('returns only demand_b transactions - scope', async () => {
     const { status, body } = await get(app, '/v1/transaction', {}, 'demandB:read')
 
     expect(status).to.equal(200)
-    expect(body.every((transaction: Transaction) => transaction.apiType === 'demand_b')).to.equal(true)
+    expect(body.every((transaction: TransactionResponse) => transaction.apiType === 'demand_b')).to.equal(true)
   })
 
   it('returns all match2 transactions - scope', async () => {
     const { status, body } = await get(app, '/v1/transaction', {}, 'match2:read')
 
     expect(status).to.equal(200)
-    expect(body.every((transaction: Transaction) => transaction.apiType === 'match2')).to.equal(true)
+    expect(body.every((transaction: TransactionResponse) => transaction.apiType === 'match2')).to.equal(true)
   })
 
   it('should return 401 listing transactions when unauthenticated', async () => {

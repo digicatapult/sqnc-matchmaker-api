@@ -9,7 +9,23 @@ if (process.env.NODE_ENV === 'test') {
   dotenv.config()
 }
 
-const env = envalid.cleanEnv(process.env, {
+export const allowedRoles = ['member-a', 'member-b', 'admin', 'optimiser'] as const
+
+export type Roles = (typeof allowedRoles)[number]
+
+export const rolesArray = envalid.makeValidator<string[]>((input) => {
+  const roles = input.split(',').map((s) => s.trim())
+
+  for (const role of roles) {
+    if (!allowedRoles.includes(role as Roles)) {
+      throw new Error(`Invalid role: ${role}. Allowed roles are: ${allowedRoles.join(', ')}`)
+    }
+  }
+
+  return roles
+})
+
+export const envSchema = {
   PORT: envalid.port({ default: 3000 }),
   LOG_LEVEL: envalid.str({ default: 'info', devDefault: 'debug' }),
   DB_HOST: envalid.str({ devDefault: 'localhost' }),
@@ -52,7 +68,10 @@ const env = envalid.cleanEnv(process.env, {
     devDefault: 'internal',
   }),
   INDEXER_RETRY_DELAY: envalid.num({ default: 1000 }),
-})
+  ROLES: rolesArray({ devDefault: ['member-a'] }),
+}
+
+const env = envalid.cleanEnv(process.env, envSchema)
 
 export default env
 

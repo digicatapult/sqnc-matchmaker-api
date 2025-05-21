@@ -1,9 +1,9 @@
 import type { Logger } from 'pino'
-import type express from 'express'
 
 import { Controller } from 'tsoa'
 
-import Database, { DemandCommentRow, DemandRow } from '../../../lib/db/index.js'
+import Database from '../../../lib/db/index.js'
+import type { DemandCommentRow, DemandRow } from '../../../lib/db/types.js'
 import {
   DemandResponse,
   DemandRequest,
@@ -12,21 +12,24 @@ import {
   DemandWithCommentsResponse,
 } from '../../../models/demand.js'
 import { DATE, UUID } from '../../../models/strings.js'
-import { BadRequest, NotFound, UnknownError } from '../../../lib/error-handler/index.js'
-import { TransactionResponse, TransactionType } from '../../../models/transaction.js'
+import { BadRequest, NotFound, Unauthorized, UnknownError } from '../../../lib/error-handler/index.js'
+import { TransactionResponse } from '../../../models/transaction.js'
 import { demandCommentCreate, demandCreate } from '../../../lib/payload.js'
 import ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import Identity from '../../../lib/services/identity.js'
-import { getAuthorization } from '../../../lib/utils/shared.js'
 import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 import Attachment from '../../../lib/services/attachment.js'
+import { TransactionRow, Where } from '../../../lib/db/types.js'
+import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
+import { Env } from '../../../env.js'
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'
-  dbDemandSubtype: 'demand_a' | 'demand_b'
+  dbDemandSubtype: DemandSubtype
   log: Logger
   db: Database
+  env: Env
 
   constructor(
     demandType: 'demandA' | 'demandB',
@@ -35,16 +38,18 @@ export class DemandController extends Controller {
     private node: ChainNode,
     private addressResolver: AddressResolver,
     db: Database,
-    logger: Logger
+    logger: Logger,
+    env: Env
   ) {
     super()
     this.demandType = demandType
     this.dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'
     this.log = logger.child({ controller: `/${this.demandType}` })
     this.db = db
+    this.env = env
   }
 
-  public async createDemand(req: express.Request, { parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
+  public async createDemand({ parametersAttachmentId }: DemandRequest): Promise<DemandResponse> {
     const [attachment] = await this.attachment.getAttachments([parametersAttachmentId])
 
     if (!attachment) {
@@ -53,15 +58,17 @@ export class DemandController extends Controller {
 
     // So self should be whoever is actually making this transaction -> which is Dave if there is a PROXY_FOR env (because then Alice is a proxy for Dave)
     // He is also the one who is associated with it in a db
-    const res = await this.addressResolver.determineSelfAddress(req)
+    const res = await this.addressResolver.determineSelfAddress()
     const selfAddress = res.address
     const selfAlias = res.alias
 
-    const [demand] = await this.db.insertDemand({
+    const [demand] = await this.db.insert('demand', {
       owner: selfAddress,
       subtype: this.dbDemandSubtype,
       state: 'pending',
       parameters_attachment_id: parametersAttachmentId,
+      latest_token_id: null,
+      original_token_id: null,
     })
 
     return {
@@ -74,99 +81,173 @@ export class DemandController extends Controller {
     }
   }
 
-  public async getAll(req: express.Request, updated_since?: DATE): Promise<DemandResponse[]> {
-    const query: { subtype: DemandSubtype; updatedSince?: Date } = { subtype: this.dbDemandSubtype }
+  public async getAll(updated_since?: DATE): Promise<DemandResponse[]> {
+    const query: Where<'demand'> = [['subtype', '=', this.dbDemandSubtype]]
     if (updated_since) {
-      query.updatedSince = parseDateParam(updated_since)
+      query.push(['updated_at', '>', parseDateParam(updated_since)])
+    }
+    const selfAddress = (await this.addressResolver.determineSelfAddress()).address
+    const roles = this.env.ROLES
+
+    if (roles.includes('optimiser') || roles.includes('admin')) {
+      // Privileged roles get all demands matching base query
+      return await Promise.all(
+        (await this.db.get('demand', query)).map(async (demand) => responseWithAlias(demand, this.identity))
+      )
+    }
+    // Owner's own demands
+    const ownedQuery: Where<'demand'> = [['owner', '=', selfAddress]]
+    if (updated_since) {
+      ownedQuery.push(['updated_at', '>', parseDateParam(updated_since)])
+    }
+    const ownedDemands = await this.db.get('demand', ownedQuery)
+
+    if (ownedDemands.length === 0) {
+      return []
     }
 
-    const demands = await this.db.getDemands(query)
-    const result = await Promise.all(demands.map(async (demand) => responseWithAlias(req, demand, this.identity)))
-    return result
+    const filteredOwnedDemands = ownedDemands.filter((demand) => demand.subtype === this.dbDemandSubtype)
+
+    const ownedDemandsOppositeSubTypeIds = ownedDemands
+      .filter((demand) => demand.subtype !== this.dbDemandSubtype)
+      .map((demand) => demand.id)
+
+    // Get all demands that are matched with the users demands
+    const match2Query: Where<'match2'> = [
+      [this.demandType === 'demandA' ? 'demand_b_id' : 'demand_a_id', 'IN', ownedDemandsOppositeSubTypeIds],
+    ]
+    const matches = await this.db.get('match2', match2Query)
+    const notOwnedDemandIds = matches.map((m) => (this.dbDemandSubtype === 'demand_a' ? m.demand_a_id : m.demand_b_id))
+    const matchedDemands = []
+    if (notOwnedDemandIds.length > 0) {
+      const matchedQuery: Where<'demand'> = [...query, ['id', 'IN', notOwnedDemandIds]]
+      if (updated_since) {
+        matchedQuery.push(['updated_at', '>', parseDateParam(updated_since)])
+      }
+      matchedDemands.push(...(await this.db.get('demand', matchedQuery)))
+    }
+
+    return await Promise.all(
+      [...filteredOwnedDemands, ...matchedDemands].map(async (demand) => responseWithAlias(demand, this.identity))
+    )
   }
 
-  public async getDemand(req: express.Request, demandId: UUID): Promise<DemandWithCommentsResponse> {
-    const [demand] = await this.db.getDemand(demandId)
+  public async getDemand(demandId: UUID): Promise<DemandWithCommentsResponse> {
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
+    // If you can view the demand, you are a admin optimiser
+    if (!(await this.canAccessDemand(demand, 'read'))) {
+      throw new NotFound(this.demandType)
+    }
 
-    const comments = await this.db.getDemandComments(demandId, 'created')
+    const comments = await this.db.get('demand_comment', { demand: demandId, state: 'created' }, [
+      ['created_at', 'asc'],
+    ])
 
-    return responseWithComments(req, await responseWithAlias(req, demand, this.identity), comments, this.identity)
+    return responseWithComments(await responseWithAlias(demand, this.identity), comments, this.identity)
   }
 
   public async createDemandOnChain(demandId: UUID): Promise<TransactionResponse> {
-    const [demand] = await this.db.getDemand(demandId)
-    if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
+    if (!demand) throw new NotFound(this.demandType)
+
+    if (!(await this.canAccessDemand(demand, 'createOnChain'))) {
+      if (!(await this.canAccessDemand(demand, 'read'))) {
+        throw new NotFound(this.demandType)
+      }
+      throw new Unauthorized(`You are not allowed to create demand ${demandId} on-chain`)
+    }
+
     if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
 
-    const [attachment] = await this.attachment.getAttachments([demand.parametersAttachmentId])
+    const [attachment] = await this.attachment.getAttachments([demand.parameters_attachment_id])
     if (!attachment) throw new UnknownError()
 
     const extrinsic = await this.node.prepareRunProcess(demandCreate(demand, attachment))
 
-    const [transaction] = await this.db.insertTransaction({
+    const [transaction] = await this.db.insert('transaction', {
       api_type: this.dbDemandSubtype,
       transaction_type: 'creation',
       local_id: demandId,
       state: 'submitted',
-      hash: extrinsic.hash.toHex(),
+      hash: extrinsic.hash.toHex().slice(2),
     })
 
-    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+    await this.node.submitRunProcess(extrinsic, async (state: TransactionRow['state']) => {
+      await this.db.update('transaction', { id: transaction.id }, { state })
+    })
 
-    return transaction
+    return dbTransactionToResponse(transaction)
   }
 
   public async getDemandCreation(demandId: UUID, creationId: UUID): Promise<TransactionResponse> {
-    const [demand] = await this.db.getDemand(demandId)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    const [creation] = await this.db.getTransaction(creationId)
-    if (!creation) throw new NotFound('creation')
-    return creation
-  }
-
-  public async getTransactionsFromDemand(demandId: UUID, updated_since?: DATE): Promise<TransactionResponse[]> {
-    const query: {
-      localId: UUID
-      transactionType: TransactionType
-      updatedSince?: Date
-    } = { localId: demandId, transactionType: 'creation' }
-    if (updated_since) {
-      query.updatedSince = parseDateParam(updated_since)
+    if (!(await this.canAccessDemand(demand, 'read'))) {
+      throw new NotFound(this.demandType)
     }
 
-    const [demandAB] = await this.db.getDemand(demandId)
+    const [creation] = await this.db.get('transaction', {
+      id: creationId,
+      local_id: demand.id,
+      transaction_type: 'creation',
+    })
+    if (!creation) throw new NotFound('creation')
+    return dbTransactionToResponse(creation)
+  }
+
+  public async getDemandCreations(demandId: UUID, updated_since?: DATE): Promise<TransactionResponse[]> {
+    const query: Where<'transaction'> = [
+      ['local_id', '=', demandId],
+      ['transaction_type', '=', 'creation'],
+    ]
+    if (updated_since) {
+      query.push(['updated_at', '>', parseDateParam(updated_since)])
+    }
+
+    const [demandAB] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demandAB) throw new NotFound(this.demandType)
 
-    return await this.db.getTransactionsByLocalId(query)
+    if (!(await this.canAccessDemand(demandAB, 'read'))) {
+      throw new NotFound(this.demandType)
+    }
+
+    const dbTxs = await this.db.get('transaction', query)
+    return dbTxs.map(dbTransactionToResponse)
   }
 
   public async createDemandCommentOnChain(
-    req: express.Request,
     demandId: UUID,
     { attachmentId }: DemandCommentRequest
   ): Promise<TransactionResponse> {
-    const [demand] = await this.db.getDemand(demandId)
-    if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
+    if (!demand) throw new NotFound(this.demandType)
+
+    if (!(await this.canAccessDemand(demand, 'createOnChain'))) {
+      if (!(await this.canAccessDemand(demand, 'read'))) {
+        throw new NotFound(this.demandType)
+      }
+      throw new Unauthorized(`You are not allowed to create demand ${demandId} on-chain`)
+    }
 
     const [comment] = await this.attachment.getAttachments([attachmentId])
     if (!comment) throw new BadRequest(`${attachmentId} not found`)
 
-    const res = await this.identity.getMemberBySelf(getAuthorization(req))
+    const res = await this.identity.getMemberBySelf()
     const selfAddress = res.address
 
     const extrinsic = await this.node.prepareRunProcess(demandCommentCreate(demand, comment))
 
-    const [transaction] = await this.db.insertTransaction({
+    const [transaction] = await this.db.insert('transaction', {
       api_type: this.dbDemandSubtype,
       transaction_type: 'comment',
       local_id: demandId,
       state: 'submitted',
-      hash: extrinsic.hash.toHex(),
+      hash: extrinsic.hash.toHex().slice(2),
     })
 
-    await this.db.insertDemandComment({
+    await this.db.insert('demand_comment', {
       transaction_id: transaction.id,
       state: 'pending',
       owner: selfAddress,
@@ -174,57 +255,86 @@ export class DemandController extends Controller {
       attachment_id: attachmentId,
     })
 
-    this.node.submitRunProcess(extrinsic, this.db.updateTransactionState(transaction.id))
+    await this.node.submitRunProcess(extrinsic, async (state) => {
+      await this.db.update('transaction', { id: transaction.id }, { state })
+    })
 
-    return transaction
+    return dbTransactionToResponse(transaction)
   }
 
   public async getDemandComment(demandId: UUID, commentId: UUID): Promise<TransactionResponse> {
-    const [demand] = await this.db.getDemand(demandId)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
     if (!demand) throw new NotFound(this.demandType)
 
-    const [comment] = await this.db.getTransaction(commentId)
+    if (!(await this.canAccessDemand(demand, 'read'))) {
+      throw new NotFound(this.demandType)
+    }
+
+    const [comment] = await this.db.get('transaction', {
+      id: commentId,
+      local_id: demand.id,
+      transaction_type: 'comment',
+    })
     if (!comment) throw new NotFound('comment')
-    return comment
+    return dbTransactionToResponse(comment)
   }
 
   public async getDemandComments(demandId: UUID, updated_since?: DATE): Promise<TransactionResponse[]> {
-    const query: {
-      localId: UUID
-      transactionType: TransactionType
-      updatedSince?: Date
-    } = { localId: demandId, transactionType: 'comment' }
+    const query: Where<'transaction'> = [
+      ['local_id', '=', demandId],
+      ['transaction_type', '=', 'comment'],
+    ]
     if (updated_since) {
-      query.updatedSince = parseDateParam(updated_since)
+      query.push(['updated_at', '>', parseDateParam(updated_since)])
     }
 
-    const [demand] = await this.db.getDemand(demandId)
-    if (!demand || demand.subtype !== this.dbDemandSubtype) throw new NotFound(this.demandType)
+    const [demand] = await this.db.get('demand', { id: demandId, subtype: this.dbDemandSubtype })
+    if (!demand) throw new NotFound(this.demandType)
 
-    return await this.db.getTransactionsByLocalId(query)
+    if (!(await this.canAccessDemand(demand, 'read'))) {
+      throw new Unauthorized('You are not allowed to view this demand')
+    }
+
+    const dbTxs = await this.db.get('transaction', query)
+    return dbTxs.map(dbTransactionToResponse)
+  }
+
+  public async canAccessDemand(demand: DemandRow, accessType: 'read' | 'createOnChain'): Promise<boolean> {
+    const roles = this.env.ROLES
+    const member = await this.addressResolver.determineSelfAddress()
+
+    if (accessType === 'createOnChain') {
+      if (roles.includes('admin')) return true
+      if (demand.owner === member.address) return true
+      return false
+    }
+    if (accessType === 'read') {
+      if (roles.includes('admin') || roles.includes('optimizer')) return true
+      if (demand.owner === member.address) return true
+      const query: Where<'match2'> = [[this.demandType === 'demandA' ? 'demand_a_id' : 'demand_b_id', '=', demand.id]]
+      const [match] = await this.db.get('match2', query)
+      if (!match) return false
+      return [match.member_a, match.member_b].includes(member.address)
+    }
+    return false
   }
 }
 
-const responseWithAlias = async (
-  req: express.Request,
-  demand: DemandRow,
-  identity: Identity
-): Promise<DemandResponse> => {
-  const res = await identity.getMemberByAddress(demand.owner, getAuthorization(req))
+const responseWithAlias = async (demand: DemandRow, identity: Identity): Promise<DemandResponse> => {
+  const res = await identity.getMemberByAddress(demand.owner)
   const ownerAlias = res.alias
 
   return {
     id: demand.id,
     owner: ownerAlias,
     state: demand.state,
-    parametersAttachmentId: demand.parametersAttachmentId,
-    createdAt: demand.createdAt.toISOString(),
-    updatedAt: demand.updatedAt.toISOString(),
+    parametersAttachmentId: demand.parameters_attachment_id,
+    createdAt: demand.created_at.toISOString(),
+    updatedAt: demand.updated_at.toISOString(),
   }
 }
 
 const responseWithComments = async (
-  req: express.Request,
   demand: DemandResponse,
   comments: DemandCommentRow[],
   identity: Identity
@@ -233,7 +343,7 @@ const responseWithComments = async (
   const aliasMap = new Map(
     await Promise.all(
       commentors.map(async (commentor) => {
-        const res = await identity.getMemberByAddress(commentor, getAuthorization(req))
+        const res = await identity.getMemberByAddress(commentor)
         const alias = res.alias
 
         return [commentor, alias] as const
@@ -242,9 +352,9 @@ const responseWithComments = async (
   )
   return {
     ...demand,
-    comments: comments.map(({ attachmentId, createdAt, owner }) => ({
-      attachmentId,
-      createdAt: createdAt.toISOString(),
+    comments: comments.map(({ attachment_id, created_at, owner }) => ({
+      attachmentId: attachment_id,
+      createdAt: created_at.toISOString(),
       owner: aliasMap.get(owner) as string,
     })),
   }

@@ -4,7 +4,13 @@ import { expect } from 'chai'
 
 import Indexer from '../../../src/lib/indexer/index.js'
 import { post } from '../../helper/routeHelper.js'
-import { seed, cleanup, seededDemandBId } from '../../seeds/onchainSeeds/demandB.seed.js'
+import {
+  seed,
+  cleanup,
+  seededDemandBId,
+  seededDemandBNotOwnedId,
+  seededDemandBMatchedNotOwnedId,
+} from '../../seeds/onchainSeeds/demandB.seed.js'
 import {
   MockDispatcherContext,
   parametersAttachmentId,
@@ -13,7 +19,7 @@ import {
   withDispatcherMock,
   withIdentitySelfMock,
 } from '../../helper/mock.js'
-import Database, { DemandRow } from '../../../src/lib/db/index.js'
+import Database from '../../../src/lib/db/index.js'
 import { pollDemandCommentState, pollDemandState, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
@@ -22,6 +28,7 @@ import { withProxy } from '../../helper/proxy.js'
 import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
 import { logger } from '../../../src/lib/logger.js'
 import env from '../../../src/env.js'
+import { DemandRow } from '../../../src/lib/db/types.js'
 
 describe('on-chain', function () {
   this.timeout(60000)
@@ -64,10 +71,10 @@ describe('on-chain', function () {
       await pollDemandState(db, seededDemandBId, 'created')
 
       // check local demandB updates with token id
-      const [maybeDemandB] = await db.getDemand(seededDemandBId)
+      const [maybeDemandB] = await db.get('demand', { id: seededDemandBId })
       const demandB = maybeDemandB as DemandRow
-      expect(demandB.latestTokenId).to.equal(lastTokenId + 1)
-      expect(demandB.originalTokenId).to.equal(lastTokenId + 1)
+      expect(demandB.latest_token_id).to.equal(lastTokenId + 1)
+      expect(demandB.original_token_id).to.equal(lastTokenId + 1)
     })
 
     it('creates a demandB on chain - scope', async () => {
@@ -76,6 +83,39 @@ describe('on-chain', function () {
       } = await post(context.app, '/v1/demandB', { parametersAttachmentId })
       const { status } = await post(context.app, `/v1/demandB/${demandBId}/creation`, {}, {}, `demandB:create`)
       expect(status).to.equal(201)
+    })
+
+    it('returns 404 when attempting to create a demandB on chain - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandB/${seededDemandBNotOwnedId}/creation`,
+        {},
+        {},
+        `demandB:create`
+      )
+      expect(status).to.equal(404)
+    })
+
+    it('returns 401 when attempting to create a demandB on chain that is not owned but matched - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandB/${seededDemandBMatchedNotOwnedId}/creation`,
+        {},
+        {},
+        `demandB:create`
+      )
+      expect(status).to.equal(401)
+    })
+
+    it('returns 401 when attempting to create a demandB comment on chain this is not owned but matched - scope', async () => {
+      const { status } = await post(
+        context.app,
+        `/v1/demandB/${seededDemandBMatchedNotOwnedId}/comment`,
+        {},
+        {},
+        `demandB:create`
+      )
+      expect(status).to.equal(401)
     })
 
     it('creates many demandBs on chain in parallel', async function () {
@@ -135,12 +175,12 @@ describe('on-chain', function () {
         fulfilledDemandIds.map(async (demand) => {
           await pollDemandState(db, demand, 'created', 500, 100)
 
-          const [demandA] = await db.getDemand(demand)
+          const [demandA] = await db.get('demand', { id: demand })
           expect(demandA).to.contain({
             id: demand,
             state: 'created',
             subtype: 'demand_b',
-            parametersAttachmentId,
+            parameters_attachment_id: parametersAttachmentId,
           })
         })
       )
@@ -193,20 +233,22 @@ describe('on-chain', function () {
       await pollDemandCommentState(db, commentResponse.body.id, 'created')
 
       // check local demandB updates with token id
-      const [maybeDemandB] = await db.getDemand(seededDemandBId)
+      const [maybeDemandB] = await db.get('demand', { id: seededDemandBId })
       const demandB = maybeDemandB as DemandRow
-      expect(demandB.latestTokenId).to.equal(lastTokenId + 2)
-      expect(demandB.originalTokenId).to.equal(lastTokenId + 1)
+      expect(demandB.latest_token_id).to.equal(lastTokenId + 2)
+      expect(demandB.original_token_id).to.equal(lastTokenId + 1)
 
-      const [maybeComment] = await db.getDemandCommentForTransaction(commentResponse.body.id)
+      const [maybeComment] = await db.get('demand_comment', { transaction_id: commentResponse.body.id })
       if (!maybeComment) {
         expect.fail('Expected comment to be in db')
       }
-      const { id, createdAt, ...comment } = maybeComment
+      const { id, created_at, updated_at, ...comment } = maybeComment
       expect(comment).to.deep.equal({
         owner: selfAddress,
-        attachmentId: parametersAttachmentId,
+        attachment_id: parametersAttachmentId,
         state: 'created',
+        transaction_id: commentResponse.body.id,
+        demand: seededDemandBId,
       })
     })
 
@@ -268,12 +310,12 @@ describe('on-chain', function () {
         fulfilledDemandIds.map(async (demand) => {
           await pollDemandState(db, demand, 'created', 500, 100)
 
-          const [demandB] = await db.getDemand(demand)
+          const [demandB] = await db.get('demand', { id: demand })
           expect(demandB).to.contain({
             id: demand,
             state: 'created',
             subtype: 'demand_b',
-            parametersAttachmentId,
+            parameters_attachment_id: parametersAttachmentId,
           })
         })
       )
@@ -299,15 +341,17 @@ describe('on-chain', function () {
         fulfilledCommentResponses.map(async (commentResponseId) => {
           await pollTransactionState(db, commentResponseId, 'finalised')
           await pollDemandCommentState(db, commentResponseId, 'created')
-          const [maybeComment] = await db.getDemandCommentForTransaction(commentResponseId)
+          const [maybeComment] = await db.get('demand_comment', { transaction_id: commentResponseId })
           if (!maybeComment) {
             expect.fail('Expected comment to be in db')
           }
-          const { id, createdAt, ...comment } = maybeComment
+          const { id, created_at, updated_at, ...comment } = maybeComment
           expect(comment).to.deep.equal({
             owner: selfAddress,
-            attachmentId: parametersAttachmentId,
+            attachment_id: parametersAttachmentId,
             state: 'created',
+            demand: comment.demand,
+            transaction_id: commentResponseId,
           })
         })
       )

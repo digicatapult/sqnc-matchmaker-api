@@ -1,11 +1,12 @@
 import { Express } from 'express'
-import Database, { DemandRow, Match2Row } from '../../src/lib/db/index.js'
+import Database from '../../src/lib/db/index.js'
 import { post } from './routeHelper.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from './poll.js'
 import { expect } from 'chai'
-import ChainNode from '../../src/lib/chainNode'
+import ChainNode from '../../src/lib/chainNode.js'
 import { Response } from 'supertest'
 import { parametersAttachmentId } from './mock.js'
+import { DemandRow, Match2Row } from '../../src/lib/db/types.js'
 
 export type DemandType = { originalTokenId: number; demandId: string; transactionId: any }
 
@@ -30,10 +31,10 @@ async function createDemand(
     body: { id: transactionId },
   } = await post(context.app, `/v1/${demandType}/${demandId}/creation`, {})
 
-  const [demand]: DemandRow[] = await db.getDemand(demandId)
+  const [demand]: DemandRow[] = await db.get('demand', { id: demandId })
 
   return {
-    originalTokenId: demand.originalTokenId as number,
+    originalTokenId: demand.original_token_id as number,
     demandId: demandId as string,
     transactionId,
   }
@@ -156,7 +157,7 @@ export async function verifyMatch2State(match2Ids: string[], expectedState: stri
 export async function verifyDemandState(demandIds: { demandId: string }[], expectedState: string, db: Database) {
   const results = await Promise.allSettled(
     demandIds.map(async ({ demandId }) => {
-      const [maybeDemand] = await db.getDemand(demandId)
+      const [maybeDemand] = await db.get('demand', { id: demandId })
       const demand = maybeDemand as DemandRow
       expect(demand.state).to.equal(expectedState)
     })
@@ -171,7 +172,7 @@ export async function verifyDemandState(demandIds: { demandId: string }[], expec
 export async function verifyMatch2DatabaseState(match2Ids: string[], expectedState: string, db: Database) {
   const results = await Promise.allSettled(
     match2Ids.map(async (match2Id) => {
-      const [maybeMatch2] = await db.getMatch2(match2Id)
+      const [maybeMatch2] = await db.get('match2', { id: match2Id })
       const match2 = maybeMatch2 as Match2Row
       expect(match2.state).to.equal(expectedState)
     })

@@ -1,9 +1,9 @@
 import sinon from 'sinon'
 
-import Database from '../../../db/index.js'
 import Attachment from '../../../services/attachment.js'
+import { IndexerDatabaseExtensions } from '../../indexerDb.js'
 
-type LastProcessBlockResult = { hash: string; parent: string; height: number } | null
+type LastProcessBlockResult = { hash: string; parent: string; height: bigint } | null
 
 export const withLastProcessedBlocksByCall = (calls: LastProcessBlockResult[]) => {
   let getMock = sinon.stub().resolves(calls.at(-1))
@@ -14,26 +14,26 @@ export const withLastProcessedBlocksByCall = (calls: LastProcessBlockResult[]) =
   const insertProcessedBlock = sinon.stub().resolves()
   const getNextUnprocessedBlockAboveHeight = sinon
     .stub()
-    .callsFake((height) => Promise.resolve({ hash: `${height}-hash` }))
+    .callsFake((height) => Promise.resolve({ hash: `${height}-hash`, height: BigInt(height) }))
   const tryInsertUnprocessedBlock = sinon.stub().resolves()
   const getNextUnprocessedBlockAtHeight = sinon
     .stub()
-    .callsFake((height) => Promise.resolve({ hash: `${height}-hash` }))
+    .callsFake((height) => Promise.resolve({ hash: `${height}-hash`, height: BigInt(height) }))
 
   const self = {
     tryInsertUnprocessedBlock,
     getNextUnprocessedBlockAtHeight,
     getNextUnprocessedBlockAboveHeight,
     getLastProcessedBlock: sinon.stub().resolves(calls[2]),
-    withTransaction: sinon.spy(async function (fn: (db: Database) => Promise<void>) {
+    withTransaction: sinon.spy(async function (fn: (db: IndexerDatabaseExtensions) => Promise<void>) {
       await fn({
         tryInsertUnprocessedBlock,
         getNextUnprocessedBlockAtHeight,
         getNextUnprocessedBlockAboveHeight,
         insertProcessedBlock,
-      } as unknown as Database)
+      } as unknown as IndexerDatabaseExtensions)
     }),
-  } as unknown as Database
+  } as unknown as IndexerDatabaseExtensions
 
   return self
 }
@@ -50,11 +50,13 @@ export const withInitialLastProcessedBlock = (initial: LastProcessBlockResult) =
   const updateMatch2 = sinon.stub().resolves()
   const insertDemand = sinon.stub().resolves()
   const insertMatch2 = sinon.stub().resolves()
-  const getNextUnprocessedBlockAboveHeight = sinon.stub().callsFake((height) => ({ hash: `${height}-hash` }))
+  const getNextUnprocessedBlockAboveHeight = sinon
+    .stub()
+    .callsFake((height) => ({ hash: `${height}-hash`, height: BigInt(height) }))
   const tryInsertUnprocessedBlock = sinon.stub().resolves()
   const getNextUnprocessedBlockAtHeight = sinon
     .stub()
-    .callsFake((height) => Promise.resolve({ hash: `${height}-hash` }))
+    .callsFake((height) => Promise.resolve({ hash: `${height}-hash`, height: BigInt(height) }))
 
   return {
     tryInsertUnprocessedBlock,
@@ -66,7 +68,7 @@ export const withInitialLastProcessedBlock = (initial: LastProcessBlockResult) =
     insertDemand,
     insertMatch2,
     insertProcessedBlock,
-    withTransaction: sinon.spy(async function (fn: (db: Database) => Promise<void>) {
+    withTransaction: sinon.spy(async function (fn: (db: IndexerDatabaseExtensions) => Promise<void>) {
       await fn({
         getNextUnprocessedBlockAboveHeight,
         getNextUnprocessedBlockAtHeight,
@@ -76,9 +78,9 @@ export const withInitialLastProcessedBlock = (initial: LastProcessBlockResult) =
         insertDemand,
         insertMatch2,
         tryInsertUnprocessedBlock,
-      } as unknown as Database)
+      } as unknown as IndexerDatabaseExtensions)
     }),
-  } as unknown as Database
+  } as unknown as IndexerDatabaseExtensions
 }
 
 export const withInitialLastProcessedBlockAndTxError = (initial: LastProcessBlockResult) => {
@@ -93,11 +95,13 @@ export const withInitialLastProcessedBlockAndTxError = (initial: LastProcessBloc
   const updateMatch2 = sinon.stub().resolves()
   const insertDemand = sinon.stub().resolves()
   const insertMatch2 = sinon.stub().resolves()
-  const getNextUnprocessedBlockAboveHeight = sinon.stub().callsFake((height) => ({ hash: `${height}-hash` }))
+  const getNextUnprocessedBlockAboveHeight = sinon
+    .stub()
+    .callsFake((height) => ({ hash: `${height}-hash`, height: BigInt(height) }))
   const tryInsertUnprocessedBlock = sinon.stub().resolves()
   const getNextUnprocessedBlockAtHeight = sinon
     .stub()
-    .callsFake((height) => Promise.resolve({ hash: `${height}-hash` }))
+    .callsFake((height) => Promise.resolve({ hash: `${height}-hash`, height: BigInt(height) }))
 
   return {
     tryInsertUnprocessedBlock,
@@ -111,7 +115,7 @@ export const withInitialLastProcessedBlockAndTxError = (initial: LastProcessBloc
     insertProcessedBlock,
     withTransaction: sinon
       .stub()
-      .callsFake(async function (fn: (db: Database) => Promise<void>) {
+      .callsFake(async function (fn: (db: IndexerDatabaseExtensions) => Promise<void>) {
         await fn({
           getNextUnprocessedBlockAboveHeight,
           getNextUnprocessedBlockAtHeight,
@@ -121,11 +125,11 @@ export const withInitialLastProcessedBlockAndTxError = (initial: LastProcessBloc
           insertDemand,
           insertMatch2,
           tryInsertUnprocessedBlock,
-        } as unknown as Database)
+        } as unknown as IndexerDatabaseExtensions)
       })
       .onFirstCall()
       .rejects(new Error('Transaction error')),
-  } as unknown as Database
+  } as unknown as IndexerDatabaseExtensions
 }
 
 export const withMockAttachment = () => {
@@ -139,5 +143,5 @@ export const withTransactionMatchingTokensInDb = (tx: null | object, tokens: Map
   return {
     findTransaction: sinon.stub().resolves(tx),
     findLocalIdForToken: sinon.stub().callsFake((id: number) => Promise.resolve(tokens.get(id))),
-  } as unknown as Database
+  } as unknown as IndexerDatabaseExtensions
 }

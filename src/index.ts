@@ -10,6 +10,8 @@ import { LoggerToken } from './lib/logger.js'
 import { Logger } from 'pino'
 
 import ChainNode from './lib/chainNode.js'
+import Identity from './lib/services/identity.js'
+import AuthInternal from './lib/services/authInternal.js'
 ;(async () => {
   // Register singletons in tsyringe
   resetContainer()
@@ -17,10 +19,13 @@ import ChainNode from './lib/chainNode.js'
   const env = container.resolve<Env>(EnvToken)
   const app: Express = await Server()
 
+  const identity = container.resolve<Identity>(Identity)
+  const authInternal = container.resolve<AuthInternal>(AuthInternal)
+  await identity.updateRole('Optimiser', `bearer ${await authInternal.getInternalAccessToken()}`)
+
   if (env.ENABLE_INDEXER) {
     const node = container.resolve(ChainNode)
 
-    // container.registerSingleton(Indexer)
     const indexer = container.resolve(Indexer)
 
     await indexer.start()

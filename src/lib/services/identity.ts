@@ -5,12 +5,14 @@ import { NotFound, HttpResponse } from '../error-handler/index.js'
 import env from '../../env.js'
 import { Status, serviceState } from '../service-watcher/statusPoll.js'
 import { logger } from '../logger.js'
+import AuthInternal from './authInternal.js'
 
 const identityResponseValidator = z.object({
   address: z.string(),
   alias: z.string(),
+  role: z.union([z.undefined(), z.literal('Optimiser'), z.literal('Self')]).optional(),
 })
-type IdentityResponse = z.infer<typeof identityResponseValidator>
+export type IdentityResponse = z.infer<typeof identityResponseValidator>
 
 const identityHealthValidator = z.object({
   version: z.string(),
@@ -22,7 +24,7 @@ type IdentityHealthResponse = z.infer<typeof identityHealthValidator>
 export default class Identity {
   private URL_PREFIX: string
 
-  constructor() {
+  constructor(private authInternal: AuthInternal) {
     this.URL_PREFIX = `http://${env.IDENTITY_SERVICE_HOST}:${env.IDENTITY_SERVICE_PORT}`
   }
 
@@ -57,10 +59,10 @@ export default class Identity {
       }
     }
   }
-  getMemberByAlias = async (alias: string, authorization: string): Promise<IdentityResponse> => {
+  getMemberByAlias = async (alias: string): Promise<IdentityResponse> => {
     const res = await fetch(`${this.URL_PREFIX}/v1/members/${encodeURIComponent(alias)}`, {
       headers: {
-        authorization,
+        authorization: `bearer ${await this.authInternal.getInternalAccessToken()}`,
       },
     })
 
@@ -85,10 +87,10 @@ export default class Identity {
     throw new HttpResponse({})
   }
 
-  getMemberBySelf = async (authorization: string): Promise<IdentityResponse> => {
+  getMemberBySelf = async (): Promise<IdentityResponse> => {
     const res = await fetch(`${this.URL_PREFIX}/v1/self`, {
       headers: {
-        authorization,
+        authorization: `bearer ${await this.authInternal.getInternalAccessToken()}`,
       },
     })
 
@@ -99,5 +101,37 @@ export default class Identity {
     throw new HttpResponse({})
   }
 
-  getMemberByAddress = (alias: string, authorization: string) => this.getMemberByAlias(alias, authorization)
+  getMemberByAddress = (alias: string) => this.getMemberByAlias(alias)
+
+  async updateRole(role: string, authorization: string): Promise<void> {
+    const res = await fetch(`${this.URL_PREFIX}/v1/roles/${role}`, {
+      method: 'PUT',
+      headers: {
+        authorization,
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!res.ok) {
+      throw new HttpResponse({
+        message: 'Failed to update role',
+      })
+    }
+  }
+
+  async getAllRoles(authorization: string): Promise<string[]> {
+    const res = await fetch(`${this.URL_PREFIX}/v1/roles`, {
+      headers: {
+        authorization,
+      },
+    })
+
+    if (res.ok) {
+      const roles = await res.json()
+      return roles
+    }
+
+    throw new HttpResponse({
+      message: 'Failed to fetch roles',
+    })
+  }
 }
