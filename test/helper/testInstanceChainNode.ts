@@ -61,7 +61,7 @@ export default class ExtendedChainNode extends ChainNode {
     }
   }
 
-  async addProxy({ delegatingAlias, proxyAddress, proxyType, delay = 0 }: ProxyRequest) {
+  async addProxy({ delegatingAlias, proxyAddress, proxyType, delay = 0 }: ProxyRequest): Promise<SubmittableExtrinsic<'promise', SubmittableResult>> {
     // The proxy address (the account you want to set as a proxy for the delegatingAlias provided)
     // Proxy type (e.g., Any, Governance,RunProcess)
     // Delay in blocks (typically 0)
@@ -79,7 +79,7 @@ export default class ExtendedChainNode extends ChainNode {
     const signed = await result.signAsync(account, { nonce })
     return signed
   }
-  async removeProxy({ delegatingAlias, proxyAddress, proxyType, delay = 0 }: ProxyRequest) {
+  async removeProxy({ delegatingAlias, proxyAddress, proxyType, delay = 0 }: ProxyRequest): Promise<SubmittableExtrinsic<'promise', SubmittableResult>> {
     await this.api.isReady
     const result = this.api.tx.proxy.removeProxy(proxyAddress, proxyType, delay)
 
