@@ -9,6 +9,7 @@ import { seed, cleanup, seededDemandAId, seededDemandANotOwnedId } from '../../s
 import {
   MockDispatcherContext,
   parametersAttachmentId,
+  proxyAddress,
   selfAddress,
   withAttachmentMock,
   withDispatcherMock,
@@ -16,7 +17,7 @@ import {
 } from '../../helper/mock.js'
 import Database from '../../../src/lib/db/index.js'
 import { pollTransactionState, pollDemandState, pollDemandCommentState } from '../../helper/poll.js'
-import { withAppAndIndexer } from '../../helper/chainTest.js'
+import { withAllPermissions, withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
 import { filterRejectedAndAcceptedPromises } from '../../helper/parallelTests.js'
 import { withProxy } from '../../helper/proxy.js'
@@ -34,6 +35,7 @@ describe('on-chain', function () {
   const mock: MockDispatcherContext = {} as MockDispatcherContext
 
   withAppAndIndexer(context)
+  withAllPermissions(proxyAddress)
 
   withDispatcherMock(mock)
   withIdentitySelfMock(mock)
