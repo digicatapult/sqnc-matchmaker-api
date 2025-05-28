@@ -14,7 +14,6 @@ import { hexToBs58 } from '../utils/hex.js'
 import { trim0x } from './utils/shared.js'
 import { LoggerToken } from './logger.js'
 import { type Env, EnvToken } from '../env.js'
-import { ISubmittableResult } from '@polkadot/types/types'
 
 const processRanTopic = blake2AsHex('utxoNFT.ProcessRan')
 
@@ -107,9 +106,9 @@ export default class ChainNode {
     return {
       status: serviceState.UP,
       detail: {
-        chain,
+        chain: chain.toString(),
         runtime: {
-          name: runtime.specName,
+          name: runtime.specName.toString(),
           versions: {
             spec: runtime.specVersion.toNumber(),
             impl: runtime.implVersion.toNumber(),
@@ -155,7 +154,7 @@ export default class ChainNode {
 
     await this.api.isReady
     //optionally use proxy here
-    let extrinsic: SubmittableExtrinsic<'promise', ISubmittableResult> = this.api.tx.utxoNFT.runProcess(
+    let extrinsic: SubmittableExtrinsic<'promise', SubmittableResult> = this.api.tx.utxoNFT.runProcess(
       process,
       inputs,
       fulfilledOutputs
@@ -326,8 +325,8 @@ export default class ChainNode {
     }
   }
 
-  async sealBlock(createEmpty: boolean = true, finalise: boolean = true) {
-    return await this.api.rpc.engine.createBlock(createEmpty, finalise)
+  async sealBlock(createEmpty: boolean = true, finalise: boolean = true): Promise<void> {
+    await this.api.rpc.engine.createBlock(createEmpty, finalise)
   }
 
   // continue sealing blocks if there are transactions
