@@ -63,7 +63,7 @@ services:
     networks: ['member-a']
 
   member-a-identity:
-    image: digicatapult/sqnc-identity-service:v4.2.29
+    image: digicatapult/sqnc-identity-service:v4.2.35
     container_name: member-a-identity
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -90,7 +90,7 @@ services:
     networks: ['member-a']
 
   member-a-attachment:
-    image: digicatapult/sqnc-attachment-api:v3.0.33
+    image: digicatapult/sqnc-attachment-api:v3.1.7
     container_name: member-a-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -220,7 +220,7 @@ services:
     networks: ['member-b']
 
   member-b-identity:
-    image: digicatapult/sqnc-identity-service:v4.2.29
+    image: digicatapult/sqnc-identity-service:v4.2.35
     container_name: member-b-identity
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -247,7 +247,7 @@ services:
     networks: ['member-b']
 
   member-b-attachment:
-    image: digicatapult/sqnc-attachment-api:v3.0.33
+    image: digicatapult/sqnc-attachment-api:v3.1.7
     container_name: member-b-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -385,7 +385,7 @@ services:
     networks: ['optimiser']
 
   optimiser-identity:
-    image: digicatapult/sqnc-identity-service:v4.2.29
+    image: digicatapult/sqnc-identity-service:v4.2.35
     container_name: optimiser-identity
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -412,7 +412,7 @@ services:
     networks: ['optimiser']
 
   optimiser-attachment:
-    image: digicatapult/sqnc-attachment-api:v3.0.33
+    image: digicatapult/sqnc-attachment-api:v3.1.7
     container_name: optimiser-attachment
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -504,7 +504,7 @@ services:
 
   # ------------------------------------------------------------------------ ipfs
   ipfs:
-    image: ipfs/go-ipfs:v0.34.1
+    image: ipfs/go-ipfs:v0.35.0
     container_name: ipfs
     environment:
       - |
@@ -521,7 +521,7 @@ services:
 
   # ------------------------------------------------------------------------ keycloak
   keycloak:
-    image: quay.io/keycloak/keycloak:26.2.4
+    image: quay.io/keycloak/keycloak:26.2.5
     container_name: keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
