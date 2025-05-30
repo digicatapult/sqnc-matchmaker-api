@@ -92,6 +92,7 @@ services:
       - IDP_EXTERNAL_REALM=external
       - IDP_INTERNAL_CLIENT_ID=sequence
       - IDP_INTERNAL_CLIENT_SECRET=secret
+      - CREDENTIALS_FILE_PATH=/app/docker/config/credentials.json
       - AUTHZ_WEBHOOK=http://localhost:3000/v1/authz
 
   sqnc-node:
