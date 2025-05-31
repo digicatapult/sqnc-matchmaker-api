@@ -118,7 +118,7 @@ services:
     networks: ['member-a', 'ipfs']
 
   member-a-node:
-    image: digicatapult/sqnc-node:v12.5.1
+    image: digicatapult/sqnc-node:v13.0.0
     container_name: member-a-node
     command: --base-path /data --alice --unsafe-rpc-external --rpc-cors all --node-key 0000000000000000000000000000000000000000000000000000000000000001
     ports:
@@ -275,7 +275,7 @@ services:
     networks: ['member-b', 'ipfs']
 
   member-b-node:
-    image: digicatapult/sqnc-node:v12.5.1
+    image: digicatapult/sqnc-node:v13.0.0
     container_name: member-b-node
     command: |
       --base-path /data/
@@ -440,7 +440,7 @@ services:
     networks: ['optimiser', 'ipfs']
 
   optimiser-node:
-    image: digicatapult/sqnc-node:v12.5.1
+    image: digicatapult/sqnc-node:v13.0.0
     container_name: optimiser-node
     command: |
       --base-path /data/
