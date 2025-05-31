@@ -264,6 +264,18 @@ export default class Indexer {
       }
       await db.insertProcessedBlock({ ...header, height: BigInt(header.height) })
 
+      if (changeSet.permissions) {
+        for (const [, permission] of changeSet.permissions) {
+          if (permission.type === 'insert') {
+            const { type, ...record } = permission
+            await db.insertPermission(record)
+          } else {
+            const { id } = permission
+            await db.deletePermission(id)
+          }
+        }
+      }
+
       if (changeSet.demands) {
         for (const [, demand] of changeSet.demands) {
           if (demand.type === 'insert') {
