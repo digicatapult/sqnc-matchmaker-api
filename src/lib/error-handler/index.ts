@@ -82,10 +82,10 @@ export const errorHandler = function errorHandler(
   req: ExRequest,
   res: ExResponse,
   next: NextFunction
-): ExResponse | void {
+): void {
   const logger = container.resolve<Logger>(LoggerToken)
   if (err instanceof OauthError || err instanceof AggregateOAuthError) {
-    return res.status(401).send({
+    res.status(401).send({
       message: err.message,
     })
   }
@@ -94,24 +94,24 @@ export const errorHandler = function errorHandler(
 
     const { status, ...rest } = err
 
-    return res.status(422).send({
+    res.status(422).send({
       ...rest,
       message: 'Validation failed',
     })
   }
   if (err instanceof ServiceUnavailable) {
     logger.warn('Error thrown in Health Watcher')
-    return res.status(err.code).json(err.data)
+    res.status(err.code).json(err.data)
   }
   if (err instanceof HttpResponse) {
     logger.warn('Error thrown in handler: %s', err.message)
 
-    return res.status(err.code).json(err.message)
+    res.status(err.code).json(err.message)
   }
   if (err instanceof Error) {
     logger.error('Unexpected error thrown in handler: %s', err.message)
 
-    return res.status(500).json(err)
+    res.status(500).json(err)
   }
 
   next()
