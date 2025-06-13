@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/sqnc-matchmaker-api",
-  "version": "6.2.52",
+  "version": "6.2.53",
   "description": "An OpenAPI Matchmaking API service for SQNC",
   "main": "src/index.ts",
   "type": "module",
@@ -79,7 +79,7 @@
     "@digicatapult/tsoa-oauth-express": "^2.0.2",
     "@grpc/grpc-js": "^1.13.4",
     "@opentelemetry/auto-instrumentations-node": "^0.60.0",
-    "@polkadot/api": "^16.1.2",
+    "@polkadot/api": "^16.2.1",
     "@tsoa/runtime": "^6.6.0",
     "async-mutex": "^0.5.0",
     "base-x": "^5.0.1",
@@ -97,6 +97,6 @@
     "tsoa": "^6.6.0",
     "tsyringe": "^4.10.0",
     "uuid": "^11.1.0",
-    "zod": "^3.25.56"
+    "zod": "^3.25.57"
   }
 }
