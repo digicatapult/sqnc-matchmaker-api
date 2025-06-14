@@ -43,6 +43,8 @@ import {
 import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
 import { resetContainer } from '../../../src/ioc.js'
 import { allowedRoles } from '../../../src/env.js'
+import { container } from 'tsyringe'
+import Database from '../../../src/lib/db/index.js'
 
 const runDemandTests = (demandType: 'demandA' | 'demandB') => {
   const dbDemandSubtype = demandType === 'demandA' ? 'demand_a' : 'demand_b'
@@ -424,6 +426,15 @@ const runDemandTests = (demandType: 'demandA' | 'demandB') => {
       it(`non-existent ${demandType} id when creating on-chain - 404`, async () => {
         const response = await post(app, `/v1/${demandType}/${nonExistentId}/creation`, {})
         expect(response.status).to.equal(404)
+      })
+
+      it(`${demandType} creation when missing on-chain permissions`, async () => {
+        // remove permission from seeded data
+        const db = container.resolve(Database)
+        await db.delete('permission', { scope: demandType === 'demandA' ? 'member_a' : 'member_b' })
+
+        const response = await post(app, `/v1/${demandType}/${seededDemandId}/creation`, {})
+        expect(response.status).to.equal(401)
       })
 
       it(`non-existent ${demandType} id when getting creation tx - 404`, async () => {

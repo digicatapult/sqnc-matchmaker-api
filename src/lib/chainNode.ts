@@ -331,6 +331,7 @@ export default class ChainNode {
 
   // continue sealing blocks if there are transactions
   async clearAllTransactions(createEmpty: boolean = true, finalise: boolean = true) {
+    await this.api.isReady
     while (true) {
       const pending = await this.api.rpc.author.pendingExtrinsics()
       if (pending.length === 0) {

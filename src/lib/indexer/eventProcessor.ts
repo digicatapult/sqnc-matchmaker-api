@@ -9,9 +9,12 @@ import {
   DemandRecord,
   Match2CommentRecord,
   MatchRecord,
+  PermissionRecord,
 } from './changeSet.js'
 
 const processNames = [
+  'permission_create',
+  'permission_destroy',
   'demand_create',
   'match2_propose',
   'match2_accept',
@@ -55,8 +58,38 @@ const attachmentPayload = (map: Map<string, string>, sender: string, key: string
 })
 
 const DefaultEventProcessors: EventProcessors = {
+  permission_create: (version, _transaction, _sender, _inputs, outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for permission_create process`)
+
+    const permissionToken = outputs[0]
+    const scope = getOrError(permissionToken.metadata, 'scope')
+    if (scope !== 'member_a' && scope !== 'member_b' && scope !== 'optimiser') {
+      throw new Error(`Invalid scope ${scope} detected on-chain for permission token ${permissionToken.id}`)
+    }
+
+    const permission: PermissionRecord = {
+      type: 'insert',
+      id: UUIDv4(),
+      original_token_id: permissionToken.id,
+      latest_token_id: permissionToken.id,
+      owner: getOrError(permissionToken.roles, 'owner'),
+      scope,
+    }
+
+    return {
+      permissions: new Map([[permission.id, permission]]),
+    }
+  },
+  permission_destroy: (version, _transaction, _sender, inputs, _outputs) => {
+    if (version !== 1) throw new Error(`Incompatible version ${version} for destroy_permission process`)
+
+    const id = inputs[0].localId
+    return {
+      permissions: new Map([[id, { type: 'delete', id }]]),
+    }
+  },
   demand_create: (version, transaction, sender, _inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for demand_create process`)
+    if (version !== 1 && version !== 2) throw new Error(`Incompatible version ${version} for demand_create process`)
 
     const newDemandId = outputs[0].id
     const newDemand = outputs[0]
@@ -87,7 +120,6 @@ const DefaultEventProcessors: EventProcessors = {
       demands: new Map([[demand.id, demand]]),
     }
   },
-
   demand_comment: (version, transaction, sender, inputs, outputs) => {
     if (version !== 1) throw new Error(`Incompatible version ${version} for match2_propose process`)
 
@@ -134,23 +166,32 @@ const DefaultEventProcessors: EventProcessors = {
       demands: new Map([[demandId, demandUpdate]]),
     }
   },
-
   match2_propose: (version, transaction, _sender, inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for match2_propose process`)
+    if (version !== 1 && version !== 2) throw new Error(`Incompatible version ${version} for match2_propose process`)
 
-    const newDemands = [
-      { id: inputs[0].localId, tokenId: outputs[0].id },
-      { id: inputs[1].localId, tokenId: outputs[1].id },
-    ]
-    const newMatchId = outputs[2].id
-    const newMatch = outputs[2]
+    let demands: ChangeSet['demands'] = undefined
+
+    const demandAIn = inputs[version === 1 ? 0 : 1]
+    const demandBIn = inputs[version === 1 ? 1 : 2]
+    const match2Out = outputs[version === 1 ? 2 : 0]
+
+    if (version === 1) {
+      const newDemands = [
+        { id: demandAIn.localId, tokenId: outputs[0].id },
+        { id: demandBIn.localId, tokenId: outputs[1].id },
+      ]
+      demands = new Map(
+        newDemands.map(({ id, tokenId }) => [id, { type: 'update', id, state: 'created', latest_token_id: tokenId }])
+      )
+    }
+
+    const newMatchId = match2Out.id
+    const newMatch = match2Out
 
     if (transaction) {
       const id = transaction.local_id
       return {
-        demands: new Map(
-          newDemands.map(({ id, tokenId }) => [id, { type: 'update', id, state: 'created', latest_token_id: tokenId }])
-        ),
+        demands,
         matches: new Map([
           [id, { type: 'update', id, state: 'proposed', latest_token_id: newMatchId, original_token_id: newMatchId }],
         ]),
@@ -164,35 +205,38 @@ const DefaultEventProcessors: EventProcessors = {
       member_a: getOrError(newMatch.roles, 'member_a'),
       member_b: getOrError(newMatch.roles, 'member_b'),
       state: 'proposed',
-      demand_a_id: inputs[0].localId,
-      demand_b_id: inputs[1].localId,
+      demand_a_id: demandAIn.localId,
+      demand_b_id: demandBIn.localId,
       latest_token_id: newMatchId,
       original_token_id: newMatchId,
       replaces_id: null,
     }
 
     return {
-      demands: new Map(
-        newDemands.map(({ id, tokenId }) => [id, { type: 'update', id, state: 'created', latest_token_id: tokenId }])
-      ),
+      demands,
       matches: new Map([[match.id, match]]),
     }
   },
   rematch2_propose: (version, transaction, _sender, inputs, outputs) => {
-    if (version !== 1) {
+    if (version !== 1 && version !== 2) {
       throw new Error(`Incompatible version ${version} for rematch2_propose process`)
     }
-    const demandAIn = inputs[0]
-    const demandAOut = outputs[0]
-    const oldMatchIn = inputs[1]
-    const oldMatchOut = outputs[1]
-    const newDemandBIn = inputs[2]
-    const newDemandBOut = outputs[2]
-    const newMatchId = outputs[3].id
-    const newMatch = outputs[3]
 
-    const commonUpdates: ChangeSet = {
-      demands: new Map([
+    const demandAIn = inputs[version === 1 ? 0 : 1]
+    const oldMatchIn = inputs[version === 1 ? 1 : 2]
+    const newDemandBIn = inputs[version === 1 ? 2 : 3]
+    const newMatch = outputs[version === 1 ? 3 : 0]
+    const newMatchId = newMatch.id
+
+    let demands: ChangeSet['demands'] = undefined
+    let matches: ChangeSet['matches'] = undefined
+
+    if (version === 1) {
+      const demandAOut = outputs[0]
+      const oldMatchOut = outputs[1]
+      const newDemandBOut = outputs[2]
+
+      demands = new Map([
         [
           demandAIn.localId,
           { type: 'update', id: demandAIn.localId, latest_token_id: demandAOut.id, state: 'allocated' },
@@ -206,8 +250,8 @@ const DefaultEventProcessors: EventProcessors = {
             state: 'created',
           },
         ],
-      ]),
-      matches: new Map([
+      ])
+      matches = new Map([
         [
           oldMatchIn.localId,
           {
@@ -217,15 +261,15 @@ const DefaultEventProcessors: EventProcessors = {
             latest_token_id: oldMatchOut.id,
           },
         ],
-      ]),
+      ])
     }
 
     if (transaction) {
       const id = transaction.local_id
       return {
-        demands: commonUpdates.demands,
+        demands,
         matches: new Map([
-          ...(commonUpdates.matches || []),
+          ...(matches || []),
           [
             id,
             {
@@ -254,11 +298,10 @@ const DefaultEventProcessors: EventProcessors = {
     }
 
     return {
-      demands: commonUpdates.demands,
-      matches: new Map([...(commonUpdates.matches || []), [match.id, match]]),
+      demands,
+      matches: new Map([...(matches || []), [match.id, match]]),
     }
   },
-
   match2_accept: (version, _transaction, _sender, inputs, outputs) => {
     if (version !== 1) throw new Error(`Incompatible version ${version} for match2_accept process`)
 
@@ -300,47 +343,56 @@ const DefaultEventProcessors: EventProcessors = {
     }
   },
   rematch2_acceptFinal: (version, _transaction, _sender, inputs, outputs) => {
-    if (version !== 1) throw new Error(`Incompatible version ${version} for rematch2_acceptFinal process`)
+    if (version !== 1 && version !== 2)
+      throw new Error(`Incompatible version ${version} for rematch2_acceptFinal process`)
 
     const demandAIn = inputs[0]
-    const demandAOut = outputs[0]
     const oldDemandBIn = inputs[1]
-    const oldDemandBOut = outputs[1]
     const oldMatch2In = inputs[2]
-    const oldMatch2Out = outputs[2]
     const newDemandBIn = inputs[3]
-    const newDemandBOut = outputs[3]
     const newMatch2In = inputs[4] //rematch
-    const newMatch2Out = outputs[4] //rematch
+
+    const oldDemandBOut = outputs[version === 1 ? 1 : 0]
+    const oldMatch2Out = outputs[version === 1 ? 2 : 1]
+    const newDemandBOut = outputs[version === 1 ? 3 : 2]
+    const newMatch2Out = outputs[version === 1 ? 4 : 3] //rematch
+
+    const demands: ChangeSet['demands'] = new Map([
+      [
+        oldDemandBIn.localId,
+        { type: 'update', id: oldDemandBIn.localId, latest_token_id: oldDemandBOut.id, state: 'cancelled' },
+      ],
+      [
+        newDemandBIn.localId,
+        { type: 'update', id: newDemandBIn.localId, latest_token_id: newDemandBOut.id, state: 'allocated' },
+      ],
+    ])
+    const matches: ChangeSet['matches'] = new Map([
+      [
+        oldMatch2In.localId,
+        { type: 'update', id: oldMatch2In.localId, latest_token_id: oldMatch2Out.id, state: 'cancelled' },
+      ],
+      [
+        newMatch2In.localId,
+        { type: 'update', id: newMatch2In.localId, latest_token_id: newMatch2Out.id, state: 'acceptedFinal' },
+      ],
+    ])
+
+    if (version === 1) {
+      const demandAOut = outputs[0]
+      demands.set(demandAIn.localId, {
+        type: 'update',
+        id: demandAIn.localId,
+        latest_token_id: demandAOut.id,
+        state: 'allocated',
+      })
+    }
 
     return {
-      demands: new Map([
-        [
-          demandAIn.localId,
-          { type: 'update', id: demandAIn.localId, latest_token_id: demandAOut.id, state: 'allocated' },
-        ],
-        [
-          oldDemandBIn.localId,
-          { type: 'update', id: oldDemandBIn.localId, latest_token_id: oldDemandBOut.id, state: 'cancelled' },
-        ],
-        [
-          newDemandBIn.localId,
-          { type: 'update', id: newDemandBIn.localId, latest_token_id: newDemandBOut.id, state: 'allocated' },
-        ],
-      ]),
-      matches: new Map([
-        [
-          oldMatch2In.localId,
-          { type: 'update', id: oldMatch2In.localId, latest_token_id: oldMatch2Out.id, state: 'cancelled' },
-        ],
-        [
-          newMatch2In.localId,
-          { type: 'update', id: newMatch2In.localId, latest_token_id: newMatch2Out.id, state: 'acceptedFinal' },
-        ],
-      ]),
+      demands,
+      matches,
     }
   },
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   match2_reject: (version, _transaction, _sender, inputs, _outputs) => {
     if (version !== 1) throw new Error(`Incompatible version ${version} for match2_reject process`)
@@ -351,7 +403,6 @@ const DefaultEventProcessors: EventProcessors = {
       matches: new Map([[localId, { id: localId, type: 'update', state: 'rejected' }]]),
     }
   },
-
   match2_cancel: (version, transaction, sender, inputs, outputs) => {
     if (version !== 1) throw new Error(`Incompatible version ${version} for match2_cancel process`)
 
