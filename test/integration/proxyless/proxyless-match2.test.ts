@@ -16,7 +16,7 @@ import {
 import Database from '../../../src/lib/db/index.js'
 import ChainNode from '../../../src/lib/chainNode.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
-import { withAppAndIndexer } from '../../helper/chainTest.js'
+import { withAllPermissions, withAppAndIndexer } from '../../helper/chainTest.js'
 import { UUID } from '../../../src/models/strings.js'
 import { container } from 'tsyringe'
 import env from '../../../src/env.js'
@@ -31,6 +31,8 @@ describe('on-chain proxyless', function () {
   const mock: MockDispatcherContext = {} as MockDispatcherContext
 
   withAppAndIndexer(context)
+  withAllPermissions(selfAddress)
+
   withDispatcherMock(mock)
   withIdentitySelfMock(mock)
   withAttachmentMock(mock)

@@ -1,6 +1,6 @@
 import { UUID } from '../../models/strings.js'
 
-type ChangeOperation = 'insert' | 'update'
+type ChangeOperation = 'insert' | 'update' | 'delete'
 
 interface Change {
   type: ChangeOperation
@@ -78,6 +78,20 @@ export type Match2CommentRecord =
       state: 'created'
     }
 
+export type PermissionRecord =
+  | {
+      type: 'insert'
+      id: string
+      scope: 'member_a' | 'member_b' | 'optimiser'
+      owner: string
+      latest_token_id: number
+      original_token_id: number
+    }
+  | {
+      type: 'delete'
+      id: string
+    }
+
 export type AttachmentRecord = {
   type: 'insert'
   id: string
@@ -93,6 +107,7 @@ export type ChangeSet = {
   matches?: Map<string, MatchRecord>
   demandComments?: Map<string, DemandCommentRecord>
   match2Comments?: Map<string, Match2CommentRecord>
+  permissions?: Map<string, PermissionRecord>
 }
 
 const mergeMaps = <T extends Change>(base?: Map<string, T>, update?: Map<string, T>) => {
@@ -103,6 +118,12 @@ const mergeMaps = <T extends Change>(base?: Map<string, T>, update?: Map<string,
   const result = base || new Map<string, T>()
   for (const [key, value] of update) {
     const base = result.get(key) || { type: 'update' }
+
+    if (value.type === 'delete') {
+      result.set(key, value)
+      continue
+    }
+
     const operation = base.type === 'insert' || value.type === 'insert' ? 'insert' : 'update'
     result.set(key, {
       ...base,
@@ -119,12 +140,14 @@ export const mergeChangeSets = (base: ChangeSet, update: ChangeSet) => {
   const demands = mergeMaps(base.demands, update.demands)
   const matches = mergeMaps(base.matches, update.matches)
   const demandComments = mergeMaps(base.demandComments, update.demandComments)
+  const permissions = mergeMaps(base.permissions, update.permissions)
 
   const result: ChangeSet = {
     ...(attachments ? { attachments } : {}),
     ...(demands ? { demands } : {}),
     ...(matches ? { matches } : {}),
     ...(demandComments ? { demandComments } : {}),
+    ...(permissions ? { permissions } : {}),
   }
 
   return result
@@ -133,7 +156,10 @@ export const mergeChangeSets = (base: ChangeSet, update: ChangeSet) => {
 export const findLocalIdInChangeSet = (change: ChangeSet, tokenId: number): UUID | null => {
   const demandRecordValues = [...(change.demands?.values() || [])]
   const matchRecordValues = [...(change.matches?.values() || [])]
+  const permissionRecordValues = [...(change.permissions?.values() || [])]
 
-  const match = [...demandRecordValues, ...matchRecordValues].find((el) => el.latest_token_id === tokenId)
+  const match = [...demandRecordValues, ...matchRecordValues, ...permissionRecordValues].find(
+    (el) => 'latest_token_id' in el && el.latest_token_id === tokenId
+  )
   return match?.id || null
 }
