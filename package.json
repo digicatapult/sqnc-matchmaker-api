@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/sqnc-matchmaker-api",
-  "version": "6.2.58",
+  "version": "6.2.59",
   "description": "An OpenAPI Matchmaking API service for SQNC",
   "main": "src/index.ts",
   "type": "module",
@@ -97,6 +97,6 @@
     "tsoa": "^6.6.0",
     "tsyringe": "^4.10.0",
     "uuid": "^11.1.0",
-    "zod": "^3.25.64"
+    "zod": "^4.0.5"
   }
 }
