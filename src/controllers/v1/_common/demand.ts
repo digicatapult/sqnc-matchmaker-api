@@ -158,12 +158,20 @@ export class DemandController extends Controller {
       throw new Unauthorized(`You are not allowed to create demand ${demandId} on-chain`)
     }
 
+    const [permission] = await this.db.get('permission', {
+      owner: (await this.addressResolver.determineSelfAddress()).address,
+      scope: demand.subtype === 'demand_a' ? 'member_a' : 'member_b',
+    })
+    if (!permission) {
+      throw new Unauthorized(`On-chain authorisation to create demand of type ${demand.subtype} not found`)
+    }
+
     if (demand.state !== 'pending') throw new BadRequest(`Demand must have state: 'pending'`)
 
     const [attachment] = await this.attachment.getAttachments([demand.parameters_attachment_id])
     if (!attachment) throw new UnknownError()
 
-    const extrinsic = await this.node.prepareRunProcess(demandCreate(demand, attachment))
+    const extrinsic = await this.node.prepareRunProcess(demandCreate(permission, demand, attachment))
 
     const [transaction] = await this.db.insert('transaction', {
       api_type: this.dbDemandSubtype,
