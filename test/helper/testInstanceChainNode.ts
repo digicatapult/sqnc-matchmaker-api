@@ -25,14 +25,14 @@ export default class ExtendedChainNode extends ChainNode {
 
   async submitRunProcessForProxy(extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>): Promise<void> {
     try {
-      this.logger.debug('Submitting Transaction %j', extrinsic.hash.toHex())
+      this.logger.debug('Submitting Transaction %s', extrinsic.hash.toHex())
       const unsub: () => void = await extrinsic.send((result: SubmittableResult): void => {
         this.logger.debug('result.status %s', JSON.stringify(result.status))
 
         const { dispatchError, status } = result
 
         if (dispatchError) {
-          this.logger.warn('dispatch error %s', dispatchError, extrinsic)
+          this.logger.warn(dispatchError, 'dispatch error %s', extrinsic.toJSON())
 
           unsub()
           if (dispatchError.isModule) {
