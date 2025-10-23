@@ -180,7 +180,7 @@ export default class ChainNode {
     transactionDbUpdate: (state: TransactionState) => Promise<void>
   ): Promise<void> {
     try {
-      this.logger.debug('Submitting Transaction %j', extrinsic.hash.toHex())
+      this.logger.debug('Submitting Transaction %s', extrinsic.hash.toHex())
       const unsub: () => void = await extrinsic.send((result: SubmittableResult): void => {
         this.logger.debug('result.status %s', JSON.stringify(result.status))
 
