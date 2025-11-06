@@ -1,4 +1,4 @@
-import { AttachmentRecord, ChangeSet, DemandRecord, MatchRecord } from '../../changeSet.js'
+import { AttachmentRecord, ChangeSet, DemandRecord, MatchRecord, PermissionRecord } from '../../changeSet.js'
 
 export const changeSets2: ChangeSet[] = [
   {
@@ -58,6 +58,13 @@ export const findIdTestSet: ChangeSet = {
         state: 'proposed',
         latest_token_id: 44,
       },
+    ],
+  ]),
+  permissions: new Map<string, PermissionRecord>([
+    ['0x05', { type: 'delete', id: '0x05' }],
+    [
+      '0x06',
+      { type: 'insert', id: '0x06', latest_token_id: 45, original_token_id: 45, owner: 'alice', scope: 'member_a' },
     ],
   ]),
 }

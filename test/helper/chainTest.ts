@@ -6,6 +6,8 @@ import Indexer from '../../src/lib/indexer/index.js'
 import Database from '../../src/lib/db/index.js'
 import ChainNode from '../../src/lib/chainNode.js'
 import { container } from 'tsyringe'
+import ExtendedChainNode from './testInstanceChainNode.js'
+import { pollPermissionState } from './poll.js'
 
 export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) => {
   const db = container.resolve(Database)
@@ -41,5 +43,39 @@ export const withAppAndIndexer = (context: { app: Express; indexer: Indexer }) =
 
   afterEach(async function () {
     await context.indexer.close()
+  })
+}
+
+const scopes = ['member_a', 'member_b', 'optimiser'] as const
+export const withAllPermissions = (address: string) => {
+  beforeEach(async function () {
+    const node = container.resolve(ExtendedChainNode)
+    const db = container.resolve(Database)
+
+    for (const scope of scopes) {
+      const extrinsic = await node.prepareRunProcessAsSudo({
+        process: { id: 'permission_create', version: 1 },
+        inputs: [],
+        outputs: [
+          {
+            roles: { owner: address },
+            metadata: {
+              '@version': { type: 'LITERAL', value: '1' },
+              '@type': { type: 'LITERAL', value: 'Permission' },
+              scope: { type: 'LITERAL', value: scope },
+            },
+          },
+        ],
+      })
+      await node.submitRunProcess(extrinsic, () => Promise.resolve())
+    }
+
+    await node.clearAllTransactions()
+    await Promise.all(scopes.map((scope) => pollPermissionState(db, address, scope)))
+  })
+
+  afterEach(async function () {
+    const db = container.resolve(Database)
+    await db.delete('permission', {})
   })
 }

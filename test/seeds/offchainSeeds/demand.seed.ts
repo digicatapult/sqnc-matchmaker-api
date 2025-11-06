@@ -6,6 +6,7 @@ import { seededMatch2IsMemberId, seededMatch2IsNotMemberId } from './offchain.ma
 
 export const cleanup = async () => {
   const db = container.resolve(Database)
+  await db.delete('permission', {})
   await db.delete('demand', {})
   await db.delete('transaction', {})
   await db.delete('demand_comment', {})
@@ -48,10 +49,34 @@ export const seededDemandANotOwnedCommentTransactionId2 = 'c88908aa-a2a6-48df-a6
 export const seededDemandBNotOwnedCommentTransactionId2 = 'b21f865e-f4e9-4ae2-8944-de691e9eb4d5'
 const seededDemandTokenId = 42
 
+export const permissionAId = '610d34e6-52c4-4430-bf9d-f73f74d11304'
+export const permissionBId = 'bda1f763-764e-457c-89a4-eed1aa8e0008'
+
 export const demandSeed = async () => {
   const db = container.resolve(Database)
   const insert = dbInsert(db)
   await cleanup()
+
+  await insert('permission', [
+    {
+      id: permissionAId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: 1,
+      original_token_id: 1,
+      owner: proxyAddress,
+      scope: 'member_a',
+    },
+    {
+      id: permissionBId,
+      created_at: new Date(exampleDate),
+      updated_at: new Date(exampleDate),
+      latest_token_id: 1,
+      original_token_id: 1,
+      owner: proxyAddress,
+      scope: 'member_b',
+    },
+  ])
 
   await insert('demand', [
     {

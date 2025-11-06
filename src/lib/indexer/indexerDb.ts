@@ -7,6 +7,7 @@ import {
   InsertDemandComment,
   InsertMatch2,
   InsertMatch2Comment,
+  InsertPermissionRow,
   InsertProcessedBlock,
   InsertUnprocessedBlock,
   Match2CommentRow,
@@ -29,6 +30,7 @@ export class IndexerDatabaseExtensions {
     const result = await Promise.all([
       this.db.get('demand', { latest_token_id: tokenId }),
       this.db.get('match2', { latest_token_id: tokenId }),
+      this.db.get('permission', { latest_token_id: tokenId }),
     ])
 
     return result.flat()[0]?.id || null
@@ -55,6 +57,13 @@ export class IndexerDatabaseExtensions {
 
   public async insertProcessedBlock(block: InsertProcessedBlock) {
     return await this.db.insert('processed_blocks', this.trim0x(block))
+  }
+
+  public async insertPermission(permission: InsertPermissionRow) {
+    return await this.db.insert('permission', permission)
+  }
+  public async deletePermission(id: string) {
+    return await this.db.delete('permission', { id })
   }
 
   public async insertDemand(demand: InsertDemand) {

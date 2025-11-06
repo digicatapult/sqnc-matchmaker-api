@@ -13,4 +13,6 @@ export const withMockEventProcessors: (result?: ChangeSet) => EventProcessors = 
   match2_reject: sinon.stub().returns(result),
   rematch2_propose: sinon.stub().returns(result),
   match2_cancel: sinon.stub().returns(result),
+  permission_create: sinon.stub().returns(result),
+  permission_destroy: sinon.stub().returns(result),
 })

@@ -2,10 +2,14 @@ import { type Logger } from 'pino'
 import { SubmittableResult } from '@polkadot/api'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 
-import { type Env } from '../../src/env.js'
+import { EnvToken, type Env } from '../../src/env.js'
 import { ProxyRequest } from '../../src/models/proxy.js'
 import ChainNode, { EventData } from '../../src/lib/chainNode.js'
 import { z } from 'zod'
+import { Output, Payload } from '../../src/lib/payload.js'
+import { ISubmittableResult } from '@polkadot/types/types'
+import { inject, singleton } from 'tsyringe'
+import { LoggerToken } from '../../src/lib/logger.js'
 
 const proxyParser = z.tuple([
   z.array(
@@ -18,8 +22,11 @@ const proxyParser = z.tuple([
   z.number(),
 ])
 
+@singleton()
 export default class ExtendedChainNode extends ChainNode {
-  constructor(logger: Logger, env: Env) {
+  private sudoUri = '//Alice'
+
+  constructor(@inject(LoggerToken) logger: Logger, @inject(EnvToken) env: Env) {
     super(logger, env)
   }
 
@@ -102,6 +109,37 @@ export default class ExtendedChainNode extends ChainNode {
       return nextTxPoolNonce
     })
     const signed = await result.signAsync(account, { nonce })
+    return signed
+  }
+
+  async prepareRunProcessAsSudo({ process, inputs, outputs }: Payload) {
+    const outputsAsMaps = await Promise.allSettled(
+      outputs.map(async (output: Output) => [output.roles, this.processMetadata(output.metadata)])
+    )
+    const fulfilledOutputs = outputsAsMaps
+      .filter((result) => result.status === 'fulfilled')
+      .map((result) => result.value)
+    const rejectedOutputs = outputsAsMaps
+      .filter((result) => result.status === 'rejected')
+      .map((result) => result.reason)
+    if (rejectedOutputs.length > 0) {
+      throw new Error(`${rejectedOutputs.length} rejected outputs as maps with Error: ${rejectedOutputs[0]}`)
+    }
+
+    this.logger.debug('Preparing Transaction inputs: %j outputs: %j', inputs, fulfilledOutputs)
+
+    await this.api.isReady
+    let extrinsic: SubmittableExtrinsic<'promise', ISubmittableResult> = this.api.tx.sudo.sudo(
+      this.api.tx.utxoNFT.runProcessAsRoot(process, inputs, fulfilledOutputs)
+    )
+    const account = this.keyring.addFromUri(this.sudoUri)
+
+    const nonce = await this.mutex.runExclusive(async () => {
+      const nextTxPoolNonce = (await this.api.rpc.system.accountNextIndex(account.publicKey)).toNumber()
+      return nextTxPoolNonce
+    })
+
+    const signed = await extrinsic.signAsync(account, { nonce })
     return signed
   }
 

@@ -17,7 +17,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { LoggerToken } from '../../../lib/logger.js'
 import Database from '../../../lib/db/index.js'
-import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index.js'
+import { BadRequest, HttpResponse, NotFound, Unauthorized } from '../../../lib/error-handler/index.js'
 import Identity from '../../../lib/services/identity.js'
 import {
   type Match2CancelRequest,
@@ -174,6 +174,14 @@ export class Match2Controller extends Controller {
     if (!(await this.match2Member(match2))) throw new NotFound('match2')
     validatePreLocal(match2, 'Match2', { state: 'pending' })
 
+    const [permission] = await this.db.get('permission', {
+      owner: (await this.addressResolver.determineSelfAddress()).address,
+      scope: 'optimiser',
+    })
+    if (!permission) {
+      throw new Unauthorized(`On-chain authorisation to propose a match not found`)
+    }
+
     let originalMatch: { match2: Match2Row; demandB: DemandRow } | null = null //old match2
     if (match2.replaces_id) {
       const [originalMatch2] = await this.db.get('match2', { id: match2.replaces_id })
@@ -194,8 +202,8 @@ export class Match2Controller extends Controller {
     validatePreOnChain(demandB, 'DemandB', { subtype: 'demand_b', state: 'created' })
 
     const extrinsic = originalMatch
-      ? await this.node.prepareRunProcess(rematch2Propose(match2, demandA, originalMatch, demandB))
-      : await this.node.prepareRunProcess(match2Propose(match2, demandA, demandB))
+      ? await this.node.prepareRunProcess(rematch2Propose(permission, match2, demandA, originalMatch, demandB))
+      : await this.node.prepareRunProcess(match2Propose(permission, match2, demandA, demandB))
 
     const [transaction] = await this.db.insert('transaction', {
       transaction_type: 'proposal',
