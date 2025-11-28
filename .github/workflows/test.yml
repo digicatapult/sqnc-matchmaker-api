@@ -32,3 +32,5 @@ jobs:
     permissions:
       packages: write
       contents: write
+      security-events: write
+      actions: read
