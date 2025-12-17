@@ -18,7 +18,7 @@ networks:
 services:
   # -------------------------------------------------------------------- member-a
   member-a-postgres-matchmaker-api:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: member-a-postgres-matchmaker
     ports:
       - 5432:5432
@@ -33,7 +33,7 @@ services:
     networks: ['member-a']
 
   member-a-postgres-identity:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: member-a-postgres-identity
     ports:
       - 5433:5432
@@ -48,7 +48,7 @@ services:
     networks: ['member-a']
 
   member-a-postgres-attachment-api:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: member-a-postgres-attachment
     ports:
       - 5434:5432
@@ -119,7 +119,7 @@ services:
     networks: ['member-a', 'ipfs']
 
   member-a-node:
-    image: digicatapult/sqnc-node:v12.5.1
+    image: digicatapult/sqnc-node:v14.0.0
     container_name: member-a-node
     command: --base-path /data --alice --unsafe-rpc-external --rpc-cors all --node-key 0000000000000000000000000000000000000000000000000000000000000001
     ports:
@@ -176,7 +176,7 @@ services:
 
   # -------------------------------------------------------------------- member-b
   member-b-postgres-matchmaker-api:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: member-b-postgres-matchmaker
     ports:
       - 5442:5432
@@ -191,7 +191,7 @@ services:
     networks: ['member-b']
 
   member-b-postgres-identity:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: member-b-postgres-identity
     ports:
       - 5443:5432
@@ -206,7 +206,7 @@ services:
     networks: ['member-b']
 
   member-b-postgres-attachment-api:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: member-b-postgres-attachment
     ports:
       - 5444:5432
@@ -277,7 +277,7 @@ services:
     networks: ['member-b', 'ipfs']
 
   member-b-node:
-    image: digicatapult/sqnc-node:v12.5.1
+    image: digicatapult/sqnc-node:v14.0.0
     container_name: member-b-node
     command: |
       --base-path /data/
@@ -342,7 +342,7 @@ services:
   # ------------------------------------------------------------------- optimiser
 
   optimiser-postgres-matchmaker-api:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: optimiser-postgres-matchmaker
     ports:
       - 5452:5432
@@ -357,7 +357,7 @@ services:
     networks: ['optimiser']
 
   optimiser-postgres-identity:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: optimiser-postgres-identity
     ports:
       - 5453:5432
@@ -372,7 +372,7 @@ services:
     networks: ['optimiser']
 
   optimiser-postgres-attachment-api:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: optimiser-postgres-attachment
     ports:
       - 5454:5432
@@ -443,7 +443,7 @@ services:
     networks: ['optimiser', 'ipfs']
 
   optimiser-node:
-    image: digicatapult/sqnc-node:v12.5.1
+    image: digicatapult/sqnc-node:v14.0.0
     container_name: optimiser-node
     command: |
       --base-path /data/
