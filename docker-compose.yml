@@ -1,6 +1,6 @@
 services:
   postgres-matchmaker-api:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: postgres-matchmaker-api
     ports:
       - 5432:5432
@@ -14,7 +14,7 @@ services:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
 
   postgres-identity-service:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: postgres-identity
     ports:
       - 5433:5432
@@ -28,7 +28,7 @@ services:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
 
   postgres-attachment-api:
-    image: postgres:17.5-alpine
+    image: postgres:18.1-alpine
     container_name: postgres-attachment
     ports:
       - 5434:5432
@@ -96,7 +96,7 @@ services:
       - AUTHZ_WEBHOOK=http://localhost:3000/v1/authz
 
   sqnc-node:
-    image: digicatapult/sqnc-node:v12.5.1
+    image: digicatapult/sqnc-node:v14.0.0
     container_name: node
     command: --base-path /data/ --dev --unsafe-rpc-external --rpc-max-connections 512 --rpc-cors all
     ports:
