@@ -1,5 +1,5 @@
 import { describe, before } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server.js'
@@ -33,13 +33,8 @@ import {
   seededDemandBNotOwnedCreationTransactionId,
 } from '../../seeds/offchainSeeds/demand.seed.js'
 
-import {
-  MockDispatcherContext,
-  proxyAlias,
-  withAttachmentMock,
-  withDispatcherMock,
-  withIdentitySelfMock,
-} from '../../helper/mock.js'
+import type { MockDispatcherContext } from '../../helper/mock.js'
+import { proxyAlias, withAttachmentMock, withDispatcherMock, withIdentitySelfMock } from '../../helper/mock.js'
 import { assertIsoDate, assertUUID } from '../../helper/assertions.js'
 import { resetContainer } from '../../../src/ioc.js'
 import { allowedRoles } from '../../../src/env.js'

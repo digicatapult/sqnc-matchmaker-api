@@ -7,8 +7,9 @@ import { inject, injectable } from 'tsyringe'
 import type { AuthorizationRequest, AuthorizationResponse } from '../../../models/authorization.js'
 import { AddressResolver } from '../../../utils/determineSelfAddress.js'
 import { Unauthorized } from '../../../lib/error-handler/index.js'
-import Identity, { type IdentityResponse } from '../../../lib/services/identity.js'
-import { DemandRow, Match2Row, Where } from '../../../lib/db/types.js'
+import Identity from '../../../lib/services/identity.js'
+import { type IdentityResponse } from '../../../lib/services/identity.js'
+import type { DemandRow, Match2Row, Where } from '../../../lib/db/types.js'
 
 const success = {
   result: {

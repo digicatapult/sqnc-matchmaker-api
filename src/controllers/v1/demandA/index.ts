@@ -1,4 +1,5 @@
-import { ValidateError, Get, Post, Route, Path, Response, Body, SuccessResponse, Tags, Security, Query } from 'tsoa'
+import type { ValidateError } from 'tsoa'
+import { Get, Post, Route, Path, Response, Body, SuccessResponse, Tags, Security, Query } from 'tsoa'
 import { inject, injectable } from 'tsyringe'
 
 import type {
@@ -8,8 +9,8 @@ import type {
   DemandWithCommentsResponse,
 } from '../../../models/demand.js'
 import type { DATE, UUID } from '../../../models/strings.js'
-import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
-import { TransactionResponse } from '../../../models/transaction.js'
+import type { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
+import type { TransactionResponse } from '../../../models/transaction.js'
 import { DemandController } from '../_common/demand.js'
 import Identity from '../../../lib/services/identity.js'
 import ChainNode from '../../../lib/chainNode.js'

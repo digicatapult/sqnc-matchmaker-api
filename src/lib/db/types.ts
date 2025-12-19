@@ -1,4 +1,4 @@
-import { Knex } from 'knex'
+import type { Knex } from 'knex'
 import { z } from 'zod'
 
 const char64Parser = z.string().max(64)

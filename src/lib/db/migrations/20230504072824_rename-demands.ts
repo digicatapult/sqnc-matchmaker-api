@@ -1,4 +1,4 @@
-import { Knex } from 'knex'
+import type { Knex } from 'knex'
 
 export const up = async (knex: Knex): Promise<void> => {
   await knex.raw("ALTER TYPE \"demand_subtype\" RENAME VALUE 'order' TO 'demand_a'")

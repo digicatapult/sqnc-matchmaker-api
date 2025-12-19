@@ -1,4 +1,4 @@
-import { DATE, UUID } from './strings.js'
+import type { DATE, UUID } from './strings.js'
 
 /**
  * The possible states of a Match2

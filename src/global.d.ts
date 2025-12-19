@@ -1,6 +1,6 @@
 import 'express'
 
-import { TsoaExpressUser } from '@digicatapult/tsoa-oauth-express'
+import type { TsoaExpressUser } from '@digicatapult/tsoa-oauth-express'
 
 declare global {
   namespace Express {

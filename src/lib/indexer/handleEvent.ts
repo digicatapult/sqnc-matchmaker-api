@@ -1,9 +1,12 @@
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
 
-import ChainNode, { ProcessRanEvent } from '../chainNode.js'
-import { ChangeSet, findLocalIdInChangeSet, mergeChangeSets } from './changeSet.js'
-import defaultEventProcessors, { EventProcessors, ValidateProcessName } from './eventProcessor.js'
-import { IndexerDatabaseExtensions } from './indexerDb.js'
+import type { ProcessRanEvent } from '../chainNode.js'
+import type ChainNode from '../chainNode.js'
+import type { ChangeSet } from './changeSet.js'
+import { findLocalIdInChangeSet, mergeChangeSets } from './changeSet.js'
+import type { EventProcessors } from './eventProcessor.js'
+import defaultEventProcessors, { ValidateProcessName } from './eventProcessor.js'
+import type { IndexerDatabaseExtensions } from './indexerDb.js'
 
 export interface EventHandlerCtorArgs {
   db: IndexerDatabaseExtensions

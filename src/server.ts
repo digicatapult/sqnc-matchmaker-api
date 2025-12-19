@@ -1,5 +1,7 @@
-import express, { Express } from 'express'
-import { setup, serve, SwaggerUiOptions } from 'swagger-ui-express'
+import type { Express } from 'express'
+import express from 'express'
+import type { SwaggerUiOptions } from 'swagger-ui-express'
+import { setup, serve } from 'swagger-ui-express'
 import cors from 'cors'
 import promBundle from 'express-prom-bundle'
 

@@ -1,12 +1,12 @@
 import { describe, beforeEach, afterEach, it } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { expect } from 'chai'
 
-import Indexer from '../../../src/lib/indexer/index.js'
+import type Indexer from '../../../src/lib/indexer/index.js'
 import { post, get } from '../../helper/routeHelper.js'
 import { cleanup } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
+import type { MockDispatcherContext } from '../../helper/mock.js'
 import {
-  MockDispatcherContext,
   parametersAttachmentId,
   withAttachmentMock,
   withDispatcherMock,
@@ -15,14 +15,14 @@ import {
 import Database from '../../../src/lib/db/index.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
-import { UUID } from '../../../src/models/strings.js'
+import type { UUID } from '../../../src/models/strings.js'
 import { container } from 'tsyringe'
 import { withProxy } from '../../helper/proxy.js'
 import { logger } from '../../../src/lib/logger.js'
 import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
 import env from '../../../src/env.js'
-import { DemandRow, Match2Row } from '../../../src/lib/db/types.js'
-import { TransactionResponse } from '../../../src/models/transaction.js'
+import type { DemandRow, Match2Row } from '../../../src/lib/db/types.js'
+import type { TransactionResponse } from '../../../src/models/transaction.js'
 
 describe('on-chain', function () {
   this.timeout(180000)

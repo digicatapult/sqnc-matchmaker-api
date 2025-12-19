@@ -1,6 +1,6 @@
 import { describe, it } from 'mocha'
 import { AddressResolver } from '../determineSelfAddress.js'
-import Identity from '../../lib/services/identity.js'
+import type Identity from '../../lib/services/identity.js'
 import env from '../../env.js'
 import { expect } from 'chai'
 import { withIdentityMock } from './helpers/mockIdentity.js'

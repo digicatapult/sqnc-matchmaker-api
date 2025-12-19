@@ -1,5 +1,5 @@
-import { Scope } from './scope.js'
-import { UUID } from './strings.js'
+import type { Scope } from './scope.js'
+import type { UUID } from './strings.js'
 
 /**
  * The possible states of a chain transaction

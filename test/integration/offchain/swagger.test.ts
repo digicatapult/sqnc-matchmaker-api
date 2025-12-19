@@ -1,5 +1,5 @@
 import { describe, before, it } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server.js'

@@ -1,10 +1,10 @@
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
 
-import ChainNode from '../chainNode.js'
-import { ChangeSet } from './changeSet.js'
+import type ChainNode from '../chainNode.js'
+import type { ChangeSet } from './changeSet.js'
 import EventHandler from './handleEvent.js'
-import { HEX } from '../../models/strings.js'
-import { IndexerDatabaseExtensions } from './indexerDb.js'
+import type { HEX } from '../../models/strings.js'
+import type { IndexerDatabaseExtensions } from './indexerDb.js'
 
 export interface BlockHandlerCtorArgs {
   db: IndexerDatabaseExtensions

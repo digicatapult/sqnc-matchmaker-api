@@ -1,4 +1,4 @@
-import { Express } from 'express'
+import type { Express } from 'express'
 
 import createHttpServer from '../../src/server.js'
 import Indexer from '../../src/lib/indexer/index.js'

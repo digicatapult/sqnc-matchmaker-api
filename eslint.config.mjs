@@ -45,7 +45,6 @@ export default [
           ignoreRestSiblings: true,
         },
       ],
-
       'no-console': 2,
     },
   },

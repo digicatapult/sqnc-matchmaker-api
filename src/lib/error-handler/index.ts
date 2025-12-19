@@ -1,10 +1,10 @@
-import { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
+import type { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 import { ValidateError } from 'tsoa'
 import { AggregateOAuthError, OauthError } from '@digicatapult/tsoa-oauth-express'
 
-import { Health } from '../../models/health.js'
+import type { Health } from '../../models/health.js'
 import { LoggerToken } from '../logger.js'
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
 import { container } from 'tsyringe'
 
 /**

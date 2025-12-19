@@ -1,4 +1,4 @@
-import { UUID } from '../../models/strings.js'
+import type { UUID } from '../../models/strings.js'
 
 type ChangeOperation = 'insert' | 'update'
 

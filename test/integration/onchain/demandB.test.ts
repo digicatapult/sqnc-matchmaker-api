@@ -1,8 +1,8 @@
 import { describe, beforeEach, afterEach, it } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { expect } from 'chai'
 
-import Indexer from '../../../src/lib/indexer/index.js'
+import type Indexer from '../../../src/lib/indexer/index.js'
 import { post } from '../../helper/routeHelper.js'
 import {
   seed,
@@ -11,8 +11,8 @@ import {
   seededDemandBNotOwnedId,
   seededDemandBMatchedNotOwnedId,
 } from '../../seeds/onchainSeeds/demandB.seed.js'
+import type { MockDispatcherContext } from '../../helper/mock.js'
 import {
-  MockDispatcherContext,
   parametersAttachmentId,
   selfAddress,
   withAttachmentMock,
@@ -28,7 +28,7 @@ import { withProxy } from '../../helper/proxy.js'
 import ExtendedChainNode from '../../helper/testInstanceChainNode.js'
 import { logger } from '../../../src/lib/logger.js'
 import env from '../../../src/env.js'
-import { DemandRow } from '../../../src/lib/db/types.js'
+import type { DemandRow } from '../../../src/lib/db/types.js'
 
 describe('on-chain', function () {
   this.timeout(60000)

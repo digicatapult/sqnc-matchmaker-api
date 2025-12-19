@@ -1,6 +1,7 @@
 import sinon from 'sinon'
 
-import ChainNode, { ProcessRanEvent } from '../../../chainNode.js'
+import type { ProcessRanEvent } from '../../../chainNode.js'
+import type ChainNode from '../../../chainNode.js'
 
 export const events2: ProcessRanEvent[] = [
   {

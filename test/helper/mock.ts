@@ -1,4 +1,5 @@
-import { MockAgent, setGlobalDispatcher, getGlobalDispatcher, Dispatcher } from 'undici'
+import type { Dispatcher } from 'undici'
+import { MockAgent, setGlobalDispatcher, getGlobalDispatcher } from 'undici'
 import env, { EnvToken, rolesArray, envSchema } from '../../src/env.js'
 import type { Env } from '../../src/env.js'
 import { notOptimiserAddress } from '../seeds/offchainSeeds/authz.seed.js'

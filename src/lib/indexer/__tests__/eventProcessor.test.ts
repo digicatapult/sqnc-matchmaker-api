@@ -2,8 +2,8 @@ import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
 import eventProcessors from '../eventProcessor.js'
-import { TransactionRow } from '../../db/types.js'
-import { ChangeSet } from '../changeSet.js'
+import type { TransactionRow } from '../../db/types.js'
+import type { ChangeSet } from '../changeSet.js'
 
 describe('eventProcessor', function () {
   describe('demand_create', function () {

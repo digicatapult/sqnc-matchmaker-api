@@ -1,12 +1,12 @@
-import { Express } from 'express'
-import Database from '../../src/lib/db/index.js'
+import type { Express } from 'express'
+import type Database from '../../src/lib/db/index.js'
 import { post } from './routeHelper.js'
 import { pollDemandState, pollMatch2State, pollTransactionState } from './poll.js'
 import { expect } from 'chai'
-import ChainNode from '../../src/lib/chainNode.js'
-import { Response } from 'supertest'
+import type ChainNode from '../../src/lib/chainNode.js'
+import type { Response } from 'supertest'
 import { parametersAttachmentId } from './mock.js'
-import { DemandRow, Match2Row } from '../../src/lib/db/types.js'
+import type { DemandRow, Match2Row } from '../../src/lib/db/types.js'
 
 export type DemandType = { originalTokenId: number; demandId: string; transactionId: any }
 

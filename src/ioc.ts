@@ -1,10 +1,10 @@
-import { IocContainer } from '@tsoa/runtime'
+import type { IocContainer } from '@tsoa/runtime'
 import { container } from 'tsyringe'
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
 
 import env, { type Env, EnvToken } from './env.js'
 import { logger, LoggerToken } from './lib/logger.js'
-import { Knex } from 'knex'
+import type { Knex } from 'knex'
 import { KnexToken, clientSingleton } from './lib/db/knexClient.js'
 
 export const iocContainer: IocContainer = {

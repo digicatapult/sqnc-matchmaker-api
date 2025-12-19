@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { Env } from './env.js'
+import type { Env } from './env.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

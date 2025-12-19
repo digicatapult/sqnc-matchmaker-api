@@ -1,5 +1,5 @@
 import { describe, before } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server.js'
@@ -17,7 +17,7 @@ import {
   seededDemandACommentTransactionId2,
 } from '../../seeds/offchainSeeds/transaction.seed.js'
 import { resetContainer } from '../../../src/ioc.js'
-import { TransactionResponse } from '../../../src/models/transaction.js'
+import type { TransactionResponse } from '../../../src/models/transaction.js'
 
 describe('transaction', () => {
   resetContainer()

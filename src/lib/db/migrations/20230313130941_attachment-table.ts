@@ -1,4 +1,4 @@
-import { Knex } from 'knex'
+import type { Knex } from 'knex'
 
 export async function up(knex: Knex): Promise<void> {
   const [extInstalled] = await knex('pg_extension').select('*').where({ extname: 'uuid-ossp' })

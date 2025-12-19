@@ -1,20 +1,20 @@
 import { describe, before } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server.js'
 import { postInternal } from '../../helper/routeHelper.js'
 import { cleanup } from '../../seeds/offchainSeeds/offchain.match2.seed.js'
 
+import type { MockDispatcherContext } from '../../helper/mock.js'
 import {
-  MockDispatcherContext,
   withIdentitySelfMock,
   withDispatcherMock,
   notSelfAddress,
   optimiserAddress,
   selfAddress,
 } from '../../helper/mock.js'
-import { AuthorizationRequest } from '../../../src/models/authorization.js'
+import type { AuthorizationRequest } from '../../../src/models/authorization.js'
 import {
   authzSeed,
   demandACommentId,

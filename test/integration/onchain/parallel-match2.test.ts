@@ -1,10 +1,10 @@
 import { describe, beforeEach, afterEach, it } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 
-import Indexer from '../../../src/lib/indexer/index.js'
+import type Indexer from '../../../src/lib/indexer/index.js'
 import { cleanup } from '../../seeds/onchainSeeds/onchain.match2.seed.js'
+import type { MockDispatcherContext } from '../../helper/mock.js'
 import {
-  MockDispatcherContext,
   parametersAttachmentId,
   withAttachmentMock,
   withDispatcherMock,
@@ -12,11 +12,11 @@ import {
 } from '../../helper/mock.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'
 import { container } from 'tsyringe'
+import type { DemandType } from '../../helper/parallelTests.js'
 import {
   createMatch2s,
   createMultipleDemands,
   createMultipleRematches,
-  DemandType,
   submitAndVerifyTransactions,
   verifyDemandState,
   verifyMatch2DatabaseState,

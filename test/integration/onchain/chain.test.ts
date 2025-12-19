@@ -1,15 +1,11 @@
 import { describe } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { expect } from 'chai'
 
-import Indexer from '../../../src/lib/indexer/index.js'
+import type Indexer from '../../../src/lib/indexer/index.js'
 import { cleanup, seededDemandBId } from '../../seeds/onchainSeeds/transaction.seed.js'
-import {
-  MockDispatcherContext,
-  withAttachmentMock,
-  withDispatcherMock,
-  withIdentitySelfMock,
-} from '../../helper/mock.js'
+import type { MockDispatcherContext } from '../../helper/mock.js'
+import { withAttachmentMock, withDispatcherMock, withIdentitySelfMock } from '../../helper/mock.js'
 import ChainNode from '../../../src/lib/chainNode.js'
 import { pollTransactionState } from '../../helper/poll.js'
 import { withAppAndIndexer } from '../../helper/chainTest.js'

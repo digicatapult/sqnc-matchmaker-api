@@ -1,4 +1,4 @@
-import { ADDRESS, UUID } from './strings.js'
+import type { ADDRESS, UUID } from './strings.js'
 
 export interface AuthorizationRequest {
   input: {

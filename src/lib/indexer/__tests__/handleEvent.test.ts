@@ -1,6 +1,6 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import { SinonStub } from 'sinon'
+import type { SinonStub } from 'sinon'
 
 import EventHandler from '../handleEvent.js'
 import { withTransactionMatchingTokensInDb } from './fixtures/db.js'
@@ -8,7 +8,7 @@ import { withMockLogger } from './fixtures/logger.js'
 import { withGetTokenResponses } from './fixtures/chainNode.js'
 import { withMockEventProcessors } from './fixtures/eventProcessor.js'
 import { invalidProcess, noInputsOutputs, complexEvent } from './fixtures/event.js'
-import { ChangeSet } from '../changeSet.js'
+import type { ChangeSet } from '../changeSet.js'
 
 describe('EventHandler', function () {
   it('should throw an exception if the process name is invalid', async function () {
