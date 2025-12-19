@@ -2,7 +2,7 @@ import type { Logger } from 'pino'
 
 import { Controller } from 'tsoa'
 
-import type Database from '../../../lib/db/index.js'
+import Database from '../../../lib/db/index.js'
 import type { DemandCommentRow, DemandRow } from '../../../lib/db/types.js'
 import type {
   DemandResponse,
@@ -15,11 +15,11 @@ import type { DATE, UUID } from '../../../models/strings.js'
 import { BadRequest, NotFound, Unauthorized, UnknownError } from '../../../lib/error-handler/index.js'
 import type { TransactionResponse } from '../../../models/transaction.js'
 import { demandCommentCreate, demandCreate } from '../../../lib/payload.js'
-import type ChainNode from '../../../lib/chainNode.js'
+import ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
-import type Identity from '../../../lib/services/identity.js'
+import Identity from '../../../lib/services/identity.js'
 import type { AddressResolver } from '../../../utils/determineSelfAddress.js'
-import type Attachment from '../../../lib/services/attachment.js'
+import Attachment from '../../../lib/services/attachment.js'
 import type { TransactionRow, Where } from '../../../lib/db/types.js'
 import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
 import type { Env } from '../../../env.js'

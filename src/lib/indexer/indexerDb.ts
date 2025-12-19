@@ -1,5 +1,5 @@
 import { singleton } from 'tsyringe'
-import type Database from '../db/index.js'
+import Database from '../db/index.js'
 import type {
   DemandCommentRow,
   DemandRow,

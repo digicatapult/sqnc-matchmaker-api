@@ -6,7 +6,7 @@ import env from '../../env.js'
 import type { Status } from '../service-watcher/statusPoll.js'
 import { serviceState } from '../service-watcher/statusPoll.js'
 import { logger } from '../logger.js'
-import type AuthInternal from './authInternal.js'
+import AuthInternal from './authInternal.js'
 
 const identityResponseValidator = z.object({
   address: z.string(),

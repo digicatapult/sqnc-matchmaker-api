@@ -3,7 +3,7 @@ import { Controller, Get, Route, Path, Response, Tags, Security, Query, Request 
 import type { Logger } from 'pino'
 
 import { LoggerToken } from '../../../lib/logger.js'
-import type Database from '../../../lib/db/index.js'
+import Database from '../../../lib/db/index.js'
 import type { DATE, UUID } from '../../../models/strings.js'
 import type { BadRequest } from '../../../lib/error-handler/index.js'
 import { NotFound } from '../../../lib/error-handler/index.js'

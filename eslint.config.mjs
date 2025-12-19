@@ -45,7 +45,6 @@ export default [
           ignoreRestSiblings: true,
         },
       ],
-      '@typescript-eslint/consistent-type-imports': ['error'],
       'no-console': 2,
     },
   },
