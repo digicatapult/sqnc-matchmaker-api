@@ -1,4 +1,4 @@
-import { ProcessRanEvent } from '../../../chainNode.js'
+import type { ProcessRanEvent } from '../../../chainNode.js'
 
 export const complexEvent: ProcessRanEvent = {
   blockHash: '0x01',

@@ -1,6 +1,6 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import { SinonStub } from 'sinon'
+import type { SinonStub } from 'sinon'
 
 import BlockHandler from '../handleBlock.js'
 import { withInitialLastProcessedBlock } from './fixtures/db.js'

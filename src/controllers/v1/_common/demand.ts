@@ -2,27 +2,27 @@ import type { Logger } from 'pino'
 
 import { Controller } from 'tsoa'
 
-import Database from '../../../lib/db/index.js'
+import type Database from '../../../lib/db/index.js'
 import type { DemandCommentRow, DemandRow } from '../../../lib/db/types.js'
-import {
+import type {
   DemandResponse,
   DemandRequest,
   DemandSubtype,
   DemandCommentRequest,
   DemandWithCommentsResponse,
 } from '../../../models/demand.js'
-import { DATE, UUID } from '../../../models/strings.js'
+import type { DATE, UUID } from '../../../models/strings.js'
 import { BadRequest, NotFound, Unauthorized, UnknownError } from '../../../lib/error-handler/index.js'
-import { TransactionResponse } from '../../../models/transaction.js'
+import type { TransactionResponse } from '../../../models/transaction.js'
 import { demandCommentCreate, demandCreate } from '../../../lib/payload.js'
-import ChainNode from '../../../lib/chainNode.js'
+import type ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
-import Identity from '../../../lib/services/identity.js'
-import { AddressResolver } from '../../../utils/determineSelfAddress.js'
-import Attachment from '../../../lib/services/attachment.js'
-import { TransactionRow, Where } from '../../../lib/db/types.js'
+import type Identity from '../../../lib/services/identity.js'
+import type { AddressResolver } from '../../../utils/determineSelfAddress.js'
+import type Attachment from '../../../lib/services/attachment.js'
+import type { TransactionRow, Where } from '../../../lib/db/types.js'
 import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
-import { Env } from '../../../env.js'
+import type { Env } from '../../../env.js'
 
 export class DemandController extends Controller {
   demandType: 'demandA' | 'demandB'

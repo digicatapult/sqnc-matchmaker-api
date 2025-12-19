@@ -1,5 +1,5 @@
-import Database from '../../../src/lib/db/index.js'
-import { Models, TABLE } from '../../../src/lib/db/types.js'
+import type Database from '../../../src/lib/db/index.js'
+import type { Models, TABLE } from '../../../src/lib/db/types.js'
 
 export const dbInsert =
   (db: Database) =>

@@ -1,4 +1,5 @@
-import { MockAgent, setGlobalDispatcher, getGlobalDispatcher, Dispatcher } from 'undici'
+import type { Dispatcher } from 'undici'
+import { MockAgent, setGlobalDispatcher, getGlobalDispatcher } from 'undici'
 import env from '../../../env.js'
 
 export const selfAlias = 'test-self'

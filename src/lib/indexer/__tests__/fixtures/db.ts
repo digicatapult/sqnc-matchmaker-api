@@ -1,7 +1,7 @@
 import sinon from 'sinon'
 
-import Attachment from '../../../services/attachment.js'
-import { IndexerDatabaseExtensions } from '../../indexerDb.js'
+import type Attachment from '../../../services/attachment.js'
+import type { IndexerDatabaseExtensions } from '../../indexerDb.js'
 
 type LastProcessBlockResult = { hash: string; parent: string; height: bigint } | null
 

@@ -11,7 +11,8 @@ import {
   withInitialLastProcessedBlockAndTxError,
 } from './fixtures/db.js'
 import { withHappyChainNode, withGetHeaderBoom } from './fixtures/chainNode.js'
-import Indexer, { getStatus } from '../index.js'
+import type Indexer from '../index.js'
+import { getStatus } from '../index.js'
 import { container } from 'tsyringe'
 import DefaultBlockHandler from '../../../lib/indexer/handleBlock.js'
 import { registerInstances } from './fixtures/registerInstances.js'

@@ -1,6 +1,6 @@
 import { singleton } from 'tsyringe'
-import Database from '../db/index.js'
-import {
+import type Database from '../db/index.js'
+import type {
   DemandCommentRow,
   DemandRow,
   InsertDemand,
@@ -14,7 +14,7 @@ import {
   ProcessedBlockRow,
   UnprocessedBlockRow,
 } from '../db/types.js'
-import { HEX, UUID } from '../../models/strings.js'
+import type { HEX, UUID } from '../../models/strings.js'
 
 @singleton()
 export class IndexerDatabaseExtensions {

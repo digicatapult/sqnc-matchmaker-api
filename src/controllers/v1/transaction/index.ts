@@ -3,19 +3,15 @@ import { Controller, Get, Route, Path, Response, Tags, Security, Query, Request 
 import type { Logger } from 'pino'
 
 import { LoggerToken } from '../../../lib/logger.js'
-import Database from '../../../lib/db/index.js'
+import type Database from '../../../lib/db/index.js'
 import type { DATE, UUID } from '../../../models/strings.js'
-import { BadRequest, NotFound } from '../../../lib/error-handler/index.js'
-import {
-  type TransactionApiType,
-  type TransactionState,
-  scopeToApiTypeMap,
-  TransactionResponse,
-  TransactionScope,
-} from '../../../models/transaction.js'
+import type { BadRequest } from '../../../lib/error-handler/index.js'
+import { NotFound } from '../../../lib/error-handler/index.js'
+import type { TransactionResponse, TransactionScope } from '../../../models/transaction.js'
+import { type TransactionApiType, type TransactionState, scopeToApiTypeMap } from '../../../models/transaction.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
 import { inject, injectable } from 'tsyringe'
-import { Where } from '../../../lib/db/types.js'
+import type { Where } from '../../../lib/db/types.js'
 import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
 import { OauthError } from '@digicatapult/tsoa-oauth-express'
 

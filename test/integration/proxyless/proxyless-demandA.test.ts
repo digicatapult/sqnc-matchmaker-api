@@ -1,13 +1,13 @@
 import { describe, beforeEach, afterEach, it } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { expect } from 'chai'
 
-import Indexer from '../../../src/lib/indexer/index.js'
+import type Indexer from '../../../src/lib/indexer/index.js'
 import { post } from '../../helper/routeHelper.js'
 import { seed, cleanup } from '../../seeds/onchainSeeds/demandA.seed.js'
 
+import type { MockDispatcherContext } from '../../helper/mock.js'
 import {
-  MockDispatcherContext,
   parametersAttachmentId,
   selfAddress,
   withAttachmentMock,

@@ -1,13 +1,14 @@
 import 'reflect-metadata'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { container } from 'tsyringe'
 import { resetContainer } from './ioc.js'
 
 import Indexer from './lib/indexer/index.js'
 import Server from './server.js'
-import { Env, EnvToken } from './env.js'
+import type { Env } from './env.js'
+import { EnvToken } from './env.js'
 import { LoggerToken } from './lib/logger.js'
-import { Logger } from 'pino'
+import type { Logger } from 'pino'
 
 import ChainNode from './lib/chainNode.js'
 import Identity from './lib/services/identity.js'

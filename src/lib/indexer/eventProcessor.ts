@@ -1,8 +1,9 @@
 import { v4 as UUIDv4 } from 'uuid'
 
-import { UUID } from '../../models/strings.js'
-import { demandStateParser, demandSubtypeParser, match2StateParser, TransactionRow } from '../db/types.js'
-import {
+import type { UUID } from '../../models/strings.js'
+import type { TransactionRow } from '../db/types.js'
+import { demandStateParser, demandSubtypeParser, match2StateParser } from '../db/types.js'
+import type {
   AttachmentRecord,
   ChangeSet,
   DemandCommentRecord,

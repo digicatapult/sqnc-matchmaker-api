@@ -1,5 +1,5 @@
 import { describe, before } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { expect } from 'chai'
 
 import createHttpServer from '../../../src/server.js'
@@ -37,8 +37,8 @@ import {
   seededMatch2IsNotMemberInReplacesId,
 } from '../../seeds/offchainSeeds/offchain.match2.seed.js'
 
+import type { MockDispatcherContext } from '../../helper/mock.js'
 import {
-  MockDispatcherContext,
   parametersAttachmentId,
   proxyAlias,
   withAttachmentMock,

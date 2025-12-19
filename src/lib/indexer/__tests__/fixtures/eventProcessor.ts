@@ -1,7 +1,7 @@
 import sinon from 'sinon'
 
-import { ChangeSet } from '../../changeSet.js'
-import { EventProcessors } from '../../eventProcessor.js'
+import type { ChangeSet } from '../../changeSet.js'
+import type { EventProcessors } from '../../eventProcessor.js'
 
 export const withMockEventProcessors: (result?: ChangeSet) => EventProcessors = (result: ChangeSet = {}) => ({
   demand_create: sinon.stub().returns(result),

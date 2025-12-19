@@ -3,9 +3,10 @@ import { z } from 'zod'
 
 import { HttpResponse } from '../error-handler/index.js'
 import env from '../../env.js'
-import { Status, serviceState } from '../service-watcher/statusPoll.js'
+import type { Status } from '../service-watcher/statusPoll.js'
+import { serviceState } from '../service-watcher/statusPoll.js'
 import { logger } from '../logger.js'
-import AuthInternal from './authInternal.js'
+import type AuthInternal from './authInternal.js'
 
 const attachmentHealthValidator = z.object({
   version: z.string(),

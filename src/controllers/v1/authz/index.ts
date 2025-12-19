@@ -2,13 +2,14 @@ import { Controller, Route, Response, Security, Hidden, Post, Body } from 'tsoa'
 import type { Logger } from 'pino'
 
 import { LoggerToken } from '../../../lib/logger.js'
-import Database from '../../../lib/db/index.js'
+import type Database from '../../../lib/db/index.js'
 import { inject, injectable } from 'tsyringe'
 import type { AuthorizationRequest, AuthorizationResponse } from '../../../models/authorization.js'
-import { AddressResolver } from '../../../utils/determineSelfAddress.js'
+import type { AddressResolver } from '../../../utils/determineSelfAddress.js'
 import { Unauthorized } from '../../../lib/error-handler/index.js'
-import Identity, { type IdentityResponse } from '../../../lib/services/identity.js'
-import { DemandRow, Match2Row, Where } from '../../../lib/db/types.js'
+import type Identity from '../../../lib/services/identity.js'
+import { type IdentityResponse } from '../../../lib/services/identity.js'
+import type { DemandRow, Match2Row, Where } from '../../../lib/db/types.js'
 
 const success = {
   result: {

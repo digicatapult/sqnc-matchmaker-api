@@ -1,5 +1,5 @@
-import Database from '../../src/lib/db/index.js'
-import { UUID } from '../../src/models/strings.js'
+import type Database from '../../src/lib/db/index.js'
+import type { UUID } from '../../src/models/strings.js'
 
 type Method = 'getTransaction' | 'getDemand' | 'getDemandCommentForTransaction' | 'getMatch2'
 

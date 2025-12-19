@@ -1,5 +1,5 @@
-import { TransactionRow } from '../lib/db/types.js'
-import { TransactionResponse } from '../models/transaction.js'
+import type { TransactionRow } from '../lib/db/types.js'
+import type { TransactionResponse } from '../models/transaction.js'
 
 export const dbTransactionToResponse = (transaction: TransactionRow): TransactionResponse => {
   return {

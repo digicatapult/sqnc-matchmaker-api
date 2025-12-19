@@ -1,34 +1,18 @@
-import {
-  ValidateError,
-  Controller,
-  Post,
-  Get,
-  Route,
-  Response,
-  Body,
-  SuccessResponse,
-  Tags,
-  Security,
-  Path,
-  Query,
-} from 'tsoa'
+import type { ValidateError } from 'tsoa'
+import { Controller, Post, Get, Route, Response, Body, SuccessResponse, Tags, Security, Path, Query } from 'tsoa'
 import type { Logger } from 'pino'
 import { inject, injectable } from 'tsyringe'
 
 import { LoggerToken } from '../../../lib/logger.js'
-import Database from '../../../lib/db/index.js'
+import type Database from '../../../lib/db/index.js'
 import { BadRequest, HttpResponse, NotFound } from '../../../lib/error-handler/index.js'
-import Identity from '../../../lib/services/identity.js'
-import {
-  type Match2CancelRequest,
-  type Match2Request,
-  type Match2State,
-  Match2Response,
-} from '../../../models/match2.js'
+import type Identity from '../../../lib/services/identity.js'
+import type { Match2Response } from '../../../models/match2.js'
+import { type Match2CancelRequest, type Match2Request, type Match2State } from '../../../models/match2.js'
 
 import type { DATE, UUID } from '../../../models/strings.js'
 
-import { TransactionResponse } from '../../../models/transaction.js'
+import type { TransactionResponse } from '../../../models/transaction.js'
 import {
   match2AcceptFinal,
   match2AcceptFirst,
@@ -38,11 +22,11 @@ import {
   match2Reject,
   rematch2AcceptFinal,
 } from '../../../lib/payload.js'
-import ChainNode from '../../../lib/chainNode.js'
+import type ChainNode from '../../../lib/chainNode.js'
 import { parseDateParam } from '../../../lib/utils/queryParams.js'
-import { AddressResolver } from '../../../utils/determineSelfAddress.js'
-import Attachment from '../../../lib/services/attachment.js'
-import { DemandRow, Match2Row, Where } from '../../../lib/db/types.js'
+import type { AddressResolver } from '../../../utils/determineSelfAddress.js'
+import type Attachment from '../../../lib/services/attachment.js'
+import type { DemandRow, Match2Row, Where } from '../../../lib/db/types.js'
 import { dbTransactionToResponse } from '../../../utils/dbToApi.js'
 import type { Env } from '../../../env.js'
 import { EnvToken } from '../../../env.js'

@@ -1,5 +1,5 @@
-import knex from 'knex'
-import { TABLE, Where } from './types.js'
+import type knex from 'knex'
+import type { TABLE, Where } from './types.js'
 
 // reduces the where condition on a knex query. Gracefully handles undefined values in WhereMatch objects
 export const reduceWhere = <M extends TABLE>(

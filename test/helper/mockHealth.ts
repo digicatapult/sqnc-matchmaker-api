@@ -1,5 +1,5 @@
 import env from '../../src/env.js'
-import { MockDispatcherContext } from './mock.js'
+import type { MockDispatcherContext } from './mock.js'
 
 export async function withOkMock(context: MockDispatcherContext) {
   beforeEach(async function () {

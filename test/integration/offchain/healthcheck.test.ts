@@ -1,5 +1,5 @@
 import { describe, before } from 'mocha'
-import { Express } from 'express'
+import type { Express } from 'express'
 import { expect } from 'chai'
 import { container } from 'tsyringe'
 
@@ -10,7 +10,8 @@ import { responses as healthResponses } from '../../helper/healthHelper.js'
 import { withOkMock, withAttachmentMockError } from '../../helper/mockHealth.js'
 import { resetContainer } from '../../../src/ioc.js'
 import Indexer from '../../../src/lib/indexer/index.js'
-import { MockDispatcherContext, withDispatcherMock } from '../../helper/mock.js'
+import type { MockDispatcherContext } from '../../helper/mock.js'
+import { withDispatcherMock } from '../../helper/mock.js'
 
 const getSpecVersion = (actualResult: any) => {
   return actualResult?._body?.details?.api?.detail?.runtime?.versions?.spec

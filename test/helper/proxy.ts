@@ -1,5 +1,5 @@
 import { type ProxyType } from '../../src/models/proxy.js'
-import ExtendedChainNode from './testInstanceChainNode.js'
+import type ExtendedChainNode from './testInstanceChainNode.js'
 
 const proxyReq = {
   delegatingAlias: '//Dave', // e.g. //Alice

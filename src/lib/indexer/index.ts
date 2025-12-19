@@ -1,17 +1,18 @@
 import { type Logger } from 'pino'
 
-import Database from '../db/index.js'
-import ChainNode from '../chainNode.js'
+import type Database from '../db/index.js'
+import type ChainNode from '../chainNode.js'
 import DefaultBlockHandler from './handleBlock.js'
-import { ChangeSet } from './changeSet.js'
-import { HEX } from '../../models/strings.js'
+import type { ChangeSet } from './changeSet.js'
+import type { HEX } from '../../models/strings.js'
 import { container, inject, singleton } from 'tsyringe'
-import { serviceState, Status } from '../service-watcher/statusPoll.js'
+import type { Status } from '../service-watcher/statusPoll.js'
+import { serviceState } from '../service-watcher/statusPoll.js'
 import { type Env, EnvToken } from '../../env.js'
 import { LoggerToken } from '../logger.js'
-import Attachment from '../services/attachment.js'
-import { IndexerDatabaseExtensions } from './indexerDb.js'
-import { ProcessedBlockRow } from '../db/types.js'
+import type Attachment from '../services/attachment.js'
+import type { IndexerDatabaseExtensions } from './indexerDb.js'
+import type { ProcessedBlockRow } from '../db/types.js'
 
 export type BlockHandler = (blockHash: HEX) => Promise<ChangeSet>
 

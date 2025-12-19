@@ -1,4 +1,4 @@
-import { DATE, UUID } from './strings.js'
+import type { DATE, UUID } from './strings.js'
 
 /**
  * The possible types of a Demand

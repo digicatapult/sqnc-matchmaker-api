@@ -2,7 +2,8 @@ import type { Knex } from 'knex'
 import { inject, singleton } from 'tsyringe'
 import { z } from 'zod'
 
-import Zod, { ColumnsByType, IDatabase, Models, Order, TABLE, Update, Where, tablesList } from './types.js'
+import type { ColumnsByType, IDatabase, Models, Order, TABLE, Update, Where } from './types.js'
+import Zod, { tablesList } from './types.js'
 import { reduceWhere } from './util.js'
 import { KnexToken } from './knexClient.js'
 

@@ -1,10 +1,11 @@
 import { type Logger } from 'pino'
-import { SubmittableResult } from '@polkadot/api'
-import { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { SubmittableResult } from '@polkadot/api'
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
 
 import { type Env } from '../../src/env.js'
-import { ProxyRequest } from '../../src/models/proxy.js'
-import ChainNode, { EventData } from '../../src/lib/chainNode.js'
+import type { ProxyRequest } from '../../src/models/proxy.js'
+import type { EventData } from '../../src/lib/chainNode.js'
+import ChainNode from '../../src/lib/chainNode.js'
 import { z } from 'zod'
 
 const proxyParser = z.tuple([

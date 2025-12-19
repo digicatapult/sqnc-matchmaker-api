@@ -3,7 +3,8 @@ import { singleton } from 'tsyringe'
 import startApiStatus from './apiStatus.js'
 import startAttachmentStatus from './attachment.js'
 import startIdentityStatus from './identityStatus.js'
-import { buildCombinedHandler, SERVICE_STATE, Status } from './statusPoll.js'
+import type { SERVICE_STATE, Status } from './statusPoll.js'
+import { buildCombinedHandler } from './statusPoll.js'
 import startIndexerStatus from './indexerStatus.js'
 
 @singleton()

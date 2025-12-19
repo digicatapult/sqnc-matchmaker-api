@@ -1,5 +1,5 @@
 import request from 'supertest'
-import express from 'express'
+import type express from 'express'
 import { scopes } from '../../src/models/scope.js'
 
 export const getToken = async (scope: string = scopes.join(' '), realm: 'member-a' | 'internal' = 'member-a') => {

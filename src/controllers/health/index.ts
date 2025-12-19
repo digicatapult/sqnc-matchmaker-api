@@ -5,7 +5,7 @@ import type { Health } from '../../models/health.js'
 import { LoggerToken } from '../../lib/logger.js'
 import { serviceState } from '../../lib/service-watcher/statusPoll.js'
 import { ServiceUnavailable } from '../../lib/error-handler/index.js'
-import { ServiceWatcher } from '../../lib/service-watcher/index.js'
+import type { ServiceWatcher } from '../../lib/service-watcher/index.js'
 import { type Logger } from 'pino'
 
 const packageVersion = process.env.npm_package_version ? process.env.npm_package_version : 'unknown'

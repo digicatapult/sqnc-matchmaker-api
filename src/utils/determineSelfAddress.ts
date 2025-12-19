@@ -1,5 +1,5 @@
 import { EnvToken, type Env } from '../env.js'
-import Identity from '../lib/services/identity.js'
+import type Identity from '../lib/services/identity.js'
 import { inject, singleton } from 'tsyringe'
 
 @singleton()
