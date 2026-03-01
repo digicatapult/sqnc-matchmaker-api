@@ -1,6 +1,6 @@
 services:
   postgres-matchmaker-api:
-    image: postgres:18.1-alpine
+    image: postgres:18.3-alpine
     container_name: postgres-matchmaker-api
     ports:
       - 5432:5432
@@ -14,7 +14,7 @@ services:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
 
   postgres-identity-service:
-    image: postgres:18.1-alpine
+    image: postgres:18.3-alpine
     container_name: postgres-identity
     ports:
       - 5433:5432
@@ -28,7 +28,7 @@ services:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
 
   postgres-attachment-api:
-    image: postgres:18.1-alpine
+    image: postgres:18.3-alpine
     container_name: postgres-attachment
     ports:
       - 5434:5432
@@ -42,7 +42,7 @@ services:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
 
   sqnc-identity-service:
-    image: digicatapult/sqnc-identity-service:v4.2.40
+    image: digicatapult/sqnc-identity-service:v4.2.153
     container_name: identity-service
     command: /bin/sh -c "npx knex migrate:latest && npm start"
     depends_on:
@@ -68,7 +68,7 @@ services:
       - IDP_INTERNAL_REALM=internal
 
   sqnc-attachment-api:
-    image: digicatapult/sqnc-attachment-api:v3.1.12
+    image: digicatapult/sqnc-attachment-api:v3.3.77
     container_name: attachment-api
     command: /bin/sh -c "npx knex --env production migrate:latest && npm start"
     depends_on:
@@ -106,7 +106,7 @@ services:
     restart: on-failure
 
   ipfs:
-    image: ipfs/go-ipfs:v0.35.0
+    image: ipfs/go-ipfs:v0.39.0
     container_name: ipfs
     environment:
       - |
@@ -119,7 +119,7 @@ services:
       - 5001:5001
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.2.5
+    image: quay.io/keycloak/keycloak:26.5.4
     container_name: keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
