@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/sqnc-matchmaker-api",
-  "version": "6.2.121",
+  "version": "6.2.122",
   "description": "An OpenAPI Matchmaking API service for SQNC",
   "main": "src/index.ts",
   "type": "module",
@@ -62,7 +62,7 @@
     "depcheck": "^1.4.7",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-prettier": "^5.5.6",
     "globals": "^17.6.0",
     "mocha": "^11.7.6",
     "nodemon": "^3.1.14",
@@ -75,7 +75,7 @@
     "undici": "^7.26.0"
   },
   "dependencies": {
-    "@digicatapult/sqnc-process-management": "^3.0.94",
+    "@digicatapult/sqnc-process-management": "^3.0.95",
     "@digicatapult/tsoa-oauth-express": "^2.0.65",
     "@grpc/grpc-js": "^1.14.4",
     "@opentelemetry/auto-instrumentations-node": "^0.76.0",
