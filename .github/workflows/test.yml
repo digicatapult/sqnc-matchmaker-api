@@ -9,6 +9,7 @@ jobs:
       security-events: write
     with:
       matrix_commands: '["lint", "depcheck", "check"]'
+      enable_trufflehog_action: true
   tests-unit:
     uses: digicatapult/shared-workflows/.github/workflows/tests-npm.yml@main
     permissions:
